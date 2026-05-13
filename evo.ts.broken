@@ -79,10 +79,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { fileURLToPath } from 'url';
 import { Worker as WorkerThread } from 'worker_threads';
-import { WorkerPool } from './src/worker-pool.js';
 import * as http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -117,8 +115,6 @@ export class EvoAgent {
   private healthMonitor!: HealthMonitor;
   private astTransformer!: ASTTransformer;
   private testRunner!: TestRunner;
-  private workerPool?: WorkerPool;
-  private analysisCache = new Map<string, { result: any; timestamp: number }>();
 
   constructor(config: Partial<AgentConfig> = {}, parent?: EvoAgent) {
     this.id = generateId();
@@ -215,20 +211,6 @@ export class EvoAgent {
 
     // Sync state with modules
     this.syncStateFromModules();
-  }
-
-  private syncStateFromModules(): void {
-    // Sync goals from GoalManager
-    this.state.goals = this.goalManager.getAll();
-    // Sync health from HealthMonitor
-    const healthStatus = this.healthMonitor.getStatus();
-    this.state.health = {
-      status: healthStatus.status,
-      lastCheck: healthStatus.lastCheck,
-      consecutiveFailures: healthStatus.consecutiveFailures,
-      memoryPressure: healthStatus.memoryPressure
-    };
-    // Note: messages are transient, not stored in state
   }
 
   // ==================== LOGGING ====================
@@ -363,9 +345,9 @@ export class EvoAgent {
     return { status, memoryPressure, issues };
   }
 
-  private async updateHealthCheck(): Promise<void> {
+  private updateHealthCheck(): void {
     // Use HealthMonitor module
-    const check = await this.healthMonitor.performCheck(
+    const check = this.healthMonitor.performCheck(
       getMemoryUsage(),
       getCpuTime(),
       getUptime()
@@ -597,18 +579,7 @@ export class EvoAgent {
           break;
         }
 
-        // Adaptive delay (Iteration 111)
-        const mem = process.memoryUsage();
-        const totalMem = mem.heapUsed + mem.heapTotal + mem.external;
-        const maxMem = 500 * 1024 * 1024; // 500MB
-        const memPct = (totalMem / maxMem) * 100;
-        const cpuStart = process.cpuUsage();
-        const cpuPct = cpuStart ? (cpuStart.user + cpuStart.system) / (os.cpus().length * 1000) : 0;
-        let delayMs = 10;
-        if (memPct > 80 || cpuPct > 80) delayMs = 2000 + Math.random() * 1000;
-        else if (memPct > 50 || cpuPct > 50) delayMs = 500 + Math.random() * 500;
-        this.log('debug', `⏱️ Delay: ${Math.round(delayMs)}ms (mem: ${Math.round(memPct)}%, cpu: ${Math.round(cpuPct)}%)`);
-        await sleep(delayMs);
+        await sleep(1000);
       } catch (error) {
         this.log('error', '💥 Iteration failed:', error);
         this.state.health.consecutiveFailures++;
@@ -625,7 +596,7 @@ export class EvoAgent {
     this.loadLogBuffer();
 
     if (this.config.enableHealthChecks) {
-      await this.updateHealthCheck();
+      this.updateHealthCheck();
     }
   }
 
@@ -729,38 +700,19 @@ export class EvoAgent {
 
     // Health check
     if (this.config.enableHealthChecks) {
-      await this.updateHealthCheck();
+      this.updateHealthCheck();
     }
-  }
-
-  private hashString(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash.toString(36);
   }
 
   private readSelf(): Promise<void> {
     return new Promise((resolve, reject) => {
       const filePath = path.join(__dirname, 'evo.ts');
       try {
-        const code = fs.readFileSync(filePath, 'utf-8');
-        const hash = this.hashString(code);
-        const lastHash = this.state.memory.get('lastCodeHash');
-        if (lastHash === hash) {
-          this.log('debug', '📖 Self-code unchanged (cached)');
-        } else {
-          this.state.memory.set('lastCodeHash', hash);
-          this.log('trace', '📖 Self-code read. Size:', code.length);
-        }
-        this.currentCode = code;
+        this.currentCode = fs.readFileSync(filePath, 'utf-8');
+        this.log('trace', '📖 Self-code read. Size:', this.currentCode.length);
         resolve();
       } catch (e) {
-        const err = e as Error;
-        this.log('error', `💔 Cannot read self: ${err.message}`);
+        this.log('error', '💔 Cannot read self:', e);
         reject(new Error('Cannot read own source code'));
       }
     });
@@ -774,18 +726,8 @@ export class EvoAgent {
     opportunities: string[];
     metrics: Partial<EvolutionMetrics>;
   }> {
+    const lines = this.currentCode.split('\n').length;
     const code = this.currentCode;
-
-    // Cache analysis (Iteration 111)
-    const codeHash = this.hashString(code);
-    const cacheKey = `analysis_${codeHash}_${this.state.level}`;
-    const cached = this.analysisCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 60000) { // 1 min TTL
-      this.log('debug', '📊 Using cached analysis');
-      return cached.result;
-    }
-
-    const lines = code.split('\n').length;
 
     const features = {
       async: /async\s+/.test(code),
@@ -802,15 +744,12 @@ export class EvoAgent {
       security: /security|sandbox/i.test(code),
       stats: /(stats:|totalMessagesSent|MessageQueue)/.test(code),
       documentation: /\/\*\*[\s\S]*?\*\//.test(code) || (/\bJSDoc\b/i.test(code)),
-      testing: /(describe\(|it\(|test\(|expect\()/.test(code) || /(TestRunner|testRunner)/.test(code),
+      testing: /(describe\(|it\(|test\(|expect\()/.test(code) || (TestRunner|testRunner)/.test(code),
       modularization: /(private|public|protected)\s+\w+\s*\(/.test(code) && (code.match(/class/g) || []).length > 1,
       concurrency: /(Worker|cluster|Thread|Promise\.all|async\s+\w+\s*\()/.test(code),
       selfTesting: /(TestRunner|testRunner\.runAll)/.test(code),
-      astTransformation: /(ASTTransformer|astTransformer|transform)/.test(code),
-      'worker-pool': /(WorkerPool|workerPool)/.test(code),
-      'distributed-coordination': /(WorkerPool|workerPool|cluster)/.test(code)
+      astTransformation: /(ASTTransformer|astTransformer|transform)/.test(code)
     };
-
 
     const strengths = Object.entries(features)
       .filter(([_, v]) => v)
@@ -821,7 +760,7 @@ export class EvoAgent {
       .map(([k, _]) => this.formatFeatureName(k));
 
     const featureCount = Object.values(features).filter(v => v).length;
-    const newLevel = Math.min(100, featureCount + Math.floor(this.state.level * 0.5)); // Allow growth beyond level 20
+    const newLevel = Math.min(20, featureCount + Math.floor(this.state.level * 0.5));
 
     const metrics: Partial<EvolutionMetrics> = {
       iteration: this.iterationCount + 1,
@@ -842,12 +781,7 @@ export class EvoAgent {
       health: this.state.health.status
     };
 
-    const result = { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
-    // Cache analysis (Iteration 111)
-    const codeHash = this.hashString(this.currentCode);
-    const cacheKey = `analysis_${codeHash}_${this.state.level}`;
-    this.analysisCache.set(cacheKey, { result, timestamp: Date.now() });
-    return result;
+    return { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
   }
 
   private formatFeatureName(key: string): string {
@@ -868,9 +802,7 @@ export class EvoAgent {
       documentation: 'code documentation',
       testing: 'unit testing',
       modularization: 'modular architecture',
-      concurrency: 'concurrency support',
-      'worker-pool': 'worker pool',
-      'distributed-coordination': 'distributed coordination'
+      concurrency: 'concurrency support'
     };
     return names[key] || key;
   }
@@ -1038,19 +970,6 @@ export class EvoAgent {
         /(\/\/ Features: .*)/,
         `$1\n${changelog}`
       );
-    }
-
-    // AST Transformation (Iteration 112 - aggressive after iteration 10)
-    if (this.iterationCount >= 10) {
-      try {
-        const transformResult = await this.astTransformer.analyzeAndTransform(newCode, this.iterationCount);
-        if (transformResult.success) {
-          newCode = transformResult.transformedCode;
-          this.log('info', '🔨 AST transformations:', transformResult.changes.join('; '));
-        }
-      } catch (e) {
-        this.log('warn', 'AST transform error:', e);
-      }
     }
 
     return newCode;

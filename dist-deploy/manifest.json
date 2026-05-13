@@ -1,0 +1,32 @@
+{
+  "version": "auto-20",
+  "agentId": "1778682619792-5rx006cvh",
+  "level": 20,
+  "capabilities": [
+    "self-awareness",
+    "basic-evolution",
+    "async operations",
+    "error handling",
+    "persistent memory",
+    "file system",
+    "self-replication",
+    "inter-agent messaging",
+    "goal management",
+    "advanced logging",
+    "planning",
+    "health monitoring",
+    "sandboxing",
+    "security",
+    "statistics",
+    "code documentation",
+    "unit testing",
+    "modular architecture",
+    "concurrency support"
+  ],
+  "deployedAt": "2026-05-13T14:30:40.110Z",
+  "files": [
+    "evo.ts",
+    "filesystem.ts",
+    "types.ts"
+  ]
+}

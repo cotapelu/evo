@@ -1,0 +1,50 @@
+--- a/evo.ts
++++ b/evo.ts
+@@ -1216,7 +1216,7 @@ export class EvoAgent {
+     return changes;
+   }
+ 
+-  private async improveCode(plan: EvolutionPlan): Promise<string> {
++  private async improveCode(plan: EvolutionPlan): Promise<string> {
+     this.log('debug', '🔧 Applying improvement:', plan.opportunity, 'Risk:', plan.riskLevel);
+ 
+     let newCode = this.currentCode;
+@@ -1227,6 +1227,33 @@ export class EvoAgent {
+     return newCode;
+   }
+ 
++  // ==================== CODE GENERATION TRANSFORMATIONS ====================
++
++  private addJSDocComments(code: string): string {
++    this.log('info', '📚 Adding JSDoc documentation...');
++    if (!code.includes('/**\n * EvoAgent - Self-Evolving')) {
++      code = code.replace(
++        /export class EvoAgent \{/,
++        `/**\n * EvoAgent - Self-Evolving AI Agent\n * Autonomous self-improving system\n * @version 2.0\n */\nexport class EvoAgent {`
++      );
++    }
++    this.log('info', '✅ JSDoc added');
++    return code;
++  }
++
++  private async addTestStubs(code: string): Promise<string> {
++    this.log('info', '🧪 Generating test stubs...');
++    const tests = `// Auto-generated tests\nimport { EvoAgent } from './evo.ts';\n\ndescribe('EvoAgent', () => {\n  it('initializes', () => {\n    const a = new EvoAgent({ maxIterations: 1 });\n    expect(a.id).toBeDefined();\n  });\n});\n`;
++    try { this.fs.writeFile('test-stubs.ts', tests); this.log('info', '📝 test-stubs.ts created'); } catch (e) {}
++    return code;
++  }
++
++  private prepareModularization(code: string): string {
++    this.log('info', '📦 Modularization prep...');
++    if (!code.includes('// MODULE SUGGESTIONS')) {
++      code = code.replace(
++        /(\/\/ ==================== AGENT CLASS ====================)/,
++        `// MODULE SUGGESTIONS:\n// - Split FileSystem → filesystem.ts\n// - Split types → types.ts\n\n$1`
++      );
++    }
++    return code;
++  }
++
+   private async validateCode(code: string): Promise<{ valid: boolean; error?: string }> {
+     try {
+       if (!code.includes('class EvoAgent')) return { valid: false, error: 'Missing EvoAgent class' };

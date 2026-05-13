@@ -1,0 +1,19 @@
+    const features = {
+      async: /async\s+/.test(code),
+      errorHandling: /(try\s*\{|catch\s*\()/.test(code),
+      persistentMemory: /(saveMemory|loadMemory|memoryPath)/.test(code),
+      fileSystem: /(class FileSystem|fs\.readFileSync)/.test(code),
+      replication: /(spawnChild|children)/.test(code),
+      messaging: /(sendMessage|broadcast|Message)/.test(code),
+      goals: /(createGoal|Goal)/.test(code),
+      logging: /(logBuffer|flushLogs|logPath)/.test(code),
+      planning: /(createEvolutionPlan|EvolutionPlan)/.test(code),
+      health: /(performHealthCheck|updateHealthCheck)/.test(code),
+      sandbox: /(validatePath|isWithinSandbox)/.test(code),
+      security: /security|sandbox/i.test(code),
+      stats: /(stats:|totalMessagesSent)/.test(code),
+      documentation: /\/\*\*[\s\S]*?\*\//.test(code) || (/\bJSDoc\b/i.test(code)),
+      testing: /(describe\(|it\(|test\(|expect\()/.test(code),
+      modularization: /(private|public|protected)\s+\w+\s*\(/.test(code) && (code.match(/class/g) || []).length > 1,
+      concurrency: /(Worker|cluster|Thread|Promise\.all|async\s+\w+\s*\()/.test(code)
+    };

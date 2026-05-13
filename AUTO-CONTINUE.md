@@ -1,1 +1,1 @@
-Chạy vòng tự nhân bản và tự tiến hóa tiếp theo dựa vào toàn bộ các file md đã nói.
+Tiếp tục evolution, Đọc toàn bộ EVOLUTION.md full file và làm như nó nói đi. chạy vòng tiếp theo.

@@ -1,0 +1,17 @@
+  private formatCapabilityName(cap: string): string {
+    // Convert 'worker-pool' -> 'worker-pool'
+    return cap.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+
+  private getCapabilityLevelRequirement(cap: string): number {
+    const reqs: Record<string, number> = {
+      'worker-pool': 12,
+      'ast-transformation': 15,
+      'orchestration': 18,
+      'performance-tuning': 14,
+      'auto-recovery': 16,
+      'distributed-coordination': 20,
+      'deployment': 10
+    };
+    return reqs[cap] || 10;
+  }
