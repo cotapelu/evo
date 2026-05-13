@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# State & logs
+memory.json
+agent.log
+agents registry.json
+*.db
+*.db-journal
+data/
+
+# Backups
+evo.ts.backup.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Plugins (user plugins may be tracked separately)
+plugins/*.js
+!plugins/hello-world.js
+
+# Test
+coverage/
+.nyc_output/
+
+# Build
+dist/
+build/
+
+# Misc
+*.log
+tmp/
+temp/

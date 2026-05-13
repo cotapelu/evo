@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  agent-os:
+    build: .
+    container_name: agent-os
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - AGENT_ENABLE_DATABASE=true
+      - AGENT_DB_PATH=/data/agent.db
+      - AGENT_MEMORY_PATH=/data/memory.json
+      - AGENT_LOG_PATH=/data/agent.log
+      - AGENT_METRICS_PORT=3456
+      - AGENT_ENABLE_METRICS=true
+      - AGENT_ENABLE_WEBSOCKET=true
+      - AGENT_WEBSOCKET_PORT=3457
+      - AGENT_MAX_CHILDREN=10
+      - AGENT_RESOURCE_MAX_MEMORY=100
+      - AGENT_API_RATE_LIMIT=120
+      - AGENT_PLUGINS_PATH=/app/plugins
+    ports:
+      - "3456:3456"   # HTTP Metrics API
+      - "3457:3457"   # WebSocket Real-time Stream
+    volumes:
+      - ./data:/data           # Database & persistent state
+      - ./logs:/app/logs       # Log files
+      - ./plugins:/app/plugins # Plugin directory
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3456/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
