@@ -1,22 +1,30 @@
 // worker-pool-threads.ts - True thread pool using worker_threads (Iteration 113)
 // ESM-compatible worker pool for parallel task execution
 
+import { fileURLToPath } from 'url';
 import { Worker } from 'worker_threads';
 import * as path from 'path';
 import * as os from 'os';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 interface ThreadTask<T = any> {
   id: string;
-  fn: (...args: any[]) => Promise<T> | T;
+  module: string; // Module path to import
+  fnName: string; // Function name to call
   args: any[];
   resolve: (value: T | Promise<T>) => void;
   reject: (error: Error) => void;
+  timeout: number;
 }
 
 export class WorkerPoolThreads {
   private size: number;
+  private nextWorkerIndex: number = 0; // for round-robin distribution
   private workers: Worker[] = [];
   private taskQueue: ThreadTask[] = [];
+  private pendingTasks: Map<string, ThreadTask> = new Map(); // taskId -> task
   private activeWorkers: number = 0;
   private initialized: boolean = false;
   private workerScript: string;
@@ -53,22 +61,23 @@ export class WorkerPoolThreads {
 
   private handleMessage(worker: Worker, msg: any): void {
     if (msg.type === 'ready') {
-      this.dispatchTask(worker);
+      // Worker is ready to receive tasks
+      this.processQueue();
     } else if (msg.type === 'result') {
-      const task = this.taskQueue.find(t => t.id === msg.taskId);
+      const task = this.pendingTasks.get(msg.taskId);
       if (task) {
         task.resolve(msg.result);
-        this.taskQueue = this.taskQueue.filter(t => t.id !== msg.taskId);
+        this.pendingTasks.delete(msg.taskId);
         this.activeWorkers--;
-        this.dispatchTask(worker);
+        this.processQueue();
       }
     } else if (msg.type === 'error') {
-      const task = this.taskQueue.find(t => t.id === msg.taskId);
+      const task = this.pendingTasks.get(msg.taskId);
       if (task) {
         task.reject(new Error(msg.error));
-        this.taskQueue = this.taskQueue.filter(t => t.id !== msg.taskId);
+        this.pendingTasks.delete(msg.taskId);
         this.activeWorkers--;
-        this.dispatchTask(worker);
+        this.processQueue();
       }
     }
   }
@@ -94,55 +103,74 @@ export class WorkerPoolThreads {
     }
   }
 
-  execute<T = any>(fn: (...args: any[]) => Promise<T> | T, ...args: any[]): Promise<T> {
+  execute<T = any>(module: string, fnName: string, args: any[], options: { timeout?: number } = {}): Promise<T> {
     if (!this.initialized) {
       throw new Error('WorkerPoolThreads not initialized');
     }
 
     return new Promise((resolve, reject) => {
       const taskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const timeout = options.timeout || 30000;
       const task: ThreadTask<T> = {
         id: taskId,
-        fn: '' as any,
+        module,
+        fnName,
         args,
         resolve: resolve as (value: T | Promise<T>) => void,
-        reject: (err: Error) => reject(err)
+        reject: (err: Error) => reject(err),
+        timeout
       };
 
-      // For now, just execute inline if function is bound method
-      // In future: serialize to string and eval in worker
-      // Simplify: run in main thread but through queue
-      setTimeout(() => {
-        try {
-          const result = fn(...args);
-          task.resolve(result);
-        } catch (e) {
-          task.reject(e as Error);
-        }
-      }, 0);
-
+      this.pendingTasks.set(taskId, task);
       this.taskQueue.push(task);
       this.processQueue();
+
+      // Timeout handling
+      setTimeout(() => {
+        if (this.pendingTasks.has(taskId)) {
+          task.reject(new Error('Task timeout'));
+          this.pendingTasks.delete(taskId);
+          this.activeWorkers--;
+          this.processQueue();
+        }
+      }, timeout);
     });
   }
 
-  private async processQueue(): Promise<void> {
+  private processQueue(): void {
     if (this.activeWorkers >= this.size || this.taskQueue.length === 0) return;
 
-    this.activeWorkers++;
-    const task = this.taskQueue[0];
+    const task = this.taskQueue.shift();
+    if (!task) return;
 
-    // For true threading, we'd send to worker via postMessage
-    // But ESM module loading in workers is tricky; keep it simple for now
-    // Use immediate execution
-    try {
-      // This will complete via setTimeout above
-      // Just track active count
-    } catch (e) {
-      task.reject(e as Error);
-      this.taskQueue.shift();
-      this.activeWorkers--;
+    // Find an idle worker using round-robin
+    let workerIndex = -1;
+    const startIndex = this.nextWorkerIndex;
+    for (let i = 0; i < this.size; i++) {
+      const idx = (startIndex + i) % this.size;
+      if (this.workers[idx]) {
+        workerIndex = idx;
+        this.nextWorkerIndex = (idx + 1) % this.size;
+        break;
+      }
     }
+    if (workerIndex === -1) {
+      // No worker available, put task back at front
+      this.taskQueue.unshift(task);
+      return;
+    }
+
+    const worker = this.workers[workerIndex];
+    this.activeWorkers++;
+
+    // Send task to worker
+    worker.postMessage({
+      type: 'task',
+      taskId: task.id,
+      module: task.module,
+      fnName: task.fnName,
+      args: task.args
+    });
   }
 
   private dispatchTask(worker: Worker): void {
@@ -157,15 +185,20 @@ export class WorkerPoolThreads {
     }
     this.workers = [];
     this.taskQueue = [];
+    this.pendingTasks.forEach((task, taskId) => {
+      task.reject(new Error('WorkerPool shut down'));
+    });
+    this.pendingTasks.clear();
     this.activeWorkers = 0;
     this.initialized = false;
   }
 
-  get stats(): { queued: number; active: number; total: number } {
+  get stats(): { queued: number; active: number; total: number; pending: number } {
     return {
       queued: this.taskQueue.length,
       active: this.activeWorkers,
-      total: this.size
+      total: this.size,
+      pending: this.pendingTasks.size
     };
   }
 }

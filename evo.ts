@@ -82,7 +82,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { fileURLToPath } from 'url';
 import { Worker as WorkerThread } from 'worker_threads';
-import { WorkerPool } from './src/worker-pool.js';
+import { WorkerPoolThreads } from './src/worker-pool-threads.js';
 import * as http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -91,7 +91,8 @@ const __dirname = path.dirname(__filename);
 // ==================== MODULE IMPORTS ====================
 import { FileSystem } from './src/filesystem.js';
 import { MessageQueue, Message } from './src/messaging.js';
-import { GoalManager, Goal } from './src/goals.js';
+import * as GoalsModule from './src/goals.js';
+export type { Goal } from './src/goals.js';
 import { HealthMonitor } from './src/health.js';
 import { ASTTransformer } from './src/ast-transformer.js';
 import { TestRunner } from './src/test-runner.js';
@@ -110,17 +111,31 @@ export class EvoAgent {
   private isRunning: boolean = false;
   private parent?: EvoAgent;
   private logBuffer: string[] = [];
+  // Static counter for all agent instances to limit total agents
+  private static totalAgents = 0;
+  private static readonly MAX_TOTAL_AGENTS = 20; // Hard limit across all agents
   private healthCheckTimer?: NodeJS.Timeout;
   private backupTimer?: NodeJS.Timeout;
-  private goalManager!: GoalManager;
+  private goalManager!: GoalsModule.GoalManager;
   private messageQueue!: MessageQueue;
   private healthMonitor!: HealthMonitor;
   private astTransformer!: ASTTransformer;
   private testRunner!: TestRunner;
-  private workerPool?: WorkerPool;
+  private workerPool?: WorkerPoolThreads;
   private analysisCache = new Map<string, { result: any; timestamp: number }>();
+  private readonly ANALYSIS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly ANALYSIS_CACHE_MAX_SIZE = 50; // Max entries
+  private lastCacheCleanup = 0;
+  private readonly ANALYSIS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly ANALYSIS_CACHE_MAX_SIZE = 50; // Max entries
+  private lastCacheCleanup = 0;
 
   constructor(config: Partial<AgentConfig> = {}, parent?: EvoAgent) {
+    // Check global agent limit
+    if (EvoAgent.totalAgents >= EvoAgent.MAX_TOTAL_AGENTS) {
+      throw new Error(`Max total agents (${EvoAgent.MAX_TOTAL_AGENTS}) reached. Cannot create new agent.`);
+    }
+    EvoAgent.totalAgents++;
     this.id = generateId();
     this.parent = parent;
 
@@ -167,7 +182,7 @@ export class EvoAgent {
     this.fs = new FileSystem({ basePath: __dirname, allowedPaths, blockedOperations: blockedOps });
 
     // Initialize core modules (Iteration 105)
-    this.goalManager = new GoalManager();
+    this.goalManager = new GoalsModule.GoalManager();
     this.messageQueue = new MessageQueue(1000);
     this.healthMonitor = new HealthMonitor(this.config.resourceLimits, {
       checkInterval: 10000,
@@ -175,7 +190,9 @@ export class EvoAgent {
     });
     this.astTransformer = new ASTTransformer();
     this.testRunner = new TestRunner();
-    this.workerPool = new WorkerPool(4);
+    // Calculate worker pool size based on memory limit (1 worker per ~25MB, capped at 8)
+    const workerCount = Math.max(1, Math.min(8, Math.floor((this.config.resourceLimits?.maxMemoryMB || 100) / 25)));
+    this.workerPool = new WorkerPoolThreads(workerCount);
 
     // Initialize state
     this.state = {
@@ -419,7 +436,7 @@ export class EvoAgent {
 
   // ==================== GOAL MANAGEMENT ====================
 
-  createGoal(description: string, priority: number = 1, steps?: string[], dependencies?: string[]): Goal {
+  createGoal(description: string, priority: number = 1, steps?: string[], dependencies?: string[]): GoalsModule.Goal {
     const goal = this.goalManager.create(description, priority, steps, dependencies);
     this.state.goals = this.goalManager.getAll();
     this.saveMemory();
@@ -427,7 +444,7 @@ export class EvoAgent {
     return goal;
   }
 
-  updateGoal(goalId: string, status: Goal['status']): boolean {
+  updateGoal(goalId: string, status: GoalsModule.Goal['status']): boolean {
     const success = this.goalManager.update(goalId, { status });
     if (success) {
       this.state.goals = this.goalManager.getAll();
@@ -455,11 +472,11 @@ export class EvoAgent {
     return success;
   }
 
-  getActiveGoals(): Goal[] {
+  getActiveGoals(): GoalsModule.Goal[] {
     return this.goalManager.getActive();
   }
 
-  getGoalsByPriority(minPriority: number = 1): Goal[] {
+  getGoalsByPriority(minPriority: number = 1): GoalsModule.Goal[] {
     return this.goalManager.getByPriority(minPriority);
   }
 
@@ -527,6 +544,12 @@ export class EvoAgent {
       return null;
     }
 
+    // Check global agent limit
+    if (EvoAgent.totalAgents >= EvoAgent.MAX_TOTAL_AGENTS) {
+      this.log('warn', 'Global agent limit reached:', EvoAgent.MAX_TOTAL_AGENTS);
+      return null;
+    }
+
     if (this.state.children.length >= this.config.maxChildren) {
       this.log('warn', 'Max children reached:', this.config.maxChildren);
       return null;
@@ -548,6 +571,8 @@ export class EvoAgent {
           maxOpenFiles: 50
         }
       };
+      // Reduce worker pool size for children based on memory limit
+      const childWorkerCount = Math.max(1, Math.min(2, Math.floor((childConfig.resourceLimits?.maxMemoryMB || 50) / 30)));
 
       const child = new EvoAgent(childConfig, this);
       this.state.children.push(child.id);
@@ -598,17 +623,45 @@ export class EvoAgent {
           break;
         }
 
-        // Adaptive delay (Iteration 111)
+        // Adaptive delay based on health, resources, and iteration performance (Iteration 116)
         const mem = process.memoryUsage();
         const totalMem = mem.heapUsed + mem.heapTotal + mem.external;
-        const maxMem = 500 * 1024 * 1024; // 500MB
-        const memPct = (totalMem / maxMem) * 100;
+        const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB * 1024 * 1024;
+        const memPct = (totalMem / memLimit) * 100;
         const cpuStart = process.cpuUsage();
-        const cpuPct = cpuStart ? (cpuStart.user + cpuStart.system) / (os.cpus().length * 1000) : 0;
+        const cpuPct = cpuStart ? ((cpuStart.user + cpuStart.system) / (os.cpus().length * 1000)) : 0;
+
+        // Base delay
         let delayMs = 10;
-        if (memPct > 90 || cpuPct > 90) delayMs = 2000 + Math.random() * 1000; // Critical
-        else if (memPct > 80 || cpuPct > 80) delayMs = 500 + Math.random() * 500; // High
-        this.log('debug', `⏱️ Delay: ${Math.round(delayMs)}ms (mem: ${Math.round(memPct)}%, cpu: ${Math.round(cpuPct)}%`);
+
+        // Health-based backoff
+        if (this.state.health.status === 'unhealthy') {
+          delayMs = 3000 + Math.random() * 2000; // Severe: 3-5s
+        } else if (this.state.health.status === 'degraded') {
+          delayMs = 1000 + Math.random() * 1000; // Moderate: 1-2s
+        } else {
+          // Resource-based backoff
+          if (memPct > 85 || cpuPct > 85) {
+            delayMs = 500 + Math.random() * 500; // High load: 0.5-1s
+          } else if (memPct > 70 || cpuPct > 70) {
+            delayMs = 200 + Math.random() * 200; // Medium load: 0.2-0.4s
+          }
+        }
+
+        // Failure-based backoff
+        if (this.state.health.consecutiveFailures > 0) {
+          delayMs += this.state.health.consecutiveFailures * 500;
+        }
+
+        // Children count backoff (more children = more delay)
+        if (this.state.children.length > 2) {
+          delayMs += (this.state.children.length - 2) * 100;
+        }
+
+        // Cap delay
+        delayMs = Math.min(5000, delayMs);
+
+        this.log('debug', `⏱️ Delay: ${Math.round(delayMs)}ms (mem: ${Math.round(memPct)}%, cpu: ${Math.round(cpuPct)}%, health: ${this.state.health.status}, failures: ${this.state.health.consecutiveFailures}, children: ${this.state.children.length})`);
         await sleep(delayMs);
       } catch (error) {
         this.log('error', '💥 Iteration failed:', error);
@@ -647,12 +700,11 @@ export class EvoAgent {
     if (this.workerPool && this.iterationCount >= 10) {
       this.log('info', '🧪 Offloading analysis to WorkerPool');
       try {
+        const analyzerPath = path.resolve(__dirname, 'src', 'analyzer.js');
         analysis = await this.workerPool!.execute(
-          this.analyzeOffloaded.bind(this),
-          this.currentCode,
-          this.iterationCount,
-          this.state.level,
-          this.state.capabilities
+          analyzerPath,
+          'analyzeCode',
+          [{ code: this.currentCode, iteration: this.iterationCount, level: this.state.level, capabilities: this.state.capabilities }]
         );
         this.log('info', '✅ WorkerPool analysis completed');
       } catch (e) {
@@ -663,17 +715,19 @@ export class EvoAgent {
       analysis = await this.analyzeCurrentState();
     }
 
-    // 2.5 Self-Testing (Iteration 105) - run unit tests before applying changes
-    try {
-      const testResult = await this.testRunner.runAll();
-      if (!testResult.success) {
-        this.log('warn', '❌ Tests failed, skipping change application:', testResult.errors.slice(0, 3));
-        // Skip applying changes this iteration
-        return;
+    // 2.5 Self-Testing (Iteration 105+) - run unit tests before applying changes (every 10 iterations)
+    if (this.iterationCount % 10 === 0) {
+      try {
+        const testResult = await this.testRunner.runAll();
+        if (!testResult.success) {
+          this.log('warn', '❌ Tests failed, skipping change application:', testResult.errors.slice(0, 3));
+          // Skip applying changes this iteration
+          return;
+        }
+        this.log('debug', '✅ Tests passed:', testResult.passed, '/', testResult.total);
+      } catch (e) {
+        this.log('warn', '⚠️ Test runner error:', e);
       }
-      this.log('debug', '✅ Tests passed:', testResult.passed, '/', testResult.total);
-    } catch (e) {
-      this.log('warn', '⚠️ Test runner error:', e);
     }
 
     // 3. Planning
@@ -741,9 +795,12 @@ export class EvoAgent {
         this.gossip();
       }
 
-      // Replication
-      if (this.config.enableReplication && this.state.level >= 2 && this.state.children.length < this.config.maxChildren) {
-        if (Math.random() < 0.15) {
+      // Replication (only if healthy, low memory pressure, and low children count)
+      if (this.config.enableReplication && this.state.level >= 2 && this.state.children.length < this.config.maxChildren && this.state.health.status === 'healthy') {
+        const memUsage = getMemoryUsage();
+        const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB;
+        const memHeadroom = 1 - (memUsage / memLimit);
+        if (memHeadroom > 0.5 && Math.random() < 0.05) { // 5% chance, requires >50% memory headroom
           this.spawnChild();
         }
       }
@@ -767,17 +824,14 @@ export class EvoAgent {
     return hash.toString(36);
   }
 
-    // Offloaded analysis for WorkerPool (Iteration 114)
+    // Offloaded analysis for WorkerPool (Iteration 117+)
+  // This is now a pure function executed in worker thread
   private async analyzeOffloaded(code: string, iteration: number, level: number, capabilities: string[]): Promise<any> {
-    this.log('info', '🧠 analyzeOffloaded START (worker thread)');
-    try {
-      const result = await this.analyzeCurrentState();
-      this.log('info', '✅ analyzeOffloaded END, strengths:', result.strengths?.length || 0);
-      return result;
-    } catch (e) {
-      this.log('error', '❌ analyzeOffloaded ERROR:', e);
-      throw e;
-    }
+    // Dynamic import of analyzer module (runs in worker thread)
+    const { analyzeCode } = await import('./src/analyzer.js');
+    const result = await analyzeCode({ code, iteration, level, capabilities });
+    // No logging here (worker thread)
+    return result;
   }
 
     private readSelf(): Promise<void> {
@@ -811,16 +865,21 @@ export class EvoAgent {
     opportunities: string[];
     metrics: Partial<EvolutionMetrics>;
   }> {
-    const lines = this.currentCode.split('\n').length;
     const code = this.currentCode;
-    // Analysis result caching (Iteration 116)
-    const cacheKey = this.hashString(code + this.iterationCount + this.state.level + JSON.stringify(this.state.capabilities));
-    const cached = this.analysisCache.get(cacheKey);
+    // Cleanup old cache entries if needed
+    if (this.analysisCache.size > this.ANALYSIS_CACHE_MAX_SIZE) {
+      this.cleanupAnalysisCache();
+    }
+    // Analysis result caching (Iteration 116) - cache by code hash
+    const codeHash = this.hashString(code);
+    const cached = this.analysisCache.get(codeHash);
     const now = Date.now();
-    if (cached && (now - cached.timestamp) < 60000) {
-      this.log('debug', '📦 Analysis cache hit');
+    if (cached && (now - cached.timestamp) < this.ANALYSIS_CACHE_TTL_MS) {
+      this.log('debug', '📦 Analysis cache hit (age:', Math.round((now-cached.timestamp)/1000), 's)');
       return cached.result;
     }
+
+    const lines = code.split('\n').length;
 
         const features = {
       async: /async\s+/.test(code),
@@ -870,7 +929,7 @@ export class EvoAgent {
       .map(([k, _]) => this.formatFeatureName(k));
 
     const featureCount = Object.values(features).filter(v => v).length;
-    const newLevel = Math.min(100, featureCount + Math.floor(this.state.level * 0.5));
+    const newLevel = Math.min(200, featureCount + Math.floor(this.state.level * 0.5));
 
     const metrics: Partial<EvolutionMetrics> = {
       iteration: this.iterationCount + 1,
@@ -892,8 +951,34 @@ export class EvoAgent {
     };
 
     // Store in cache
-    this.analysisCache.set(cacheKey, { result: { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics }, timestamp: Date.now() });
-        return { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
+    this.analysisCache.set(codeHash, { result: { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics }, timestamp: Date.now() });
+    return { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
+  }
+
+  private cleanupAnalysisCache(): void {
+    const now = Date.now();
+    const expiredHashes: string[] = [];
+    for (const [hash, entry] of this.analysisCache.entries()) {
+      if (now - entry.timestamp > this.ANALYSIS_CACHE_TTL_MS) {
+        expiredHashes.push(hash);
+      }
+    }
+    for (const hash of expiredHashes) {
+      this.analysisCache.delete(hash);
+    }
+    if (expiredHashes.length > 0) {
+      this.log('debug', '🧹 Cleaned analysis cache:', expiredHashes.length, 'entries');
+    }
+    // If still too large, remove oldest entries
+    if (this.analysisCache.size > this.ANALYSIS_CACHE_MAX_SIZE) {
+      const sorted = Array.from(this.analysisCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = sorted.slice(0, this.analysisCache.size - this.ANALYSIS_CACHE_MAX_SIZE);
+      for (const [hash] of toRemove) {
+        this.analysisCache.delete(hash);
+      }
+      this.log('debug', '🧹 trimmed analysis cache to max size:', this.analysisCache.size);
+    }
   }
 
   private formatFeatureName(key: string): string {
@@ -1186,22 +1271,28 @@ export class EvoAgent {
     const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB;
     const memHeadroom = 1 - (memUsage / memLimit);
 
-    if (memHeadroom > 0.3 && this.state.children.length < this.config.maxChildren && Math.random() < 0.2) {
+    // Spawn only under healthy conditions and low memory pressure
+    if (this.state.health.status === 'healthy' && memHeadroom > 0.5 && this.state.children.length < this.config.maxChildren && Math.random() < 0.1) {
       this.spawnChild();
-    } else if (memHeadroom < 0.1 && this.state.children.length > 1) {
-      const nonEssential = this.state.children.slice(1);
-      for (const childId of nonEssential) {
-        this.log('info', '📉 Terminating child due to memory pressure:', childId);
+    }
+
+    // Aggressive cleanup when memory pressure is high
+    if (memHeadroom < 0.3 && this.state.children.length > 0) {
+      // Prioritize keeping oldest/most stable children (first few), terminate newer ones
+      const toTerminate = Math.max(1, Math.floor(this.state.children.length * 0.5)); // Terminate half if under pressure
+      const terminated = this.state.children.slice(-toTerminate); // remove newest
+      for (const childId of terminated) {
+        this.log('warn', '📉 Terminating child due to memory pressure:', childId);
         this.state.children = this.state.children.filter(id => id !== childId);
       }
     }
 
-    // Update dynamic limit
+    // Update dynamic limit based on average recent memory
     const recentMem = this.state.history.slice(-5).map(h => h.performance.memoryUsage);
     if (recentMem.length === 5) {
       const avg = recentMem.reduce((a, b) => a + b, 0) / 5;
-      if (avg < memLimit * 0.5) {
-        this.state.sandbox.resourceLimits.maxMemoryMB = Math.max(50, avg * 1.5);
+      if (avg < memLimit * 0.6) {
+        this.state.sandbox.resourceLimits.maxMemoryMB = Math.max(40, Math.min(200, avg * 1.5)); // cap at 200MB
       }
     }
   }
@@ -1222,6 +1313,21 @@ export class EvoAgent {
     this.saveMemory().catch(console.error);
     this.flushLogs();
     this.log('info', '🛑 Agent shutting down');
+    // Decrement global agent counter
+    if (EvoAgent.totalAgents > 0) {
+      EvoAgent.totalAgents--;
+    }
+    // Notify parent to remove this child
+    if (this.parent) {
+      this.parent.removeChild(this.id);
+    }
+  }
+
+  // Called by parent to remove child reference
+  public removeChild(childId: string): void {
+    this.state.children = this.state.children.filter(id => id !== childId);
+    this.saveMemory().catch(() => {});
+    this.log('debug', '🗑️ Removed child reference:', childId);
   }
 }
 

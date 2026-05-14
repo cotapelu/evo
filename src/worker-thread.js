@@ -1,19 +1,23 @@
-// worker-thread.js - Simple worker for WorkerPoolThreads (ESM compatible via CommonJS)
-// This worker receives tasks and executes them
+// worker-thread.js - Worker for true parallel task execution
+// Imports specified module and calls function with arguments
 
-const { parentPort, workerData } = require('worker_threads');
+import { parentPort, workerData } from 'worker_threads';
 
 // Signal ready
 parentPort?.postMessage({ type: 'ready', workerId: workerData.poolId });
 
 parentPort?.on('message', async (msg) => {
-  if (msg.type === 'execute') {
+  if (msg.type === 'task') {
     try {
-      // msg.fn is a function string? or a method name?
-      // For now, we expect fn to be a string that we can evaluate
-      // NOTE: eval is dangerous but acceptable in this sandboxed context
-      const fn = eval(`(${msg.fn})`);
-      const result = await fn(...(msg.args || []));
+      const { module: modulePath, fnName, args } = msg;
+      // Dynamic import of the module
+      const mod = await import(modulePath);
+      // Get function (support default or named)
+      const fn = mod[fnName] || mod.default;
+      if (typeof fn !== 'function') {
+        throw new Error(`Function '${fnName}' not found in module '${modulePath}'`);
+      }
+      const result = await fn(...(args || []));
       parentPort?.postMessage({
         type: 'result',
         taskId: msg.taskId,

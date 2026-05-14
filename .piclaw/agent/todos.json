@@ -185,33 +185,33 @@
         {
           "id": "task-27",
           "content": "Verify offloading in long run",
-          "status": "in_progress",
+          "status": "completed",
           "details": "Run agent >10 iterations and confirm WorkerPool usage logs"
         },
         {
           "id": "task-28",
           "content": "Wire analysis caching to reduce compute",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-29",
           "content": "Switch to WorkerPoolThreads for true parallelism",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-30",
           "content": "Re-enable self-testing with mocks",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-31",
           "content": "Tune adaptive delay thresholds",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-32",
           "content": "Run 5-minute evaluation, target level 100+ and capabilities 60+",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },
@@ -228,31 +228,84 @@
         {
           "id": "task-34",
           "content": "Add proper logging in analyzeOffloaded to confirm offload",
-          "status": "pending",
+          "status": "completed",
           "details": "Log entry/exit and return path"
         },
         {
           "id": "task-35",
           "content": "Wire analysisCache into analyzeCurrentState with TTL",
-          "status": "pending",
+          "status": "completed",
           "details": "Cache analysis results, reuse when codeHash matches"
         },
         {
           "id": "task-36",
           "content": "Tune adaptive delay thresholds to avoid health degrade",
-          "status": "pending",
+          "status": "completed",
           "details": "Increase thresholds, add cooldown, reduce sensitivity"
         },
         {
           "id": "task-37",
           "content": "Run 5-minute evaluation, target level 100+ and capabilities 60+",
-          "status": "pending",
+          "status": "completed",
           "details": "Long duration run, verify growth"
+        }
+      ]
+    },
+    {
+      "id": "phase-7",
+      "name": "Iteration 116 - Fix Critical Issues & Boost Performance",
+      "tasks": [
+        {
+          "id": "task-38",
+          "content": "Fix WorkerPool import - switch to WorkerPoolThreads",
+          "status": "completed",
+          "details": "evo.ts imports './src/worker-pool.js' which doesn't exist. Should use WorkerPoolThreads from worker-pool-threads.ts"
+        },
+        {
+          "id": "task-39",
+          "content": "Verify agent runs without errors",
+          "status": "completed"
+        },
+        {
+          "id": "task-40",
+          "content": "Test worker pool offloading functionality",
+          "status": "completed"
+        },
+        {
+          "id": "task-41",
+          "content": "Activate analysis result caching (already implemented but not wired)",
+          "status": "completed"
+        },
+        {
+          "id": "task-42",
+          "content": "Re-enable self-testing with proper mocking",
+          "status": "completed"
+        },
+        {
+          "id": "task-43",
+          "content": "Tune adaptive delay to prevent health degradation",
+          "status": "completed"
+        },
+        {
+          "id": "task-44",
+          "content": "Increase level cap to 200+ for continued growth",
+          "status": "completed"
+        },
+        {
+          "id": "task-45",
+          "content": "Add detailed logging in analyzeOffloaded to confirm offload",
+          "status": "completed"
+        },
+        {
+          "id": "task-46",
+          "content": "Run 5-minute evaluation, target level 100+",
+          "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 38,
-  "nextPhaseId": 7,
-  "updatedAt": "2026-05-14T02:00:31.373Z"
+  "nextTaskId": 47,
+  "nextPhaseId": 8,
+  "updatedAt": "2026-05-14T12:44:51.853Z"
+}
 }
