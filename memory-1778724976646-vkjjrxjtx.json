@@ -1,0 +1,63 @@
+{
+  "state": {
+    "level": 10,
+    "capabilities": [
+      "self-awareness",
+      "basic-evolution"
+    ],
+    "memory": [
+      [
+        "lastCodeHash",
+        "ze1wuz"
+      ]
+    ],
+    "history": [
+      {
+        "iteration": 1,
+        "level": 40,
+        "capabilities": [
+          "self-awareness",
+          "basic-evolution"
+        ],
+        "performance": {
+          "memoryUsage": 10,
+          "cpuTime": 6515,
+          "uptime": 78,
+          "successRate": 100
+        },
+        "codeQuality": {
+          "linesOfCode": 1240,
+          "complexity": 7
+        },
+        "changes": [
+          "Split large classes into separate modules",
+          "Create index.ts barrel exports",
+          "Add internal module boundaries"
+        ],
+        "bugsFixed": 0,
+        "regressions": 0,
+        "timestamp": "2026-05-14T02:16:41.288Z",
+        "health": "degraded"
+      }
+    ],
+    "goals": [],
+    "children": [],
+    "health": {
+      "status": "degraded",
+      "lastCheck": "2026-05-14T02:16:16.648Z",
+      "consecutiveFailures": 0,
+      "memoryPressure": 0.36
+    },
+    "stats": {
+      "totalIterations": 0,
+      "totalMessagesSent": 0,
+      "totalMessagesReceived": 0,
+      "totalChildrenSpawned": 0,
+      "totalGoalsCompleted": 0,
+      "startTime": "2026-05-14T02:16:16.647Z"
+    }
+  },
+  "lastSaved": "2026-05-14T02:16:41.288Z",
+  "agentId": "1778724976646-e8l1z7scc",
+  "version": "2.0"
+}

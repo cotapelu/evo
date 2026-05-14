@@ -12,7 +12,7 @@ export interface TransformationResult {
 export class ASTTransformer {
   // Aggressive thresholds (Iteration 112)
   private readonly COMPLEXITY_THRESHOLD = 3; // Lower from 5
-  private readonly METHOD_LENGTH_THRESHOLD = 30; // Lower from 40
+  private readonly METHOD_LENGTH_THRESHOLD = 15; // Aggressive: extract methods >15 lines
   private readonly MIN_LINE_DIFF = 20; // Lower from 20 (keep)
   private readonly AGGRESSIVE_ITERATIONS = 10; // After iteration 10
 
@@ -54,6 +54,15 @@ export class ASTTransformer {
       }
     }
 
+    // 4. Dead code removal
+    if (aggressive) {
+      const deadResult = this.transformDeadCode(newCode);
+      if (deadResult.success) {
+        newCode = deadResult.transformedCode;
+        changes.push(...deadResult.changes);
+      }
+    }
+
     return {
       success: changes.length > 0,
       originalCode: code,
@@ -69,15 +78,15 @@ export class ASTTransformer {
     let newCode = code;
     let extractions = 0;
 
-    // Find long private async methods
+    // Find long methods (any access modifier, async optional)
     for (let i = 0; i < lines.length && extractions < maxExtractions; i++) {
       const line = lines[i];
-      // Match:   private async methodName(...)
-      const match = line.match(/^\s*private\s+async\s+(\w+)\s*\(/);
+      // Match:   [public|protected|private] [async] methodName(...)
+      const match = line.match(/^\s*(public|protected|private)?\s*(async\s+)?(\w+)\s*\(/);
       if (match) {
-        const methodName = match[1];
+        const methodName = match[3];
         const startLine = i + 1;
-        // Find end of method (closing brace at same indent)
+        // Find end of method (brace matching)
         let braceCount = 0;
         let endLine = startLine;
         for (let j = startLine; j < lines.length; j++) {
@@ -91,13 +100,11 @@ export class ASTTransformer {
         }
         const length = endLine - startLine + 1;
         if (length > this.METHOD_LENGTH_THRESHOLD) {
-          // Extract
           const result = this.transformExtractMethod(code, `${methodName}_extracted_${Date.now()}`, startLine, endLine);
           if (result.success) {
             newCode = result.transformedCode;
             changes.push(`Extracted method ${methodName} (${length} lines)`);
             extractions++;
-            // Re-parse lines for next iteration
             lines.length = 0;
             lines.push(...newCode.split('\n'));
           }
@@ -150,6 +157,38 @@ export class ASTTransformer {
       newCode = newCode.replace(negRegex, 'return !!$1;');
       changes.push('Simplified boolean logic');
     }
+
+    return { success: changes.length > 0, originalCode: code, transformedCode: newCode, changes, errors: [] };
+  }
+
+  private transformDeadCode(code: string): TransformationResult {
+    const changes: string[] = [];
+    let newCode = code;
+
+    // Remove unreachable code after return/throw/break (simple line-based)
+    const lines = newCode.split('\n');
+    let baseIndent = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith('return') || trimmed.startsWith('throw') || trimmed.startsWith('break')) {
+        const indent = line.match(/^\s*/)?.[0]?.length || 0;
+        baseIndent = indent;
+        // Mark subsequent lines with deeper indent as unreachable
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextIndent = lines[j].match(/^\s*/)?.[0]?.length || 0;
+          if (nextIndent > baseIndent) {
+            if (!lines[j].trim().startsWith('//')) {
+              lines[j] = '';
+              changes.push(`Removed unreachable code (line ${j+1})`);
+            }
+          } else if (nextIndent <= baseIndent) {
+            break; // Same or outer block, stop
+          }
+        }
+      }
+    }
+    newCode = lines.filter(l => l.trim() !== '').join('\n');
 
     return { success: changes.length > 0, originalCode: code, transformedCode: newCode, changes, errors: [] };
   }

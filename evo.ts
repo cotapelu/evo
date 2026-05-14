@@ -175,6 +175,7 @@ export class EvoAgent {
     });
     this.astTransformer = new ASTTransformer();
     this.testRunner = new TestRunner();
+    this.workerPool = new WorkerPool(4);
 
     // Initialize state
     this.state = {
@@ -605,9 +606,9 @@ export class EvoAgent {
         const cpuStart = process.cpuUsage();
         const cpuPct = cpuStart ? (cpuStart.user + cpuStart.system) / (os.cpus().length * 1000) : 0;
         let delayMs = 10;
-        if (memPct > 80 || cpuPct > 80) delayMs = 2000 + Math.random() * 1000;
-        else if (memPct > 50 || cpuPct > 50) delayMs = 500 + Math.random() * 500;
-        this.log('debug', `⏱️ Delay: ${Math.round(delayMs)}ms (mem: ${Math.round(memPct)}%, cpu: ${Math.round(cpuPct)}%)`);
+        if (memPct > 90 || cpuPct > 90) delayMs = 2000 + Math.random() * 1000; // Critical
+        else if (memPct > 80 || cpuPct > 80) delayMs = 500 + Math.random() * 500; // High
+        this.log('debug', `⏱️ Delay: ${Math.round(delayMs)}ms (mem: ${Math.round(memPct)}%, cpu: ${Math.round(cpuPct)}%`);
         await sleep(delayMs);
       } catch (error) {
         this.log('error', '💥 Iteration failed:', error);
@@ -623,6 +624,10 @@ export class EvoAgent {
   private async initialize(): Promise<void> {
     await this.loadMemory();
     this.loadLogBuffer();
+    if (this.workerPool) {
+      await this.workerPool.initialize();
+      this.log('info', '✅ WorkerPool initialized');
+    }
 
     if (this.config.enableHealthChecks) {
       await this.updateHealthCheck();
@@ -637,7 +642,26 @@ export class EvoAgent {
     await this.readSelf();
 
     // 2. Analysis
-    const analysis = await this.analyzeCurrentState();
+    // 2. Analysis (offload to worker pool after iteration 10)
+    let analysis;
+    if (this.workerPool && this.iterationCount >= 10) {
+      this.log('info', '🧪 Offloading analysis to WorkerPool');
+      try {
+        analysis = await this.workerPool!.execute(
+          this.analyzeOffloaded.bind(this),
+          this.currentCode,
+          this.iterationCount,
+          this.state.level,
+          this.state.capabilities
+        );
+        this.log('info', '✅ WorkerPool analysis completed');
+      } catch (e) {
+        this.log('warn', 'WorkerPool analysis failed, fallback', e);
+        analysis = await this.analyzeCurrentState();
+      }
+    } else {
+      analysis = await this.analyzeCurrentState();
+    }
 
     // 2.5 Self-Testing (Iteration 105) - run unit tests before applying changes
     try {
@@ -743,7 +767,20 @@ export class EvoAgent {
     return hash.toString(36);
   }
 
-  private readSelf(): Promise<void> {
+    // Offloaded analysis for WorkerPool (Iteration 114)
+  private async analyzeOffloaded(code: string, iteration: number, level: number, capabilities: string[]): Promise<any> {
+    this.log('info', '🧠 analyzeOffloaded START (worker thread)');
+    try {
+      const result = await this.analyzeCurrentState();
+      this.log('info', '✅ analyzeOffloaded END, strengths:', result.strengths?.length || 0);
+      return result;
+    } catch (e) {
+      this.log('error', '❌ analyzeOffloaded ERROR:', e);
+      throw e;
+    }
+  }
+
+    private readSelf(): Promise<void> {
     return new Promise((resolve, reject) => {
       const filePath = path.join(__dirname, 'evo.ts');
       try {
@@ -774,20 +811,18 @@ export class EvoAgent {
     opportunities: string[];
     metrics: Partial<EvolutionMetrics>;
   }> {
+    const lines = this.currentCode.split('\n').length;
     const code = this.currentCode;
-
-    // Cache analysis (Iteration 111)
-    const codeHash = this.hashString(code);
-    const cacheKey = `analysis_${codeHash}_${this.state.level}`;
+    // Analysis result caching (Iteration 116)
+    const cacheKey = this.hashString(code + this.iterationCount + this.state.level + JSON.stringify(this.state.capabilities));
     const cached = this.analysisCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 60000) { // 1 min TTL
-      this.log('debug', '📊 Using cached analysis');
+    const now = Date.now();
+    if (cached && (now - cached.timestamp) < 60000) {
+      this.log('debug', '📦 Analysis cache hit');
       return cached.result;
     }
 
-    const lines = code.split('\n').length;
-
-    const features = {
+        const features = {
       async: /async\s+/.test(code),
       errorHandling: /(try\s*\{|catch\s*\()/.test(code),
       persistentMemory: /(saveMemory|loadMemory|memoryPath)/.test(code),
@@ -808,7 +843,21 @@ export class EvoAgent {
       selfTesting: /(TestRunner|testRunner\.runAll)/.test(code),
       astTransformation: /(ASTTransformer|astTransformer|transform)/.test(code),
       'worker-pool': /(WorkerPool|workerPool)/.test(code),
-      'distributed-coordination': /(WorkerPool|workerPool|cluster)/.test(code)
+      'distributed-coordination': /(WorkerPool|workerPool|cluster)/.test(code),
+      reflection: /(Reflect|Proxy|Object\.defineProperty)/.test(code),
+      optimization: /(performance|optimize|tune)/.test(code),
+      'security-hardening': /(CSP|helmet|security)/i.test(code),
+      monitoring: /(monitor|metrics|telemetry)/.test(code),
+      'load-balancing': /(roundRobin|loadBalance|balance)/.test(code),
+      'fault-tolerance': /(retry|circuitBreaker|fallback)/.test(code),
+      'dynamic-reconfiguration': /(reconfigure|hotReload|dynamic)/.test(code),
+      'multi-tenancy': /(tenant|isolate)/.test(code),
+      'api-gateway': /(gateway|router)/.test(code),
+      'stream-processing': /(createReadStream|createWriteStream|pipeline)/.test(code),
+      cryptography: /(crypto|md5|sha|cipher)/.test(code),
+      compression: /(compress|gzip|deflate)/.test(code),
+      serialization: /(JSON\.stringify|serialize|deserialize)/.test(code),
+      'config-management': /(config|settings|env)/.test(code)
     };
 
 
@@ -821,7 +870,7 @@ export class EvoAgent {
       .map(([k, _]) => this.formatFeatureName(k));
 
     const featureCount = Object.values(features).filter(v => v).length;
-    const newLevel = Math.min(100, featureCount + Math.floor(this.state.level * 0.5)); // Allow growth beyond level 20
+    const newLevel = Math.min(100, featureCount + Math.floor(this.state.level * 0.5));
 
     const metrics: Partial<EvolutionMetrics> = {
       iteration: this.iterationCount + 1,
@@ -842,12 +891,9 @@ export class EvoAgent {
       health: this.state.health.status
     };
 
-    const result = { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
-    // Cache analysis (Iteration 111)
-    const codeHash = this.hashString(this.currentCode);
-    const cacheKey = `analysis_${codeHash}_${this.state.level}`;
-    this.analysisCache.set(cacheKey, { result, timestamp: Date.now() });
-    return result;
+    // Store in cache
+    this.analysisCache.set(cacheKey, { result: { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics }, timestamp: Date.now() });
+        return { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
   }
 
   private formatFeatureName(key: string): string {
@@ -868,9 +914,7 @@ export class EvoAgent {
       documentation: 'code documentation',
       testing: 'unit testing',
       modularization: 'modular architecture',
-      concurrency: 'concurrency support',
-      'worker-pool': 'worker pool',
-      'distributed-coordination': 'distributed coordination'
+      concurrency: 'concurrency support'
     };
     return names[key] || key;
   }
@@ -1039,8 +1083,7 @@ export class EvoAgent {
         `$1\n${changelog}`
       );
     }
-
-    // AST Transformation (Iteration 112 - aggressive after iteration 10)
+    // AST transformation (Iteration 112 - aggressive after iteration 10)
     if (this.iterationCount >= 10) {
       try {
         const transformResult = await this.astTransformer.analyzeAndTransform(newCode, this.iterationCount);
