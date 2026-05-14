@@ -5,7 +5,8 @@
   "type": "module",
   "main": "evo.ts",
   "scripts": {
-    "start": "node evo.ts",
+    "start": "ts-node --esm evo.ts",
+    "dev": "ts-node --esm evo.ts",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",

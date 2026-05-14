@@ -82,22 +82,26 @@ import * as path from 'path';
 import * as os from 'os';
 import { fileURLToPath } from 'url';
 import { Worker as WorkerThread } from 'worker_threads';
-import { WorkerPoolThreads } from './src/worker-pool-threads.js';
+import { WorkerPoolThreads } from './src/worker-pool-threads.ts';
 import * as http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ==================== MODULE IMPORTS ====================
-import { FileSystem } from './src/filesystem.js';
-import { MessageQueue, Message } from './src/messaging.js';
-import * as GoalsModule from './src/goals.js';
-export type { Goal } from './src/goals.js';
-import { HealthMonitor } from './src/health.js';
-import { ASTTransformer } from './src/ast-transformer.js';
-import { TestRunner } from './src/test-runner.js';
-import { generateId, sleep, nowISO, safeStringify, clamp, getMemoryUsage, getCpuTime, getUptime } from './src/utils.js';
-import type { EvolutionPlan, AgentConfig, AgentState, EvolutionMetrics } from './src/types.js';
+import { FileSystem } from './src/filesystem.ts';
+import { MessageQueue } from './src/messaging.ts';
+import type { Message } from './src/messaging.ts';
+import * as GoalsModule from './src/goals.ts';
+export type { Goal } from './src/goals.ts';
+import { HealthMonitor } from './src/health.ts';
+import { ASTTransformer } from './src/ast-transformer.ts';
+import { TestRunner } from './src/test-runner.ts';
+import { generateId, sleep, nowISO, safeStringify, clamp, getMemoryUsage, getCpuTime, getUptime } from './src/utils.ts';
+import type { EvolutionPlan, AgentConfig, AgentState, EvolutionMetrics } from './src/types.ts';
+
+// Debug: mark imports done
+(() => { try { require('fs').appendFileSync('/tmp/evo-early.log', 'IMPORTS DONE\n'); } catch {} })();
 
 // ==================== AGENT CLASS ====================
 
@@ -131,6 +135,7 @@ export class EvoAgent {
   private lastCacheCleanup = 0;
 
   constructor(config: Partial<AgentConfig> = {}, parent?: EvoAgent) {
+    try { require('fs').appendFileSync('/tmp/evo-constructor.log', 'CONSTRUCTOR CALLED\n'); } catch {}
     // Check global agent limit
     if (EvoAgent.totalAgents >= EvoAgent.MAX_TOTAL_AGENTS) {
       throw new Error(`Max total agents (${EvoAgent.MAX_TOTAL_AGENTS}) reached. Cannot create new agent.`);
@@ -190,9 +195,8 @@ export class EvoAgent {
     });
     this.astTransformer = new ASTTransformer();
     this.testRunner = new TestRunner();
-    // Calculate worker pool size based on memory limit (1 worker per ~25MB, capped at 8)
-    const workerCount = Math.max(1, Math.min(8, Math.floor((this.config.resourceLimits?.maxMemoryMB || 100) / 25)));
-    this.workerPool = new WorkerPoolThreads(workerCount);
+    // TODO: Enable worker pool after fixing thread loading
+    this.workerPool = undefined; // new WorkerPoolThreads(workerCount);
 
     // Initialize state
     this.state = {
@@ -571,10 +575,19 @@ export class EvoAgent {
           maxOpenFiles: 50
         }
       };
-      // Reduce worker pool size for children based on memory limit
-      const childWorkerCount = Math.max(1, Math.min(2, Math.floor((childConfig.resourceLimits?.maxMemoryMB || 50) / 30)));
+      // Worker pool size will be auto-calculated in child constructor based on its memory limit
 
-      const child = new EvoAgent(childConfig, this);
+      let child: EvoAgent | null = null;
+      try {
+        child = new EvoAgent(childConfig, this);
+      } catch (error) {
+        this.log('error', 'Failed to create child agent (limit reached?):', error);
+        // Ensure global counter stays consistent if constructor incremented before throwing
+        if (EvoAgent.totalAgents > 0) {
+          EvoAgent.totalAgents--;
+        }
+        return null;
+      }
       this.state.children.push(child.id);
       this.state.stats.totalChildrenSpawned++;
 
@@ -603,7 +616,9 @@ export class EvoAgent {
   // ==================== CORE EVOLUTION LOOP ====================
 
   async run(): Promise<void> {
+    try { require('fs').appendFileSync('/tmp/evo-run.log', 'RUN START\n'); } catch {}
     this.isRunning = true;
+    console.log('🚀 RUN STARTED'); // Debug
     this.log('info', '🚀 Starting Self-Evolution Loop...');
     this.log('info', 'Agent ID:', this.id);
     this.log('info', 'Parent:', this.parent?.id || 'none');
@@ -675,6 +690,7 @@ export class EvoAgent {
   }
 
   private async initialize(): Promise<void> {
+    console.log('INIT START'); // Debug
     await this.loadMemory();
     this.loadLogBuffer();
     if (this.workerPool) {
@@ -685,9 +701,11 @@ export class EvoAgent {
     if (this.config.enableHealthChecks) {
       await this.updateHealthCheck();
     }
+    console.log('INIT DONE'); // Debug
   }
 
   private async executeIteration(): Promise<void> {
+    console.log('EXECUTE ITERATION', this.iterationCount); // Debug
     const startTime = Date.now();
     this.log('debug', `─── Iteration ${this.iterationCount + 1} ───`);
 
@@ -700,7 +718,7 @@ export class EvoAgent {
     if (this.workerPool && this.iterationCount >= 10) {
       this.log('info', '🧪 Offloading analysis to WorkerPool');
       try {
-        const analyzerPath = path.resolve(__dirname, 'src', 'analyzer.js');
+        const analyzerPath = path.resolve(__dirname, 'src', 'analyzer.ts');
         analysis = await this.workerPool!.execute(
           analyzerPath,
           'analyzeCode',
@@ -828,7 +846,7 @@ export class EvoAgent {
   // This is now a pure function executed in worker thread
   private async analyzeOffloaded(code: string, iteration: number, level: number, capabilities: string[]): Promise<any> {
     // Dynamic import of analyzer module (runs in worker thread)
-    const { analyzeCode } = await import('./src/analyzer.js');
+    const { analyzeCode } = await import('./src/analyzer.ts');
     const result = await analyzeCode({ code, iteration, level, capabilities });
     // No logging here (worker thread)
     return result;
@@ -1271,11 +1289,6 @@ export class EvoAgent {
     const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB;
     const memHeadroom = 1 - (memUsage / memLimit);
 
-    // Spawn only under healthy conditions and low memory pressure
-    if (this.state.health.status === 'healthy' && memHeadroom > 0.5 && this.state.children.length < this.config.maxChildren && Math.random() < 0.1) {
-      this.spawnChild();
-    }
-
     // Aggressive cleanup when memory pressure is high
     if (memHeadroom < 0.3 && this.state.children.length > 0) {
       // Prioritize keeping oldest/most stable children (first few), terminate newer ones
@@ -1334,12 +1347,22 @@ export class EvoAgent {
 // ==================== ENTRY POINT ====================
 
 if (import.meta.main) {
-  const agent = new EvoAgent({ evolutionStrategy: 'balanced' });
+  try { require('fs').appendFileSync('/tmp/evo-entry.log', 'ENTRY MAIN\n'); } catch {}
+  let agent;
+  try {
+    agent = new EvoAgent({ evolutionStrategy: 'balanced' });
+    try { require('fs').appendFileSync('/tmp/evo-created.log', 'CREATED\n'); } catch {}
+
+
+  } catch (e) {
+    process.stderr.write('❌ Agent creation failed: ' + e + '\n');
+    process.exit(1);
+  }
   // Handle shutdown signals
   process.on('SIGINT', () => agent.shutdown());
   process.on('SIGTERM', () => agent.shutdown());
   agent.run().catch(err => {
-    console.error('Agent failed:', err);
+    process.stderr.write('Agent failed: ' + err + '\n');
     process.exit(1);
   });
 }

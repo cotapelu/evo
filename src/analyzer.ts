@@ -1,6 +1,6 @@
-// analyzer.js - Standalone code analysis for WorkerPool offloading
+// analyzer.ts - Standalone code analysis for WorkerPool offloading
 // Extracted from EvoAgent.analyzeCurrentState to run in worker threads
-// Plain JavaScript (no types) for worker compatibility
+// @ts-nocheck - Skip type checking for worker compatibility
 
 // Helper: hashString (same as agent)
 function hashString(str) {
