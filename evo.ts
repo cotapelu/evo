@@ -1,77 +1,9 @@
-// @ts-nocheck
-// evo.ts - Self-Evolving Agent v2.1 (Iteration 105 - Full Module Integration)
+// evo.ts - Self-Evolving Agent v2.0
 // Mục tiêu: Tự tiến hóa thành Agent OS hoàn chỉnh qua vòng lặp Read → Run → Evolve
 // Iteration: 1 - Complete refactor, bug fixes, architecture improvements
 // Last updated: 2026-05-13T00:00:00.000Z
 
 // Features: Core kernel, Memory management, File system with sandbox, Process manager, IPC, Security, Health monitoring
-// Iteration 56: 3 changes (Refactor for modularity) [high]
-// Iteration 55: 3 changes (Refactor for modularity) [high]
-// Iteration 54: 3 changes (Refactor for modularity) [high]
-// Iteration 53: 3 changes (Refactor for modularity) [high]
-// Iteration 52: 3 changes (Refactor for modularity) [high]
-// Iteration 51: 3 changes (Refactor for modularity) [high]
-// Iteration 50: 3 changes (Refactor for modularity) [high]
-// Iteration 49: 3 changes (Refactor for modularity) [high]
-// Iteration 48: 3 changes (Refactor for modularity) [high]
-// Iteration 47: 3 changes (Refactor for modularity) [high]
-// Iteration 46: 3 changes (Refactor for modularity) [high]
-// Iteration 45: 3 changes (Refactor for modularity) [high]
-// Iteration 44: 3 changes (Refactor for modularity) [high]
-// Iteration 43: 3 changes (Refactor for modularity) [high]
-// Iteration 42: 3 changes (Refactor for modularity) [high]
-// Iteration 41: 3 changes (Refactor for modularity) [high]
-// Iteration 40: 3 changes (Refactor for modularity) [high]
-// Iteration 39: 3 changes (Refactor for modularity) [high]
-// Iteration 38: 3 changes (Refactor for modularity) [high]
-// Iteration 37: 3 changes (Refactor for modularity) [high]
-// Iteration 36: 3 changes (Refactor for modularity) [high]
-// Iteration 35: 3 changes (Refactor for modularity) [high]
-// Iteration 34: 3 changes (Refactor for modularity) [high]
-// Iteration 33: 3 changes (Refactor for modularity) [high]
-// Iteration 32: 3 changes (Refactor for modularity) [high]
-// Iteration 31: 3 changes (Refactor for modularity) [high]
-// Iteration 30: 3 changes (Refactor for modularity) [high]
-// Iteration 29: 3 changes (Refactor for modularity) [high]
-// Iteration 28: 3 changes (Refactor for modularity) [high]
-// Iteration 27: 3 changes (Refactor for modularity) [high]
-// Iteration 26: 3 changes (Refactor for modularity) [high]
-// Iteration 25: 3 changes (Refactor for modularity) [high]
-// Iteration 24: 3 changes (Refactor for modularity) [high]
-// Iteration 23: 3 changes (Refactor for modularity) [high]
-// Iteration 22: 3 changes (Refactor for modularity) [high]
-// Iteration 21: 3 changes (Refactor for modularity) [high]
-// Iteration 20: 3 changes (Refactor for modularity) [high]
-// Iteration 19: 3 changes (Refactor for modularity) [high]
-// Iteration 18: 3 changes (Refactor for modularity) [high]
-// Iteration 17: 3 changes (Refactor for modularity) [high]
-// Iteration 16: 3 changes (Refactor for modularity) [high]
-// Iteration 15: 3 changes (Refactor for modularity) [high]
-// Iteration 14: 3 changes (Refactor for modularity) [high]
-// Iteration 13: 3 changes (Refactor for modularity) [high]
-// Iteration 12: 3 changes (Refactor for modularity) [high]
-// Iteration 11: 3 changes (Refactor for modularity) [high]
-// Iteration 10: 3 changes (Refactor for modularity) [high]
-// Iteration 9: 3 changes (Refactor for modularity) [high]
-// Iteration 8: 3 changes (Refactor for modularity) [high]
-// Iteration 7: 3 changes (Refactor for modularity) [high]
-// Iteration 6: 3 changes (Refactor for modularity) [high]
-// Iteration 5: 3 changes (Refactor for modularity) [high]
-// Iteration 4: 3 changes (Refactor for modularity) [high]
-// Iteration 3: 3 changes (Refactor for modularity) [high]
-// Iteration 2: 3 changes (Refactor for modularity) [high]
-// Iteration 1: 3 changes (Refactor for modularity) [high]
-// Iteration 8: 3 changes (Refactor for modularity) [critical]
-// Iteration 7: 3 changes (Refactor for modularity) [critical]
-// Iteration 6: 3 changes (Refactor for modularity) [critical]
-// Iteration 5: 3 changes (Refactor for modularity) [critical]
-// Iteration 4: 3 changes (Refactor for modularity) [critical]
-// Iteration 3: 3 changes (Refactor for modularity) [critical]
-// Iteration 2: 3 changes (Refactor for modularity) [critical]
-// Iteration 1: 3 changes (Refactor for modularity) [critical]
-// Iteration 5: 0 changes (Refactor for modularity) [critical]
-// Iteration 4: 0 changes (Refactor for modularity) [critical]
-// Iteration 3: 0 changes (Refactor for modularity) [critical]
 // Iteration 2: 0 changes (Refactor for modularity) [critical]
 // Iteration 1: 0 changes (Refactor for modularity) [critical]
 
@@ -79,29 +11,352 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { fileURLToPath } from 'url';
 import { Worker as WorkerThread } from 'worker_threads';
-import { WorkerPoolThreads } from './src/worker-pool-threads.ts';
 import * as http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ==================== MODULE IMPORTS ====================
-import { FileSystem } from './src/filesystem.ts';
-import { MessageQueue } from './src/messaging.ts';
-import type { Message } from './src/messaging.ts';
-import * as GoalsModule from './src/goals.ts';
-export type { Goal } from './src/goals.ts';
-import { HealthMonitor } from './src/health.ts';
-import { ASTTransformer } from './src/ast-transformer.ts';
-import { TestRunner } from './src/test-runner.ts';
-import { generateId, sleep, nowISO, safeStringify, clamp, getMemoryUsage, getCpuTime, getUptime } from './src/utils.ts';
-import type { EvolutionPlan, AgentConfig, AgentState, EvolutionMetrics } from './src/types.ts';
+// ==================== TYPES ====================
 
-// Debug: mark imports done
-(() => { try { require('fs').appendFileSync('/tmp/evo-early.log', 'IMPORTS DONE\n'); } catch {} })();
+export interface Message {
+  id: string;
+  from: string;
+  to: string;
+  content: any;
+  timestamp: string;
+  type: 'request' | 'response' | 'broadcast' | 'gossip' | 'ping' | 'pong' | 'error' | 'heartbeat';
+  priority?: number;
+  ttl?: number;
+}
+
+export interface EvolutionMetrics {
+  iteration: number;
+  level: number;
+  capabilities: string[];
+  performance: {
+    memoryUsage: number;
+    cpuTime: number;
+    responseTime?: number;
+    successRate?: number;
+    uptime: number;
+  };
+  codeQuality: {
+    linesOfCode: number;
+    complexity?: number;
+    testCoverage?: number;
+    lintScore?: number;
+  };
+  changes: string[];
+  bugsFixed: number;
+  regressions: number;
+  timestamp: string;
+  health: 'healthy' | 'degraded' | 'unhealthy';
+}
+
+export interface AgentConfig {
+  maxIterations?: number;
+  backupBeforeEvolve: boolean;
+  logLevel: 'trace' | 'debug' | 'info' | 'warn' | 'error';
+  evolutionStrategy: 'conservative' | 'aggressive' | 'balanced' | 'experimental';
+  enablePersistence: boolean;
+  enableReplication: boolean;
+  enablePlugins: boolean;
+  enableOrchestration: boolean;
+  enableSecurity: boolean;
+  enableHealthChecks: boolean;
+  maxChildren: number;
+  memoryPath?: string;
+  logPath?: string;
+  apiRateLimit?: number;
+  resourceLimits?: {
+    maxMemoryMB?: number;
+    maxCpuMsPerIter?: number;
+    maxOpenFiles?: number;
+  };
+  security?: {
+    requireAuth?: boolean;
+    allowedPaths?: string[];
+    blockedOperations?: string[];
+    sandboxMode?: 'strict' | 'moderate' | 'disabled';
+  };
+}
+
+export interface Goal {
+  id: string;
+  description: string;
+  priority: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
+  steps: string[];
+  currentStep: number;
+  createdAt: string;
+  completedAt?: string;
+  dependencies?: string[];
+}
+
+export interface AgentState {
+  level: number;
+  capabilities: string[];
+  memory: Map<string, any>;
+  history: EvolutionMetrics[];
+  config: AgentConfig;
+  goals: Goal[];
+  children: string[];
+  messages: Message[];
+  health: {
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    lastCheck: string;
+    consecutiveFailures: number;
+    memoryPressure: number;
+  };
+  stats: {
+    totalIterations: number;
+    totalMessagesSent: number;
+    totalMessagesReceived: number;
+    totalChildrenSpawned: number;
+    totalGoalsCompleted: number;
+    startTime: string;
+  };
+  sandbox: {
+    allowedPaths: string[];
+    blockedOperations: string[];
+    resourceLimits: {
+      maxMemoryMB: number;
+      maxCpuMsPerIter: number;
+      maxOpenFiles: number;
+    };
+  };
+}
+
+interface EvolutionPlan {
+  targetLevel: number;
+  opportunity: string;
+  priority: number;
+  totalOpportunities: number;
+  estimatedComplexity: number;
+  requiresNewDependencies: boolean;
+  changes: string[];
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  rollbackPlan?: string[];
+}
+
+// ==================== UTILS ====================
+
+function getMemoryUsage(): number {
+  if (typeof process !== 'undefined' && process.memoryUsage) {
+    return Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  }
+  return 0;
+}
+
+function getCpuTime(): number {
+  if (typeof process !== 'undefined' && process.cpuUsage) {
+    return Math.round(process.cpuUsage().user / 1000);
+  }
+  return 0;
+}
+
+function getUptime(): number {
+  if (typeof process !== 'undefined' && process.uptime) {
+    return Math.round(process.uptime());
+  }
+  return 0;
+}
+
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function nowISO(): string {
+  return new Date().toISOString();
+}
+
+function safeStringify(obj: any): string {
+  try {
+    const seen = new WeakSet();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return '[Circular]';
+        seen.add(value);
+      }
+      return value;
+    }, 2);
+  } catch (e) {
+    return `{"error": "Failed to stringify: ${e}"}`;
+  }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function isWithinSandbox(filePath: string, allowedPaths: string[]): boolean {
+  try {
+    const resolved = path.resolve(filePath);
+    return allowedPaths.some(allowed => resolved.startsWith(path.resolve(allowed)));
+  } catch {
+    return false;
+  }
+}
+
+function validatePath(filePath: string, allowedPaths: string[], blockedOps: string[]): { valid: boolean; reason?: string } {
+  if (!isWithinSandbox(filePath, allowedPaths)) {
+    return { valid: false, reason: 'Access denied: path outside allowed directories' };
+  }
+  for (const blocked of blockedOps) {
+    if (filePath.includes(blocked)) {
+      return { valid: false, reason: `Blocked operation: ${blocked}` };
+    }
+  }
+  return { valid: true };
+}
+
+// ==================== FILE SYSTEM MODULE ====================
+
+class FileSystem {
+  private basePath: string;
+  private allowedPaths: string[];
+  private blockedOps: string[];
+
+  constructor(basePath?: string, allowedPaths?: string[], blockedOps?: string[]) {
+    this.basePath = basePath || __dirname;
+    this.allowedPaths = allowedPaths || [this.basePath];
+    this.blockedOps = blockedOps || ['/etc/', '/sys/', '/proc/', 'C:\\Windows\\', 'C:\\Program Files'];
+  }
+
+  private validate(filePath: string): { valid: boolean; reason?: string } {
+    const fullPath = path.resolve(this.basePath, filePath);
+    return validatePath(fullPath, this.allowedPaths, this.blockedOps);
+  }
+
+  readFile(filePath: string, encoding: string = 'utf-8'): string {
+    const validation = this.validate(filePath);
+    if (!validation.valid) {
+      throw new Error(`FileSystem.readFile denied: ${validation.reason}`);
+    }
+    const fullPath = path.resolve(this.basePath, filePath);
+    return fs.readFileSync(fullPath, { encoding });
+  }
+
+  writeFile(filePath: string, content: string): void {
+    const validation = this.validate(filePath);
+    if (!validation.valid) {
+      throw new Error(`FileSystem.writeFile denied: ${validation.reason}`);
+    }
+    const fullPath = path.resolve(this.basePath, filePath);
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(fullPath, content, 'utf-8');
+  }
+
+  exists(filePath: string): boolean {
+    try {
+      const validation = this.validate(filePath);
+      if (!validation.valid) return false;
+      const fullPath = path.resolve(this.basePath, filePath);
+      return fs.existsSync(fullPath);
+    } catch {
+      return false;
+    }
+  }
+
+  listFiles(dirPath: string): string[] {
+    const validation = this.validate(dirPath);
+    if (!validation.valid) {
+      throw new Error(`FileSystem.listFiles denied: ${validation.reason}`);
+    }
+    const fullPath = path.resolve(this.basePath, dirPath);
+    if (!fs.existsSync(fullPath)) return [];
+    return fs.readdirSync(fullPath);
+  }
+
+  appendFile(filePath: string, content: string): void {
+    const validation = this.validate(filePath);
+    if (!validation.valid) {
+      throw new Error(`FileSystem.appendFile denied: ${validation.reason}`);
+    }
+    const fullPath = path.resolve(this.basePath, filePath);
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.appendFileSync(fullPath, content, 'utf-8');
+  }
+
+  deleteFile(filePath: string): void {
+    const validation = this.validate(filePath);
+    if (!validation.valid) {
+      throw new Error(`FileSystem.deleteFile denied: ${validation.reason}`);
+    }
+    const fullPath = path.resolve(this.basePath, filePath);
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+    }
+  }
+
+  mkdir(dirPath: string): void {
+    const validation = this.validate(dirPath);
+    if (!validation.valid) {
+      throw new Error(`FileSystem.mkdir denied: ${validation.reason}`);
+    }
+    const fullPath = path.resolve(this.basePath, dirPath);
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
+    }
+  }
+
+  getStats(filePath: string): { size: number; mtime: string; isFile: boolean; isDirectory: boolean } | null {
+    try {
+      const validation = this.validate(filePath);
+      if (!validation.valid) return null;
+      const fullPath = path.resolve(this.basePath, filePath);
+      const stat = fs.statSync(fullPath);
+      return {
+        size: stat.size,
+        mtime: stat.mtime.toISOString(),
+        isFile: stat.isFile(),
+        isDirectory: stat.isDirectory()
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  readdirStats(dirPath: string): Array<{ name: string; stats: { size: number; mtime: string; isFile: boolean } }> {
+    try {
+      const validation = this.validate(dirPath);
+      if (!validation.valid) return [];
+      const fullPath = path.resolve(this.basePath, dirPath);
+      if (!fs.existsSync(fullPath)) return [];
+      const entries = fs.readdirSync(fullPath, { withFileTypes: true });
+      return entries.map(entry => {
+        const full = path.join(fullPath, entry.name);
+        try {
+          const stat = fs.statSync(full);
+          return {
+            name: entry.name,
+            stats: {
+              size: stat.size,
+              mtime: stat.mtime.toISOString(),
+              isFile: entry.isFile()
+            }
+          };
+        } catch {
+          return { name: entry.name, stats: { size: 0, mtime: '', isFile: false } };
+        }
+      });
+    } catch {
+      return [];
+    }
+  }
+}
 
 // ==================== AGENT CLASS ====================
 
@@ -115,32 +370,10 @@ export class EvoAgent {
   private isRunning: boolean = false;
   private parent?: EvoAgent;
   private logBuffer: string[] = [];
-  // Static counter for all agent instances to limit total agents
-  private static totalAgents = 0;
-  private static readonly MAX_TOTAL_AGENTS = 20; // Hard limit across all agents
   private healthCheckTimer?: NodeJS.Timeout;
   private backupTimer?: NodeJS.Timeout;
-  private goalManager!: GoalsModule.GoalManager;
-  private messageQueue!: MessageQueue;
-  private healthMonitor!: HealthMonitor;
-  private astTransformer!: ASTTransformer;
-  private testRunner!: TestRunner;
-  private workerPool?: WorkerPoolThreads;
-  private analysisCache = new Map<string, { result: any; timestamp: number }>();
-  private readonly ANALYSIS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-  private readonly ANALYSIS_CACHE_MAX_SIZE = 50; // Max entries
-  private lastCacheCleanup = 0;
-  private readonly ANALYSIS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-  private readonly ANALYSIS_CACHE_MAX_SIZE = 50; // Max entries
-  private lastCacheCleanup = 0;
 
   constructor(config: Partial<AgentConfig> = {}, parent?: EvoAgent) {
-    try { require('fs').appendFileSync('/tmp/evo-constructor.log', 'CONSTRUCTOR CALLED\n'); } catch {}
-    // Check global agent limit
-    if (EvoAgent.totalAgents >= EvoAgent.MAX_TOTAL_AGENTS) {
-      throw new Error(`Max total agents (${EvoAgent.MAX_TOTAL_AGENTS}) reached. Cannot create new agent.`);
-    }
-    EvoAgent.totalAgents++;
     this.id = generateId();
     this.parent = parent;
 
@@ -184,19 +417,7 @@ export class EvoAgent {
     // Initialize sandbox
     const allowedPaths = this.config.security?.allowedPaths || defaultAllowedPaths;
     const blockedOps = this.config.security?.blockedOperations || defaultBlockedOps;
-    this.fs = new FileSystem({ basePath: __dirname, allowedPaths, blockedOperations: blockedOps });
-
-    // Initialize core modules (Iteration 105)
-    this.goalManager = new GoalsModule.GoalManager();
-    this.messageQueue = new MessageQueue(1000);
-    this.healthMonitor = new HealthMonitor(this.config.resourceLimits, {
-      checkInterval: 10000,
-      failureThreshold: 3
-    });
-    this.astTransformer = new ASTTransformer();
-    this.testRunner = new TestRunner();
-    // TODO: Enable worker pool after fixing thread loading
-    this.workerPool = undefined; // new WorkerPoolThreads(workerCount);
+    this.fs = new FileSystem(__dirname, allowedPaths, blockedOps);
 
     // Initialize state
     this.state = {
@@ -234,23 +455,6 @@ export class EvoAgent {
     };
 
     this.currentCode = '';
-
-    // Sync state with modules
-    this.syncStateFromModules();
-  }
-
-  private syncStateFromModules(): void {
-    // Sync goals from GoalManager
-    this.state.goals = this.goalManager.getAll();
-    // Sync health from HealthMonitor
-    const healthStatus = this.healthMonitor.getStatus();
-    this.state.health = {
-      status: healthStatus.status,
-      lastCheck: healthStatus.lastCheck,
-      consecutiveFailures: healthStatus.consecutiveFailures,
-      memoryPressure: healthStatus.memoryPressure
-    };
-    // Note: messages are transient, not stored in state
   }
 
   // ==================== LOGGING ====================
@@ -304,7 +508,7 @@ export class EvoAgent {
       const stateData = {
         level: this.state.level,
         capabilities: this.state.capabilities,
-        memory: Array.from(this.state.memory.entries()) as [string, any][],
+        memory: Array.from(this.state.memory.entries()),
         history: this.state.history.slice(-100),
         goals: this.state.goals,
         children: this.state.children,
@@ -336,10 +540,6 @@ export class EvoAgent {
         this.state.memory = new Map(savedState.memory || []);
         this.state.history = savedState.history || [];
         this.state.goals = savedState.goals || [];
-        // Restore goal manager from state
-        if (this.state.goals && this.state.goals.length > 0) {
-          try { this.goalManager.fromJSON(JSON.stringify(this.state.goals)); } catch {}
-        }
         this.state.children = savedState.children || [];
         if (savedState.health) this.state.health = { ...this.state.health, ...savedState.health };
         if (savedState.stats) this.state.stats = { ...this.state.stats, ...savedState.stats };
@@ -385,31 +585,28 @@ export class EvoAgent {
     return { status, memoryPressure, issues };
   }
 
-  private async updateHealthCheck(): Promise<void> {
-    // Use HealthMonitor module
-    const check = await this.healthMonitor.performCheck(
-      getMemoryUsage(),
-      getCpuTime(),
-      getUptime()
-    );
-
+  private updateHealthCheck(): void {
+    const check = this.performHealthCheck();
     const oldStatus = this.state.health.status;
     this.state.health = {
       ...this.state.health,
       status: check.status,
-      lastCheck: check.lastCheck,
-      memoryPressure: check.memoryPressure,
-      // Map other fields from HealthMonitor
-      consecutiveFailures: this.state.health.consecutiveFailures
+      lastCheck: nowISO(),
+      memoryPressure: check.memoryPressure
     };
 
     if (oldStatus !== check.status) {
       this.log('warn', '🏥 Health status changed:', oldStatus, '→', check.status, 'Issues:', check.issues.join(', '));
     }
 
-    // Auto-recovery is handled by HealthMonitor internally via registered actions
-    if (check.status === 'unhealthy' && this.state.health.consecutiveFailures >= 2) {
-      this.log('error', '🚨 Agent unhealthy. Manual recovery may be needed.');
+    if (check.status === 'unhealthy') {
+      this.state.health.consecutiveFailures++;
+      if (this.state.health.consecutiveFailures >= 3) {
+        this.log('error', '🚨 Agent unhealthy. Triggering recovery...');
+        this.triggerAutoRecovery();
+      }
+    } else {
+      this.state.health.consecutiveFailures = 0;
     }
   }
 
@@ -440,67 +637,104 @@ export class EvoAgent {
 
   // ==================== GOAL MANAGEMENT ====================
 
-  createGoal(description: string, priority: number = 1, steps?: string[], dependencies?: string[]): GoalsModule.Goal {
-    const goal = this.goalManager.create(description, priority, steps, dependencies);
-    this.state.goals = this.goalManager.getAll();
+  createGoal(description: string, priority: number = 1, steps?: string[], dependencies?: string[]): Goal {
+    const goal: Goal = {
+      id: generateId(),
+      description,
+      priority,
+      status: 'pending',
+      steps: steps || [`Complete evolution to level ${this.state.level + 1}`],
+      currentStep: 0,
+      createdAt: nowISO(),
+      dependencies
+    };
+    this.state.goals.push(goal);
     this.saveMemory();
     this.log('info', '🎯 New goal created:', description);
     return goal;
   }
 
-  updateGoal(goalId: string, status: GoalsModule.Goal['status']): boolean {
-    const success = this.goalManager.update(goalId, { status });
-    if (success) {
-      this.state.goals = this.goalManager.getAll();
-      const goal = this.goalManager.get(goalId);
-      if (status === 'completed' && goal && !goal.completedAt) {
+  updateGoal(goalId: string, status: Goal['status']): boolean {
+    const goal = this.state.goals.find(g => g.id === goalId);
+    if (goal) {
+      const oldStatus = goal.status;
+      goal.status = status;
+      if (status === 'completed' && !goal.completedAt) {
+        goal.completedAt = nowISO();
         this.state.stats.totalGoalsCompleted++;
       }
       this.saveMemory();
-      this.log('debug', 'Goal updated:', goalId, '→', status);
+      if (oldStatus !== status) {
+        this.log('debug', 'Goal updated:', goalId, '→', status);
+      }
+      return true;
     }
-    return success;
+    return false;
   }
 
   advanceGoal(goalId: string): boolean {
-    const success = this.goalManager.advance(goalId);
-    if (success) {
-      this.state.goals = this.goalManager.getAll();
-      const goal = this.goalManager.get(goalId);
-      if (goal && goal.status === 'completed') {
+    const goal = this.state.goals.find(g => g.id === goalId);
+    if (!goal) return false;
+
+    if (goal.dependencies) {
+      const allDepsMet = goal.dependencies.every(depId => {
+        const dep = this.state.goals.find(g => g.id === depId);
+        return dep && dep.status === 'completed';
+      });
+      if (!allDepsMet) {
+        this.log('debug', 'Cannot advance goal', goalId, '- dependencies not met');
+        return false;
+      }
+    }
+
+    if (goal.currentStep < goal.steps.length) {
+      goal.currentStep++;
+      if (goal.currentStep >= goal.steps.length) {
+        goal.status = 'completed';
+        goal.completedAt = nowISO();
         this.state.stats.totalGoalsCompleted++;
         this.log('info', '🎉 Goal completed:', goal.description);
+      } else {
+        this.updateGoal(goalId, 'in_progress');
       }
       this.saveMemory();
+      return true;
     }
-    return success;
+    return false;
   }
 
-  getActiveGoals(): GoalsModule.Goal[] {
-    return this.goalManager.getActive();
+  getActiveGoals(): Goal[] {
+    return this.state.goals.filter(g => g.status === 'pending' || g.status === 'in_progress');
   }
 
-  getGoalsByPriority(minPriority: number = 1): GoalsModule.Goal[] {
-    return this.goalManager.getByPriority(minPriority);
+  getGoalsByPriority(minPriority: number = 1): Goal[] {
+    return this.getActiveGoals().filter(g => g.priority >= minPriority).sort((a, b) => b.priority - a.priority);
   }
 
   // ==================== MESSAGING ====================
 
   sendMessage(to: string, content: any, type: Message['type'] = 'request', priority: number = 1, ttl: number = 10): void {
-    const msg = this.messageQueue.enqueue({
+    const msg: Message = {
+      id: generateId(),
       from: this.id,
       to,
       content,
+      timestamp: nowISO(),
       type,
       priority,
       ttl
-    });
+    };
+    this.state.messages.push(msg);
     this.state.stats.totalMessagesSent++;
-    this.log('trace', '📨 Message sent to:', to, 'type:', type, 'id:', msg.id);
+    if (this.state.messages.length > 1000) {
+      this.state.messages = this.state.messages.slice(-500);
+    }
+    this.log('trace', '📨 Message sent to:', to, 'type:', type);
   }
 
   getMessagesForAgent(agentId: string): Message[] {
-    return this.messageQueue.getForAgent(agentId);
+    const now = Date.now();
+    return this.state.messages.filter(m => m.to === agentId && (!m.ttl || (now - Date.parse(m.timestamp)) < m.ttl * 1000));
   }
 
   broadcast(content: any, priority: number = 1): void {
@@ -515,7 +749,7 @@ export class EvoAgent {
   }
 
   receiveMessage(msg: Message): void {
-    this.messageQueue.enqueue(msg);
+    this.state.messages.push(msg);
     this.state.stats.totalMessagesReceived++;
     this.log('trace', '📥 Received message from:', msg.from, 'type:', msg.type);
   }
@@ -548,12 +782,6 @@ export class EvoAgent {
       return null;
     }
 
-    // Check global agent limit
-    if (EvoAgent.totalAgents >= EvoAgent.MAX_TOTAL_AGENTS) {
-      this.log('warn', 'Global agent limit reached:', EvoAgent.MAX_TOTAL_AGENTS);
-      return null;
-    }
-
     if (this.state.children.length >= this.config.maxChildren) {
       this.log('warn', 'Max children reached:', this.config.maxChildren);
       return null;
@@ -575,19 +803,8 @@ export class EvoAgent {
           maxOpenFiles: 50
         }
       };
-      // Worker pool size will be auto-calculated in child constructor based on its memory limit
 
-      let child: EvoAgent | null = null;
-      try {
-        child = new EvoAgent(childConfig, this);
-      } catch (error) {
-        this.log('error', 'Failed to create child agent (limit reached?):', error);
-        // Ensure global counter stays consistent if constructor incremented before throwing
-        if (EvoAgent.totalAgents > 0) {
-          EvoAgent.totalAgents--;
-        }
-        return null;
-      }
+      const child = new EvoAgent(childConfig, this);
       this.state.children.push(child.id);
       this.state.stats.totalChildrenSpawned++;
 
@@ -616,9 +833,7 @@ export class EvoAgent {
   // ==================== CORE EVOLUTION LOOP ====================
 
   async run(): Promise<void> {
-    try { require('fs').appendFileSync('/tmp/evo-run.log', 'RUN START\n'); } catch {}
     this.isRunning = true;
-    console.log('🚀 RUN STARTED'); // Debug
     this.log('info', '🚀 Starting Self-Evolution Loop...');
     this.log('info', 'Agent ID:', this.id);
     this.log('info', 'Parent:', this.parent?.id || 'none');
@@ -638,46 +853,7 @@ export class EvoAgent {
           break;
         }
 
-        // Adaptive delay based on health, resources, and iteration performance (Iteration 116)
-        const mem = process.memoryUsage();
-        const totalMem = mem.heapUsed + mem.heapTotal + mem.external;
-        const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB * 1024 * 1024;
-        const memPct = (totalMem / memLimit) * 100;
-        const cpuStart = process.cpuUsage();
-        const cpuPct = cpuStart ? ((cpuStart.user + cpuStart.system) / (os.cpus().length * 1000)) : 0;
-
-        // Base delay
-        let delayMs = 10;
-
-        // Health-based backoff
-        if (this.state.health.status === 'unhealthy') {
-          delayMs = 3000 + Math.random() * 2000; // Severe: 3-5s
-        } else if (this.state.health.status === 'degraded') {
-          delayMs = 1000 + Math.random() * 1000; // Moderate: 1-2s
-        } else {
-          // Resource-based backoff
-          if (memPct > 85 || cpuPct > 85) {
-            delayMs = 500 + Math.random() * 500; // High load: 0.5-1s
-          } else if (memPct > 70 || cpuPct > 70) {
-            delayMs = 200 + Math.random() * 200; // Medium load: 0.2-0.4s
-          }
-        }
-
-        // Failure-based backoff
-        if (this.state.health.consecutiveFailures > 0) {
-          delayMs += this.state.health.consecutiveFailures * 500;
-        }
-
-        // Children count backoff (more children = more delay)
-        if (this.state.children.length > 2) {
-          delayMs += (this.state.children.length - 2) * 100;
-        }
-
-        // Cap delay
-        delayMs = Math.min(5000, delayMs);
-
-        this.log('debug', `⏱️ Delay: ${Math.round(delayMs)}ms (mem: ${Math.round(memPct)}%, cpu: ${Math.round(cpuPct)}%, health: ${this.state.health.status}, failures: ${this.state.health.consecutiveFailures}, children: ${this.state.children.length})`);
-        await sleep(delayMs);
+        await sleep(1000);
       } catch (error) {
         this.log('error', '💥 Iteration failed:', error);
         this.state.health.consecutiveFailures++;
@@ -690,22 +866,15 @@ export class EvoAgent {
   }
 
   private async initialize(): Promise<void> {
-    console.log('INIT START'); // Debug
     await this.loadMemory();
     this.loadLogBuffer();
-    if (this.workerPool) {
-      await this.workerPool.initialize();
-      this.log('info', '✅ WorkerPool initialized');
-    }
 
     if (this.config.enableHealthChecks) {
-      await this.updateHealthCheck();
+      this.updateHealthCheck();
     }
-    console.log('INIT DONE'); // Debug
   }
 
   private async executeIteration(): Promise<void> {
-    console.log('EXECUTE ITERATION', this.iterationCount); // Debug
     const startTime = Date.now();
     this.log('debug', `─── Iteration ${this.iterationCount + 1} ───`);
 
@@ -713,40 +882,7 @@ export class EvoAgent {
     await this.readSelf();
 
     // 2. Analysis
-    // 2. Analysis (offload to worker pool after iteration 10)
-    let analysis;
-    if (this.workerPool && this.iterationCount >= 10) {
-      this.log('info', '🧪 Offloading analysis to WorkerPool');
-      try {
-        const analyzerPath = path.resolve(__dirname, 'src', 'analyzer.ts');
-        analysis = await this.workerPool!.execute(
-          analyzerPath,
-          'analyzeCode',
-          [{ code: this.currentCode, iteration: this.iterationCount, level: this.state.level, capabilities: this.state.capabilities }]
-        );
-        this.log('info', '✅ WorkerPool analysis completed');
-      } catch (e) {
-        this.log('warn', 'WorkerPool analysis failed, fallback', e);
-        analysis = await this.analyzeCurrentState();
-      }
-    } else {
-      analysis = await this.analyzeCurrentState();
-    }
-
-    // 2.5 Self-Testing (Iteration 105+) - run unit tests before applying changes (every 10 iterations)
-    if (this.iterationCount % 10 === 0) {
-      try {
-        const testResult = await this.testRunner.runAll();
-        if (!testResult.success) {
-          this.log('warn', '❌ Tests failed, skipping change application:', testResult.errors.slice(0, 3));
-          // Skip applying changes this iteration
-          return;
-        }
-        this.log('debug', '✅ Tests passed:', testResult.passed, '/', testResult.total);
-      } catch (e) {
-        this.log('warn', '⚠️ Test runner error:', e);
-      }
-    }
+    const analysis = await this.analyzeCurrentState();
 
     // 3. Planning
     const plan = this.createEvolutionPlan(analysis);
@@ -813,12 +949,9 @@ export class EvoAgent {
         this.gossip();
       }
 
-      // Replication (only if healthy, low memory pressure, and low children count)
-      if (this.config.enableReplication && this.state.level >= 2 && this.state.children.length < this.config.maxChildren && this.state.health.status === 'healthy') {
-        const memUsage = getMemoryUsage();
-        const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB;
-        const memHeadroom = 1 - (memUsage / memLimit);
-        if (memHeadroom > 0.5 && Math.random() < 0.05) { // 5% chance, requires >50% memory headroom
+      // Replication
+      if (this.config.enableReplication && this.state.level >= 2 && this.state.children.length < this.config.maxChildren) {
+        if (Math.random() < 0.15) {
           this.spawnChild();
         }
       }
@@ -828,48 +961,19 @@ export class EvoAgent {
 
     // Health check
     if (this.config.enableHealthChecks) {
-      await this.updateHealthCheck();
+      this.updateHealthCheck();
     }
   }
 
-  private hashString(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash.toString(36);
-  }
-
-    // Offloaded analysis for WorkerPool (Iteration 117+)
-  // This is now a pure function executed in worker thread
-  private async analyzeOffloaded(code: string, iteration: number, level: number, capabilities: string[]): Promise<any> {
-    // Dynamic import of analyzer module (runs in worker thread)
-    const { analyzeCode } = await import('./src/analyzer.ts');
-    const result = await analyzeCode({ code, iteration, level, capabilities });
-    // No logging here (worker thread)
-    return result;
-  }
-
-    private readSelf(): Promise<void> {
+  private readSelf(): Promise<void> {
     return new Promise((resolve, reject) => {
       const filePath = path.join(__dirname, 'evo.ts');
       try {
-        const code = fs.readFileSync(filePath, 'utf-8');
-        const hash = this.hashString(code);
-        const lastHash = this.state.memory.get('lastCodeHash');
-        if (lastHash === hash) {
-          this.log('debug', '📖 Self-code unchanged (cached)');
-        } else {
-          this.state.memory.set('lastCodeHash', hash);
-          this.log('trace', '📖 Self-code read. Size:', code.length);
-        }
-        this.currentCode = code;
+        this.currentCode = fs.readFileSync(filePath, 'utf-8');
+        this.log('trace', '📖 Self-code read. Size:', this.currentCode.length);
         resolve();
       } catch (e) {
-        const err = e as Error;
-        this.log('error', `💔 Cannot read self: ${err.message}`);
+        this.log('error', '💔 Cannot read self:', e);
         reject(new Error('Cannot read own source code'));
       }
     });
@@ -883,23 +987,10 @@ export class EvoAgent {
     opportunities: string[];
     metrics: Partial<EvolutionMetrics>;
   }> {
+    const lines = this.currentCode.split('\n').length;
     const code = this.currentCode;
-    // Cleanup old cache entries if needed
-    if (this.analysisCache.size > this.ANALYSIS_CACHE_MAX_SIZE) {
-      this.cleanupAnalysisCache();
-    }
-    // Analysis result caching (Iteration 116) - cache by code hash
-    const codeHash = this.hashString(code);
-    const cached = this.analysisCache.get(codeHash);
-    const now = Date.now();
-    if (cached && (now - cached.timestamp) < this.ANALYSIS_CACHE_TTL_MS) {
-      this.log('debug', '📦 Analysis cache hit (age:', Math.round((now-cached.timestamp)/1000), 's)');
-      return cached.result;
-    }
 
-    const lines = code.split('\n').length;
-
-        const features = {
+    const features = {
       async: /async\s+/.test(code),
       errorHandling: /(try\s*\{|catch\s*\()/.test(code),
       persistentMemory: /(saveMemory|loadMemory|memoryPath)/.test(code),
@@ -909,34 +1000,11 @@ export class EvoAgent {
       goals: /(createGoal|Goal)/.test(code),
       logging: /(logBuffer|flushLogs|logPath)/.test(code),
       planning: /(createEvolutionPlan|EvolutionPlan)/.test(code),
-      health: /(HealthMonitor|healthMonitor|performHealthCheck)/.test(code),
-      sandbox: /(validatePath|isWithinSandbox|FileSystem)/.test(code),
+      health: /(performHealthCheck|updateHealthCheck)/.test(code),
+      sandbox: /(validatePath|isWithinSandbox)/.test(code),
       security: /security|sandbox/i.test(code),
-      stats: /(stats:|totalMessagesSent|MessageQueue)/.test(code),
-      documentation: /\/\*\*[\s\S]*?\*\//.test(code) || (/\bJSDoc\b/i.test(code)),
-      testing: /(describe\(|it\(|test\(|expect\()/.test(code) || /(TestRunner|testRunner)/.test(code),
-      modularization: /(private|public|protected)\s+\w+\s*\(/.test(code) && (code.match(/class/g) || []).length > 1,
-      concurrency: /(Worker|cluster|Thread|Promise\.all|async\s+\w+\s*\()/.test(code),
-      selfTesting: /(TestRunner|testRunner\.runAll)/.test(code),
-      astTransformation: /(ASTTransformer|astTransformer|transform)/.test(code),
-      'worker-pool': /(WorkerPool|workerPool)/.test(code),
-      'distributed-coordination': /(WorkerPool|workerPool|cluster)/.test(code),
-      reflection: /(Reflect|Proxy|Object\.defineProperty)/.test(code),
-      optimization: /(performance|optimize|tune)/.test(code),
-      'security-hardening': /(CSP|helmet|security)/i.test(code),
-      monitoring: /(monitor|metrics|telemetry)/.test(code),
-      'load-balancing': /(roundRobin|loadBalance|balance)/.test(code),
-      'fault-tolerance': /(retry|circuitBreaker|fallback)/.test(code),
-      'dynamic-reconfiguration': /(reconfigure|hotReload|dynamic)/.test(code),
-      'multi-tenancy': /(tenant|isolate)/.test(code),
-      'api-gateway': /(gateway|router)/.test(code),
-      'stream-processing': /(createReadStream|createWriteStream|pipeline)/.test(code),
-      cryptography: /(crypto|md5|sha|cipher)/.test(code),
-      compression: /(compress|gzip|deflate)/.test(code),
-      serialization: /(JSON\.stringify|serialize|deserialize)/.test(code),
-      'config-management': /(config|settings|env)/.test(code)
+      stats: /(stats:|totalMessagesSent)/.test(code)
     };
-
 
     const strengths = Object.entries(features)
       .filter(([_, v]) => v)
@@ -947,7 +1015,7 @@ export class EvoAgent {
       .map(([k, _]) => this.formatFeatureName(k));
 
     const featureCount = Object.values(features).filter(v => v).length;
-    const newLevel = Math.min(200, featureCount + Math.floor(this.state.level * 0.5));
+    const newLevel = Math.min(20, featureCount + Math.floor(this.state.level * 0.5));
 
     const metrics: Partial<EvolutionMetrics> = {
       iteration: this.iterationCount + 1,
@@ -968,35 +1036,7 @@ export class EvoAgent {
       health: this.state.health.status
     };
 
-    // Store in cache
-    this.analysisCache.set(codeHash, { result: { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics }, timestamp: Date.now() });
     return { currentLevel: this.state.level, newLevel, strengths, weaknesses, opportunities: this.generateOpportunities(weaknesses), metrics };
-  }
-
-  private cleanupAnalysisCache(): void {
-    const now = Date.now();
-    const expiredHashes: string[] = [];
-    for (const [hash, entry] of this.analysisCache.entries()) {
-      if (now - entry.timestamp > this.ANALYSIS_CACHE_TTL_MS) {
-        expiredHashes.push(hash);
-      }
-    }
-    for (const hash of expiredHashes) {
-      this.analysisCache.delete(hash);
-    }
-    if (expiredHashes.length > 0) {
-      this.log('debug', '🧹 Cleaned analysis cache:', expiredHashes.length, 'entries');
-    }
-    // If still too large, remove oldest entries
-    if (this.analysisCache.size > this.ANALYSIS_CACHE_MAX_SIZE) {
-      const sorted = Array.from(this.analysisCache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp);
-      const toRemove = sorted.slice(0, this.analysisCache.size - this.ANALYSIS_CACHE_MAX_SIZE);
-      for (const [hash] of toRemove) {
-        this.analysisCache.delete(hash);
-      }
-      this.log('debug', '🧹 trimmed analysis cache to max size:', this.analysisCache.size);
-    }
   }
 
   private formatFeatureName(key: string): string {
@@ -1013,11 +1053,7 @@ export class EvoAgent {
       health: 'health monitoring',
       sandbox: 'sandboxing',
       security: 'security',
-      stats: 'statistics',
-      documentation: 'code documentation',
-      testing: 'unit testing',
-      modularization: 'modular architecture',
-      concurrency: 'concurrency support'
+      stats: 'statistics'
     };
     return names[key] || key;
   }
@@ -1036,11 +1072,7 @@ export class EvoAgent {
       'health monitoring': 'Add health checks and auto-recovery',
       'sandboxing': 'Enforce file system sandbox',
       'security': 'Add permission checks',
-      'statistics': 'Track stats like messages, goals, children',
-      'code documentation': 'Add JSDoc comments for all public APIs',
-      'unit testing': 'Create test suite for core components',
-      'modular architecture': 'Extract large classes into modules',
-      'concurrency support': 'Add worker threads for parallel tasks'
+      'statistics': 'Track stats like messages, goals, children'
     };
     const opportunities = weaknesses.map(w => opps[w] || `Improve ${w}`).filter(Boolean);
     if (opportunities.length === 0) {
@@ -1114,55 +1146,28 @@ export class EvoAgent {
     const changes: string[] = [];
     if (opportunity.includes('persistent') || opportunity.includes('file-based persistence')) {
       changes.push('Enhance saveMemory/loadMemory JSON serialization');
-      changes.push('Add compression for state data');
     }
     if (opportunity.includes('FileSystem') || opportunity.includes('abstraction')) {
       changes.push('Add path validation and sandboxing to FileSystem');
-      changes.push('Add file access auditing');
     }
     if (opportunity.includes('Replicate') || opportunity.includes('spawnChild')) {
       changes.push('Add resource allocation for child agents');
       changes.push('Add parent-child relationship tracking');
-      changes.push('Implement child health monitoring');
     }
     if (opportunity.includes('messaging') || opportunity.includes('Message')) {
       changes.push('Add message TTL and priority');
       changes.push('Implement message queue size limits');
-      changes.push('Add message routing and filtering');
     }
     if (opportunity.includes('goal') || opportunity.includes('Goal')) {
       changes.push('Add goal dependencies');
       changes.push('Add goal priority sorting');
-      changes.push('Implement goal progress tracking');
     }
     if (opportunity.includes('logging') || opportunity.includes('log')) {
       changes.push('Add log rotation');
-      changes.push('Add structured logging (JSON)');
     }
     if (opportunity.includes('health') || opportunity.includes('monitoring')) {
       changes.push('Add memory pressure tracking');
       changes.push('Implement auto-recovery actions');
-      changes.push('Add metrics collection intervals');
-    }
-    if (opportunity.includes('documentation')) {
-      changes.push('Add JSDoc comments for all public classes and methods');
-      changes.push('Generate API documentation automatically');
-      changes.push('Add code examples in comments');
-    }
-    if (opportunity.includes('testing')) {
-      changes.push('Create unit test stubs for EvoAgent core');
-      changes.push('Add integration tests for persistence');
-      changes.push('Implement test runner integration');
-    }
-    if (opportunity.includes('modular')) {
-      changes.push('Split large classes into separate modules');
-      changes.push('Create index.ts barrel exports');
-      changes.push('Add internal module boundaries');
-    }
-    if (opportunity.includes('concurrency')) {
-      changes.push('Add Worker threads for background tasks');
-      changes.push('Implement thread pool for message processing');
-      changes.push('Add async bulk operations');
     }
     return changes;
   }
@@ -1185,18 +1190,6 @@ export class EvoAgent {
         /(\/\/ Features: .*)/,
         `$1\n${changelog}`
       );
-    }
-    // AST transformation (Iteration 112 - aggressive after iteration 10)
-    if (this.iterationCount >= 10) {
-      try {
-        const transformResult = await this.astTransformer.analyzeAndTransform(newCode, this.iterationCount);
-        if (transformResult.success) {
-          newCode = transformResult.transformedCode;
-          this.log('info', '🔨 AST transformations:', transformResult.changes.join('; '));
-        }
-      } catch (e) {
-        this.log('warn', 'AST transform error:', e);
-      }
     }
 
     return newCode;
@@ -1280,8 +1273,12 @@ export class EvoAgent {
   }
 
   private async processMessages(): Promise<void> {
-    // Expire old messages in the queue
-    this.messageQueue.expire(60000); // 60 seconds
+    // Process incoming messages (simplified)
+    const now = Date.now();
+    const expired = this.state.messages.filter(m => m.ttl && (now - Date.parse(m.timestamp)) > m.ttl * 1000);
+    if (expired.length > 0) {
+      this.state.messages = this.state.messages.filter(m => !expired.includes(m));
+    }
   }
 
   private adaptiveResourceManagement(analysis: ReturnType<this['analyzeCurrentState']>): void {
@@ -1289,23 +1286,22 @@ export class EvoAgent {
     const memLimit = this.state.sandbox.resourceLimits.maxMemoryMB;
     const memHeadroom = 1 - (memUsage / memLimit);
 
-    // Aggressive cleanup when memory pressure is high
-    if (memHeadroom < 0.3 && this.state.children.length > 0) {
-      // Prioritize keeping oldest/most stable children (first few), terminate newer ones
-      const toTerminate = Math.max(1, Math.floor(this.state.children.length * 0.5)); // Terminate half if under pressure
-      const terminated = this.state.children.slice(-toTerminate); // remove newest
-      for (const childId of terminated) {
-        this.log('warn', '📉 Terminating child due to memory pressure:', childId);
+    if (memHeadroom > 0.3 && this.state.children.length < this.config.maxChildren && Math.random() < 0.2) {
+      this.spawnChild();
+    } else if (memHeadroom < 0.1 && this.state.children.length > 1) {
+      const nonEssential = this.state.children.slice(1);
+      for (const childId of nonEssential) {
+        this.log('info', '📉 Terminating child due to memory pressure:', childId);
         this.state.children = this.state.children.filter(id => id !== childId);
       }
     }
 
-    // Update dynamic limit based on average recent memory
+    // Update dynamic limit
     const recentMem = this.state.history.slice(-5).map(h => h.performance.memoryUsage);
     if (recentMem.length === 5) {
       const avg = recentMem.reduce((a, b) => a + b, 0) / 5;
-      if (avg < memLimit * 0.6) {
-        this.state.sandbox.resourceLimits.maxMemoryMB = Math.max(40, Math.min(200, avg * 1.5)); // cap at 200MB
+      if (avg < memLimit * 0.5) {
+        this.state.sandbox.resourceLimits.maxMemoryMB = Math.max(50, avg * 1.5);
       }
     }
   }
@@ -1326,43 +1322,18 @@ export class EvoAgent {
     this.saveMemory().catch(console.error);
     this.flushLogs();
     this.log('info', '🛑 Agent shutting down');
-    // Decrement global agent counter
-    if (EvoAgent.totalAgents > 0) {
-      EvoAgent.totalAgents--;
-    }
-    // Notify parent to remove this child
-    if (this.parent) {
-      this.parent.removeChild(this.id);
-    }
-  }
-
-  // Called by parent to remove child reference
-  public removeChild(childId: string): void {
-    this.state.children = this.state.children.filter(id => id !== childId);
-    this.saveMemory().catch(() => {});
-    this.log('debug', '🗑️ Removed child reference:', childId);
   }
 }
 
 // ==================== ENTRY POINT ====================
 
-if (import.meta.main) {
-  try { require('fs').appendFileSync('/tmp/evo-entry.log', 'ENTRY MAIN\n'); } catch {}
-  let agent;
-  try {
-    agent = new EvoAgent({ evolutionStrategy: 'balanced' });
-    try { require('fs').appendFileSync('/tmp/evo-created.log', 'CREATED\n'); } catch {}
-
-
-  } catch (e) {
-    process.stderr.write('❌ Agent creation failed: ' + e + '\n');
-    process.exit(1);
-  }
+if (require.main === module) {
+  const agent = new EvoAgent({ evolutionStrategy: 'balanced' });
   // Handle shutdown signals
   process.on('SIGINT', () => agent.shutdown());
   process.on('SIGTERM', () => agent.shutdown());
   agent.run().catch(err => {
-    process.stderr.write('Agent failed: ' + err + '\n');
+    console.error('Agent failed:', err);
     process.exit(1);
   });
 }
