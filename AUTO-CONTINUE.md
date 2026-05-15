@@ -1,1 +1,1 @@
-Tiếp tục evolution, Đọc toàn bộ EVOLUTION.md full file và làm như nó nói đi. chạy vòng tiếp theo.
+Tiếp tục evolution, Đọc toàn bộ EVOLUTION.md full file và làm như nó nói đi.

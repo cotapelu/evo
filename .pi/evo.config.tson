@@ -1,0 +1,9 @@
+{
+  "agentDir": "/home/quangtynu/.pi/evo",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "thinkingLevel": "medium",
+  "logLevel": "info",
+  "logPath": "/home/quangtynu/Qcoder/evo/evo.log",
+  "enableExtensions": true,
+  "evolutionInterval": 300000
+}

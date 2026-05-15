@@ -3,309 +3,232 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Iteration 111 Implementation",
+      "name": "Phase 1: Foundation - Integrate pi-agent-core",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Implement WorkerPool class using worker_threads",
+          "content": "Create src/agents/ directory structure",
           "status": "completed",
-          "details": "Create src/worker-pool.ts with thread pool pattern"
+          "details": "Base agent classes and templates"
         },
         {
           "id": "task-2",
-          "content": "Integrate WorkerPool into EvoAgent",
+          "content": "Create PiAgent adapter module",
           "status": "completed",
-          "details": "Initialize and use for task parallelism"
+          "details": "src/pi-agent-adapter.ts - integrate pi-agent-core"
         },
         {
           "id": "task-3",
-          "content": "Add analyzeCurrentState caching",
+          "content": "Update evo.ts to use pi-agent-core",
           "status": "completed",
-          "details": "Cache analysis results to reduce recomputation"
+          "details": "Refactor EvoAgent to use Agent from pi-agent-core"
         },
         {
           "id": "task-4",
-          "content": "Fine-tune adaptive delay",
+          "content": "Add model router using pi-ai",
           "status": "completed",
-          "details": "Ensure it activates under high CPU/memory load"
+          "details": "src/model-router.ts - dynamic model selection"
         },
         {
           "id": "task-5",
-          "content": "Run and verify improvements",
+          "content": "Create tool registry system",
           "status": "completed",
-          "details": "Target level 45+, caching active, metrics improved"
+          "details": "src/tools/registry.ts"
+        },
+        {
+          "id": "task-6",
+          "content": "Update package.json",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Type check",
+          "status": "completed",
+          "details": "tsc --noEmit"
+        },
+        {
+          "id": "task-8",
+          "content": "Integrate PiIntegration into evo.ts",
+          "status": "completed",
+          "details": "Add pi field to state, use for AI tasks"
         }
       ]
     },
     {
       "id": "phase-2",
-      "name": "Iteration 112 Implementation",
+      "name": "Rewrite Evo with pi-coding-agent",
       "tasks": [
         {
-          "id": "task-6",
-          "content": "Enhance ASTTransformer with more aggressive thresholds",
-          "status": "completed",
-          "details": "Lower complexity threshold to 3, method length to 30 lines, enable duplication detection"
-        },
-        {
-          "id": "task-7",
-          "content": "Implement WorkerPool with worker_threads parallism",
-          "status": "completed",
-          "details": "Use actual Worker threads, implement task serialization, handle worker lifecycle"
-        },
-        {
-          "id": "task-8",
-          "content": "Offload analysis and test execution to WorkerPool",
-          "status": "completed",
-          "details": "Use workerPool.execute() for analyzeCurrentState and testRunner.runAll"
-        },
-        {
           "id": "task-9",
-          "content": "Add AST-based code transformation opportunities",
+          "content": "Design new architecture",
           "status": "completed",
-          "details": "Detect duplicate code, dead code, simplify conditionals"
+          "details": "Use pi-coding-agent as foundation"
         },
         {
           "id": "task-10",
-          "content": "Run evolution and target level 25+ with 50+ capabilities",
+          "content": "Write new evo.ts core",
           "status": "completed",
-          "details": "2-3 minute run, measure improvements, update changelog"
+          "details": "Agent manager with evolution capabilities"
+        },
+        {
+          "id": "task-11",
+          "content": "Create agent types",
+          "status": "completed",
+          "details": "researcher, coder, analyzer, etc."
+        },
+        {
+          "id": "task-12",
+          "content": "Implement AI integration",
+          "status": "completed",
+          "details": "Using pi sdk directly"
+        },
+        {
+          "id": "task-13",
+          "content": "Add tool registry",
+          "status": "completed",
+          "details": "Custom tools beyond built-in"
+        },
+        {
+          "id": "task-14",
+          "content": "Implement evolution loop",
+          "status": "completed",
+          "details": "Self-improvement cycle"
+        },
+        {
+          "id": "task-15",
+          "content": "Type check and test",
+          "status": "completed"
         }
       ]
     },
     {
       "id": "phase-3",
-      "name": "Iteration 113 Implementation",
+      "name": "Phase 1: Foundation - Create new architecture with pi-coding-agent",
       "tasks": [
         {
-          "id": "task-11",
-          "content": "Implement true WorkerPool with worker_threads ESM workers",
-          "status": "completed",
-          "details": "Create worker-pool-threads.ts using actual Worker threads, handle ESM imports, task serialization"
+          "id": "task-16",
+          "content": "Write Config class",
+          "status": "completed"
         },
         {
-          "id": "task-12",
-          "content": "Offload analyzeOffloaded to WorkerPool when iterationCount > 10",
-          "status": "completed",
-          "details": "Use workerPool.execute() for analysis to parallelize"
+          "id": "task-17",
+          "content": "Write Logger class",
+          "status": "completed"
         },
         {
-          "id": "task-13",
-          "content": "Offload testRunner.runAll to WorkerPool",
-          "status": "completed",
-          "details": "Execute tests in parallel via worker pool"
+          "id": "task-18",
+          "content": "Write EvoTools (custom tools)",
+          "status": "completed"
         },
         {
-          "id": "task-14",
-          "content": "Enhance ASTTransformer method extraction to work on any long method (not just private async)",
-          "status": "completed",
-          "details": "Detect methods by brace counting, extract any method >30 lines"
+          "id": "task-19",
+          "content": "Write EvolutionEngine (basic)",
+          "status": "completed"
         },
         {
-          "id": "task-15",
-          "content": "Run agent 5 minutes, target level 25+ and 50+ capabilities",
-          "status": "completed",
-          "details": "Measure improvements, verify worker pool usage, AST extractions"
+          "id": "task-20",
+          "content": "Write System class",
+          "status": "completed"
+        },
+        {
+          "id": "task-21",
+          "content": "Write main evo.ts",
+          "status": "completed"
+        },
+        {
+          "id": "task-22",
+          "content": "Type check pass",
+          "status": "completed"
+        },
+        {
+          "id": "task-23",
+          "content": "Test print mode",
+          "status": "completed"
         }
       ]
     },
     {
       "id": "phase-4",
-      "name": "Iteration 114 Implementation",
+      "name": "Phase 2: Multi-Agent Support",
       "tasks": [
         {
-          "id": "task-16",
-          "content": "Offload analysis to WorkerPool when iterationCount > 10",
-          "status": "completed",
-          "details": "Use workerPool.execute() to run analyzeOffloaded in parallel"
+          "id": "task-24",
+          "content": "Create agent templates (researcher, coder, analyzer)",
+          "status": "completed"
         },
         {
-          "id": "task-17",
-          "content": "Enhance ASTTransformer method extraction for any long method",
-          "status": "completed",
-          "details": "Detect methods by brace counting, extract >30 lines regardless of modifier"
+          "id": "task-25",
+          "content": "Implement AgentManager to spawn/stop agents",
+          "status": "completed"
         },
         {
-          "id": "task-18",
-          "content": "Add dead code removal transformation",
-          "status": "completed",
-          "details": "Remove unused imports, variables, unreachable code"
+          "id": "task-26",
+          "content": "Add inter-agent messaging",
+          "status": "completed"
         },
         {
-          "id": "task-19",
-          "content": "Expand feature detection patterns (+10 new capabilities)",
-          "status": "completed",
-          "details": "Add patterns for reflection, optimization, security-hardening, etc."
-        },
-        {
-          "id": "task-20",
-          "content": "Run agent 5 min, target level 25+ and 50+ capabilities",
-          "status": "completed",
-          "details": "Verify offloading, AST extraction, capability growth"
+          "id": "task-27",
+          "content": "Test multi-agent scenarios",
+          "status": "in_progress"
         }
       ]
     },
     {
       "id": "phase-5",
-      "name": "Iteration 115 Status",
+      "name": "Implement AgentSessionRuntime Architecture",
       "tasks": [
         {
-          "id": "task-21",
-          "content": "WorkerPool offloading integration",
-          "status": "completed",
-          "details": "Added analyzeOffloaded and executeIteration branch"
-        },
-        {
-          "id": "task-22",
-          "content": "Feature detection expansion (+14)",
-          "status": "completed",
-          "details": "Added patterns for reflection, optimization, security-hardening, etc."
-        },
-        {
-          "id": "task-23",
-          "content": "Level cap raised to 100",
-          "status": "completed"
-        },
-        {
-          "id": "task-24",
-          "content": "Adaptive delay implementation",
-          "status": "completed",
-          "details": "Replaced fixed sleep with CPU/memory-based delay"
-        },
-        {
-          "id": "task-25",
-          "content": "hashString + readSelf caching",
-          "status": "completed"
-        },
-        {
-          "id": "task-26",
-          "content": "analysisCache property added",
-          "status": "completed"
-        },
-        {
-          "id": "task-27",
-          "content": "Verify offloading in long run",
-          "status": "completed",
-          "details": "Run agent >10 iterations and confirm WorkerPool usage logs"
-        },
-        {
           "id": "task-28",
-          "content": "Wire analysis caching to reduce compute",
-          "status": "completed"
+          "content": "Update EvolutionEngine to accept AgentSessionRuntime instead of AgentSession",
+          "status": "completed",
+          "details": "Change constructor and all session.prompt() calls to runtime.session.prompt()"
         },
         {
           "id": "task-29",
-          "content": "Switch to WorkerPoolThreads for true parallelism",
-          "status": "completed"
+          "content": "Update AgentManager to create full runtime for each agent",
+          "status": "completed",
+          "details": "Replace createAgentSession() with proper runtime creation"
         },
         {
           "id": "task-30",
-          "content": "Re-enable self-testing with mocks",
-          "status": "completed"
+          "content": "Update EvoSystem to include AgentManager and MessageBus",
+          "status": "completed",
+          "details": "Add agentManager and messageBus fields, instantiate them"
         },
         {
           "id": "task-31",
-          "content": "Tune adaptive delay thresholds",
-          "status": "completed"
+          "content": "Implement spawn_agent tool to actually use AgentManager",
+          "status": "completed",
+          "details": "Make spawn_agent tool call agentManager.spawnAgent()"
         },
         {
           "id": "task-32",
-          "content": "Run 5-minute evaluation, target level 100+ and capabilities 60+",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-6",
-      "name": "Iteration 116 Implementation",
-      "tasks": [
+          "content": "Implement evolve tool to trigger evolution cycle",
+          "status": "completed",
+          "details": "Make evolve tool call evolution.cycle()"
+        },
         {
           "id": "task-33",
-          "content": "Fix WorkerPool execution: make execute() actually run tasks",
+          "content": "Implement evo_status tool to return proper system info",
           "status": "completed",
-          "details": "WorkerPool uses in-process queue; need proper Promise resolution"
+          "details": "Use getEvolutionEngine(), getRuntime() to build status"
         },
         {
           "id": "task-34",
-          "content": "Add proper logging in analyzeOffloaded to confirm offload",
+          "content": "Fix TypeScript compilation errors",
           "status": "completed",
-          "details": "Log entry/exit and return path"
+          "details": "Check imports, types, APIs"
         },
         {
           "id": "task-35",
-          "content": "Wire analysisCache into analyzeCurrentState with TTL",
+          "content": "Test all modes: interactive, print, evolution",
           "status": "completed",
-          "details": "Cache analysis results, reuse when codeHash matches"
-        },
-        {
-          "id": "task-36",
-          "content": "Tune adaptive delay thresholds to avoid health degrade",
-          "status": "completed",
-          "details": "Increase thresholds, add cooldown, reduce sensitivity"
-        },
-        {
-          "id": "task-37",
-          "content": "Run 5-minute evaluation, target level 100+ and capabilities 60+",
-          "status": "completed",
-          "details": "Long duration run, verify growth"
-        }
-      ]
-    },
-    {
-      "id": "phase-7",
-      "name": "Iteration 116 - Fix Critical Issues & Boost Performance",
-      "tasks": [
-        {
-          "id": "task-38",
-          "content": "Fix WorkerPool import - switch to WorkerPoolThreads",
-          "status": "completed",
-          "details": "evo.ts imports './src/worker-pool.js' which doesn't exist. Should use WorkerPoolThreads from worker-pool-threads.ts"
-        },
-        {
-          "id": "task-39",
-          "content": "Verify agent runs without errors",
-          "status": "completed"
-        },
-        {
-          "id": "task-40",
-          "content": "Test worker pool offloading functionality",
-          "status": "completed"
-        },
-        {
-          "id": "task-41",
-          "content": "Activate analysis result caching (already implemented but not wired)",
-          "status": "completed"
-        },
-        {
-          "id": "task-42",
-          "content": "Re-enable self-testing with proper mocking",
-          "status": "completed"
-        },
-        {
-          "id": "task-43",
-          "content": "Tune adaptive delay to prevent health degradation",
-          "status": "completed"
-        },
-        {
-          "id": "task-44",
-          "content": "Increase level cap to 200+ for continued growth",
-          "status": "completed"
-        },
-        {
-          "id": "task-45",
-          "content": "Add detailed logging in analyzeOffloaded to confirm offload",
-          "status": "completed"
-        },
-        {
-          "id": "task-46",
-          "content": "Run 5-minute evaluation, target level 100+",
-          "status": "completed"
+          "details": "Ensure each mode works"
         }
       ]
     }
   ],
-  "nextTaskId": 47,
-  "nextPhaseId": 8,
-  "updatedAt": "2026-05-14T12:44:51.853Z"
-}
+  "nextTaskId": 36,
+  "nextPhaseId": 6,
+  "updatedAt": "2026-05-15T14:48:36.023Z"
 }
