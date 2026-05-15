@@ -1,7 +1,7 @@
 {
   "name": "evo-agent",
-  "version": "2.1.0",
-  "description": "Self-Evolving Agent System powered by pi-coding-agent",
+  "version": "2.2.0",
+  "description": "Self-Evolving AI Agent System with auto-apply, safety guards, agent messaging, and comprehensive metrics",
   "type": "module",
   "main": "evo.ts",
   "scripts": {

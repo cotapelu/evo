@@ -1,0 +1,59 @@
+{
+  "defaultModel": "anthropic/claude-sonnet-4-20250514",
+  "defaultProvider": "anthropic",
+  "defaultThinkingLevel": "medium",
+  "evo": {
+    "model": "anthropic/claude-sonnet-4-20250514",
+    "thinkingLevel": "medium",
+    "logLevel": "info",
+    "evolutionInterval": 300000,
+    "autoApply": false,
+    "enableExtensions": true,
+    "enableWebUI": false,
+    "webUIPort": 3000,
+    "enableGeneticStrategy": false,
+    "evolutionStrategy": "genetic",
+    "enablePromptOptimization": false,
+    "promptOptimizationInterval": 5,
+    "maxBackups": 50,
+    "enableSandbox": false,
+    "sandboxConfig": {
+      "enabled": false,
+      "allowedTools": ["read", "grep", "find", "ls", "bash"],
+      "blockedCommands": ["rm -rf", ">", "dd", "mkfs", "chmod", "chown", "rmdir", ":(){ :|:& };", "wget", "curl", "ssh", "scp", "git push"],
+      "allowedPaths": ["\\.ts$", "\\.js$", "\\.json$", "\\.md$", "\\.txt$", "\\.log$", "/src/", "/test/", "/docs/", "\\.pi/agent/"],
+      "maxFileSizeBytes": 10485760,
+      "maxExecutionTimeMs": 30000
+    },
+    "agentTemplates": {
+      "security-expert": {
+        "systemPrompt": "You are a Security Expert Agent specializing in vulnerability assessment, secure coding practices, and threat modeling. You analyze code for security issues and provide remediation guidance.",
+        "model": "openai/gpt-4o-mini",
+        "thinkingLevel": "high",
+        "tools": ["read", "grep", "find", "ls", "bash"],
+        "customTools": []
+      },
+      "performance-tuner": {
+        "systemPrompt": "You are a Performance Tuner Agent focused on optimizing code for speed, memory usage, and resource efficiency. You identify bottlenecks and suggest concrete optimizations.",
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "thinkingLevel": "medium",
+        "tools": ["read", "bash", "edit"],
+        "customTools": []
+      },
+      "test-writer": {
+        "systemPrompt": "You are a Test Writer Agent that creates comprehensive test suites. You write unit tests, integration tests, and end-to-end tests following best practices.",
+        "model": "openai/gpt-4o-mini",
+        "thinkingLevel": "low",
+        "tools": ["read", "write", "bash"],
+        "customTools": []
+      },
+      "docs-writer": {
+        "systemPrompt": "You are a Documentation Writer Agent that creates clear, comprehensive documentation. You write READMEs, API docs, inline comments, and tutorials.",
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "thinkingLevel": "low",
+        "tools": ["read", "write", "edit"],
+        "customTools": []
+      }
+    }
+  }
+}

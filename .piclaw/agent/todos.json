@@ -3,232 +3,296 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Phase 1: Foundation - Integrate pi-agent-core",
+      "name": "Analyze Current Implementation",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Create src/agents/ directory structure",
-          "status": "completed",
-          "details": "Base agent classes and templates"
-        },
-        {
-          "id": "task-2",
-          "content": "Create PiAgent adapter module",
-          "status": "completed",
-          "details": "src/pi-agent-adapter.ts - integrate pi-agent-core"
-        },
-        {
-          "id": "task-3",
-          "content": "Update evo.ts to use pi-agent-core",
-          "status": "completed",
-          "details": "Refactor EvoAgent to use Agent from pi-agent-core"
-        },
-        {
-          "id": "task-4",
-          "content": "Add model router using pi-ai",
-          "status": "completed",
-          "details": "src/model-router.ts - dynamic model selection"
-        },
-        {
-          "id": "task-5",
-          "content": "Create tool registry system",
-          "status": "completed",
-          "details": "src/tools/registry.ts"
-        },
-        {
-          "id": "task-6",
-          "content": "Update package.json",
+          "content": "Compare code with EVOLUTION.md",
           "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Type check",
-          "status": "completed",
-          "details": "tsc --noEmit"
-        },
-        {
-          "id": "task-8",
-          "content": "Integrate PiIntegration into evo.ts",
-          "status": "completed",
-          "details": "Add pi field to state, use for AI tasks"
         }
       ]
     },
     {
       "id": "phase-2",
-      "name": "Rewrite Evo with pi-coding-agent",
+      "name": "Implement according to EVOLUTION.md",
       "tasks": [
         {
-          "id": "task-9",
-          "content": "Design new architecture",
-          "status": "completed",
-          "details": "Use pi-coding-agent as foundation"
+          "id": "task-2",
+          "content": "Fix AgentManager: use dispose(), set systemPrompt, resolve model, handle task",
+          "status": "completed"
         },
         {
-          "id": "task-10",
-          "content": "Write new evo.ts core",
-          "status": "completed",
-          "details": "Agent manager with evolution capabilities"
+          "id": "task-3",
+          "content": "Update EvoSystem to inject EvoExtension via resourceLoaderOptions",
+          "status": "completed"
         },
         {
-          "id": "task-11",
-          "content": "Create agent types",
-          "status": "completed",
-          "details": "researcher, coder, analyzer, etc."
+          "id": "task-4",
+          "content": "Remove manual extension loading and use resource loader",
+          "status": "completed"
         },
         {
-          "id": "task-12",
-          "content": "Implement AI integration",
-          "status": "completed",
-          "details": "Using pi sdk directly"
+          "id": "task-5",
+          "content": "Fix EvoExtension to lazily access system components",
+          "status": "completed"
         },
         {
-          "id": "task-13",
-          "content": "Add tool registry",
-          "status": "completed",
-          "details": "Custom tools beyond built-in"
+          "id": "task-6",
+          "content": "Update System.ts to pass modelRegistry to AgentManager",
+          "status": "completed"
         },
         {
-          "id": "task-14",
-          "content": "Implement evolution loop",
-          "status": "completed",
-          "details": "Self-improvement cycle"
-        },
-        {
-          "id": "task-15",
-          "content": "Type check and test",
+          "id": "task-7",
+          "content": "Compile and test",
           "status": "completed"
         }
       ]
     },
     {
       "id": "phase-3",
-      "name": "Phase 1: Foundation - Create new architecture with pi-coding-agent",
+      "name": "Implement Auto-Apply & Safety Features",
       "tasks": [
         {
-          "id": "task-16",
-          "content": "Write Config class",
+          "id": "task-8",
+          "content": "Add diff parser and applier to EvolutionEngine",
           "status": "completed"
         },
         {
-          "id": "task-17",
-          "content": "Write Logger class",
+          "id": "task-9",
+          "content": "Implement backup/restore before applying",
           "status": "completed"
         },
         {
-          "id": "task-18",
-          "content": "Write EvoTools (custom tools)",
+          "id": "task-10",
+          "content": "Add evolution history tracking",
           "status": "completed"
         },
         {
-          "id": "task-19",
-          "content": "Write EvolutionEngine (basic)",
+          "id": "task-11",
+          "content": "Create rollback command in extension",
           "status": "completed"
         },
         {
-          "id": "task-20",
-          "content": "Write System class",
+          "id": "task-12",
+          "content": "Add safety validation (syntax check before apply)",
           "status": "completed"
         },
         {
-          "id": "task-21",
-          "content": "Write main evo.ts",
+          "id": "task-13",
+          "content": "Update settings with autoApply option",
           "status": "completed"
         },
         {
-          "id": "task-22",
-          "content": "Type check pass",
-          "status": "completed"
-        },
-        {
-          "id": "task-23",
-          "content": "Test print mode",
+          "id": "task-14",
+          "content": "Test auto-apply cycle end-to-end",
           "status": "completed"
         }
       ]
     },
     {
       "id": "phase-4",
-      "name": "Phase 2: Multi-Agent Support",
+      "name": "Agent Messaging & Coordination",
       "tasks": [
         {
-          "id": "task-24",
-          "content": "Create agent templates (researcher, coder, analyzer)",
+          "id": "task-15",
+          "content": "Implement MessageBus pub/sub system",
           "status": "completed"
         },
         {
-          "id": "task-25",
-          "content": "Implement AgentManager to spawn/stop agents",
+          "id": "task-16",
+          "content": "Add evolution event broadcasting",
           "status": "completed"
         },
         {
-          "id": "task-26",
-          "content": "Add inter-agent messaging",
+          "id": "task-17",
+          "content": "Create agent-to-agent messaging",
           "status": "completed"
         },
         {
-          "id": "task-27",
-          "content": "Test multi-agent scenarios",
-          "status": "in_progress"
+          "id": "task-18",
+          "content": "Add message history tracking",
+          "status": "completed"
+        },
+        {
+          "id": "task-19",
+          "content": "Create messaging tools for LLM",
+          "status": "completed"
+        },
+        {
+          "id": "task-20",
+          "content": "Test agent coordination",
+          "status": "completed"
         }
       ]
     },
     {
       "id": "phase-5",
-      "name": "Implement AgentSessionRuntime Architecture",
+      "name": "Metrics & Monitoring",
       "tasks": [
         {
+          "id": "task-21",
+          "content": "Add metrics tracking to EvolutionEngine",
+          "status": "completed"
+        },
+        {
+          "id": "task-22",
+          "content": "Create /evolution-metrics command",
+          "status": "completed"
+        },
+        {
+          "id": "task-23",
+          "content": "Add success rate tracking",
+          "status": "completed"
+        },
+        {
+          "id": "task-24",
+          "content": "Implement improvement categories/statistics",
+          "status": "completed"
+        },
+        {
+          "id": "task-25",
+          "content": "Add time-between-cycles metric",
+          "status": "completed"
+        },
+        {
+          "id": "task-26",
+          "content": "Test metrics reporting",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Advanced Features - Agent Templates",
+      "tasks": [
+        {
+          "id": "task-27",
+          "content": "Add custom agent templates from settings",
+          "status": "completed"
+        },
+        {
           "id": "task-28",
-          "content": "Update EvolutionEngine to accept AgentSessionRuntime instead of AgentSession",
-          "status": "completed",
-          "details": "Change constructor and all session.prompt() calls to runtime.session.prompt()"
+          "content": "Allow per-agent model/thinkingLevel override",
+          "status": "completed"
         },
         {
           "id": "task-29",
-          "content": "Update AgentManager to create full runtime for each agent",
-          "status": "completed",
-          "details": "Replace createAgentSession() with proper runtime creation"
-        },
+          "content": "Add agent template validation",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-7",
+      "name": "Future Work - Web UI & Evolution Strategies",
+      "tasks": [
         {
           "id": "task-30",
-          "content": "Update EvoSystem to include AgentManager and MessageBus",
-          "status": "completed",
-          "details": "Add agentManager and messageBus fields, instantiate them"
+          "content": "Create Web UI extension with dashboard",
+          "status": "completed"
         },
         {
           "id": "task-31",
-          "content": "Implement spawn_agent tool to actually use AgentManager",
-          "status": "completed",
-          "details": "Make spawn_agent tool call agentManager.spawnAgent()"
+          "content": "Implement evolution strategies (genetic)",
+          "status": "completed"
         },
         {
           "id": "task-32",
-          "content": "Implement evolve tool to trigger evolution cycle",
-          "status": "completed",
-          "details": "Make evolve tool call evolution.cycle()"
+          "content": "Add multi-provider model selection",
+          "status": "completed"
         },
         {
           "id": "task-33",
-          "content": "Implement evo_status tool to return proper system info",
-          "status": "completed",
-          "details": "Use getEvolutionEngine(), getRuntime() to build status"
+          "content": "Create strategy configuration UI",
+          "status": "completed"
         },
         {
           "id": "task-34",
-          "content": "Fix TypeScript compilation errors",
-          "status": "completed",
-          "details": "Check imports, types, APIs"
-        },
+          "content": "Test Web UI dashboard",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-8",
+      "name": "Final Polish - Missing EVOLUTION.md Features",
+      "tasks": [
         {
           "id": "task-35",
-          "content": "Test all modes: interactive, print, evolution",
+          "content": "Add genetic evolution strategy for improvement selection",
+          "status": "completed"
+        },
+        {
+          "id": "task-36",
+          "content": "Implement sandbox execution for agent safety",
+          "status": "completed"
+        },
+        {
+          "id": "task-37",
+          "content": "Add evolution compaction integration",
+          "status": "completed"
+        },
+        {
+          "id": "task-38",
+          "content": "Create provider/model selection UI",
+          "status": "completed"
+        },
+        {
+          "id": "task-39",
+          "content": "Add metrics charts to Web UI",
+          "status": "completed"
+        },
+        {
+          "id": "task-40",
+          "content": "Final documentation update",
+          "status": "completed"
+        },
+        {
+          "id": "task-41",
+          "content": "Wire evolutionStrategy config option through system to engine",
           "status": "completed",
-          "details": "Ensure each mode works"
+          "details": "Add setting to system.ts and SETTINGS_EXAMPLE.json, pass to EvolutionEngine"
+        },
+        {
+          "id": "task-42",
+          "content": "Implement metrics history tracking in EvolutionEngine",
+          "status": "completed",
+          "details": "Store metrics snapshot after each cycle to .evo/metrics_history.json, provide getMetricsHistory() API"
+        },
+        {
+          "id": "task-43",
+          "content": "Add metrics charts to Web UI dashboard with Chart.js",
+          "status": "completed",
+          "details": "Render success rate and cycles chart from /api/metrics-history"
+        }
+      ]
+    },
+    {
+      "id": "phase-9",
+      "name": "Prompt Optimization (Future Work #8)",
+      "tasks": [
+        {
+          "id": "task-44",
+          "content": "Implement genetic prompt optimizer for system prompts",
+          "status": "completed",
+          "details": "Create PromptOptimizer class that evolves system prompts using genetic algorithm"
+        }
+      ]
+    },
+    {
+      "id": "phase-10",
+      "name": "Deep Compliance Audit (Post-Implementation)",
+      "tasks": [
+        {
+          "id": "task-45",
+          "content": "Audit EVOLUTION.md line-by-line compliance",
+          "status": "completed",
+          "details": "Read entire EVOLUTION.md and verify each requirement is met"
         }
       ]
     }
   ],
-  "nextTaskId": 36,
-  "nextPhaseId": 6,
-  "updatedAt": "2026-05-15T14:48:36.023Z"
+  "nextTaskId": 46,
+  "nextPhaseId": 11,
+  "updatedAt": "2026-05-15T19:37:59.959Z"
 }

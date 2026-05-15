@@ -4,45 +4,54 @@ import {
   createAgentSessionFromServices,
   SessionManager,
   InteractiveMode,
-  type CreateAgentSessionServicesOptions,
   type CreateAgentSessionRuntimeFactory,
-  type CreateAgentSessionResult,
-  type ToolDefinition,
-  ModelRegistry,
+  getAgentDir,
   AuthStorage,
   SettingsManager,
-  DefaultResourceLoader,
-  createReadTool,
-  createWriteTool,
-  createEditTool,
-  createBashTool,
-  createGrepTool,
-  createFindTool,
-  createLsTool,
-  type Extension,
+  ModelRegistry,
 } from '@earendil-works/pi-coding-agent';
 
 import { AgentManager } from './agent-manager.js';
 import { MessageBus } from './messaging.js';
-import { Config } from './config.js';
 import { Logger } from './logger.js';
 import { EvolutionEngine } from './evolution-engine.js';
-import { EvoTools, setEvoContext } from './evoTools.js';
+import createEvoExtension from './evo-extension.js';
+import createWebExtension from './web-extension.js';
+import { Sandbox, DEFAULT_SANDBOX_CONFIG } from './sandbox.js';
 
 export class EvoSystem {
   private static instance: EvoSystem | null = null;
   private runtime: any = null; // AgentSessionRuntime
-  private config: Config;
   private logger: Logger;
   private evolution: EvolutionEngine | null = null;
   private agentManager: any = null;
   private messageBus: any = null;
-  private customTools: ToolDefinition[] = [];
-  private extensions: Extension[] = [];
+  private settingsManager!: SettingsManager;
+  private modelRegistry!: any; // ModelRegistry
+  private agentDir!: string;
+  private sandbox?: any;
+
+  // Evolution config (from settings.json -> evo section)
+  private model: string = 'anthropic/claude-sonnet-4-20250514';
+  private thinkingLevel: 'low' | 'medium' | 'high' = 'medium';
+  private logLevel: string = 'info';
+  private logPath: string;
+  private enableExtensions: boolean = true;
+  private evolutionInterval: number = 300000;
+  private enableWebUI: boolean = false;
+  private webUIPort: number = 3000;
+  private enableGeneticStrategy: boolean = false;
+  private evolutionStrategy: 'priority' | 'risk-averse' | 'impact-first' | 'thompson-sampling' | 'context-aware' | 'ensemble' | 'genetic' = 'genetic';
+  private enableSandbox: boolean = false;
+  private sandboxConfig?: any;
+  private enablePromptOptimization: boolean = false;
+  private promptOptimizationInterval: number = 5;
+  private enableCompaction: boolean = true;
 
   constructor() {
-    this.config = Config.load();
-    this.logger = new Logger(this.config, this.config.logPath);
+    this.agentDir = getAgentDir();
+    this.logPath = this.agentDir + '/evo.log';
+    this.logger = new Logger({ logLevel: this.logLevel }, this.logPath);
   }
 
   static getInstance(): EvoSystem {
@@ -53,42 +62,89 @@ export class EvoSystem {
   }
 
   async initialize() {
+    const cwd = process.cwd();
+
+    this.settingsManager = SettingsManager.create(cwd, this.agentDir);
+    const projectSettings = this.settingsManager.getProjectSettings();
+    const evoSettings = (projectSettings as any).evo || {};
+
+    if (evoSettings.model) this.model = evoSettings.model;
+    if (evoSettings.thinkingLevel) this.thinkingLevel = evoSettings.thinkingLevel as any;
+    if (evoSettings.logLevel) this.logLevel = evoSettings.logLevel;
+    if (evoSettings.logPath) this.logPath = evoSettings.logPath;
+    if (evoSettings.enableExtensions !== undefined) this.enableExtensions = evoSettings.enableExtensions;
+    if (evoSettings.evolutionInterval) this.evolutionInterval = evoSettings.evolutionInterval;
+    const autoApply = evoSettings.autoApply || false;
+    this.enableWebUI = evoSettings.enableWebUI || false;
+    this.webUIPort = evoSettings.webUIPort || 3000;
+    this.enableGeneticStrategy = evoSettings.enableGeneticStrategy || false;
+    this.evolutionStrategy = (evoSettings.evolutionStrategy as any) || 'genetic';
+    this.enableSandbox = evoSettings.enableSandbox || false;
+    this.sandboxConfig = evoSettings.sandboxConfig || DEFAULT_SANDBOX_CONFIG;
+    this.enablePromptOptimization = evoSettings.enablePromptOptimization || false;
+    this.promptOptimizationInterval = evoSettings.promptOptimizationInterval || 5;
+    this.enableCompaction = evoSettings.enableCompaction ?? true; // default true
+
+    this.logger = new Logger({ logLevel: this.logLevel }, this.logPath);
     this.logger.info('🚀 Initializing Evo System with AgentSessionRuntime...');
 
-    // 1. Initialize supporting infrastructure
-    this.agentManager = new AgentManager(this.logger);
+    // Shared services
+    const authStorage = AuthStorage.create(this.agentDir);
+    this.modelRegistry = ModelRegistry.create(authStorage, this.agentDir + '/models.json');
+    const sessionManager = SessionManager.create(cwd, this.agentDir);
+
+    // Initialize MessageBus for agent coordination
     this.messageBus = new MessageBus();
 
-    // 2. Prepare custom tools (they will use globals set later)
-    this.customTools = EvoTools.getAll();
+    // AgentManager with modelRegistry for sub-agent model resolution + custom templates
+    this.agentManager = new AgentManager(this.logger, this.modelRegistry, this.messageBus, this.settingsManager);
 
-    // 3. Create session manager
-    const cwd = process.cwd();
-    const sessionManager = SessionManager.create(cwd, this.config.agentDir);
+    // Runtime factory
+    const createRuntime = this.createRuntimeFactory(
+      sessionManager,
+      authStorage,
+      this.settingsManager,
+      this.modelRegistry
+    );
 
-    // 4. Create supporting services
-    const authStorage = AuthStorage.create(this.config.agentDir);
-    const settingsManager = SettingsManager.create(cwd, this.config.agentDir);
-    const modelRegistry = ModelRegistry.create(authStorage, this.config.agentDir + '/models.json');
-
-    // 5. Create runtime factory
-    const createRuntime = this.createRuntimeFactory(sessionManager, authStorage, settingsManager, modelRegistry);
-
-    // 6. Create AgentSessionRuntime (FULL RUNTIME)
+    // Create AgentSessionRuntime
     this.runtime = await createAgentSessionRuntime(createRuntime, {
       cwd,
-      agentDir: this.config.agentDir,
+      agentDir: this.agentDir,
       sessionManager,
     });
 
-    // 7. Evolution engine
-    this.evolution = new EvolutionEngine(this.runtime, this.config, this.logger, this.agentManager, this.messageBus);
+    // Create sandbox if enabled
+    if (this.enableSandbox) {
+      const { Sandbox } = await import('./sandbox.js');
+      this.sandbox = new Sandbox({ ...this.sandboxConfig, enabled: true }, this.logger);
+      this.logger.info('🔒 Sandbox mode enabled');
+      // Also set on agentManager
+      // Pass sandbox to evolution engine
+    }
 
-    // 8. Set global context for tools (must be before any tool execution)
-    setEvoContext(this.evolution, this.agentManager);
+    // Reinitialize AgentManager with sandbox
+    this.agentManager = new AgentManager(this.logger, this.modelRegistry, this.messageBus, this.settingsManager, this.sandbox);
 
-    // 9. Load extensions
-    this.extensions = await this.loadExtensions();
+    // Evolution engine
+    this.evolution = new EvolutionEngine(
+      this.runtime,
+      {
+        model: this.model,
+        thinkingLevel: this.thinkingLevel,
+        evolutionInterval: this.evolutionInterval,
+        enableExtensions: this.enableExtensions,
+        autoApply: autoApply,
+        enableGeneticStrategy: this.enableGeneticStrategy,
+        evolutionStrategy: this.evolutionStrategy,
+        enablePromptOptimization: this.enablePromptOptimization,
+        promptOptimizationInterval: this.promptOptimizationInterval,
+      },
+      this.logger,
+      this.agentManager,
+      this.messageBus,
+      this.sandbox
+    );
 
     this.logger.info('✅ Evo System initialized with AgentSessionRuntime');
   }
@@ -99,122 +155,61 @@ export class EvoSystem {
     settingsManager: SettingsManager,
     modelRegistry: ModelRegistry
   ): CreateAgentSessionRuntimeFactory {
-    // Builtin tool names (not objects) for the tools option
     const builtinToolNames = ['read', 'write', 'edit', 'bash', 'grep', 'find', 'ls'];
 
+    const extensionFactories: any[] = [];
+    if (this.enableExtensions) {
+      extensionFactories.push(createEvoExtension);
+      if (this.enableWebUI) {
+        extensionFactories.push(createWebExtension);
+      }
+    }
+
     return async (opts) => {
-      // Create services first
       const services = await createAgentSessionServices({
         cwd: opts.cwd,
         agentDir: opts.agentDir,
         authStorage,
         settingsManager,
         modelRegistry,
+        resourceLoaderOptions: {
+          extensionFactories,
+          noExtensions: !this.enableExtensions,
+        },
       });
 
-      // Resolve model from config string (format: 'provider/modelId')
-      const [provider, modelId] = this.config.model.split('/');
+      const [provider, modelId] = this.model.split('/');
       const model = modelRegistry.find(provider, modelId);
       if (!model) {
         const available = modelRegistry.getAll().map(m => `${m.provider}/${m.id}`).join(', ');
-        throw new Error(`Cannot resolve model: ${this.config.model}. Available: ${available}`);
+        throw new Error(`Cannot resolve model: ${this.model}. Available: ${available}`);
       }
 
-      // Create session from services
       const result = await createAgentSessionFromServices({
         services,
         sessionManager,
         model,
-        thinkingLevel: this.config.thinkingLevel as any,
+        thinkingLevel: this.thinkingLevel as any,
         tools: builtinToolNames,
-        customTools: this.customTools,
+        customTools: [], // tools via extension
       });
 
-      return {
-        ...result,
-        services,
-        diagnostics: [],
-      };
+      return { ...result, services, diagnostics: [] };
     };
-  }
-
-  private async loadExtensions(): Promise<any[]> {
-    if (!this.config.enableExtensions) return [];
-    try {
-      const { discoverAndLoadExtensions } = await import('@earendil-works/pi-coding-agent');
-      // signature: discoverAndLoadExtensions(configuredPaths: string[], cwd: string, agentDir?: string)
-      const result = await discoverAndLoadExtensions(
-        [], // configuredPaths - empty means use defaults
-        process.cwd(),
-        this.config.agentDir
-      );
-      // LoadExtensionsResult has .extensions array
-      const extensions = result.extensions || [];
-      this.logger.info(`📦 Loaded ${extensions.length} extensions`);
-      return extensions;
-    } catch (e: any) {
-      this.logger.warn('Failed to load extensions:', e.message);
-      return [];
-    }
   }
 
   async run(mode: 'interactive' = 'interactive', args?: string[]) {
     if (!this.runtime) throw new Error('System not initialized');
-
     if (mode !== 'interactive') {
       this.logger.warn(`Mode '${mode}' not supported. Only interactive mode available.`);
     }
-
     await this.runInteractive();
   }
 
   private async runInteractive() {
     this.logger.info('🎮 Starting Interactive Mode with AgentSessionRuntime...');
-
-    const interactive = new InteractiveMode(this.runtime, {
-      // extensions are loaded automatically from runtime
-    });
-
+    const interactive = new InteractiveMode(this.runtime, {});
     await interactive.run();
-  }
-
-  private async runPrint(args: string[]) {
-    const prompt = args[0] || '';
-    const files = args.slice(1).filter(a => a.startsWith('@')).map(a => a.slice(1));
-
-    if (!prompt) {
-      console.error('Usage: evo print <prompt> [@file1 @file2 ...]');
-      process.exit(1);
-    }
-
-    let fullPrompt = prompt;
-    if (files.length > 0) {
-      for (const file of files) {
-        try {
-          const content = await import('fs').then(fs => fs.promises.readFile(file, 'utf-8'));
-          fullPrompt += `\n\n[File: ${file}]\n${content}`;
-        } catch (e: any) {
-          fullPrompt += `\n\n[Error: ${e.message}]`;
-        }
-      }
-    }
-
-    const result = await this.runtime.session.prompt(fullPrompt);
-    const text = this.extractText(result);
-    console.log('\n' + text + '\n');
-  }
-
-  private async runEvolutionDaemon() {
-    this.logger.info('🧬 Evolution Daemon (with AgentSessionRuntime)');
-    while (true) {
-      try {
-        await this.evolution?.cycle();
-        await this.sleep(this.config.evolutionInterval);
-      } catch (e) {
-        this.logger.error('Cycle error:', e);
-        await this.sleep(60000);
-      }
-    }
   }
 
   private extractText(result: any): string {
@@ -229,16 +224,24 @@ export class EvoSystem {
     return this.evolution;
   }
 
-  getRuntime(): any {
-    return this.runtime;
-  }
-
   getAgentManager(): any {
     return this.agentManager;
   }
 
+  getSettingsManager(): SettingsManager | null {
+    return this.settingsManager || null;
+  }
+
+  getModelRegistry(): any {
+    return this.modelRegistry;
+  }
+
   getMessageBus(): any {
     return this.messageBus;
+  }
+
+  getRuntime(): any {
+    return this.runtime;
   }
 
   getSession(): any {
@@ -259,10 +262,6 @@ export class EvoSystem {
       await EvoSystem.instance.shutdown();
       EvoSystem.instance = null;
     }
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

@@ -9,6 +9,7 @@ export interface AgentConfig {
   thinkingLevel?: 'low' | 'medium' | 'high';
   tools: string[];
   customTools?: any[];
+  task?: string;
 }
 
 export const BASE_AGENT_CONFIG: AgentConfig = {

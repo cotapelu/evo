@@ -22,16 +22,14 @@ Thumbs.db
 # Evo specific
 .evo/
 *.log
-~/.pi/agent/evo.log
+
+# Pi
+~/.pi/agent/
+# Note: Keep your pi config, but ignore if you want to share project without secrets
 
 # Test coverage
 coverage/
 
 # Misc
-.cache/
-.tmp/
-temp/
-
-# Pi secrets (keep your own, but don't commit)
-# ~/.pi/agent/auth.json (contains API keys)
-# ~/.pi/agent/sessions/ (contains conversation history)
+*.tmp
+*.temp
