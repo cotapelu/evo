@@ -15,7 +15,7 @@ export interface AgentConfig {
 export const BASE_AGENT_CONFIG: AgentConfig = {
   type: 'base',
   systemPrompt: 'You are a helpful AI agent.',
-  model: 'anthropic/claude-sonnet-4-20250514',
   thinkingLevel: 'medium',
   tools: ['read', 'write', 'edit', 'bash', 'grep', 'find', 'ls'],
+  // model is set dynamically from defaultModel in agent-manager.ts
 };

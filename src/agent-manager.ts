@@ -46,8 +46,24 @@ export class AgentManager {
   }
 
   private loadAgentTemplates(settingsManager?: any): Record<string, AgentConfig> {
-    // Start with defaults - cast to Record<string, AgentConfig>
-    const templates: Record<string, AgentConfig> = { ...DEFAULT_AGENTS } as Record<string, AgentConfig>;
+    const templates: Record<string, AgentConfig> = {};
+    const defaultModel = settingsManager?.getDefaultModel();
+
+    if (!defaultModel) {
+      this.logger.warn('No default model configured - agent templates will have no model');
+    }
+
+    // Load defaults - ALL use defaultModel (hardcoded models in agents/*.ts are IGNORED)
+    for (const [key, agent] of Object.entries(DEFAULT_AGENTS)) {
+      templates[key] = {
+        type: agent.type || key,
+        systemPrompt: agent.systemPrompt,
+        model: defaultModel, // ONLY default model, ignore agent.model
+        thinkingLevel: agent.thinkingLevel || 'medium',
+        tools: agent.tools,
+        customTools: agent.customTools,
+      } as AgentConfig;
+    }
 
     // Load custom templates from settings if available
     if (settingsManager) {
@@ -61,11 +77,15 @@ export class AgentManager {
               this.logger.warn(`Invalid agent template '${type}': missing systemPrompt or tools`);
               continue;
             }
-            // Merge with defaults (type is from key)
+            // NEVER use template.model - ONLY defaultModel
+            if (!defaultModel) {
+              this.logger.warn(`No default model configured - skipping agent '${type}'`);
+              continue;
+            }
             templates[type] = {
               type,
               systemPrompt: template.systemPrompt,
-              model: template.model || 'anthropic/claude-sonnet-4-20250514',
+              model: defaultModel, // forced
               thinkingLevel: template.thinkingLevel || 'medium',
               tools: template.tools,
               customTools: template.customTools,
@@ -89,9 +109,11 @@ export class AgentManager {
       throw new Error(`Unknown agent type: ${type}. Available: ${available}`);
     }
 
+    // NEVER allow overrides.model - all agents use defaultModel exclusively
+    const { model: _ignored, ...restOverrides } = overrides || {};
     const config: AgentConfig & { task?: string } = {
       ...template,
-      ...overrides,
+      ...restOverrides,
     };
 
     this.logger.info(`Spawning agent: ${type}`);

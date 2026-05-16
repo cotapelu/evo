@@ -22,7 +22,7 @@ Principles:
 
 When modifying files, make minimal, focused changes.`,
 
-  model: 'anthropic/claude-sonnet-4-20250514',
   thinkingLevel: 'medium',
   tools: ['read', 'write', 'edit', 'bash'],
+  // model is set dynamically from defaultModel in agent-manager.ts
 };

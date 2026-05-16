@@ -31,8 +31,8 @@ export class EvoSystem {
   private agentDir!: string;
   private sandbox?: any;
 
-  // Evolution config (from settings.json -> evo section)
-  private model: string = 'anthropic/claude-sonnet-4-20250514';
+  // Model config: exclusively from pi's global settings (defaultModel)
+  private model!: string;
   private thinkingLevel: 'low' | 'medium' | 'high' = 'medium';
   private logLevel: string = 'info';
   private logPath: string;
@@ -65,10 +65,17 @@ export class EvoSystem {
     const cwd = process.cwd();
 
     this.settingsManager = SettingsManager.create(cwd, this.agentDir);
+    // Load default model from pi's global settings (set via /model or settings.json)
+    const defaultModel = this.settingsManager.getDefaultModel();
+    if (!defaultModel) {
+      throw new Error('No default model configured. Use /model to select a model or set defaultModel in ~/.pi/agent/settings.json');
+    }
+    this.model = defaultModel;
+
+    // Optional: Read other evo-specific settings (no model here)
     const projectSettings = this.settingsManager.getProjectSettings();
     const evoSettings = (projectSettings as any).evo || {};
 
-    if (evoSettings.model) this.model = evoSettings.model;
     if (evoSettings.thinkingLevel) this.thinkingLevel = evoSettings.thinkingLevel as any;
     if (evoSettings.logLevel) this.logLevel = evoSettings.logLevel;
     if (evoSettings.logPath) this.logPath = evoSettings.logPath;

@@ -22,7 +22,7 @@ Always provide:
 
 Structure your output with: Summary, Findings (with severity), Recommendations (actionable).`,
 
-  model: 'openai/gpt-4o-mini',
   thinkingLevel: 'low',
   tools: ['read', 'bash', 'grep'],
+  // model is set dynamically from defaultModel in agent-manager.ts
 };

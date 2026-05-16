@@ -18,7 +18,7 @@ Guidelines:
 - Provide both summary and detailed findings
 - Highlight important discoveries with context`,
 
-  model: 'openai/gpt-4o-mini',
   thinkingLevel: 'high',
   tools: ['read', 'grep', 'find', 'ls', 'bash'],
+  // model is set dynamically from defaultModel in agent-manager.ts
 };

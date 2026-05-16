@@ -221,9 +221,14 @@ async function preFlightCheck(): Promise<PreflightResult> {
       console.log(`   ✓ settings.json at ${settingsPath}`);
       const raw = await readFile(settingsPath, 'utf-8');
       Object.assign(settingsJson, JSON.parse(raw));
-      const evoSettings = (settingsJson as any).evo || {};
-      selectedModel = evoSettings.model || settingsJson.defaultModel || 'anthropic/claude-sonnet-4-20250514';
-      console.log(`   ✓ Model: ${selectedModel}`);
+      // Model comes from pi's global defaultModel only
+      selectedModel = settingsJson.defaultModel || '';
+      if (selectedModel) {
+        console.log(`   ✓ Model: ${selectedModel}`);
+      } else {
+        warnings.push('No defaultModel configured in settings.json. Use /model to select one.');
+        console.log(`   ⚠️  No defaultModel set`);
+      }
     } catch {
       errors.push('settings.json not found at ' + settingsPath);
     }
