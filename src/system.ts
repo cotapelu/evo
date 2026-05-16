@@ -190,8 +190,7 @@ export class EvoSystem {
       const [provider, modelId] = this.model.split('/');
       const model = modelRegistry.find(provider, modelId);
       if (!model) {
-        const available = modelRegistry.getAll().map(m => `${m.provider}/${m.id}`).join(', ');
-        throw new Error(`Cannot resolve model: ${this.model}. Available: ${available}`);
+        this.logger?.warn(`Model '${this.model}' not found in registry - continuing without validation`);
       }
 
       const result = await createAgentSessionFromServices({
