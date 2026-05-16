@@ -3,10 +3,10 @@
   "version": "2.2.0",
   "description": "Self-Evolving AI Agent System with auto-apply, safety guards, agent messaging, and comprehensive metrics",
   "type": "module",
-  "main": "evo.ts",
+  "main": "dist/src/main.js",
   "scripts": {
-    "start": "node dist/evo.js",
-    "dev": "ts-node --esm evo.ts",
+    "start": "node dist/src/main.js",
+    "dev": "ts-node --esm src/main.ts",
     "build": "tsc",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
@@ -14,7 +14,7 @@
     "lint": "eslint src/**/*.ts"
   },
   "bin": {
-    "evo": "./dist/evo.js"
+    "evo": "./dist/src/main.js"
   },
   "keywords": [
     "agent",
