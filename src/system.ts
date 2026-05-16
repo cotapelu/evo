@@ -221,7 +221,13 @@ export class EvoSystem {
         },
       });
 
-      const [provider, modelId] = this.model.split('/');
+      // Parse model string "provider/model"
+      const firstSlash = this.model.indexOf('/');
+      if (firstSlash === -1) {
+        throw new Error(`Invalid model format: '${this.model}'. Expected 'provider/model'`);
+      }
+      const provider = this.model.substring(0, firstSlash);
+      const modelId = this.model.substring(firstSlash + 1); // support model IDs with slashes
       const model = modelRegistry.find(provider, modelId);
       if (!model) {
         this.logger?.warn(`Model '${this.model}' not found in registry - continuing without validation`);

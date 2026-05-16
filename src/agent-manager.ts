@@ -140,12 +140,18 @@ export class AgentManager {
 
     // Resolve model string to Model object if we have modelRegistry
     if (typeof config.model === 'string' && this.modelRegistry) {
-      const [provider, modelId] = config.model.split('/');
-      const resolved = this.modelRegistry.find(provider, modelId);
-      if (resolved) {
-        sessionOptions.model = resolved;
+      const firstSlash = config.model.indexOf('/');
+      if (firstSlash === -1) {
+        this.logger.warn(`Invalid model format: '${config.model}'. Expected 'provider/model'`);
       } else {
-        this.logger.warn(`Cannot resolve model ${config.model} for agent ${type}, using default`);
+        const provider = config.model.substring(0, firstSlash);
+        const modelId = config.model.substring(firstSlash + 1);
+        const resolved = this.modelRegistry.find(provider, modelId);
+        if (resolved) {
+          sessionOptions.model = resolved;
+        } else {
+          this.logger.warn(`Cannot resolve model ${config.model} for agent ${type}, using default`);
+        }
       }
     } else if (typeof config.model !== 'string' && config.model) {
       sessionOptions.model = config.model;

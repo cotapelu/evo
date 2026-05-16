@@ -421,7 +421,7 @@ export class EvolutionEngine {
   private async readSelf(): Promise<string> {
     try {
       const cwd = process.cwd();
-      const defaultFiles = ['evo.ts', 'src/evolution-engine.ts', 'src/system.ts'];
+      const defaultFiles = this.collectSourceFiles();
       const files = this.config.filesToEvolve && this.config.filesToEvolve.length > 0
         ? this.config.filesToEvolve
         : defaultFiles;
@@ -439,30 +439,114 @@ export class EvolutionEngine {
       );
 
       const combined = contents.join('\n\n');
-      // Limit to 8000 chars to avoid LLM context overflow
-      const maxLen = 8000;
+      // Increased limit to 100000 chars (100k) for comprehensive analysis
+      const maxLen = 100000;
       if (combined.length <= maxLen) return combined;
 
-      // Keep start and end, truncate middle
-      const keep = Math.floor(maxLen / 2);
-      const front = combined.substring(0, keep);
-      const back = combined.substring(combined.length - keep);
-      return front + '\n... (truncated for length) ...\n' + back;
+      // For large codebases, include evo.ts fully and sample from src/
+      const parts: string[] = [];
+      let totalLen = 0;
+
+      // Always include evo.ts first and fully
+      const evoIndex = files.findIndex(f => f === 'evo.ts' || f.endsWith('main.ts'));
+      if (evoIndex >= 0 && contents[evoIndex]) {
+        parts.push(contents[evoIndex]);
+        totalLen += contents[evoIndex].length;
+      }
+
+      // Add other files until we hit limit
+      for (let i = 0; i < files.length; i++) {
+        if (i === evoIndex) continue;
+        const content = contents[i];
+        if (!content) continue;
+
+        if (totalLen + content.length <= maxLen) {
+          parts.push(content);
+          totalLen += content.length;
+        } else {
+          // Truncate this file and add partial
+          const remaining = maxLen - totalLen - 100; // reserve for truncation msg
+          if (remaining > 500) {
+            const half = Math.floor(remaining / 2);
+            const front = content.substring(0, half);
+            const back = content.substring(content.length - half);
+            parts.push(front + '\n... (truncated) ...\n' + back);
+          }
+          break;
+        }
+      }
+
+      return parts.join('\n\n') + 
+        (totalLen >= maxLen ? '\n\n// Note: Code truncated due to length limit. Full analysis would require multiple passes or summary approach.' : '');
     } catch (e: any) {
       throw new Error(`Cannot read self: ${e.message}`);
     }
   }
 
-  private async analyze(code: string): Promise<any> {
-    const prompt = `Analyze this self-evolving agent code and suggest concrete improvements.
+  /**
+   * Collect all relevant source files for self-analysis
+   * Prioritizes core files and includes all .ts files in src/
+   */
+  private collectSourceFiles(): string[] {
+    const files: string[] = [];
 
-Code (first 8000 chars):
-${code.substring(0, 8000)}
+    // Always include root-level entry point
+    files.push('evo.ts');
+
+    // Include all TypeScript files in src/ directory
+    // We'll manually list expected core files to ensure proper ordering
+    const coreFiles = [
+      'src/main.ts',
+      'src/system.ts',
+      'src/evolution-engine.ts',
+      'src/agent-manager.ts',
+      'src/messaging.ts',
+      'src/logger.ts',
+      'src/diff-utils.ts',
+      'src/diff-parser.ts',
+      'src/config-manager.ts',
+      'src/sandbox.ts',
+      'src/webhook-notifier.ts',
+      'src/prompt-optimizer.ts',
+      'src/evolution-strategies.ts',
+      'src/evolution-strategy.ts',
+    ];
+    files.push(...coreFiles);
+
+    // Include all agent templates
+    files.push(
+      'src/agents/base.ts',
+      'src/agents/researcher.ts',
+      'src/agents/coder.ts',
+      'src/agents/analyzer.ts',
+      'src/agents/index.ts'
+    );
+
+    // Include all extensions
+    files.push(
+      'src/extensions/evo-extension.ts',
+      'src/extensions/web-extension.ts'
+    );
+
+    return files;
+  }
+
+  private async analyze(code: string): Promise<any> {
+    const prompt = `Analyze this complete self-evolving agent codebase and suggest concrete improvements.
+
+Code (${code.length} chars, includes core system, agents, extensions):
+${code.substring(0, 120000)}
 
 Return JSON:
 {
   "improvements": [
-    { "priority": "high|medium|low", "description": "specific change" }
+    { 
+      "priority": "high|medium|low", 
+      "description": "specific change", 
+      "category": "architecture|performance|security|testing|refactoring|typescript|documentation|other",
+      "files": ["src/file.ts"],
+      "reason": "brief explanation"
+    }
   ]
 }`;
 
