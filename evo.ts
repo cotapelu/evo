@@ -224,7 +224,8 @@ async function preFlightCheck(): Promise<PreflightResult> {
       // Model comes from pi's global defaultModel only
       selectedModel = settingsJson.defaultModel || '';
       if (selectedModel) {
-        console.log(`   ✓ Model: ${selectedModel}`);
+        // DON'T print checkmark yet - will validate against registry later
+        console.log(`   ℹ️  Model from settings: ${selectedModel}`);
       } else {
         warnings.push('No defaultModel configured in settings.json. Use /model to select one.');
         console.log(`   ⚠️  No defaultModel set`);
@@ -261,10 +262,12 @@ async function preFlightCheck(): Promise<PreflightResult> {
         if (provider && modelId) {
           const prov = (modelRegistrySnapshot as any).providers?.[provider];
           if (prov && prov.models && prov.models[modelId]) {
-            console.log(`   ✓ Model resolved: ${provider}/${modelId}`);
+            console.log(`   ✓ Model validated: ${provider}/${modelId}`);
           } else {
             warnings.push(`Model '${selectedModel}' not found in registry — initialize will likely fail.`);
           }
+        } else {
+          warnings.push(`Invalid model format: '${selectedModel}'. Expected 'provider/model'`);
         }
       }
     } catch (e: any) {
