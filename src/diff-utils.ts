@@ -1,5 +1,7 @@
-import { readFile, writeFile, mkdir } from 'fs/promises';
+import { readFile, writeFile, mkdir, unlink, readdir } from 'fs/promises';
 import { join } from 'path';
+import { Logger } from './logger.js';
+import { parsePatch, applyPatch } from 'diff';
 
 export interface EvolutionHistoryEntry {
   level: number;
@@ -12,16 +14,18 @@ export interface EvolutionHistoryEntry {
 
 export class DiffApplier {
   private history: EvolutionHistoryEntry[] = [];
-  private logger: any;
+  private logger: Logger;
   private backupDir: string;
   private targetFile: string;
+  private maxBackups: number;
 
-  constructor(logger: any, targetFile?: string, backupDir?: string, agentDir?: string) {
+  constructor(logger: Logger, targetFile?: string, backupDir?: string, agentDir?: string, maxBackups: number = 50) {
     this.logger = logger;
     // Default backupDir: agentDir/.evo/backups (pi convention), fallback cwd
     this.backupDir = backupDir || (agentDir ? join(agentDir, '.evo', 'backups') : join(process.cwd(), '.evo', 'backups'));
     // Default target: evo.ts in cwd (project source file being evolved)
     this.targetFile = targetFile || join(process.cwd(), 'evo.ts');
+    this.maxBackups = maxBackups;
   }
 
   /** Refresh the target file path (useful for testing) */
@@ -45,6 +49,7 @@ export class DiffApplier {
     const backupPath = join(this.backupDir, backupName);
     await writeFile(backupPath, await readFile(filePath, 'utf-8'));
     this.logger.debug(`📦 Backed up ${filePath} → ${backupPath}`);
+    await this.cleanupBackups(); // Prune old backups
     return backupPath;
   }
 
@@ -61,46 +66,51 @@ export class DiffApplier {
       await writeFile(targetFile, applied);
       this.logger.info('✅ Diff applied successfully');
       return true;
-    } catch (e: any) {
-      this.logger.error('❌ Error applying diff:', e.message);
+    } catch (error) {
+      this.logger.error('❌ Error applying diff:', error instanceof Error ? error.message : String(error));
       return false;
     }
   }
 
   private applyUnifiedDiff(original: string, diff: string): string | null {
-    const lines = original.split('\n');
-    const diffLines = diff.split('\n').filter(l => l.length > 0);
-
-    // Simple unified diff parser (limited but works for our case)
-    let result = [...lines];
-    let lineIdx = 0;
-
-    for (const line of diffLines) {
-      if (line.startsWith('@@')) {
-        // Parse hunk header: @@ -oldStart,oldCount +newStart,newCount @@
-        const match = line.match(/@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
-        if (!match) continue;
-        const oldStart = parseInt(match[1], 10) - 1;
-        const oldCount = match[2] ? parseInt(match[2], 10) : 1;
-        const newStart = parseInt(match[3], 10) - 1;
-        const newCount = match[4] ? parseInt(match[4], 10) : 1;
-
-        // For simplicity, we rebuild the entire file for each hunk
-        // In production, use a proper diff library
-        lineIdx = newStart;
-      } else if (line.startsWith('+') && !line.startsWith('+++')) {
-        // Add line
-        result.splice(lineIdx, 0, line.substring(1));
-        lineIdx++;
-      } else if (line.startsWith('-') && !line.startsWith('---')) {
-        // Remove line
-        result.splice(lineIdx, 1);
-      } else if (!line.startsWith('---') && !line.startsWith('+++')) {
-        // Context line, skip
+    // 1. Validate file paths in diff (security: prevent path traversal)
+    const lines = diff.split('\n');
+    const fileHeaders = lines.filter(l => l.startsWith('--- ') || l.startsWith('+++ '));
+    const targetFileName = this.targetFile.split(/[\\/]/).pop();
+    
+    for (const header of fileHeaders) {
+      const path = header.substring(4).trim(); // after '--- ' or '+++ '
+      // Extract base path (remove a/ or b/ prefix)
+      const basePath = path.replace(/^a\//, '').replace(/^b\//, '');
+      
+      // Only allow evolving the target file
+      if (basePath !== 'evo.ts' && basePath !== targetFileName) {
+        this.logger.error(`Diff targets wrong file: ${basePath}, expected ${targetFileName}`);
+        return null;
+      }
+      
+      // Path traversal protection
+      if (basePath.includes('..') || path.includes('/..') || path.includes('\\..')) {
+        this.logger.error('Diff contains path traversal attempt');
+        return null;
       }
     }
 
-    return result.join('\n');
+    // 2. Use diff library for proper patch application
+    try {
+      const patch = parsePatch(diff);
+      if (!patch || patch.length === 0) {
+        this.logger.error('Invalid or empty diff patch');
+        return null;
+      }
+      
+      // Apply the patch (cast to any to satisfy type mismatch in @types/diff)
+      const result = applyPatch(original, patch as any);
+      return result || null;
+    } catch (error) {
+      this.logger.error('Error parsing/applying diff:', error instanceof Error ? error.message : String(error));
+      return null;
+    }
   }
 
   async rollback(level: number): Promise<boolean> {
@@ -151,6 +161,31 @@ export class DiffApplier {
     } catch (e) {
       // No history yet
       this.history = [];
+    }
+  }
+
+  /**
+   * Clean up old backup files, keeping only the most recent maxBackups
+   */
+  private async cleanupBackups(): Promise<void> {
+    try {
+      const files = await readdir(this.backupDir).catch(() => []);
+      // Filter for backup files (timestamp-*.ts)
+      const backupFiles: Array<{ name: string; path: string }> = files
+        .filter((f): f is string => typeof f === 'string' && /^\d+-\d+\.ts$/.test(f))
+        .map((f): { name: string; path: string } => ({ name: f, path: join(this.backupDir, f) }))
+        .sort((a, b) => b.name.localeCompare(a.name)); // descending by name (timestamp)
+
+      if (backupFiles.length <= this.maxBackups) return;
+
+      // Delete oldest (excess)
+      const toDelete = backupFiles.slice(this.maxBackups);
+      for (const file of toDelete) {
+        await unlink(file.path).catch(() => {});
+        this.logger.debug(`🗑️ Deleted old backup: ${file.name}`);
+      }
+    } catch (e) {
+      this.logger.warn('Failed to cleanup backups:', e);
     }
   }
 }

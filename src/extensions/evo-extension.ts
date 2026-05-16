@@ -3,6 +3,7 @@ import { readFile, readdir, stat } from 'fs/promises';
 import { join } from 'path';
 import { getAgentDir } from '@earendil-works/pi-coding-agent';
 import { EvoSystem } from '../system.js';
+import { ConfigManager } from '../config-manager.js';
 
 export default function (pi: ExtensionAPI) {
   const sendMessage = async (text: string) => {
@@ -275,6 +276,134 @@ export default function (pi: ExtensionAPI) {
         await sendMessage('Log files (' + logs.length + '):\n\n' + entries.join('\n'));
       } catch (e: any) {
         await sendMessage('Error: ' + (e.message || String(e)));
+      }
+    },
+  });
+
+  // /reload-config — Reload configuration from settings.json (hot-reload)
+  pi.registerCommand('reload-config', {
+    description: 'Reload configuration without restart (hot-reload). Usage: /reload-config',
+    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      try {
+        await system.reloadConfiguration();
+        await sendMessage('✅ Configuration reloaded');
+      } catch (error: any) {
+        await sendMessage(`❌ Failed to reload configuration: ${error.message}`);
+      }
+    },
+  });
+
+  // /config-export [file] - Export current configuration
+  pi.registerCommand('config-export', {
+    description: 'Export current Evo configuration to JSON. Usage: /config-export [path]',
+    handler: async (argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const configManager = system.getConfigManager();
+      if (!configManager) {
+        await sendMessage('❌ Config manager not available');
+        return;
+      }
+      try {
+        const path = argsStr.trim() || undefined;
+        const exported = await configManager.exportConfig(path);
+        await sendMessage(`✅ Configuration exported to: ${exported}`);
+      } catch (error: any) {
+        await sendMessage(`❌ Export failed: ${error.message}`);
+      }
+    },
+  });
+
+  // /config-import <file> [--merge] - Import configuration
+  pi.registerCommand('config-import', {
+    description: 'Import Evo configuration from JSON. Usage: /config-import <file> [--merge]',
+    handler: async (argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const configManager = system.getConfigManager();
+      if (!configManager) {
+        await sendMessage('❌ Config manager not available');
+        return;
+      }
+      const parts = argsStr.trim().split(/\s+/);
+      if (parts.length === 0) {
+        await sendMessage('❌ Specify file to import. Usage: /config-import <file> [--merge]');
+        return;
+      }
+      const filePath = parts[0];
+      const merge = parts.includes('--merge');
+      try {
+        await configManager.importConfig(filePath, merge);
+        await sendMessage(`✅ Configuration imported from ${filePath}${merge ? ' (merged)' : ' (replaced)'}`);
+      } catch (error: any) {
+        await sendMessage(`❌ Import failed: ${error.message}`);
+      }
+    },
+  });
+
+  // /config-snapshots - List available configuration snapshots
+  pi.registerCommand('config-snapshots', {
+    description: 'List all configuration snapshots',
+    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const configManager = system.getConfigManager();
+      if (!configManager) {
+        await sendMessage('❌ Config manager not available');
+        return;
+      }
+      try {
+        const snapshots = await configManager.listSnapshots();
+        if (snapshots.length === 0) {
+          await sendMessage('📭 No snapshots found');
+          return;
+        }
+        const lines = snapshots.map(s => `  ${s.name} (${(s.size / 1024).toFixed(1)}KB) - ${s.created.toISOString()}`);
+        await sendMessage(`📸 Snapshots (${snapshots.length}):\n\n${lines.join('\n')}`);
+      } catch (error: any) {
+        await sendMessage(`❌ Failed to list snapshots: ${error.message}`);
+      }
+    },
+  });
+
+  // /config-snapshot [name] - Create a configuration snapshot
+  pi.registerCommand('config-snapshot', {
+    description: 'Create a configuration snapshot. Usage: /config-snapshot [name]',
+    handler: async (argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const configManager = system.getConfigManager();
+      if (!configManager) {
+        await sendMessage('❌ Config manager not available');
+        return;
+      }
+      try {
+        const name = argsStr.trim() || undefined;
+        const path = await configManager.createSnapshot(name);
+        await sendMessage(`✅ Snapshot created: ${path}`);
+      } catch (error: any) {
+        await sendMessage(`❌ Snapshot failed: ${error.message}`);
+      }
+    },
+  });
+
+  // /config-restore <name> - Restore configuration from snapshot
+  pi.registerCommand('config-restore', {
+    description: 'Restore configuration from a snapshot. Usage: /config-restore <name>',
+    handler: async (argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const configManager = system.getConfigManager();
+      if (!configManager) {
+        await sendMessage('❌ Config manager not available');
+        return;
+      }
+      const name = argsStr.trim();
+      if (!name) {
+        await sendMessage('❌ Specify snapshot name. Usage: /config-restore <name>');
+        return;
+      }
+      try {
+        await configManager.restoreSnapshot(name);
+        await sendMessage(`✅ Configuration restored from: ${name}`);
+      } catch (error: any) {
+        await sendMessage(`❌ Restore failed: ${error.message}`);
       }
     },
   });

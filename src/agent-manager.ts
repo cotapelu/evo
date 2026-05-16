@@ -1,4 +1,6 @@
 import { createAgentSession } from '@earendil-works/pi-coding-agent';
+import type { ModelRegistry, SettingsManager } from '@earendil-works/pi-coding-agent';
+// Use NodeJS.Timeout for timer types
 import { researcherAgent } from './agents/researcher.js';
 import { coderAgent } from './agents/coder.js';
 import { analyzerAgent } from './agents/analyzer.js';
@@ -6,6 +8,7 @@ import type { AgentConfig } from './agents/base.js';
 import { Logger } from './logger.js';
 import type { Model } from '@earendil-works/pi-ai';
 import { MessageBus } from './messaging.js';
+import { Sandbox } from './sandbox.js';
 
 export interface RunningAgent {
   id: string;
@@ -13,6 +16,7 @@ export interface RunningAgent {
   session: any; // AgentSession
   status: 'running' | 'stopped' | 'error';
   createdAt: Date;
+  expiresAt?: Date; // TTL: auto-stop after this time
   messageBus?: MessageBus;
 }
 
@@ -26,26 +30,28 @@ const DEFAULT_AGENTS = {
 export class AgentManager {
   private agents: Map<string, RunningAgent> = new Map();
   private logger: Logger;
-  private modelRegistry: any; // ModelRegistry
+  private modelRegistry?: ModelRegistry;
   private globalMessageBus?: MessageBus;
-  private sandbox?: any;
+  private sandbox?: Sandbox;
   private agentTemplates: Record<string, AgentConfig> = {} as Record<string, AgentConfig>;
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(
     logger: Logger,
-    modelRegistry?: any,
+    modelRegistry?: ModelRegistry,
     messageBus?: MessageBus,
-    settingsManager?: any,
-    sandbox?: any
+    settingsManager?: SettingsManager,
+    sandbox?: Sandbox
   ) {
     this.logger = logger;
     this.modelRegistry = modelRegistry;
     this.globalMessageBus = messageBus;
     this.sandbox = sandbox;
     this.agentTemplates = this.loadAgentTemplates(settingsManager);
+    this.startAgentMonitor();
   }
 
-  private loadAgentTemplates(settingsManager?: any): Record<string, AgentConfig> {
+  private loadAgentTemplates(settingsManager?: SettingsManager): Record<string, AgentConfig> {
     const templates: Record<string, AgentConfig> = {};
     const defaultModel = settingsManager?.getDefaultModel();
 
@@ -101,7 +107,7 @@ export class AgentManager {
     return templates;
   }
 
-  async spawnAgent(type: string, overrides?: Partial<AgentConfig> & { task?: string }): Promise<RunningAgent> {
+  async spawnAgent(type: string, overrides?: Partial<AgentConfig> & { task?: string; ttlMinutes?: number }): Promise<RunningAgent> {
     const all = this.agentTemplates as Record<string, AgentConfig>;
     const template = all[type];
     if (!template) {
@@ -161,6 +167,7 @@ export class AgentManager {
       session,
       status: 'running',
       createdAt: new Date(),
+      expiresAt: overrides?.ttlMinutes ? new Date(Date.now() + overrides.ttlMinutes * 60 * 1000) : undefined,
       messageBus: this.globalMessageBus,
     };
 
@@ -210,10 +217,55 @@ export class AgentManager {
   }
 
   async stopAll(): Promise<void> {
+    this.stopAgentMonitor();
     const stops = Array.from(this.agents.keys()).map(id => this.stopAgent(id));
     await Promise.allSettled(stops);
     this.agents.clear();
     this.logger.info('All agents stopped');
+  }
+
+  /**
+   * Start monitoring agents for TTL expiration
+   */
+  private startAgentMonitor(): void {
+    if (this.cleanupInterval) return; // already running
+    this.cleanupInterval = setInterval(() => {
+      this.checkAgentExpirations().catch(e => this.logger.warn('Agent monitor error:', e));
+    }, 60_000); // check every minute
+    this.logger.debug('👁️ Agent monitor started');
+  }
+
+  /**
+   * Stop the agent monitoring interval
+   */
+  private stopAgentMonitor(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+    }
+  }
+
+  /**
+   * Check all agents for TTL expiration and stop expired ones
+   */
+  private async checkAgentExpirations(): Promise<void> {
+    const now = new Date();
+    const expired: string[] = [];
+
+    for (const [id, agent] of this.agents) {
+      if (agent.expiresAt && now > agent.expiresAt) {
+        this.logger.info(`⏰ Agent ${id} TTL expired (spawned: ${agent.createdAt.toISOString()}, expired: ${agent.expiresAt.toISOString()})`);
+        expired.push(id);
+      }
+    }
+
+    for (const id of expired) {
+      try {
+        await this.stopAgent(id);
+      } catch (e) {
+        this.logger.error(`Failed to stop expired agent ${id}:`, e);
+      }
+    }
   }
 
   // Broadcast message to all agents

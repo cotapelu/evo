@@ -365,6 +365,16 @@ async function main(): Promise<void> {
   const afterInitMem = process.memoryUsage();
   console.log(`✅ Initialized in ${initTime}ms | RSS: ${Math.round(afterInitMem.rss / 1024 / 1024)}MB\n`);
 
+  // Register SIGHUP for hot-reload configuration
+  process.on('SIGHUP', async () => {
+    try {
+      await system.reloadConfiguration();
+      console.log('🔄 Configuration reloaded via SIGHUP');
+    } catch (err: any) {
+      console.error('Reload config error:', err.message);
+    }
+  });
+
   // ── Phase 3: Health & heartbeat ───────────────────────────────────
   startHeartbeat();       // synchronous — no await
   startMemoryHealthCheck();

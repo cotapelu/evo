@@ -8,6 +8,9 @@ import { GeneticEvolutionStrategy, type ImprovementCandidate } from './evolution
 import { StrategyRegistry, type EvolutionStrategy, type StrategyContext } from './evolution-strategies.js';
 import { PromptOptimizer } from './prompt-optimizer.js';
 import type { AgentConfig } from './agents/base.js';
+import { AgentManager } from './agent-manager.js';
+import { MessageBus } from './messaging.js';
+import { Sandbox } from './sandbox.js';
 
 export interface EvolutionConfig {
   agentDir: string;
@@ -21,6 +24,7 @@ export interface EvolutionConfig {
   evolutionStrategy?: 'priority' | 'genetic' | 'risk-averse' | 'impact-first' | 'thompson-sampling' | 'context-aware' | 'ensemble';
   enablePromptOptimization?: boolean;
   promptOptimizationInterval?: number; // Run every N cycles
+  filesToEvolve?: string[]; // List of files/globs to include in self-analysis (default: evo.ts)
 }
 
 export interface EvolutionMetrics {
@@ -42,17 +46,19 @@ export class EvolutionEngine {
   private agentDir: string;
   private level: number = 0;
   private autoInterval: NodeJS.Timeout | null = null;
-  private agentManager: any;
-  private messageBus: any;
+  private agentManager: AgentManager;
+  private messageBus: MessageBus;
   private diffApplier: DiffApplier;
   private historyLoaded = false;
   private geneticStrategy?: GeneticEvolutionStrategy;
-  private sandbox?: any;
+  private sandbox?: Sandbox;
   private maxBackups: number;
   private strategyRegistry?: StrategyRegistry;
   private selectedStrategyName: string = 'genetic';
   private promptOptimizer?: PromptOptimizer;
   private enablePromptOptimization: boolean = false;
+  private enableCanary: boolean = true; // Enable canary deployment by default
+  private canaryTestTimeoutMs: number = 30000; // 30s timeout for canary test
   private metricsHistory: Array<{
     timestamp: string;
     totalCycles: number;
@@ -74,14 +80,23 @@ export class EvolutionEngine {
   };
   private totalCycleTimeMs = 0;
   private cycleCountSinceOptimization = 0;
+  private isRunning = false;
+  private consecutiveFailures = 0;
+  private readonly CIRCUIT_BREAKER_THRESHOLD = 3;
+  private readonly CIRCUIT_BREAKER_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+  private circuitBreakerPausedUntil = 0;
+  private restartAttempts = 0;
+  private readonly MAX_RESTART_ATTEMPTS = 5;
+  private readonly RESTART_BACKOFF_BASE_MS = 5000; // 5s
+  private restartTimer?: NodeJS.Timeout;
 
   constructor(
     runtime: AgentSessionRuntime,
     config: EvolutionConfig,
     logger: Logger,
-    agentManager: any,
-    messageBus: any,
-    sandbox?: any
+    agentManager: AgentManager,
+    messageBus: MessageBus,
+    sandbox?: Sandbox
   ) {
     this.runtime = runtime;
     this.config = config;
@@ -90,8 +105,8 @@ export class EvolutionEngine {
     this.agentManager = agentManager;
     this.messageBus = messageBus;
     this.sandbox = sandbox;
-    this.diffApplier = new DiffApplier(logger, undefined, this.agentDir);
     this.maxBackups = config.maxBackups || 50;
+    this.diffApplier = new DiffApplier(logger, undefined, join(this.agentDir, '.evo', 'backups'), this.agentDir, this.maxBackups);
     // Prompt optimization
     this.enablePromptOptimization = config.enablePromptOptimization || false;
     if (this.enablePromptOptimization) {
@@ -142,6 +157,19 @@ export class EvolutionEngine {
   }
 
   async cycle(): Promise<boolean> {
+    if (this.isRunning) {
+      this.logger.warn('⚠️ Evolution cycle already running, skipping...');
+      return false;
+    }
+
+    // Circuit breaker check
+    if (Date.now() < this.circuitBreakerPausedUntil) {
+      const remaining = Math.round((this.circuitBreakerPausedUntil - Date.now()) / 1000);
+      this.logger.warn(`⚠️ Circuit breaker active — evolution paused for another ${remaining}s`);
+      return false;
+    }
+
+    this.isRunning = true;
     await this.ensureHistoryLoaded();
     const startTime = Date.now();
     this.metrics.totalCycles++;
@@ -204,26 +232,26 @@ export class EvolutionEngine {
         const diff = await this.generateDiff(selectedImprovement);
         if (!diff.includes('--- a/') || !diff.includes('+++ b/') || !diff.includes('@@')) {
           this.logger.warn('❌ Invalid diff format');
-          return false;
-        }
-
-        // Auto-apply if configured
-        if (this.config.autoApply) {
-          const applySuccess = await this.applyWithSafety(diff, selectedImprovement, individualId);
-          // Record outcome to genetic strategy
-          if (this.geneticStrategy && individualId) {
-            this.geneticStrategy.recordOutcome(individualId, selectedImprovement, applySuccess);
-          }
-          success = applySuccess;
-          if (applySuccess) {
-            this.level++;
-            await this.messageBus?.publish('evolution.applied', 'evolution-engine', `Level ${this.level}: ${selectedImprovement.description}`);
-          }
+          success = false;
         } else {
-          this.logger.info('✅ Diff generated (manual apply required)');
-          this.logger.debug(`Diff preview:\n${diff.substring(0, 500)}...`);
-          this.level++;
-          success = true;
+          // Auto-apply if configured
+          if (this.config.autoApply) {
+            const applySuccess = await this.applyWithSafety(diff, selectedImprovement, individualId);
+            // Record outcome to genetic strategy
+            if (this.geneticStrategy && individualId) {
+              this.geneticStrategy.recordOutcome(individualId, selectedImprovement, applySuccess);
+            }
+            success = applySuccess;
+            if (applySuccess) {
+              this.level++;
+              await this.messageBus?.publish('evolution.applied', 'evolution-engine', `Level ${this.level}: ${selectedImprovement.description}`);
+            }
+          } else {
+            this.logger.info('✅ Diff generated (manual apply required)');
+            this.logger.debug(`Diff preview:\n${diff.substring(0, 500)}...`);
+            this.level++;
+            success = true;
+          }
         }
       } else {
         this.logger.info('✅ No improvements identified');
@@ -233,6 +261,26 @@ export class EvolutionEngine {
       this.metrics.failedCycles++;
       this.logger.error(`❌ Evolution cycle #${this.level} failed: ${error.message}`);
       success = false;
+      // Circuit breaker: count consecutive failures
+      this.consecutiveFailures++;
+      if (this.consecutiveFailures >= this.CIRCUIT_BREAKER_THRESHOLD) {
+        this.circuitBreakerPausedUntil = Date.now() + this.CIRCUIT_BREAKER_DURATION_MS;
+        this.logger.error(`🔴 Circuit breaker triggered — pausing auto-evolution for ${this.CIRCUIT_BREAKER_DURATION_MS / 1000 / 60} minutes`);
+        this.stopAuto(); // stop daemon
+        
+        // Auto-restart with exponential backoff if within max attempts
+        if (this.restartAttempts < this.MAX_RESTART_ATTEMPTS) {
+          this.restartAttempts++;
+          const backoff = this.RESTART_BACKOFF_BASE_MS * Math.pow(2, this.restartAttempts - 1);
+          this.logger.warn(`♻️ Scheduling auto-restart attempt ${this.restartAttempts}/${this.MAX_RESTART_ATTEMPTS} in ${backoff / 1000}s...`);
+          this.restartTimer = setTimeout(() => {
+            this.logger.info(`🔄 Auto-restarting evolution daemon (attempt ${this.restartAttempts})...`);
+            this.startAuto(this.config.evolutionInterval);
+          }, backoff);
+        } else {
+          this.logger.error(`💀 Max restart attempts (${this.MAX_RESTART_ATTEMPTS}) exceeded — manual intervention required`);
+        }
+      }
     } finally {
       const duration = Date.now() - startTime;
       this.metrics.lastCycleTimeMs = duration;
@@ -245,9 +293,17 @@ export class EvolutionEngine {
       }
       this.metrics.successRate = (this.metrics.successfulCycles / this.metrics.totalCycles) * 100;
       this.logger.debug(`📊 Cycle completed in ${duration}ms, success rate: ${this.metrics.successRate.toFixed(1)}% (${this.metrics.successfulCycles}/${this.metrics.totalCycles})`);
+      if (success) {
+        this.consecutiveFailures = 0; // reset on success
+        if (this.restartAttempts > 0) {
+          this.logger.info(`✅ Cycle succeeded after ${this.restartAttempts} restart attempt(s) — resetting restart counter`);
+          this.restartAttempts = 0;
+        }
+      }
+      this.isRunning = false;
     }
     // Save metrics snapshot for history
-    await this.saveMetricsSnapshot();
+    await this.saveMetricsSnapshot().catch(() => {});
 
     // Prompt optimization trigger
     if (this.enablePromptOptimization && this.promptOptimizer) {
@@ -255,7 +311,7 @@ export class EvolutionEngine {
       const interval = this.config.promptOptimizationInterval || 5;
       if (this.cycleCountSinceOptimization >= interval) {
         this.cycleCountSinceOptimization = 0;
-        await this.runPromptOptimization();
+        await this.runPromptOptimization().catch(e => this.logger.error('Prompt optimization failed:', e));
       }
     }
 
@@ -364,15 +420,34 @@ export class EvolutionEngine {
 
   private async readSelf(): Promise<string> {
     try {
-      const selfPath = join(process.cwd(), 'evo.ts');
-      const enginePath = join(process.cwd(), 'src', 'evolution-engine.ts');
-      const systemPath = join(process.cwd(), 'src', 'system.ts');
-      const [entrySrc, engineSrc, systemSrc] = await Promise.all([
-        readFile(selfPath, 'utf-8').catch(() => '// entry point not available'),
-        readFile(enginePath, 'utf-8').catch(() => '// evolution-engine.ts not available'),
-        readFile(systemPath, 'utf-8').catch(() => '// system.ts not available'),
-      ]);
-      return '=== evo.ts (Entry Point) ===\n' + entrySrc + '\n\n=== src/evolution-engine.ts ===\n' + engineSrc + '\n\n=== src/system.ts ===\n' + systemSrc;
+      const cwd = process.cwd();
+      const defaultFiles = ['evo.ts', 'src/evolution-engine.ts', 'src/system.ts'];
+      const files = this.config.filesToEvolve && this.config.filesToEvolve.length > 0
+        ? this.config.filesToEvolve
+        : defaultFiles;
+
+      const contents = await Promise.all(
+        files.map(async (file) => {
+          const path = join(cwd, file);
+          try {
+            const content = await readFile(path, 'utf-8');
+            return `=== ${file} ===\n` + content;
+          } catch (e) {
+            return `=== ${file} ===\n// Error: ${e instanceof Error ? e.message : String(e)}`;
+          }
+        })
+      );
+
+      const combined = contents.join('\n\n');
+      // Limit to 8000 chars to avoid LLM context overflow
+      const maxLen = 8000;
+      if (combined.length <= maxLen) return combined;
+
+      // Keep start and end, truncate middle
+      const keep = Math.floor(maxLen / 2);
+      const front = combined.substring(0, keep);
+      const back = combined.substring(combined.length - keep);
+      return front + '\n... (truncated for length) ...\n' + back;
     } catch (e: any) {
       throw new Error(`Cannot read self: ${e.message}`);
     }
@@ -484,6 +559,12 @@ NO explanations.`;
       clearInterval(this.autoInterval);
       this.autoInterval = null;
       this.logger.info('⏹️ Auto-evolution stopped');
+    }
+    // Cancel any pending restart timer
+    if (this.restartTimer) {
+      clearTimeout(this.restartTimer);
+      this.restartTimer = undefined;
+      this.logger.debug('🗑️ Cancelled pending restart');
     }
   }
 

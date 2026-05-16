@@ -9,6 +9,7 @@ import {
   AuthStorage,
   SettingsManager,
   ModelRegistry,
+  type AgentSessionRuntime,
 } from '@earendil-works/pi-coding-agent';
 
 import { AgentManager } from './agent-manager.js';
@@ -18,23 +19,27 @@ import { EvolutionEngine } from './evolution-engine.js';
 import createEvoExtension from './extensions/evo-extension.js';
 import createWebExtension from './extensions/web-extension.js';
 import { Sandbox, DEFAULT_SANDBOX_CONFIG } from './sandbox.js';
+import { WebhookNotifier } from './webhook-notifier.js';
+import { ConfigManager } from './config-manager.js';
 
 export class EvoSystem {
   private static instance: EvoSystem | null = null;
-  private runtime: any = null; // AgentSessionRuntime
+  private runtime: AgentSessionRuntime | null = null;
   private logger: Logger;
   private evolution: EvolutionEngine | null = null;
-  private agentManager: any = null;
-  private messageBus: any = null;
+  private agentManager: AgentManager | null = null;
+  private messageBus: MessageBus | null = null;
   private settingsManager!: SettingsManager;
-  private modelRegistry!: any; // ModelRegistry
+  private modelRegistry!: ModelRegistry;
   private agentDir!: string;
-  private sandbox?: any;
+  private sandbox?: Sandbox;
+  private webhookNotifier?: WebhookNotifier;
+  private configManager?: ConfigManager;
 
   // Model config: exclusively from pi's global settings (defaultModel)
   private model!: string;
   private thinkingLevel: 'low' | 'medium' | 'high' = 'medium';
-  private logLevel: string = 'info';
+  private logLevel: 'trace' | 'debug' | 'info' | 'warn' | 'error' = 'info';
   private logPath: string;
   private enableExtensions: boolean = true;
   private evolutionInterval: number = 300000;
@@ -77,7 +82,14 @@ export class EvoSystem {
     const evoSettings = (projectSettings as any).evo || {};
 
     if (evoSettings.thinkingLevel) this.thinkingLevel = evoSettings.thinkingLevel as any;
-    if (evoSettings.logLevel) this.logLevel = evoSettings.logLevel;
+    if (evoSettings.logLevel) {
+      const level = evoSettings.logLevel as 'trace' | 'debug' | 'info' | 'warn' | 'error';
+      if (['trace', 'debug', 'info', 'warn', 'error'].includes(level)) {
+        this.logLevel = level;
+      } else {
+        console.warn(`Invalid logLevel: ${evoSettings.logLevel}, using default 'info'`);
+      }
+    }
     if (evoSettings.logPath) this.logPath = evoSettings.logPath;
     if (evoSettings.enableExtensions !== undefined) this.enableExtensions = evoSettings.enableExtensions;
     if (evoSettings.evolutionInterval) this.evolutionInterval = evoSettings.evolutionInterval;
@@ -95,6 +107,9 @@ export class EvoSystem {
     this.logger = new Logger({ logLevel: this.logLevel }, this.logPath);
     this.logger.info('🚀 Initializing Evo System with AgentSessionRuntime...');
 
+    // Initialize config manager
+    this.configManager = new ConfigManager(this.logger, this.agentDir);
+
     // Shared services
     const authStorage = AuthStorage.create(this.agentDir);
     this.modelRegistry = ModelRegistry.create(authStorage, this.agentDir + '/models.json');
@@ -102,6 +117,25 @@ export class EvoSystem {
 
     // Initialize MessageBus for agent coordination
     this.messageBus = new MessageBus();
+
+    // Initialize webhook notifier if configured
+    const webhookUrl = evoSettings.webhookUrl;
+    if (webhookUrl && this.messageBus) {
+      try {
+        this.webhookNotifier = new WebhookNotifier(webhookUrl, this.logger);
+        this.messageBus.subscribe('webhook-notifier', '*', async (event) => {
+          await this.webhookNotifier!.send(event.metadata?.eventType || 'unknown', {
+            content: event.content,
+            from: event.from,
+            to: event.to,
+            timestamp: event.timestamp,
+          });
+        });
+        this.logger.info('🔗 Webhook notifier initialized');
+      } catch (error) {
+        this.logger.warn('Failed to initialize webhook notifier:', error);
+      }
+    }
 
     // AgentManager with modelRegistry for sub-agent model resolution + custom templates
     this.agentManager = new AgentManager(this.logger, this.modelRegistry, this.messageBus, this.settingsManager);
@@ -216,6 +250,7 @@ export class EvoSystem {
 
   private async runInteractive() {
     this.logger.info('🎮 Starting Interactive Mode with AgentSessionRuntime...');
+    if (!this.runtime) throw new Error('Runtime not initialized');
     const interactive = new InteractiveMode(this.runtime, {});
     await interactive.run();
   }
@@ -232,7 +267,11 @@ export class EvoSystem {
     return this.evolution;
   }
 
-  getAgentManager(): any {
+  getConfigManager(): ConfigManager | null {
+    return this.configManager || null;
+  }
+
+  getAgentManager(): AgentManager | null {
     return this.agentManager;
   }
 
@@ -240,19 +279,19 @@ export class EvoSystem {
     return this.settingsManager || null;
   }
 
-  getModelRegistry(): any {
+  getModelRegistry(): ModelRegistry {
     return this.modelRegistry;
   }
 
-  getMessageBus(): any {
+  getMessageBus(): MessageBus | null {
     return this.messageBus;
   }
 
-  getRuntime(): any {
+  getRuntime(): AgentSessionRuntime | null {
     return this.runtime;
   }
 
-  getSession(): any {
+  getSession(): unknown {
     return this.runtime?.session || null;
   }
 
@@ -263,6 +302,117 @@ export class EvoSystem {
     }
     this.logger.flush();
     this.logger.info('✅ Shutdown complete');
+  }
+
+  /**
+   * Reload configuration from settings.json without restarting the system
+   * Supports hot-reload of: logLevel, evolutionInterval, autoApply, evolutionStrategy, etc.
+   */
+  async reloadConfiguration(): Promise<void> {
+    this.logger.info('🔄 Reloading configuration from settings...');
+    try {
+      // Re-read project settings
+      const projectSettings = this.settingsManager?.getProjectSettings();
+      const evoSettings = (projectSettings as any).evo || {};
+
+      // Track changes for logging
+      const changes: string[] = [];
+
+      // Log level
+      if (evoSettings.logLevel) {
+        const level = evoSettings.logLevel as 'trace' | 'debug' | 'info' | 'warn' | 'error';
+        if (['trace', 'debug', 'info', 'warn', 'error'].includes(level) && this.logger["logLevel"] !== level) {
+          this.logger.setLogLevel(level);
+          this.logLevel = level;
+          changes.push(`logLevel=${level}`);
+        }
+      }
+
+      // Evolution interval
+      if (evoSettings.evolutionInterval && typeof evoSettings.evolutionInterval === 'number') {
+        const oldInterval = this.evolutionInterval;
+        if (evoSettings.evolutionInterval !== oldInterval) {
+          this.evolutionInterval = evoSettings.evolutionInterval;
+          changes.push(`evolutionInterval=${evoSettings.evolutionInterval}`);
+          // If auto-evolution is running, restart with new interval
+          const engine = this.evolution;
+          if (engine) {
+            // Check if auto is running by accessing private autoInterval (any)
+            const isRunning = (engine as any)['autoInterval'];
+            if (isRunning) {
+              engine.stopAuto();
+              engine.startAuto(this.evolutionInterval);
+              changes.push('auto-evolution restarted with new interval');
+            }
+          }
+        }
+      }
+
+      // Auto-apply flag
+      if (typeof evoSettings.autoApply === 'boolean' && evoSettings.autoApply !== (this as any).autoApply) {
+        (this as any).autoApply = evoSettings.autoApply;
+        changes.push(`autoApply=${evoSettings.autoApply}`);
+      }
+
+      // Evolution strategy
+      if (evoSettings.evolutionStrategy && evoSettings.evolutionStrategy !== this.evolutionStrategy) {
+        const valid = ['priority', 'risk-averse', 'impact-first', 'thompson-sampling', 'context-aware', 'ensemble', 'genetic'];
+        if (valid.includes(evoSettings.evolutionStrategy)) {
+          this.evolutionStrategy = evoSettings.evolutionStrategy as any;
+          changes.push(`evolutionStrategy=${evoSettings.evolutionStrategy}`);
+        }
+      }
+
+      // Enable genetic strategy flag (legacy)
+      if (typeof evoSettings.enableGeneticStrategy === 'boolean' && evoSettings.enableGeneticStrategy !== this.enableGeneticStrategy) {
+        this.enableGeneticStrategy = evoSettings.enableGeneticStrategy;
+        changes.push(`enableGeneticStrategy=${evoSettings.enableGeneticStrategy}`);
+      }
+
+      // Prompt optimization
+      if (typeof evoSettings.enablePromptOptimization === 'boolean' && evoSettings.enablePromptOptimization !== this.enablePromptOptimization) {
+        this.enablePromptOptimization = evoSettings.enablePromptOptimization;
+        changes.push(`enablePromptOptimization=${evoSettings.enablePromptOptimization}`);
+      }
+      if (evoSettings.promptOptimizationInterval && typeof evoSettings.promptOptimizationInterval === 'number' && evoSettings.promptOptimizationInterval !== this.promptOptimizationInterval) {
+        this.promptOptimizationInterval = evoSettings.promptOptimizationInterval;
+        changes.push(`promptOptimizationInterval=${evoSettings.promptOptimizationInterval}`);
+      }
+
+      // Log path
+      if (evoSettings.logPath && evoSettings.logPath !== this.logPath) {
+        this.logPath = evoSettings.logPath;
+        // Recreate logger with new path
+        this.logger = new Logger({ logLevel: this.logLevel }, this.logPath);
+        changes.push(`logPath=${evoSettings.logPath}`);
+      }
+
+      // Enable extensions (requires restart of runtime to take effect)
+      if (typeof evoSettings.enableExtensions === 'boolean' && evoSettings.enableExtensions !== this.enableExtensions) {
+        this.enableExtensions = evoSettings.enableExtensions;
+        changes.push(`enableExtensions=${evoSettings.enableExtensions} (requires restart)`);
+      }
+
+      // Enable Web UI
+      if (typeof evoSettings.enableWebUI === 'boolean' && evoSettings.enableWebUI !== this.enableWebUI) {
+        this.enableWebUI = evoSettings.enableWebUI;
+        changes.push(`enableWebUI=${evoSettings.enableWebUI}`);
+      }
+
+      // Sandbox settings
+      if (typeof evoSettings.enableSandbox === 'boolean' && evoSettings.enableSandbox !== this.enableSandbox) {
+        this.enableSandbox = evoSettings.enableSandbox;
+        changes.push(`enableSandbox=${evoSettings.enableSandbox}`);
+      }
+
+      if (changes.length > 0) {
+        this.logger.info(`Configuration reloaded: ${changes.join(', ')}`);
+      } else {
+        this.logger.info('Configuration reloaded: no changes');
+      }
+    } catch (error: any) {
+      this.logger.error('Failed to reload configuration:', error.message);
+    }
   }
 
   static async shutdown() {
