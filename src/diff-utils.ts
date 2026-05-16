@@ -14,11 +14,21 @@ export class DiffApplier {
   private history: EvolutionHistoryEntry[] = [];
   private logger: any;
   private backupDir: string;
+  private targetFile: string;
 
-  constructor(logger: any, backupDir?: string) {
+  constructor(logger: any, targetFile?: string, backupDir?: string, agentDir?: string) {
     this.logger = logger;
-    this.backupDir = backupDir || join(process.cwd(), '.evo/backups');
+    // Default backupDir: agentDir/.evo/backups (pi convention), fallback cwd
+    this.backupDir = backupDir || (agentDir ? join(agentDir, '.evo', 'backups') : join(process.cwd(), '.evo', 'backups'));
+    // Default target: evo.ts in cwd (project source file being evolved)
+    this.targetFile = targetFile || join(process.cwd(), 'evo.ts');
   }
+
+  /** Refresh the target file path (useful for testing) */
+  setTargetFile(filePath: string) { this.targetFile = filePath; }
+
+  /** Get the current target file path */
+  getTargetFile(): string { return this.targetFile; }
 
   async ensureBackupDir(): Promise<void> {
     try {
@@ -101,7 +111,7 @@ export class DiffApplier {
     }
 
     try {
-      await writeFile(join(process.cwd(), 'evo.ts'), await readFile(entry.backupPath, 'utf-8'));
+      await writeFile(this.targetFile, await readFile(entry.backupPath, 'utf-8'));
       entry.applied = false; // Mark as rolled back
       this.logger.info(`🔄 Rolled back to level ${level} from ${entry.backupPath}`);
       return true;
@@ -128,6 +138,7 @@ export class DiffApplier {
   }
 
   async saveHistory(): Promise<void> {
+    // Save history alongside backups in the .evo directory
     const historyFile = join(this.backupDir, 'history.json');
     await writeFile(historyFile, JSON.stringify(this.history, null, 2));
   }

@@ -130,6 +130,7 @@ export class EvoSystem {
     this.evolution = new EvolutionEngine(
       this.runtime,
       {
+        agentDir: this.agentDir,
         model: this.model,
         thinkingLevel: this.thinkingLevel,
         evolutionInterval: this.evolutionInterval,
@@ -166,9 +167,10 @@ export class EvoSystem {
     }
 
     return async (opts) => {
+      // ALWAYS use pi's default agentDir — never override with custom evo config
       const services = await createAgentSessionServices({
         cwd: opts.cwd,
-        agentDir: opts.agentDir,
+        agentDir: opts.agentDir, // from getAgentDir() — pi default
         authStorage,
         settingsManager,
         modelRegistry,

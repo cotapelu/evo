@@ -1,4 +1,7 @@
 import type { ExtensionAPI, ExtensionCommandContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { readFile, readdir, stat } from 'fs/promises';
+import { join } from 'path';
+import { getAgentDir } from '@earendil-works/pi-coding-agent';
 import { EvoSystem } from './system.js';
 
 export default function (pi: ExtensionAPI) {
@@ -172,7 +175,58 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  // LLM-callable Tools
+  
+  // /evolution-heartbeat
+  pi.registerCommand('evolution-heartbeat', {
+    description: 'Show current heartbeat status',
+    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
+      try {
+        const raw = await readFile(join(getAgentDir(), '.evo', 'heartbeat.json'), 'utf-8');
+        const hb = JSON.parse(raw);
+        const ageMs = Date.now() - new Date(hb.lastBeat).getTime();
+        const msg = [
+          'Heartbeat:',
+          '  PID: ' + hb.pid,
+          '  Last beat: ' + Math.round(ageMs / 1000) + 's ago',
+          '  Uptime: ' + Math.round(hb.uptime) + 's',
+          '  RSS: ' + Math.round(hb.memoryRSS / 1024 / 1024) + 'MB',
+        ].join('\n');
+        await sendMessage(msg);
+      } catch (e: any) {
+        await sendMessage('No heartbeat yet: ' + ((e && e.message) || String(e)));
+      }
+    },
+  });
+
+  // /evolution-logs
+  pi.registerCommand('evolution-logs', {
+    description: 'List all rotated evo.log files with sizes',
+    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
+      try {
+        const dir = getAgentDir();
+        const all = await readdir(dir).catch(() => []);
+        const logs = all
+          .filter((n: string) => n === 'evo.log' || /^evo\.log\.\d+$/.test(n))
+          .map((n: string) => ({ name: n, path: join(dir, n) }))
+          .sort((a: any, b: any) => b.name.localeCompare(a.name));
+        if (logs.length === 0) { await sendMessage('No evo log files found'); return; }
+        const entries: string[] = [];
+        for (const l of logs) {
+          try {
+            const s = await stat(l.path);
+            entries.push(l.name.padEnd(20) + (s.size / 1024).toFixed(1) + 'KB');
+          } catch {
+            entries.push(l.name.padEnd(20) + ' (unreadable)');
+          }
+        }
+        await sendMessage('Log files (' + logs.length + '):\n\n' + entries.join('\n'));
+      } catch (e: any) {
+        await sendMessage('Error: ' + (e.message || String(e)));
+      }
+    },
+  });
+
+// LLM-callable Tools
 
   const evolveTool: ToolDefinition = {
     name: 'evolve',

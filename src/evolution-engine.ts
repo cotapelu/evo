@@ -10,6 +10,7 @@ import { PromptOptimizer } from './prompt-optimizer.js';
 import type { AgentConfig } from './agents/base.js';
 
 export interface EvolutionConfig {
+  agentDir: string;
   model: string;
   thinkingLevel: string;
   evolutionInterval: number;
@@ -38,6 +39,7 @@ export class EvolutionEngine {
   private runtime: AgentSessionRuntime;
   private config: EvolutionConfig;
   private logger: Logger;
+  private agentDir: string;
   private level: number = 0;
   private autoInterval: NodeJS.Timeout | null = null;
   private agentManager: any;
@@ -83,11 +85,12 @@ export class EvolutionEngine {
   ) {
     this.runtime = runtime;
     this.config = config;
+    this.agentDir = config.agentDir;
     this.logger = logger;
     this.agentManager = agentManager;
     this.messageBus = messageBus;
     this.sandbox = sandbox;
-    this.diffApplier = new DiffApplier(logger);
+    this.diffApplier = new DiffApplier(logger, undefined, this.agentDir);
     this.maxBackups = config.maxBackups || 50;
     // Prompt optimization
     this.enablePromptOptimization = config.enablePromptOptimization || false;
@@ -95,8 +98,8 @@ export class EvolutionEngine {
       this.promptOptimizer = new PromptOptimizer(this.logger, this.metrics);
       this.logger.info('🧠 Prompt optimization enabled');
     }
-    // Metrics history path
-    this.metricsHistoryPath = join(process.cwd(), '.evo/metrics_history.json');
+    // Metrics history path — use agentDir (pi convention), not cwd
+    this.metricsHistoryPath = join(this.agentDir, '.evo', 'metrics_history.json');
     // Initialize strategy registry
     this.strategyRegistry = new StrategyRegistry();
     this.selectedStrategyName = config.evolutionStrategy || 'genetic';
@@ -130,7 +133,7 @@ export class EvolutionEngine {
   private async saveMetricsHistory(): Promise<void> {
     try {
       const { mkdir, writeFile } = await import('fs/promises');
-      const historyDir = join(process.cwd(), '.evo');
+      const historyDir = join(this.agentDir, '.evo');
       await mkdir(historyDir, { recursive: true });
       await writeFile(this.metricsHistoryPath, JSON.stringify(this.metricsHistory, null, 2));
     } catch (e) {
@@ -227,7 +230,8 @@ export class EvolutionEngine {
         success = false;
       }
     } catch (error: any) {
-      this.logger.error('Evolution cycle failed:', error.message);
+      this.metrics.failedCycles++;
+      this.logger.error(`❌ Evolution cycle #${this.level} failed: ${error.message}`);
       success = false;
     } finally {
       const duration = Date.now() - startTime;
@@ -259,6 +263,12 @@ export class EvolutionEngine {
   }
 
   private async applyWithSafety(diff: string, improvement: ImprovementCandidate, individualId?: string): Promise<boolean> {
+    // Guard: runtime must be active
+    if (!this.runtime?.session) {
+      this.logger.error('❌ Cannot apply diff: runtime session not available');
+      return false;
+    }
+
     const targetFile = join(process.cwd(), 'evo.ts');
 
     // 1. Create backup
@@ -354,7 +364,15 @@ export class EvolutionEngine {
 
   private async readSelf(): Promise<string> {
     try {
-      return await readFile(join(process.cwd(), 'evo.ts'), 'utf-8');
+      const selfPath = join(process.cwd(), 'evo.ts');
+      const enginePath = join(process.cwd(), 'src', 'evolution-engine.ts');
+      const systemPath = join(process.cwd(), 'src', 'system.ts');
+      const [entrySrc, engineSrc, systemSrc] = await Promise.all([
+        readFile(selfPath, 'utf-8').catch(() => '// entry point not available'),
+        readFile(enginePath, 'utf-8').catch(() => '// evolution-engine.ts not available'),
+        readFile(systemPath, 'utf-8').catch(() => '// system.ts not available'),
+      ]);
+      return '=== evo.ts (Entry Point) ===\n' + entrySrc + '\n\n=== src/evolution-engine.ts ===\n' + engineSrc + '\n\n=== src/system.ts ===\n' + systemSrc;
     } catch (e: any) {
       throw new Error(`Cannot read self: ${e.message}`);
     }
