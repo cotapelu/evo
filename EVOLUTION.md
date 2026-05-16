@@ -476,19 +476,65 @@ Enters full TUI. Available slash commands:
 
 ---
 
-## 🔄 EVOLUTION CYCLE
+## 🔄 EVOLUTION CYCLE (v2)
 
 Trigger via `/evolution` (starts daemon) or `/evo` → `evolve` tool, or programmatically:
 
-1. **Read Self**: Loads `evo.ts` + `src/evolution-engine.ts` + `src/system.ts`
-2. **Analyze**: Asks LLM to suggest improvements (expects JSON)
-3. **Plan**: Sorts improvements by selected strategy (priority / genetic / risk-averse / impact-first / thompson-sampling / context-aware / ensemble)
-4. **Generate Diff**: For top candidate
-5. **Apply** (if `autoApply: true`) or show diff for manual apply
-6. **Validate**: Syntax check (`tsc --noEmit`) + post-apply tests
-7. **Record**: Backup, history, metrics, genetic fitness updates
+1. **📊 Codebase Analysis** (CodeAnalyzer)
+   - Collects all relevant files using glob (`evo.ts`, `src/**/*.ts`, `agents/**/*.ts`, `extensions/**/*.ts`)
+   - Assigns priority: `high` (core), `medium` (extensions/agents), `low` (others)
+   - Always includes high-priority files **full content**
+   - For medium/low: includes summary if truncated
+   - Total token limit: ~100k (configurable)
 
-**Auto-apply**: Safe with backup, syntax pre-check, and validation after apply. Rollback available via `/evolution-rollback <level>`.
+2. **🤖 LLM Analysis**
+   - Prompt: "Analyze and suggest improvements" with full prioritized codebase
+   - Expected JSON response: `{ improvements: [{ priority, description, category, files: [], reason }] }`
+   - `files` array lists **all files** needing modification (multi-file support!)
+
+3. **📋 Planning**
+   - Converts raw JSON to `ImprovementCandidate` with computed complexity/risk/impact
+   - Sorts by priority (default) or uses selected `EvolutionStrategy`
+   - Strategies: `genetic`, `priority`, `risk-averse`, `impact-first`, `thompson-sampling`, `context-aware`, `ensemble`
+
+4. **📝 Diff Generation**
+   - For selected improvement, generate unified diff
+   - Prompt includes **only the affected files' content** (from `improvement.files`)
+   - Requirements: raw diff, multi-file support, can create new files (`--- /dev/null`)
+   - Returns unified diff string (no markdown)
+
+5. **🔧 Application** (if `autoApply: true`)
+   - **MultiFileDiffApplier**:
+     - Parse diff → list of affected files
+     - Security: block path traversal (`..`), validate allowed targets
+     - Backup all existing files to `~/.pi/agent/.evo/backups/{timestamp}-{file}.bak`
+     - Apply patch file-by-file using `diff` library
+     - Create directories as needed
+   - **ValidationRunner** (post-apply, **NEW**):
+     - Syntax check (balanced braces)
+     - TypeScript: `npx tsc --noEmit`
+     - Unit tests (Jest, if config exists)
+     - Smoke test (dynamic import + TypeScript parser)
+   - On validation failure: **auto-rollback** all files from backups
+   - On success: record history, update metrics, increment level
+
+6. **📚 Recording**
+   - Save entry to `history.json`: level, timestamp, improvement, diff, affected files, backup paths
+   - Backup rotation: keep last 50 (configurable)
+   - Metrics: success/fail rates, cycle time, validation time, rollback count
+
+7. **🧬 Genetic Fitness** (if enabled)
+   - Track individual success history (todo: integrate fully)
+   - Evolve population via crossover/mutation/selection
+
+**Key improvements in v2**:
+- ✅ **Multi-file evolution**: No longer limited to `evo.ts` only
+- ✅ **Smart context**: Priority-based file inclusion, avoids cutting core files
+- ✅ **Comprehensive validation**: Tests & type-checking after apply
+- ✅ **Auto-rollback on failure**: Safety guard
+- ✅ **Better diff format**: Supports new files, multi-file patches
+
+**Rollback**: `/evolution-rollback <level>` restores all files from that level's backups.
 
 ---
 

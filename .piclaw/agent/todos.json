@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Simplify Evo Agent - Remove Bloat",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Delete unnecessary files: evolution-strategies.ts, evolution-strategy.ts, prompt-optimizer.ts, sandbox.ts, metrics-server.ts, config-manager.ts, web-extension.ts",
+          "status": "completed",
+          "details": "Remove files that add complexity but are not core to self-evolution"
+        },
+        {
+          "id": "task-2",
+          "content": "Simplify main.ts: remove pre-flight complexity, heartbeat, memory checks, log rotation, keep minimal bootstrap",
+          "status": "completed"
+        },
+        {
+          "id": "task-3",
+          "content": "Simplify system.ts: remove ConfigManager and Sandbox dependencies; use SettingsManager directly; create runtime using official pattern",
+          "status": "completed"
+        },
+        {
+          "id": "task-4",
+          "content": "Simplify evolution-engine.ts: remove strategy pattern, use simple priority sorting; remove sandbox; streamline cycle",
+          "status": "completed"
+        },
+        {
+          "id": "task-5",
+          "content": "Simplify code-analyzer.ts: remove priority and summarization; just collect all .ts files under src/ and evo.ts",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Simplify agent-manager.ts: remove sandbox; keep basic spawn/stop/list/messaging",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Simplify extensions/evo-extension.ts: remove ConfigManager commands (config-*, reload-config), heartbeat, logs; keep only essential commands and tools",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Simplify logger.ts: remove log rotation, keep simple file+console logging",
+          "status": "completed"
+        },
+        {
+          "id": "task-9",
+          "content": "Build and test: ensure TypeScript compiles and agent can start",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 10,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-05-16T23:29:08.575Z"
+}

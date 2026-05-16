@@ -1,168 +1,142 @@
 import { createAgentSession } from '@earendil-works/pi-coding-agent';
 import type { ModelRegistry, SettingsManager } from '@earendil-works/pi-coding-agent';
-// Use NodeJS.Timeout for timer types
 import { researcherAgent } from './agents/researcher.js';
 import { coderAgent } from './agents/coder.js';
 import { analyzerAgent } from './agents/analyzer.js';
 import type { AgentConfig } from './agents/base.js';
 import { Logger } from './logger.js';
-import type { Model } from '@earendil-works/pi-ai';
 import { MessageBus } from './messaging.js';
-import { Sandbox } from './sandbox.js';
 
 export interface RunningAgent {
   id: string;
   config: AgentConfig & { task?: string };
-  session: any; // AgentSession
+  session: any;
   status: 'running' | 'stopped' | 'error';
   createdAt: Date;
-  expiresAt?: Date; // TTL: auto-stop after this time
-  messageBus?: MessageBus;
 }
-
-// Default built-in agents
-const DEFAULT_AGENTS = {
-  researcher: researcherAgent,
-  coder: coderAgent,
-  analyzer: analyzerAgent,
-} as const;
 
 export class AgentManager {
   private agents: Map<string, RunningAgent> = new Map();
   private logger: Logger;
   private modelRegistry?: ModelRegistry;
-  private globalMessageBus?: MessageBus;
-  private sandbox?: Sandbox;
-  private agentTemplates: Record<string, AgentConfig> = {} as Record<string, AgentConfig>;
-  private cleanupInterval?: NodeJS.Timeout;
+  private messageBus?: MessageBus;
+  private agentTemplates: Record<string, AgentConfig> = {};
 
   constructor(
     logger: Logger,
     modelRegistry?: ModelRegistry,
     messageBus?: MessageBus,
-    settingsManager?: SettingsManager,
-    sandbox?: Sandbox
+    settingsManager?: SettingsManager
   ) {
     this.logger = logger;
     this.modelRegistry = modelRegistry;
-    this.globalMessageBus = messageBus;
-    this.sandbox = sandbox;
+    this.messageBus = messageBus;
     this.agentTemplates = this.loadAgentTemplates(settingsManager);
-    this.startAgentMonitor();
   }
 
   private loadAgentTemplates(settingsManager?: SettingsManager): Record<string, AgentConfig> {
     const templates: Record<string, AgentConfig> = {};
     const defaultModel = settingsManager?.getDefaultModel();
-
     if (!defaultModel) {
-      this.logger.warn('No default model configured - agent templates will have no model');
+      this.logger.warn('No default model in settings - agents may fail');
     }
 
-    // Load defaults - ALL use defaultModel (hardcoded models in agents/*.ts are IGNORED)
-    for (const [key, agent] of Object.entries(DEFAULT_AGENTS)) {
+    // Default agents - cast to AgentConfig
+    const defaults: Record<string, AgentConfig> = {
+      researcher: researcherAgent as AgentConfig,
+      coder: coderAgent as AgentConfig,
+      analyzer: analyzerAgent as AgentConfig,
+    };
+
+    for (const [key, agent] of Object.entries(defaults)) {
+      const model = defaultModel || agent.model;
       templates[key] = {
         type: agent.type || key,
         systemPrompt: agent.systemPrompt,
-        model: defaultModel, // ONLY default model, ignore agent.model
+        model,
         thinkingLevel: agent.thinkingLevel || 'medium',
         tools: agent.tools,
         customTools: agent.customTools,
-      } as AgentConfig;
+      };
     }
 
-    // Load custom templates from settings if available
+    // Custom templates from settings
     if (settingsManager) {
       try {
         const projectSettings = settingsManager.getProjectSettings();
         const customTemplates = (projectSettings as any).evo?.agentTemplates as Record<string, any> | undefined;
         if (customTemplates) {
           for (const [type, template] of Object.entries(customTemplates)) {
-            // Validate required fields
-            if (!template.systemPrompt || !template.tools) {
-              this.logger.warn(`Invalid agent template '${type}': missing systemPrompt or tools`);
+            if (!template?.systemPrompt || !template?.tools) {
+              this.logger.warn(`Invalid agent template '${type}'`);
               continue;
             }
-            // NEVER use template.model - ONLY defaultModel
             if (!defaultModel) {
-              this.logger.warn(`No default model configured - skipping agent '${type}'`);
+              this.logger.warn(`No default model - skipping agent ${type}`);
               continue;
             }
             templates[type] = {
               type,
               systemPrompt: template.systemPrompt,
-              model: defaultModel, // forced
+              model: defaultModel,
               thinkingLevel: template.thinkingLevel || 'medium',
               tools: template.tools,
               customTools: template.customTools,
-            } as AgentConfig;
-            this.logger.info(`✅ Loaded custom agent template: ${type}`);
+            };
+            this.logger.info(`Loaded agent template: ${type}`);
           }
         }
       } catch (e) {
-        this.logger.warn('Failed to load agent templates from settings:', e);
+        this.logger.warn('Failed to load templates: ' + e);
       }
     }
 
     return templates;
   }
 
-  async spawnAgent(type: string, overrides?: Partial<AgentConfig> & { task?: string; ttlMinutes?: number }): Promise<RunningAgent> {
-    const all = this.agentTemplates as Record<string, AgentConfig>;
-    const template = all[type];
+  /**
+   * Spawn a new agent
+   */
+  async spawnAgent(type: string, overrides?: Partial<AgentConfig> & { task?: string }): Promise<RunningAgent> {
+    const template = this.agentTemplates[type];
     if (!template) {
       const available = Object.keys(this.agentTemplates).join(', ');
       throw new Error(`Unknown agent type: ${type}. Available: ${available}`);
     }
 
-    // NEVER allow overrides.model - all agents use defaultModel exclusively
-    const { model: _ignored, ...restOverrides } = overrides || {};
     const config: AgentConfig & { task?: string } = {
       ...template,
-      ...restOverrides,
+      ...overrides,
     };
 
-    this.logger.info(`Spawning agent: ${type}`);
+    this.logger.info(`Spawning ${type} agent`);
 
-    // Prepare createAgentSession options
-    let agentTools = config.tools;
-    // Apply sandbox filter if enabled
-    if (this.sandbox) {
-      agentTools = this.sandbox.filterTools(agentTools);
-      this.logger.info(`🔒 Sandbox: agent ${type} tools filtered to: ${agentTools.join(', ')}`);
-    }
-
-    const sessionOptions: any = {
-      thinkingLevel: config.thinkingLevel as any,
-      tools: agentTools,
-      customTools: config.customTools,
-    };
-
-    // Resolve model string to Model object if we have modelRegistry
+    // Resolve model to Model object
+    let model: any;
     if (typeof config.model === 'string' && this.modelRegistry) {
-      const firstSlash = config.model.indexOf('/');
-      if (firstSlash === -1) {
-        this.logger.warn(`Invalid model format: '${config.model}'. Expected 'provider/model'`);
-      } else {
-        const provider = config.model.substring(0, firstSlash);
-        const modelId = config.model.substring(firstSlash + 1);
-        const resolved = this.modelRegistry.find(provider, modelId);
-        if (resolved) {
-          sessionOptions.model = resolved;
-        } else {
-          this.logger.warn(`Cannot resolve model ${config.model} for agent ${type}, using default`);
-        }
+      const slash = config.model.indexOf('/');
+      if (slash !== -1) {
+        const provider = config.model.substring(0, slash);
+        const modelId = config.model.substring(slash + 1);
+        model = this.modelRegistry.find(provider, modelId);
       }
-    } else if (typeof config.model !== 'string' && config.model) {
-      sessionOptions.model = config.model;
+    }
+    if (!model && typeof config.model !== 'string') {
+      model = config.model;
     }
 
-    const { session } = await createAgentSession(sessionOptions);
+    // Create agent session
+    const { session } = await createAgentSession({
+      thinkingLevel: config.thinkingLevel as any,
+      tools: config.tools,
+      customTools: config.customTools,
+      model: model,
+    });
 
-    // Set system prompt for specialized agent
+    // Set system prompt
     session.agent.state.systemPrompt = config.systemPrompt;
 
-    // If initial task provided, send it
+    // Initial task
     if (config.task) {
       await session.prompt(config.task);
     }
@@ -173,18 +147,15 @@ export class AgentManager {
       session,
       status: 'running',
       createdAt: new Date(),
-      expiresAt: overrides?.ttlMinutes ? new Date(Date.now() + overrides.ttlMinutes * 60 * 1000) : undefined,
-      messageBus: this.globalMessageBus,
     };
 
-    // Subscribe agent to evolution events if messageBus is available
-    if (this.globalMessageBus && agent.messageBus) {
-      // Agent already has its own messageBus from constructor
-      this.globalMessageBus.subscribe(agent.id, 'evolution.*', async (event) => {
+    // Subscribe to evolution events
+    if (this.messageBus) {
+      this.messageBus.subscribe(agent.id, 'evolution.*', async (event) => {
         try {
-          await session.prompt(`[System Event: ${event.metadata?.eventType}]\n${event.content}`);
+          await session.prompt(`[System: ${event.metadata?.eventType}]\n${event.content}`);
         } catch (e) {
-          this.logger.warn(`Failed to deliver event to agent ${agent.id}:`, e);
+          this.logger.warn(`Failed to deliver event to ${agent.id}`);
         }
       });
     }
@@ -194,142 +165,85 @@ export class AgentManager {
     return agent;
   }
 
+  /**
+   * Stop an agent
+   */
   async stopAgent(agentId: string): Promise<boolean> {
     const agent = this.agents.get(agentId);
     if (!agent) return false;
 
     try {
-      // Unsubscribe from message bus
-      if (this.globalMessageBus) {
-        this.globalMessageBus.unsubscribeAll(agentId);
+      if (this.messageBus) {
+        this.messageBus.unsubscribeAll(agentId);
       }
-
-      await agent.session.dispose();
+      await agent.session.shutdown();
       this.agents.delete(agentId);
       this.logger.info(`⏹️ Agent ${agentId} stopped`);
       return true;
     } catch (e: any) {
-      this.logger.error(`Failed to stop agent ${agentId}:`, e.message);
+      this.logger.error(`Stop agent ${agentId} failed:`, e.message);
       return false;
     }
-  }
-
-  getAgent(agentId: string): RunningAgent | undefined {
-    return this.agents.get(agentId);
   }
 
   listAgents(): RunningAgent[] {
     return Array.from(this.agents.values());
   }
 
-  async stopAll(): Promise<void> {
-    this.stopAgentMonitor();
-    const stops = Array.from(this.agents.keys()).map(id => this.stopAgent(id));
-    await Promise.allSettled(stops);
-    this.agents.clear();
-    this.logger.info('All agents stopped');
+  getAgent(agentId: string): RunningAgent | undefined {
+    return this.agents.get(agentId);
   }
 
   /**
-   * Start monitoring agents for TTL expiration
+   * Broadcast message to all agents
    */
-  private startAgentMonitor(): void {
-    if (this.cleanupInterval) return; // already running
-    this.cleanupInterval = setInterval(() => {
-      this.checkAgentExpirations().catch(e => this.logger.warn('Agent monitor error:', e));
-    }, 60_000); // check every minute
-    this.logger.debug('👁️ Agent monitor started');
-  }
+  async broadcast(fromAgentId: string, content: string): Promise<void> {
+    if (!this.messageBus) return;
 
-  /**
-   * Stop the agent monitoring interval
-   */
-  private stopAgentMonitor(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-      this.cleanupInterval = undefined;
-    }
-  }
-
-  /**
-   * Check all agents for TTL expiration and stop expired ones
-   */
-  private async checkAgentExpirations(): Promise<void> {
-    const now = new Date();
-    const expired: string[] = [];
+    this.messageBus.broadcast(fromAgentId, content);
 
     for (const [id, agent] of this.agents) {
-      if (agent.expiresAt && now > agent.expiresAt) {
-        this.logger.info(`⏰ Agent ${id} TTL expired (spawned: ${agent.createdAt.toISOString()}, expired: ${agent.expiresAt.toISOString()})`);
-        expired.push(id);
-      }
-    }
-
-    for (const id of expired) {
-      try {
-        await this.stopAgent(id);
-      } catch (e) {
-        this.logger.error(`Failed to stop expired agent ${id}:`, e);
-      }
-    }
-  }
-
-  // Broadcast message to all agents
-  async broadcast(fromAgentId: string, content: string): Promise<void> {
-    if (!this.globalMessageBus) {
-      this.logger.warn('MessageBus not available for broadcast');
-      return;
-    }
-
-    this.globalMessageBus.broadcast(fromAgentId, content, 'broadcast');
-
-    // Also deliver directly to all agents
-    for (const [agentId, agent] of this.agents) {
-      if (agentId !== fromAgentId && agent.session) {
+      if (id !== fromAgentId) {
         try {
           await agent.session.prompt(`[Broadcast from ${fromAgentId}]: ${content}`);
         } catch (e) {
-          this.logger.warn(`Failed to deliver broadcast to agent ${agentId}:`, e);
+          this.logger.warn(`Broadcast to ${id} failed`);
         }
       }
     }
   }
 
-  // Send direct message between agents
+  /**
+   * Send direct message between agents
+   */
   async sendMessage(fromAgentId: string, toAgentId: string, content: string): Promise<boolean> {
-    const targetAgent = this.agents.get(toAgentId);
-    if (!targetAgent) {
-      this.logger.warn(`Cannot send message: agent ${toAgentId} not found`);
-      return false;
-    }
+    const target = this.agents.get(toAgentId);
+    if (!target) return false;
 
-    // Send via message bus for tracking
-    this.globalMessageBus?.send(fromAgentId, toAgentId, content);
+    this.messageBus?.send(fromAgentId, toAgentId, content);
 
     try {
-      await targetAgent.session.prompt(`[Message from ${fromAgentId}]: ${content}`);
+      await target.session.prompt(`[Message from ${fromAgentId}]: ${content}`);
       return true;
     } catch (e) {
-      this.logger.error(`Failed to deliver message to ${toAgentId}:`, e);
+      this.logger.error(`Send message to ${toAgentId} failed`);
       return false;
     }
-  }
-
-  // Get message history for an agent
-  getAgentMessages(agentId: string, limit?: number): any[] {
-    return this.globalMessageBus?.getAgentHistory(agentId, limit) || [];
-  }
-
-  // Get list of available agent types
-  getAvailableTypes(): string[] {
-    return Object.keys(this.agentTemplates);
   }
 
   /**
-   * Reload agent templates from settings (used after prompt optimization)
+   * Stop all agents
    */
-  public reloadTemplates(settingsManager?: SettingsManager): void {
-    this.agentTemplates = this.loadAgentTemplates(settingsManager);
-    this.logger.info('🔄 Agent templates reloaded from settings');
+  async stopAll(): Promise<void> {
+    for (const id of this.agents.keys()) {
+      await this.stopAgent(id);
+    }
+  }
+
+  /**
+   * Get available agent types
+   */
+  getAvailableTypes(): string[] {
+    return Object.keys(this.agentTemplates);
   }
 }
