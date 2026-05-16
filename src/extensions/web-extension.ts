@@ -1,5 +1,5 @@
 import type { ExtensionAPI, ExtensionCommandContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
-import { EvoSystem } from './system.js';
+import { EvoSystem } from '../system.js';
 
 // Simple HTTP server for Web UI
 let serverInstance: any = null;
@@ -106,7 +106,7 @@ export default function (pi: ExtensionAPI) {
               req.on('end', () => {
                 try {
                   const parsed = JSON.parse(body);
-                  EvoSystem.getInstance().getEvolutionEngine()?.rollback(parsed.level).then(success => {
+                  EvoSystem.getInstance().getEvolutionEngine()?.rollback(parsed.level).then((success: boolean) => {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success }));
                   }).catch((e: any) => {

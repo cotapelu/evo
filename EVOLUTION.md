@@ -126,69 +126,23 @@ await interactive.run();  // Blocks, full TUI
 
 ### 3. Custom Tools (EvoTools)
 
-Tools available as `/tool evolve`, `/tool spawn_agent`, `/tool evo_status`:
+Available Extension Commands (slash commands registered by `src/extensions/evo-extension.ts`):
 
-```typescript
-// Tool definitions - use global context (set during init)
-let globalEvolution: EvolutionEngine | null = null;
-let globalAgentManager: AgentManager | null = null;
+| Command | Description |
+|---|---|
+| `/evolution [start\|stop\|restart] [ms]` | Control daemon (default = start) |
+| `/evolution-history` | Show applied improvement history |
+| `/evolution-rollback <level>` | Rollback to previous level |
+| `/evolution-metrics` | Detailed cycle metrics |
+| `/evolution-heartbeat` | Daemon heartbeat status |
+| `/evolution-logs` | List rotated evo.log files |
+| `/evo \| /evo-status` | Full system status (JSON) |
+| `/agents` | List all running sub-agents |
+| `/agent-stop <id>` | Stop a specific agent |
+| `/spawn-agent <type> [task]` | Spawn a sub-agent |
+| `/web-ui [start\|stop] [port]` | Control Web UI dashboard |
 
-export function setEvoContext(evolution: EvolutionEngine, agentManager: AgentManager) {
-  globalEvolution = evolution;
-  globalAgentManager = agentManager;
-}
-
-export class EvoTools {
-  static evolveTool(): ToolDefinition {
-    return {
-      name: 'evolve',
-      description: 'Trigger immediate evolution cycle to improve the agent system',
-      execute: async () => {
-        if (!globalEvolution) {
-          return { content: '❌ Evolution engine not available' };
-        }
-        const success = await globalEvolution.cycle();
-        return {
-          content: success ? '✅ Evolution cycle completed' : '⚠️ No improvements',
-        };
-      }
-    };
-  }
-
-  static spawnAgentTool(): ToolDefinition {
-    return {
-      name: 'spawn_agent',
-      parameters: {
-        type: { type: 'string', enum: ['researcher', 'coder', 'analyzer'] },
-        task: { type: 'string' },
-      },
-      execute: async (params) => {
-        if (!globalAgentManager) {
-          return { content: '❌ Agent manager not available' };
-        }
-        const agent = await globalAgentManager.spawnAgent(params.type, { task: params.task });
-        return {
-          content: `✅ Spawned ${params.type} agent (id: ${agent.id})`,
-        };
-      }
-    };
-  }
-
-  static statusTool(): ToolDefinition {
-    return {
-      name: 'evo_status',
-      execute: async () => ({
-        content: JSON.stringify({
-          level: globalEvolution?.getLevel() || 0,
-          agents: globalAgentManager?.listAgents().map(a => a.id) || [],
-          uptime: process.uptime(),
-          agentDir: getAgentDir(),
-        }, null, 2),
-      })
-    };
-  }
-}
-```
+LLM-callable tools (usable by AI itself): `evolve`, `evo_status`, `spawn_agent`, `evo_rollback`, `agent_message`, `agent_broadcast`, `evo_metrics`.
 
 ### 4. EvolutionEngine
 
@@ -378,39 +332,57 @@ export class AgentManager {
 Instead of hardcoding tools globally, create an extension:
 
 ```typescript
-// src/evo-extension.ts
-import type { Extension, ExtensionAPI, ExtensionCommandContext } from '@earendil-works/pi-coding-agent';
-import { EvoSystem } from './system.js';
+// src/extensions/evo-extension.ts
+import type { ExtensionAPI, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { EvoSystem } from '../system.js';
 
-export class EvoExtension implements Extension {
-  name = 'evo-extension';
-  description = 'Self-evolution commands';
+export default function (pi: ExtensionAPI) {
+  const sendMessage = async (text: string) => {
+    await pi.sendMessage({ customType: 'text', content: text, display: true });
+  };
 
-  async activate(api: ExtensionAPI, ctx: any) {
-    const system = EvoSystem.getInstance();
+  // /evolution [start|stop|restart] [interval_ms]
+  pi.registerCommand('evolution', { ... });
+  // /evolution-history
+  pi.registerCommand('evolution-history', { ... });
+  // /evolution-rollback <level>
+  pi.registerCommand('evolution-rollback', { ... });
+  // /spawn-agent <type> [task]
+  pi.registerCommand('spawn-agent', { ... });
+  // /evo (alias trạng thái ngắn)
+  pi.registerCommand('evo', { ... });
+  // /agents
+  pi.registerCommand('agents', { ... });
+  // /agent-stop <id>
+  pi.registerCommand('agent-stop', { ... });
+  // /evolution-metrics
+  pi.registerCommand('evolution-metrics', { ... });
+  // /evolution-heartbeat
+  pi.registerCommand('evolution-heartbeat', { ... });
+  // /evolution-logs
+  pi.registerCommand('evolution-logs', { ... });
 
-    ctx.registerCommand('evolution-start', {
-      description: 'Start auto-evolution daemon',
-      args: [{ name: 'interval', type: 'number', required: false }],
-      handler: async (cmdCtx: ExtensionCommandContext) => {
-        const engine = system.getEvolutionEngine();
-        const interval = cmdCtx.args.interval as number | undefined;
-        engine?.startAuto(interval);
-        cmdCtx.session.addMessage({ type: 'text', text: '✅ Auto-evolution started' });
-      },
-    });
-
-    // Add more commands...
-  }
-
-  async deactivate(api: ExtensionAPI, ctx: any) {
-    const system = EvoSystem.getInstance();
-    system.getEvolutionEngine()?.stopAuto();
-  }
+  // ── LLM-callable Tools ──────────────────────────────────────
+  pi.registerTool({ name: 'evolve', ... });
+  pi.registerTool({ name: 'evo_status', ... });
+  pi.registerTool({ name: 'spawn_agent', ... });
+  pi.registerTool({ name: 'evo_rollback', ... });
+  pi.registerTool({ name: 'agent_message', ... });
+  pi.registerTool({ name: 'agent_broadcast', ... });
+  pi.registerTool({ name: 'evo_metrics', ... });
 }
+```
 
-export function createEvoExtension(): Extension {
-  return new EvoExtension();
+Full implementation: `src/extensions/evo-extension.ts`
+
+### Web UI Extension (`src/extensions/web-extension.ts`)
+
+Provides `/web-ui-start [port]` and `/web-ui-stop` commands plus a full browser dashboard with metrics charts, agent list, model picker, and live evolution controls.
+
+```typescript
+export default function (pi: ExtensionAPI) {
+  pi.registerCommand('web-ui-start', { ... });
+  pi.registerCommand('web-ui-stop', { ... });
 }
 ```
 
@@ -485,30 +457,38 @@ node dist/evo.js
 npm start
 ```
 
-Enters full TUI. Available commands:
-- `/help` - Show all commands
-- `/tool evolve` - Trigger evolution cycle
-- `/tool spawn_agent <type> [task]` - Spawn sub-agent
-- `/tool evo_status` - System status
-- `/tree` - Session tree
-- `/fork` - Fork current session
-- `/resume` - Resume session
-- `/settings` - Edit settings (pi built-in)
-- `/` - Command palette
+Enters full TUI. Available slash commands:
+- `/evolution [start|stop|restart] [interval_ms]` — Control evolution daemon
+- `/evolution-history` — Show improvement history
+- `/evolution-rollback <level>` — Rollback to previous level
+- `/evolution-metrics` — Detailed metrics
+- `/evolution-heartbeat` — Daemon heartbeat
+- `/evolution-logs` — List log files
+- `/evo` or `/evo-status` — Full system status (JSON)
+- `/agents` — List running agents
+- `/agent-stop <id>` — Stop an agent
+- `/spawn-agent <type> [task]` — Spawn a sub-agent
+- `/web-ui [start|stop] [port]` — Control Web UI dashboard
+- `/tree`, `/fork`, `/resume`, `/new` — Session navigation (pi built-in)
+- `/model` — Model selection
+- `/settings` — Edit settings
+- `/` — Command palette
 
 ---
 
 ## 🔄 EVOLUTION CYCLE
 
-Trigger via `/tool evolve` or programmatically:
+Trigger via `/evolution` (starts daemon) or `/evo` → `evolve` tool, or programmatically:
 
-1. **Read Self**: Loads `evo.ts` source code from cwd
+1. **Read Self**: Loads `evo.ts` + `src/evolution-engine.ts` + `src/system.ts`
 2. **Analyze**: Asks LLM to suggest improvements (expects JSON)
-3. **Plan**: Sorts improvements by priority
-4. **Implement**: Generates unified diff patch
-5. **Review**: User manually applies diff (future: auto-apply with backup)
+3. **Plan**: Sorts improvements by selected strategy (priority / genetic / risk-averse / impact-first / thompson-sampling / context-aware / ensemble)
+4. **Generate Diff**: For top candidate
+5. **Apply** (if `autoApply: true`) or show diff for manual apply
+6. **Validate**: Syntax check (`tsc --noEmit`) + post-apply tests
+7. **Record**: Backup, history, metrics, genetic fitness updates
 
-**Current**: Only generates diff preview. Auto-apply TBD.
+**Auto-apply**: Safe with backup, syntax pre-check, and validation after apply. Rollback available via `/evolution-rollback <level>`.
 
 ---
 
@@ -549,7 +529,7 @@ Pre-configured specialized agents:
 }
 ```
 
-Spawn via: `/tool spawn_agent coder "refactor utils.ts"`
+Spawn via: `/spawn-agent coder "refactor utils.ts"`
 
 ---
 
@@ -589,18 +569,16 @@ No extra configuration needed.
 
 ---
 
-## 🔮 FUTURE WORK
+## 🔮 FUTURE WORK (Planned Enhancements)
 
-1. **Auto-evolution daemon** - Background evolution while in TUI (`/evolution-start`)
-2. **Auto-apply patches** - Safe diff application with backup & rollback
-3. **Agent messaging** - Full MessageBus integration for agent coordination
-4. **Evolution history** - Track applied/rejected improvements with metrics
-5. **Agent templates** - Configurable agent types via settings
-6. **Web UI mode** - Browser-based interface
-7. **Multi-provider models** - Per-agent model selection
-8. **Evolution strategies** - Genetic algorithms for prompt/tool optimization
-9. **Safety guards** - Sandbox execution, review before apply
-10. **Metrics dashboard** - Evolution effectiveness tracking
+**Core features are largely complete** (auto-daemon, auto-apply, messaging, history, templates, Web UI, multi-provider, strategies, safety guards, metrics). Ideas for next phase:
+
+1. **Auto-restart on failure** — If daemon crashes, auto-respawn with backoff
+2. **Export/Import configurations** — Share agent templates & evolution strategies
+3. **Distributed evolution** — Multi-node evolution coordination
+4. **Prompt A/B testing** — More robust statistical prompt optimization
+5. **Stakeholder feedback loop** — Incorporate user feedback into evolution scoring
+6. **Real-time alerts** — Slack/webhook notifications on evolution events
 
 ---
 
@@ -615,6 +593,6 @@ No extra configuration needed.
 
 ---
 
-**Last Updated**: 2026-05-15
+**Last Updated**: 2026-05-16
 **Version**: 2.2.0
-**Status**: ✅ Refactored for pi defaults, Extension-based implementation
+**Status**: ✅ Core features complete — slash commands consolidated, extensions separated, auto-apply & genetic strategies active

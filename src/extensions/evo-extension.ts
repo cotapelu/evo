@@ -2,57 +2,72 @@ import type { ExtensionAPI, ExtensionCommandContext, ToolDefinition } from '@ear
 import { readFile, readdir, stat } from 'fs/promises';
 import { join } from 'path';
 import { getAgentDir } from '@earendil-works/pi-coding-agent';
-import { EvoSystem } from './system.js';
+import { EvoSystem } from '../system.js';
 
 export default function (pi: ExtensionAPI) {
   const sendMessage = async (text: string) => {
     await pi.sendMessage({ customType: 'text', content: text, display: true });
   };
 
-  // /evolution-start [interval]
-  pi.registerCommand('evolution-start', {
-    description: 'Start auto-evolution daemon (runs in background)',
+  // /evolution [start|stop|restart] [interval_ms]
+  //   /evolution          → alias start với interval mặc định
+  //   /evolution start    → start daemon
+  //   /evolution stop     → stop daemon
+  //   /evolution restart  → restart daemon
+  //   /evolution <ms>     → start với interval tùy chỉnh
+  pi.registerCommand('evolution', {
+    description: 'Control auto-evolution daemon (start / stop / restart / status). Usage: /evolution [start|stop|restart] [interval_ms]',
     handler: async (argsStr: string, ctx: ExtensionCommandContext) => {
       const system = EvoSystem.getInstance();
       const engine = system.getEvolutionEngine();
       if (!engine) { await sendMessage('❌ Evolution engine not available'); return; }
-      const trimmed = argsStr.trim();
-      let interval: number | undefined;
-      if (trimmed) {
-        interval = parseInt(trimmed, 10);
-        if (isNaN(interval!)) {
-          await sendMessage('❌ Invalid interval. Usage: /evolution-start [interval_ms]');
-          return;
+      const parts = argsStr.trim().split(/\s+/).filter(Boolean);
+      const sub = parts[0] || 'start'; // default subcommand = start
+      const intervalStr = parts[1];
+
+      switch (sub) {
+        case 'start': {
+          let interval: number | undefined;
+          if (intervalStr) {
+            interval = parseInt(intervalStr, 10);
+            if (isNaN(interval!)) {
+              await sendMessage('❌ Invalid interval. Usage: /evolution start [interval_ms]');
+              return;
+            }
+          }
+          engine.startAuto(interval);
+          await sendMessage(`✅ Auto-evolution started (interval: ${interval || 300000}ms)`);
+          break;
+        }
+        case 'stop': {
+          engine.stopAuto();
+          await sendMessage('⏹️ Auto-evolution stopped');
+          break;
+        }
+        case 'restart': {
+          engine.stopAuto();
+          await sendMessage('⏹️ Auto-evolution stopped');
+          let interval: number | undefined;
+          if (intervalStr) {
+            interval = parseInt(intervalStr, 10);
+            if (isNaN(interval!)) {
+              await sendMessage('❌ Invalid interval. Usage: /evolution restart [interval_ms]');
+              return;
+            }
+          }
+          engine.startAuto(interval);
+          await sendMessage(`✅ Auto-evolution restarted (interval: ${interval || 300000}ms)`);
+          break;
+        }
+        default: {
+          await sendMessage(`❌ Unknown subcommand '${sub}'. Usage: /evolution [start|stop|restart] [interval_ms]`);
+          break;
         }
       }
-      engine.startAuto(interval);
-      await sendMessage(`✅ Auto-evolution started (interval: ${interval || 300000}ms)`);
     },
   });
 
-  // /evolution-stop
-  pi.registerCommand('evolution-stop', {
-    description: 'Stop auto-evolution daemon',
-    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
-      const system = EvoSystem.getInstance();
-      const engine = system.getEvolutionEngine();
-      if (!engine) { await sendMessage('❌ Evolution engine not available'); return; }
-      engine.stopAuto();
-      await sendMessage('⏹️ Auto-evolution stopped');
-    },
-  });
 
-  // /evolution-status
-  pi.registerCommand('evolution-status', {
-    description: 'Show evolution daemon status',
-    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
-      const system = EvoSystem.getInstance();
-      const engine = system.getEvolutionEngine();
-      if (!engine) { await sendMessage('❌ Evolution engine not available'); return; }
-      const level = engine.getLevel();
-      await sendMessage(`🧬 Evolution Engine:\n  Level: ${level}\n  Auto-running: ${engine['autoInterval'] ? '✅' : '❌'}`);
-    },
-  });
 
   // /evolution-history
   pi.registerCommand('evolution-history', {
@@ -122,9 +137,9 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  // /evo-status
-  pi.registerCommand('evo-status', {
-    description: 'Full Evo system status',
+  // /evo (alias ngắn cho evo-status)
+  pi.registerCommand('evo', {
+    description: 'Alias ngắn cho /evo-status — xem trạng thái hệ thống',
     handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
       const system = EvoSystem.getInstance();
       const engine = system.getEvolutionEngine();
@@ -146,6 +161,44 @@ export default function (pi: ExtensionAPI) {
         }));
       }
       await sendMessage(`Evo System Status:\n${JSON.stringify(status, null, 2)}`);
+    },
+  });
+
+  // /agents — liệt kê tất cả agent đang chạy
+  pi.registerCommand('agents', {
+    description: 'List all running sub-agents',
+    handler: async (_argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const agentManager = system.getAgentManager();
+      if (!agentManager) { await sendMessage('❌ Agent manager not available'); return; }
+      const agents = agentManager.listAgents();
+      if (agents.length === 0) {
+        await sendMessage('📭 No agents running.');
+        return;
+      }
+      const lines = agents.map((a: any) => `  ${a.id}\n    type: ${a.config.type}\n    status: ${a.status}\n    created: ${a.createdAt.toISOString()}`);
+      await sendMessage(`🤖 Running Agents (${agents.length}):\n\n${lines.join('\n\n')}`);
+    },
+  });
+
+  // /agent-stop <id> — dừng một agent cụ thể
+  pi.registerCommand('agent-stop', {
+    description: 'Stop a running sub-agent by ID. Usage: /agent-stop <agent-id>',
+    handler: async (argsStr: string, ctx: ExtensionCommandContext) => {
+      const system = EvoSystem.getInstance();
+      const agentManager = system.getAgentManager();
+      if (!agentManager) { await sendMessage('❌ Agent manager not available'); return; }
+      const agentId = argsStr.trim();
+      if (!agentId) {
+        await sendMessage('❌ Specify agent ID. Usage: /agent-stop <agent-id>');
+        return;
+      }
+      const success = await agentManager.stopAgent(agentId);
+      if (success) {
+        await sendMessage(`⏹️ Agent ${agentId} stopped`);
+      } else {
+        await sendMessage(`❌ Agent ${agentId} not found or failed to stop`);
+      }
     },
   });
 

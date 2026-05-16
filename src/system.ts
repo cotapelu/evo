@@ -15,8 +15,8 @@ import { AgentManager } from './agent-manager.js';
 import { MessageBus } from './messaging.js';
 import { Logger } from './logger.js';
 import { EvolutionEngine } from './evolution-engine.js';
-import createEvoExtension from './evo-extension.js';
-import createWebExtension from './web-extension.js';
+import createEvoExtension from './extensions/evo-extension.js';
+import createWebExtension from './extensions/web-extension.js';
 import { Sandbox, DEFAULT_SANDBOX_CONFIG } from './sandbox.js';
 
 export class EvoSystem {
