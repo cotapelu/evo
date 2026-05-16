@@ -202,10 +202,11 @@ async function preFlightCheck(): Promise<PreflightResult> {
     }
   })());
 
-  // 2) API key
+  // 2) API key (warning only - don't fail)
   await withTimeout((async () => {
     if (!process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY) {
-      errors.push('No API key found. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.');
+      warnings.push('No API key found. Set ANTHROPIC_API_KEY or OPENAI_API_KEY for LLM functionality.');
+      console.log(`   ⚠️  No API key - running in limited mode`);
     } else {
       const p = process.env.ANTHROPIC_API_KEY ? 'Anthropic' : 'OpenAI';
       console.log(`   ✓ API key found (${p})`);
