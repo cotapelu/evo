@@ -18,7 +18,6 @@ export interface EventSubscription {
 
 export class MessageBus {
   private messages: Message[] = [];
-  private pending: Map<string, Message[]> = new Map(); // agentId -> messages
   private subscriptions: EventSubscription[] = [];
   private logger: any;
 
@@ -26,7 +25,7 @@ export class MessageBus {
     this.logger = logger;
   }
 
-  // Direct messaging
+  // Direct messaging - delivers immediately to matching subscriptions
   send(from: string, to: string, content: string, metadata?: Record<string, any>): Message {
     const msg: Message = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -39,18 +38,27 @@ export class MessageBus {
     };
     this.messages.push(msg);
 
-    const queue = this.pending.get(to) || [];
-    queue.push(msg);
-    this.pending.set(to, queue);
+    // Deliver immediately to agent subscriptions
+    this.deliverDirectMessage(to, msg).catch(() => {});
 
     this.logger?.debug(`📨 Message from ${from} to ${to}: ${content.substring(0, 50)}...`);
     return msg;
   }
 
-  // Broadcast to all agents
+  private async deliverDirectMessage(to: string, msg: Message): Promise<void> {
+    // Find handlers for this recipient (direct or wildcard)
+    const handlers = this.subscriptions.filter(s => s.agentId === to || s.eventType === 'message.direct');
+    for (const sub of handlers) {
+      try {
+        await sub.handler(msg);
+      } catch (e) {
+        this.logger?.error(`Failed to deliver message to ${sub.agentId}:`, e);
+      }
+    }
+  }
+
+  // Broadcast to all agents - delivers to all via subscriptions
   broadcast(from: string, content: string, eventType?: string): Message[] {
-    const messages: Message[] = [];
-    // We'll deliver this via a special mechanism - for now, log it
     const msg: Message = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       from,
@@ -61,10 +69,24 @@ export class MessageBus {
       metadata: { eventType },
     };
     this.messages.push(msg);
-    messages.push(msg);
+
+    // Deliver to all agents via subscription
+    this.deliverBroadcast(msg).catch(() => {});
 
     this.logger?.info(`📢 Broadcast from ${from} (${eventType || 'general'}): ${content.substring(0, 50)}...`);
-    return messages;
+    return [msg];
+  }
+
+  private async deliverBroadcast(msg: Message): Promise<void> {
+    // Deliver to agents that subscribed to broadcast or evolution.*
+    const handlers = this.subscriptions.filter(s => s.eventType === 'broadcast' || s.eventType === '*' || s.eventType.startsWith('evolution.'));
+    for (const sub of handlers) {
+      try {
+        await sub.handler(msg);
+      } catch (e) {
+        this.logger?.error(`Broadcast delivery failed to ${sub.agentId}:`, e);
+      }
+    }
   }
 
   // Publish event to subscribers
@@ -107,14 +129,6 @@ export class MessageBus {
   // Unsubscribe all for an agent
   unsubscribeAll(agentId: string): void {
     this.subscriptions = this.subscriptions.filter(s => s.agentId !== agentId);
-    this.pending.delete(agentId);
-  }
-
-  // Get pending messages for agent
-  getMessagesForAgent(agentId: string): Message[] {
-    const queue = this.pending.get(agentId) || [];
-    this.pending.set(agentId, []);
-    return queue;
   }
 
   // Get all messages (for debugging/history)
@@ -132,7 +146,6 @@ export class MessageBus {
   // Clear all state (for testing)
   clear(): void {
     this.messages = [];
-    this.pending.clear();
     this.subscriptions = [];
   }
 }

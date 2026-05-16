@@ -324,4 +324,12 @@ export class AgentManager {
   getAvailableTypes(): string[] {
     return Object.keys(this.agentTemplates);
   }
+
+  /**
+   * Reload agent templates from settings (used after prompt optimization)
+   */
+  public reloadTemplates(settingsManager?: SettingsManager): void {
+    this.agentTemplates = this.loadAgentTemplates(settingsManager);
+    this.logger.info('🔄 Agent templates reloaded from settings');
+  }
 }

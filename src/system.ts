@@ -137,9 +137,6 @@ export class EvoSystem {
       }
     }
 
-    // AgentManager with modelRegistry for sub-agent model resolution + custom templates
-    this.agentManager = new AgentManager(this.logger, this.modelRegistry, this.messageBus, this.settingsManager);
-
     // Runtime factory
     const createRuntime = this.createRuntimeFactory(
       sessionManager,
@@ -160,12 +157,16 @@ export class EvoSystem {
       const { Sandbox } = await import('./sandbox.js');
       this.sandbox = new Sandbox({ ...this.sandboxConfig, enabled: true }, this.logger);
       this.logger.info('🔒 Sandbox mode enabled');
-      // Also set on agentManager
-      // Pass sandbox to evolution engine
     }
 
-    // Reinitialize AgentManager with sandbox
-    this.agentManager = new AgentManager(this.logger, this.modelRegistry, this.messageBus, this.settingsManager, this.sandbox);
+    // Initialize AgentManager ONCE with final sandbox configuration
+    this.agentManager = new AgentManager(
+      this.logger,
+      this.modelRegistry,
+      this.messageBus,
+      this.settingsManager,
+      this.enableSandbox ? this.sandbox : undefined
+    );
 
     // Evolution engine
     this.evolution = new EvolutionEngine(
@@ -323,6 +324,7 @@ export class EvoSystem {
 
       // Track changes for logging
       const changes: string[] = [];
+      const engine = this.evolution; // for hot-reload propagation
 
       // Log level
       if (evoSettings.logLevel) {
@@ -358,6 +360,11 @@ export class EvoSystem {
       if (typeof evoSettings.autoApply === 'boolean' && evoSettings.autoApply !== (this as any).autoApply) {
         (this as any).autoApply = evoSettings.autoApply;
         changes.push(`autoApply=${evoSettings.autoApply}`);
+        // Propagate to engine config
+        const engine = this.evolution;
+        if (engine) {
+          engine['config'].autoApply = evoSettings.autoApply;
+        }
       }
 
       // Evolution strategy
@@ -366,6 +373,8 @@ export class EvoSystem {
         if (valid.includes(evoSettings.evolutionStrategy)) {
           this.evolutionStrategy = evoSettings.evolutionStrategy as any;
           changes.push(`evolutionStrategy=${evoSettings.evolutionStrategy}`);
+          // Propagate to engine
+          if (engine) { engine.setStrategy(this.evolutionStrategy); }
         }
       }
 
@@ -373,16 +382,22 @@ export class EvoSystem {
       if (typeof evoSettings.enableGeneticStrategy === 'boolean' && evoSettings.enableGeneticStrategy !== this.enableGeneticStrategy) {
         this.enableGeneticStrategy = evoSettings.enableGeneticStrategy;
         changes.push(`enableGeneticStrategy=${evoSettings.enableGeneticStrategy}`);
+        // Propagate to engine
+        if (engine) { engine.setGeneticFlag(this.enableGeneticStrategy); }
       }
 
       // Prompt optimization
       if (typeof evoSettings.enablePromptOptimization === 'boolean' && evoSettings.enablePromptOptimization !== this.enablePromptOptimization) {
         this.enablePromptOptimization = evoSettings.enablePromptOptimization;
         changes.push(`enablePromptOptimization=${evoSettings.enablePromptOptimization}`);
+        // Propagate to engine (interval may also change)
+        if (engine) { engine.setPromptOptimization(this.enablePromptOptimization, this.promptOptimizationInterval); }
       }
       if (evoSettings.promptOptimizationInterval && typeof evoSettings.promptOptimizationInterval === 'number' && evoSettings.promptOptimizationInterval !== this.promptOptimizationInterval) {
         this.promptOptimizationInterval = evoSettings.promptOptimizationInterval;
         changes.push(`promptOptimizationInterval=${evoSettings.promptOptimizationInterval}`);
+        // Propagate interval change even if enabled flag unchanged
+        if (engine) { engine.setPromptOptimization(this.enablePromptOptimization, this.promptOptimizationInterval); }
       }
 
       // Log path

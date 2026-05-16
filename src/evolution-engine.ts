@@ -57,8 +57,6 @@ export class EvolutionEngine {
   private selectedStrategyName: string = 'genetic';
   private promptOptimizer?: PromptOptimizer;
   private enablePromptOptimization: boolean = false;
-  private enableCanary: boolean = true; // Enable canary deployment by default
-  private canaryTestTimeoutMs: number = 30000; // 30s timeout for canary test
   private metricsHistory: Array<{
     timestamp: string;
     totalCycles: number;
@@ -89,6 +87,8 @@ export class EvolutionEngine {
   private readonly MAX_RESTART_ATTEMPTS = 5;
   private readonly RESTART_BACKOFF_BASE_MS = 5000; // 5s
   private restartTimer?: NodeJS.Timeout;
+  private metricsWriteCounter = 0;
+  private readonly METRICS_WRITE_THROTTLE = 5; // Write to disk every N cycles
 
   constructor(
     runtime: AgentSessionRuntime,
@@ -258,29 +258,9 @@ export class EvolutionEngine {
         success = false;
       }
     } catch (error: any) {
-      this.metrics.failedCycles++;
       this.logger.error(`❌ Evolution cycle #${this.level} failed: ${error.message}`);
       success = false;
-      // Circuit breaker: count consecutive failures
-      this.consecutiveFailures++;
-      if (this.consecutiveFailures >= this.CIRCUIT_BREAKER_THRESHOLD) {
-        this.circuitBreakerPausedUntil = Date.now() + this.CIRCUIT_BREAKER_DURATION_MS;
-        this.logger.error(`🔴 Circuit breaker triggered — pausing auto-evolution for ${this.CIRCUIT_BREAKER_DURATION_MS / 1000 / 60} minutes`);
-        this.stopAuto(); // stop daemon
-        
-        // Auto-restart with exponential backoff if within max attempts
-        if (this.restartAttempts < this.MAX_RESTART_ATTEMPTS) {
-          this.restartAttempts++;
-          const backoff = this.RESTART_BACKOFF_BASE_MS * Math.pow(2, this.restartAttempts - 1);
-          this.logger.warn(`♻️ Scheduling auto-restart attempt ${this.restartAttempts}/${this.MAX_RESTART_ATTEMPTS} in ${backoff / 1000}s...`);
-          this.restartTimer = setTimeout(() => {
-            this.logger.info(`🔄 Auto-restarting evolution daemon (attempt ${this.restartAttempts})...`);
-            this.startAuto(this.config.evolutionInterval);
-          }, backoff);
-        } else {
-          this.logger.error(`💀 Max restart attempts (${this.MAX_RESTART_ATTEMPTS}) exceeded — manual intervention required`);
-        }
-      }
+      // Note: failure metrics and circuit breaker handled in finally block
     } finally {
       const duration = Date.now() - startTime;
       this.metrics.lastCycleTimeMs = duration;
@@ -290,6 +270,7 @@ export class EvolutionEngine {
         this.metrics.successfulCycles++;
       } else {
         this.metrics.failedCycles++;
+        this.consecutiveFailures++; // count ANY failure (exceptions or apply failures)
       }
       this.metrics.successRate = (this.metrics.successfulCycles / this.metrics.totalCycles) * 100;
       this.logger.debug(`📊 Cycle completed in ${duration}ms, success rate: ${this.metrics.successRate.toFixed(1)}% (${this.metrics.successfulCycles}/${this.metrics.totalCycles})`);
@@ -298,6 +279,11 @@ export class EvolutionEngine {
         if (this.restartAttempts > 0) {
           this.logger.info(`✅ Cycle succeeded after ${this.restartAttempts} restart attempt(s) — resetting restart counter`);
           this.restartAttempts = 0;
+        }
+      } else {
+        // Check circuit breaker threshold
+        if (this.consecutiveFailures >= this.CIRCUIT_BREAKER_THRESHOLD) {
+          this.triggerCircuitBreaker();
         }
       }
       this.isRunning = false;
@@ -421,7 +407,7 @@ export class EvolutionEngine {
   private async readSelf(): Promise<string> {
     try {
       const cwd = process.cwd();
-      const defaultFiles = this.collectSourceFiles();
+      const defaultFiles = await this.collectSourceFiles();
       const files = this.config.filesToEvolve && this.config.filesToEvolve.length > 0
         ? this.config.filesToEvolve
         : defaultFiles;
@@ -484,51 +470,41 @@ export class EvolutionEngine {
   }
 
   /**
-   * Collect all relevant source files for self-analysis
-   * Prioritizes core files and includes all .ts files in src/
+   * Collect all relevant source files for self-analysis using dynamic discovery
    */
-  private collectSourceFiles(): string[] {
-    const files: string[] = [];
+  private async collectSourceFiles(): Promise<string[]> {
+    // @ts-ignore: glob lacks types
+    const { glob } = await import('glob') as any;
+    const cwd = process.cwd();
 
-    // Always include root-level entry point
-    files.push('evo.ts');
-
-    // Include all TypeScript files in src/ directory
-    // We'll manually list expected core files to ensure proper ordering
-    const coreFiles = [
-      'src/main.ts',
-      'src/system.ts',
-      'src/evolution-engine.ts',
-      'src/agent-manager.ts',
-      'src/messaging.ts',
-      'src/logger.ts',
-      'src/diff-utils.ts',
-      'src/diff-parser.ts',
-      'src/config-manager.ts',
-      'src/sandbox.ts',
-      'src/webhook-notifier.ts',
-      'src/prompt-optimizer.ts',
-      'src/evolution-strategies.ts',
-      'src/evolution-strategy.ts',
+    const patterns = [
+      'evo.ts',
+      'src/**/*.ts',
+      'agents/**/*.ts',
+      'extensions/**/*.ts',
+      '*.json', // config files
     ];
-    files.push(...coreFiles);
 
-    // Include all agent templates
-    files.push(
-      'src/agents/base.ts',
-      'src/agents/researcher.ts',
-      'src/agents/coder.ts',
-      'src/agents/analyzer.ts',
-      'src/agents/index.ts'
-    );
+    const files = new Set<string>();
+    for (const pattern of patterns) {
+      const matches = (glob as any).sync(pattern, {
+        cwd,
+        absolute: false,
+        nodir: true,
+        ignore: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+      }) as string[];
+      matches.forEach((m: string) => files.add(m));
+    }
 
-    // Include all extensions
-    files.push(
-      'src/extensions/evo-extension.ts',
-      'src/extensions/web-extension.ts'
-    );
+    // Ensure evo.ts is first if present
+    const result = Array.from(files).sort();
+    const evoIndex = result.findIndex(f => f === 'evo.ts');
+    if (evoIndex > 0) {
+      const evo = result.splice(evoIndex, 1)[0];
+      result.unshift(evo);
+    }
 
-    return files;
+    return result;
   }
 
   private async analyze(code: string): Promise<any> {
@@ -610,21 +586,29 @@ Return JSON:
 
   private async generateDiff(improvement: any): Promise<string> {
     const code = await this.readSelf();
-    const prompt = `Generate a unified diff patch for this improvement:
+    const prompt = `Generate a unified diff patch for this improvement.
 
+IMPROVEMENT:
 ${improvement.description}
 
-Current code (first 6000 chars):
-${code.substring(0, 6000)}
+CURRENT CODE (${code.length} chars):
+${code}
 
-Respond with ONLY the raw diff:
+REQUIREMENTS:
+1. Output ONLY raw unified diff (no markdown, no explanations)
+2. Format: --- a/evo.ts, +++ b/evo.ts, @@ headers
+3. Ensure patch applies cleanly to EXACT lines shown
+4. Target ONLY evo.ts (the main entry file)
+
+EXAMPLE:
 --- a/evo.ts
 +++ b/evo.ts
-@@ -oldLine,oldCount +newLine,newCount @@
-- old code
-+ new code
+@@ -1,5 +1,6 @@
+ line 1
++added line
+-removed line
 
-NO explanations.`;
+Respond with raw diff only:`;
 
     const response = await this.runtime.session.prompt(prompt);
     return this.extractText(response);
@@ -681,11 +665,18 @@ NO explanations.`;
       improvementsByCategory: { ...this.metrics.improvementsByCategory },
     };
     this.metricsHistory.push(snapshot);
-    // Keep only last 1000 entries to limit memory
-    if (this.metricsHistory.length > 1000) {
-      this.metricsHistory = this.metricsHistory.slice(-1000);
+
+    // Prune: keep last 200 entries OR last 24 hours
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    this.metricsHistory = this.metricsHistory
+      .filter(s => new Date(s.timestamp).getTime() > cutoff)
+      .slice(-200);
+
+    // Throttle disk writes: only every N cycles
+    this.metricsWriteCounter++;
+    if (this.metricsWriteCounter % this.METRICS_WRITE_THROTTLE === 0) {
+      await this.saveMetricsHistory();
     }
-    await this.saveMetricsHistory();
   }
 
   /**
@@ -742,6 +733,11 @@ NO explanations.`;
     // Persist optimized templates
     await settingsManager.flush();
     this.logger.info('🧠 Prompt optimization complete and saved');
+
+    // Reload agent templates so new agents use optimized prompts
+    if (this.agentManager) {
+      this.agentManager.reloadTemplates(settingsManager);
+    }
   }
 
   async rollback(level: number): Promise<boolean> {
@@ -751,6 +747,62 @@ NO explanations.`;
       await this.messageBus?.publish('evolution.rollback', 'evolution-engine', `Rolled back to level ${level}`);
     }
     return success;
+  }
+
+  // Hot-reload configuration setters
+  public setStrategy(name: string): void {
+    const old = this.selectedStrategyName;
+    this.selectedStrategyName = name as any;
+    this.logger.info(`🎯 Evolution strategy changed: ${old} → ${name}`);
+    if (name === 'genetic' && !this.geneticStrategy) {
+      this.geneticStrategy = new GeneticEvolutionStrategy(this.logger, 10);
+    }
+  }
+
+  public setGeneticFlag(enabled: boolean): void {
+    // Update config for consistency
+    this.config.enableGeneticStrategy = enabled;
+    if (enabled && !this.geneticStrategy) {
+      this.geneticStrategy = new GeneticEvolutionStrategy(this.logger, 10);
+      this.logger.info('🧬 Genetic strategy enabled');
+    } else if (!enabled) {
+      this.geneticStrategy = undefined;
+      this.logger.info('🧬 Genetic strategy disabled');
+    }
+  }
+
+  public setPromptOptimization(enabled: boolean, interval?: number): void {
+    const old = this.enablePromptOptimization;
+    this.enablePromptOptimization = enabled;
+    // Update config for runtime reference
+    this.config.enablePromptOptimization = enabled;
+    if (interval !== undefined) {
+      this.config.promptOptimizationInterval = interval;
+    }
+    if (enabled && !this.promptOptimizer) {
+      this.promptOptimizer = new PromptOptimizer(this.logger, this.metrics);
+    }
+    this.logger.info(`🧠 Prompt optimization: ${old} → ${enabled}${interval ? ` (interval: ${interval})` : ''}`);
+  }
+
+  // Trigger circuit breaker after consecutive failures
+  private triggerCircuitBreaker(): void {
+    this.circuitBreakerPausedUntil = Date.now() + this.CIRCUIT_BREAKER_DURATION_MS;
+    this.logger.error(`🔴 Circuit breaker triggered — pausing auto-evolution for ${this.CIRCUIT_BREAKER_DURATION_MS / 1000 / 60} minutes`);
+    this.stopAuto(); // stop daemon
+
+    // Auto-restart with exponential backoff if within max attempts
+    if (this.restartAttempts < this.MAX_RESTART_ATTEMPTS) {
+      this.restartAttempts++;
+      const backoff = this.RESTART_BACKOFF_BASE_MS * Math.pow(2, this.restartAttempts - 1);
+      this.logger.warn(`♻️ Scheduling auto-restart attempt ${this.restartAttempts}/${this.MAX_RESTART_ATTEMPTS} in ${backoff / 1000}s...`);
+      this.restartTimer = setTimeout(() => {
+        this.logger.info(`🔄 Auto-restarting evolution daemon (attempt ${this.restartAttempts})...`);
+        this.startAuto(this.config.evolutionInterval);
+      }, backoff);
+    } else {
+      this.logger.error(`💀 Max restart attempts (${this.MAX_RESTART_ATTEMPTS}) exceeded — manual intervention required`);
+    }
   }
 
   private extractText(result: any): string {

@@ -78,6 +78,7 @@ async function rotateLogIfNeeded(): Promise<void> {
 // ─── Heartbeat ───────────────────────────────────────────────────────────────
 
 let heartbeatTimer: NodeJS.Timeout | null = null;
+let memoryCheckTimer: NodeJS.Timeout | null = null;
 let highMemoryCount = 0;
 
 /**
@@ -127,7 +128,7 @@ async function checkHeartbeat(): Promise<void> {
  * MEMORY_MAX_THRESHOLD_MB to avoid OOM kill.
  */
 function startMemoryHealthCheck(): void {
-  setInterval(async () => {
+  memoryCheckTimer = setInterval(async () => {
     const rssMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
 
     if (rssMB > MEMORY_WARN_THRESHOLD_MB) {
@@ -290,6 +291,7 @@ async function shutdown(signal?: string): Promise<void> {
 
   // Stop timers immediately
   if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+  if (memoryCheckTimer) { clearInterval(memoryCheckTimer); memoryCheckTimer = null; }
 
   try {
     await Promise.race([
@@ -369,7 +371,7 @@ async function main(): Promise<void> {
   // ── Phase 3: Health & heartbeat ───────────────────────────────────
   startHeartbeat();       // synchronous — no await
   startMemoryHealthCheck();
-  await rotateLogIfNeeded(); // rotate on startup if needed
+  // Logger handles its own rotation; no manual rotation needed here
   console.log('💓 Heartbeat + memory monitor started.\n');
 
   // ── Phase 4: Run ──────────────────────────────────────────────────
