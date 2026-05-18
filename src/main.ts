@@ -3,39 +3,53 @@ import {
   InteractiveMode,
   SessionManager,
   AuthStorage,
-  SettingsManager,
-  ModelRegistry,
   createAgentSessionServices,
-  createAgentSessionFromServices
+  createAgentSessionFromServices,
+  getAgentDir
 } from '@earendil-works/pi-coding-agent';
-import { join } from 'node:path';
-import { mkdirSync } from 'node:fs';
+
+// ============================================
+// GLOBAL CONSTANTS (reusable everywhere)
+// ============================================
+
+// ============================================
+// GLOBAL VARIABLES (can be reused later)
+// ============================================
+let cwd: string;
+let agentDir: string;
+let sessionManager: SessionManager;
+let authStorage: AuthStorage;
+let services: any;
+let runtime: any;
+let result: any;
 
 async function main() {
-  console.log('\n🧬 Evo Agent\n🚀 Initializing...');
+  console.log('\n🧬 Evo Agent\n');
 
-  const cwd = process.cwd();
-  const agentDir = join(process.env.HOME || process.env.USERPROFILE || '.', '.pi');
-  mkdirSync(agentDir, { recursive: true });
-  const sessionManager = SessionManager.create(cwd);
+  // === SETUP PATHS ===
+  cwd = process.cwd();
+  agentDir = getAgentDir();
 
-  const runtime = await createAgentSessionRuntime(
-    async ({ cwd, agentDir, sessionManager }) => {
-      const authStorage = AuthStorage.create(join(agentDir, 'auth.json'));
-      const settingsManager = SettingsManager.create(cwd, agentDir);
-      const modelRegistry = ModelRegistry.create(authStorage);
+  console.log('🚀 Initializing...');
 
-      const services = await createAgentSessionServices({
-        cwd,
-        agentDir,
+  // === INITIALIZE SYSTEM ===
+  sessionManager = SessionManager.create(cwd);
+  authStorage = AuthStorage.create();
+
+  // === CREATE RUNTIME ===
+  runtime = await createAgentSessionRuntime(
+    async ({ cwd: innerCwd, agentDir: innerAgentDir, sessionManager: innerSessionManager }) => {
+      // Services
+      services = await createAgentSessionServices({
+        cwd: innerCwd,
+        agentDir: innerAgentDir,
         authStorage,
-        settingsManager,
-        modelRegistry,
       });
 
-      const result = await createAgentSessionFromServices({
+      // Agent session
+      result = await createAgentSessionFromServices({
         services,
-        sessionManager
+        sessionManager: innerSessionManager
       });
 
       return {

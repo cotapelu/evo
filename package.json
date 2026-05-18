@@ -39,7 +39,7 @@
     "node": ">=20.6.0"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "^0.74.0",
+    "@earendil-works/pi-coding-agent": "^0.75.3",
     "diff": "^5.1.0"
   }
 }
