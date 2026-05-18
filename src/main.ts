@@ -5,7 +5,11 @@ import {
   AuthStorage,
   createAgentSessionServices,
   createAgentSessionFromServices,
-  getAgentDir
+  getAgentDir,
+  AgentSessionRuntime,
+  AgentSessionServices,
+  CreateAgentSessionResult,
+  CreateAgentSessionRuntimeResult
 } from '@earendil-works/pi-coding-agent';
 
 // ============================================
@@ -19,9 +23,9 @@ let cwd: string;
 let agentDir: string;
 let sessionManager: SessionManager;
 let authStorage: AuthStorage;
-let services: any;
-let runtime: any;
-let result: any;
+let services: AgentSessionServices;
+let runtime: AgentSessionRuntime;
+let result: CreateAgentSessionResult;
 
 async function main() {
   console.log('\n🧬 Evo Agent\n');
