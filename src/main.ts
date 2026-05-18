@@ -1,5 +1,5 @@
 import { createAgentSessionRuntime, InteractiveMode, createAgentSessionServices, createAgentSessionFromServices, AuthStorage, getAgentDir, SessionManager } from '@earendil-works/pi-coding-agent';
-import { EvolutionEngine } from './evolution-engine.js';
+
 
 async function main() {
   console.log('\n🧬 Evo Agent\n');
@@ -46,11 +46,7 @@ async function main() {
     sessionManager,
   });
 
-  // Evolution daemon
-  const evolution = new EvolutionEngine(runtime);
-  evolution.startAuto(300000);
-
-  console.log('✅ Ready (auto-evolution 5min)');
+  console.log('✅ Ready');
   await new InteractiveMode(runtime, {}).run();
 }
 
