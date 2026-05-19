@@ -6,7 +6,7 @@
  */
 
 import { readFile, readdir, stat } from 'fs/promises';
-import { join, relative, extname, basename } from 'path';
+import { join, relative, extname, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -167,15 +167,4 @@ export function generateReport(results: Map<string, PatternMatch[]>): string {
 
   report += `Total issues found: ${totalMatches}\n`;
   return report;
-}
-
-// Helper function to get file basename without extension
-function basenameWithoutExt(path: string): string {
-  const name = basename(path);
-  return name.replace(/\.[^/.]+$/, '');
-}
-
-// Helper for dirname
-function dirname(path: string): string {
-  return path.split('/').slice(0, -1).join('/');
 }
