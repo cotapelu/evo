@@ -106,4 +106,21 @@ async function example() {
       expect(file).not.toMatch(/__tests__/);
     }
   });
+  it('should detect globalThis usage', async () => {
+    const { writeFile, unlink } = await import('fs/promises');
+    const { join } = await import('path');
+
+    const testFile = join(process.cwd(), 'test-globalThis.ts');
+    const testCode = 'const x = globalThis.someValue;';
+
+    await writeFile(testFile, testCode);
+
+    try {
+      const results = await scanDirectory(process.cwd(), ['.ts']);
+      const matches = results.get(testFile);
+      expect(matches?.some(m => m.patternId === 'avoid-global-object')).toBe(true);
+    } finally {
+      await unlink(testFile);
+    }
+  });
 });

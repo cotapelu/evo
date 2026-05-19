@@ -106,7 +106,7 @@ export const patterns: Pattern[] = [
     description: 'Do not use globalThis directly; use imported module or local variable',
     severity: 'error',
     check: (code) => {
-      const pattern = new RegExp('\bglobalThis\b');
+      const pattern = /\bglobalThis\b/;
       const lines = code.split('\n');
       for (let i = 0; i < lines.length; i++) {
         if (pattern.test(lines[i])) {
