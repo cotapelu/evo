@@ -143,6 +143,9 @@ class TeamManager {
     }
 
     const info = this.agentInfos.get(agentName)!;
+    if (info.status === 'busy') {
+      throw new Error(`Agent "${agentName}" is already busy with another task`);
+    }
     info.status = 'busy';
     info.lastTask = task;
 
@@ -204,14 +207,18 @@ class TeamManager {
 
   removeAgent(name: string): boolean {
     const runtime = this.agents.get(name);
-    if (runtime) {
-      runtime.dispose();
-      this.agents.delete(name);
-      this.agentConfigs.delete(name);
-      this.agentInfos.delete(name);
-      return true;
+    if (!runtime) return false;
+
+    const info = this.agentInfos.get(name)!;
+    if (info.status === 'busy') {
+      throw new Error(`Agent "${name}" is busy and cannot be removed`);
     }
-    return false;
+
+    runtime.dispose();
+    this.agents.delete(name);
+    this.agentConfigs.delete(name);
+    this.agentInfos.delete(name);
+    return true;
   }
 
   hasAgent(name: string): boolean {
