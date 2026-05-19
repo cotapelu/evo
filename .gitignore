@@ -22,7 +22,6 @@ Thumbs.db
 # Evo specific
 .evo/
 *.log
-~/.pi/agent/evo.log
 
 # Test coverage
 coverage/
@@ -32,6 +31,6 @@ coverage/
 .tmp/
 temp/
 
-# Pi secrets (keep your own, but don't commit)
-# ~/.pi/agent/auth.json (contains API keys)
-# ~/.pi/agent/sessions/ (contains conversation history)
+#
+llm-context/
+

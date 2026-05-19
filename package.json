@@ -1,7 +1,7 @@
 {
   "name": "evo-agent",
-  "version": "2.2.0",
-  "description": "Self-Evolving AI Agent System with auto-apply, safety guards, agent messaging, and comprehensive metrics",
+  "version": "0.0.1",
+  "description": "Self-Evolving AI Agent System",
   "type": "module",
   "main": "dist/src/main.js",
   "scripts": {
