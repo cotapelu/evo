@@ -70,4 +70,23 @@ describe('TeamManager Concurrency Guards', () => {
     expect(result).toBe(true);
     expect(manager.listAgents().some(a => a.name === 'idle-agent')).toBe(false);
   });
+
+  it('should reset agent status to idle after error and increment turnCount', async () => {
+    mockAgent('flaky-agent', 'idle');
+
+    const runtime = (manager as any).agents.get('flaky-agent');
+    runtime.session.state = { messages: [] }; // ensure state exists
+
+    // Make prompt reject with an error
+    const error = new Error('LLM API failed');
+    (runtime.session.prompt as any).mockRejectedValue(error);
+
+    // Call runTask and expect it to reject
+    await expect(manager.runTask('flaky-agent', 'task that fails')).rejects.toThrow('LLM API failed');
+
+    // Check status is back to idle, not error
+    const info = manager.listAgents().find(a => a.name === 'flaky-agent')!;
+    expect(info.status).toBe('idle');
+    expect(info.turnCount).toBe(1); // turnCount incremented even on failure
+  });
 });

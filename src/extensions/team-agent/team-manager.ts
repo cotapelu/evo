@@ -187,17 +187,15 @@ class TeamManager {
       }
 
       info.lastResult = output;
-      info.turnCount += 1;
-      info.status = 'idle';
 
       return {
         output,
         usage: { input: inputTokens, output: outputTokens, cost },
         agent: agentName,
       };
-    } catch (error: any) {
-      info.status = 'error';
-      throw error;
+    } finally {
+      info.turnCount += 1;
+      info.status = 'idle';
     }
   }
 
