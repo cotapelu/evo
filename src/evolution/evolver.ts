@@ -4,7 +4,7 @@
  * Applies learned patterns to improve codebase with full verification.
  */
 
-import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir, rm } from 'fs/promises';
 import { join, relative, dirname, resolve, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
@@ -158,6 +158,13 @@ export class Evolver {
       // Step 7: Commit changes
       console.log('\n📝 Committing changes...');
       await this.commitChanges(steps);
+
+      // Clean up backup directory after successful commit
+      try {
+        await rm(this.backupDir, { recursive: true, force: true });
+      } catch (err) {
+        console.warn('Failed to clean up backup:', err);
+      }
 
       const elapsed = Date.now() - startTime;
       report += `\n\nEvolution completed in ${elapsed}ms\n`;
