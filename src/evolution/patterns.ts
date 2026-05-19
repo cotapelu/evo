@@ -79,51 +79,6 @@ export const patterns: Pattern[] = [
     }
   },
   {
-    id: 'trailing-whitespace',
-    name: 'Remove trailing whitespace',
-    description: 'Lines should not end with spaces or tabs',
-    severity: 'info',
-    check: (code) => {
-      const lines = code.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].match(/\s+$/)) {
-          return {
-            patternId: 'trailing-whitespace',
-            line: i + 1,
-            column: 1,
-            message: 'Trailing whitespace detected',
-            suggestedFix: 'Remove trailing spaces/tabs'
-          };
-        }
-      }
-      return null;
-    },
-    fix: (code) => {
-      return code.split('\n').map(line => line.replace(/\s+$/, '')).join('\n');
-    }
-  },
-  {
-    id: 'missing-eof-newline',
-    name: 'Ensure file ends with newline',
-    description: 'POSIX standard: text files should end with newline',
-    severity: 'info',
-    check: (code) => {
-      if (!code.endsWith('\n')) {
-        return {
-          patternId: 'missing-eof-newline',
-          line: code.split('\n').length + 1,
-          column: 1,
-          message: 'File does not end with newline',
-          suggestedFix: 'Add newline at end of file'
-        };
-      }
-      return null;
-    },
-    fix: (code) => {
-      return code.endsWith('\n') ? code : code + '\n';
-    }
-  },
-  {
     id: 'use-async-await',
     name: 'Prefer async/await over Promise chains',
     description: 'Use async/await for better readability in async functions',
@@ -142,12 +97,13 @@ export const patterns: Pattern[] = [
       }
       return null;
     },
-    fix: (code) => code // placeholder - requires AST
+    // NOTE: AST-based transformation required for proper conversion. Currently a placeholder.
+    fix: (code) => code
   },
   {
     id: 'avoid-global-object',
     name: 'Avoid globalThis usage',
-    description: 'Do not use globalThis directly; use local scope',
+    description: 'Do not use globalThis directly; use imported module or local variable',
     severity: 'error',
     check: (code) => {
       const pattern = new RegExp('\bglobalThis\b');
@@ -165,7 +121,8 @@ export const patterns: Pattern[] = [
       }
       return null;
     },
-    fix: (code) => code // requires manual refactoring
+    // NOTE: Requires manual refactoring based on context. Placeholder.
+    fix: (code) => code
   }
 ];
 
