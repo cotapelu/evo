@@ -224,7 +224,7 @@ export class Evolver {
     return output;
   }
 
-  private async createBackup(steps: EvolutionStep[]): Promise<void> {
+  protected async createBackup(steps: EvolutionStep[]): Promise<void> {
     const filesToBackup = new Set(steps.map(s => s.file));
     await mkdir(this.backupDir, { recursive: true });
 
@@ -238,9 +238,48 @@ export class Evolver {
 
   private async applyChanges(steps: EvolutionStep[]): Promise<boolean> {
     try {
+      // Group steps by file path
+      const stepsByFile = new Map<string, EvolutionStep[]>();
       for (const step of steps) {
-        await writeFile(step.file, step.modified);
+        const arr = stepsByFile.get(step.file) || [];
+        arr.push(step);
+        stepsByFile.set(step.file, arr);
       }
+
+      // Create a map from pattern ID to its index for ordering
+      const patternOrder = new Map<string, number>();
+      patterns.forEach((p, i) => patternOrder.set(p.id, i));
+
+      // Sort steps for each file by pattern order
+      for (const [, fileSteps] of stepsByFile) {
+        fileSteps.sort((a, b) => {
+          const idxA = patternOrder.get(a.patternId) ?? 0;
+          const idxB = patternOrder.get(b.patternId) ?? 0;
+          return idxA - idxB;
+        });
+      }
+
+      // Determine application order for files: sorted alphabetically for determinism
+      const sortedFiles = Array.from(stepsByFile.keys()).sort();
+
+      // Apply changes to each file sequentially
+      for (const file of sortedFiles) {
+        const fileSteps = stepsByFile.get(file)!;
+        // Use the original content from the first step (all steps for same file share same original)
+        let currentContent = fileSteps[0].original;
+
+        for (const step of fileSteps) {
+          const pattern = patterns.find(p => p.id === step.patternId);
+          if (!pattern) continue;
+
+          const newContent = pattern.fix(currentContent, file);
+          if (newContent !== currentContent) {
+            await writeFile(file, newContent);
+            currentContent = newContent;
+          }
+        }
+      }
+
       return true;
     } catch (err) {
       console.error('   Error applying changes:', err);
@@ -281,7 +320,7 @@ export class Evolver {
     return files;
   }
 
-  private async runTests(): Promise<{ success: boolean; output: string }> {
+  protected async runTests(): Promise<{ success: boolean; output: string }> {
     return new Promise((resolve) => {
       const testProc = spawn('npm', ['test'], { stdio: 'pipe' });
 
@@ -322,7 +361,7 @@ export class Evolver {
     });
   }
 
-  private async commitChanges(steps: EvolutionStep[]): Promise<void> {
+  protected async commitChanges(steps: EvolutionStep[]): Promise<void> {
     const commitMessage = `Evolution: Apply ${steps.length} learned pattern(s)\n\n` +
       steps.map(s => `- ${s.match.patternId} in ${relative(process.cwd(), s.file)}`).join('\n');
 
