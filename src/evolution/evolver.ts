@@ -5,7 +5,7 @@
  */
 
 import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
-import { join, relative, dirname } from 'path';
+import { join, relative, dirname, resolve, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
 import { scanDirectory, generateReport, PatternMatch, patterns, type Pattern } from './patterns.js';
@@ -41,7 +41,16 @@ export class Evolver {
 
   async run(targetDir?: string): Promise<EvolutionResult> {
     const startTime = Date.now();
-    const target = targetDir || join(__dirname, '..'); // Default to src/
+    // Resolve target directory: use provided or default to ./src within cwd
+    const target = targetDir ? resolve(targetDir) : join(process.cwd(), 'src');
+
+    // Security: ensure target is within the project root (cwd)
+    const cwd = process.cwd();
+    const relativeTarget = relative(cwd, target);
+    if (relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) {
+      throw new Error(`Target directory must be within project root (${cwd}). Found: ${target}`);
+    }
+
     console.log(`\n🧬 Starting evolution analysis...`);
     console.log(`   Target: ${relative(process.cwd(), target)}`);
     console.log(`   Dry run: ${this.dryRun}`);
@@ -262,11 +271,12 @@ export class Evolver {
       // Determine application order for files: sorted alphabetically for determinism
       const sortedFiles = Array.from(stepsByFile.keys()).sort();
 
-      // Apply changes to each file sequentially
+      // Apply changes to each file: compute final content by composing fixes, then write once
       for (const file of sortedFiles) {
         const fileSteps = stepsByFile.get(file)!;
         // Use the original content from the first step (all steps for same file share same original)
         let currentContent = fileSteps[0].original;
+        let changed = false;
 
         for (const step of fileSteps) {
           const pattern = patterns.find(p => p.id === step.patternId);
@@ -274,9 +284,13 @@ export class Evolver {
 
           const newContent = pattern.fix(currentContent, file);
           if (newContent !== currentContent) {
-            await writeFile(file, newContent);
             currentContent = newContent;
+            changed = true;
           }
+        }
+
+        if (changed) {
+          await writeFile(file, currentContent);
         }
       }
 
