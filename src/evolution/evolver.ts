@@ -70,7 +70,7 @@ export class Evolver {
       // Step 1: Scan for patterns (with cache)
       console.log('\n📊 Scanning for patterns...');
       const results = await scanDirectory(target, ['.ts'], {
-        exclude: ['dist', 'node_modules', '__tests__'],
+        exclude: ['dist', 'node_modules', '__tests__', '.evolution-backup'],
         cache
       });
 
