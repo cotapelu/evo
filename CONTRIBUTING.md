@@ -316,6 +316,102 @@ Do not disable or modify CI without maintainer approval.
 
 ---
 
+## Team Agent Collaboration
+
+Evo Agent includes a built-in **Team Agent Extension** that allows the LLM to create, manage, and delegate tasks to multiple specialized agents, each running in its own isolated `AgentSessionRuntime`.
+
+### Features
+
+- **Create specialized agents** with custom system prompts, models, and tool sets
+- **Delegate tasks** to specific agents via `@team_run(agent_name, task)`
+- **Broadcast** tasks to all agents and collect results via `@team_broadcast(task)`
+- **Manage team** - list agents, remove agents, track usage
+- **Isolated contexts** - each agent has its own conversation state
+- **Shared resources** - agents share auth and model registry from main pi
+
+### Using the Team Extension
+
+#### Creating an Agent
+
+The LLM can create a new specialized agent:
+
+```
+@team_create(
+  name="frontend-expert",
+  system_prompt="You are a React and TypeScript expert. Focus on component architecture, accessibility, and performance.",
+  model="claude-sonnet-4-20250514",
+  tools=["read", "bash", "grep", "find", "ls"]
+)
+```
+
+#### Running Tasks
+
+Delegate a specific task to an agent:
+
+```
+@team_run(
+  agent_name="frontend-expert",
+  task="Review this component for accessibility issues and suggest improvements."
+)
+```
+
+#### Broadcasting
+
+Send the same task to all agents and collect their responses:
+
+```
+@team_broadcast(task="Find all TODO comments in the codebase")
+```
+
+#### Managing the Team
+
+- `@team_list()` - Show all agents with status, usage, last task
+- `@team_remove(name="agent-name")` - Remove an agent from the team
+
+### Predefined Agents
+
+Place agent definitions in `.pi/team-agents/*.json` for auto-loading on startup:
+
+```json
+{
+  "name": "code-reviewer",
+  "systemPrompt": "You are a senior code reviewer. Focus on security, performance, and best practices.",
+  "model": "claude-sonnet-4-20250514",
+  "tools": ["read", "bash", "grep", "find", "ls"]
+}
+```
+
+### Best Practices
+
+- **One agent per specialty**: frontend, backend, security, testing, etc.
+- **Keep agents lightweight**: Disable unnecessary tools to reduce context
+- **Use descriptive names**: `security-auditor` vs. `agent1`
+- **Monitor usage**: `@team_list()` shows turn counts and token usage
+- **Dispose unused agents**: `@team_remove()` to free resources
+
+### Architecture Notes
+
+- Each agent runs in its own `AgentSessionRuntime`
+- Agents are **isolated** - no shared conversation state
+- Agents **share** auth and model registry from main pi instance
+- Agents have **no extensions** (prevents recursion and keeps lightweight)
+- System prompt is injected via `resourceLoader.getSystemPrompt()`
+- Session manager is in-memory (non-persistent) for agents
+
+### Testing Team Features
+
+When writing tests for team functionality:
+
+1. Test agent creation with various configs
+2. Test task delegation and result extraction
+3. Test agent removal and cleanup
+4. Test error handling (non-existent agents, runtime failures)
+5. Test broadcast parallelism
+
+See `src/__tests__/team-agent.test.ts` for examples.
+
+---
+
 ## Release Process
 
 Releases are automatic via semantic-release or manual git tags:

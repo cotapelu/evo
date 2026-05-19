@@ -168,10 +168,52 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-9",
+      "name": "Team of Agents Feature",
+      "tasks": [
+        {
+          "id": "task-25",
+          "content": "Research & design multi-session TUI architecture",
+          "status": "completed",
+          "details": "One TUI, multiple AgentSession instances, custom UI layout"
+        },
+        {
+          "id": "task-26",
+          "content": "Implement TeamManager for session coordination",
+          "status": "completed",
+          "details": "Create, switch, broadcast, coordinate sessions"
+        },
+        {
+          "id": "task-27",
+          "content": "Create multi-pane TUI component",
+          "status": "abandoned",
+          "details": "Split screen showing 2-4 agents simultaneously"
+        },
+        {
+          "id": "task-28",
+          "content": "Add team commands (/team-*, /agent-*)",
+          "status": "completed",
+          "details": "CLI for team management"
+        },
+        {
+          "id": "task-29",
+          "content": "Write tests for team functionality",
+          "status": "completed",
+          "details": "Session isolation, switching, broadcasting"
+        },
+        {
+          "id": "task-30",
+          "content": "Document team workflow",
+          "status": "completed",
+          "details": "CONTRIBUTING.md section"
+        }
+      ]
     }
   ],
-  "nextTaskId": 25,
-  "nextPhaseId": 9,
-  "updatedAt": "2026-05-19T13:49:10.723Z"
+  "nextTaskId": 31,
+  "nextPhaseId": 10,
+  "updatedAt": "2026-05-19T15:31:24.262Z"
 }
 }
