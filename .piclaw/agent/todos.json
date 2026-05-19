@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Build API",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Design",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "content": "Auth",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Test Phase",
+      "tasks": [
+        {
+          "id": "task-3",
+          "content": "Write test for main.ts output",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Observability Phase",
+      "tasks": [
+        {
+          "id": "task-4",
+          "content": "Add diagnostics collection",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Git Integration Phase",
+      "tasks": [
+        {
+          "id": "task-5",
+          "content": "Add auto-commit functionality",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Self-Evolution Phase",
+      "tasks": [
+        {
+          "id": "task-6",
+          "content": "Analyze reference examples from llm-context to identify patterns",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Implement pattern detection and learning system",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Create safe self-modification with verification",
+          "status": "completed"
+        },
+        {
+          "id": "task-9",
+          "content": "Add evolution tests",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 10,
+  "nextPhaseId": 6,
+  "updatedAt": "2026-05-19T12:29:01.129Z"
+}
+}

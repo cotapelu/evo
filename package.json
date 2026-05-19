@@ -11,7 +11,9 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "evolve": "node dist/evolution/cli.js",
+    "evolve:dry": "node dist/evolution/cli.js --dry"
   },
   "bin": {
     "evo": "./dist/src/main.js"
