@@ -47,7 +47,7 @@ export class Evolver {
 
     // Step 1: Scan for patterns
     console.log('\n📊 Scanning for patterns...');
-    const results = await scanDirectory(target);
+    const results = await scanDirectory(target, ['.ts'], { exclude: ['dist', 'node_modules', '__tests__'] });
 
     if (results.size === 0) {
       console.log('   No patterns found. Code is already well-evolved!');

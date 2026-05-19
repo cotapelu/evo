@@ -92,9 +92,21 @@ npm run dev                 # Development (ts-node)
 ### Evolution
 
 ```bash
-npm run evolve:dry          # See what improvements are available
-npm run evolve              # Apply and commit improvements
+npm run evolve:dry          # Scan and report (dry-run)
+npm run evolve             # Apply fixes & commit if tests pass
 ```
+
+### Continuous Integration
+
+A GitHub Actions workflow is included (`.github/workflows/evolve.yml`):
+
+- **Schedule**: Runs daily at 2 AM UTC
+- **Manual**: Can be triggered via `workflow_dispatch`
+- **Action**: Applies safe auto-fixes and opens a PR with changes
+- **Safety**: Only commits if all tests pass
+
+This enables fully autonomous evolution of the codebase.
+
 
 ## Observability
 

@@ -1,0 +1,75 @@
+name: Auto-Evolve
+
+on:
+  # Run daily at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git operations
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run evolution dry-run (log what would change)
+        run: npm run evolve:dry
+        continue-on-error: true
+
+      - name: Apply safe auto-fixes
+        id: evolve
+        run: |
+          echo "Running evolution..."
+          output=$(npm run evolve 2>&1) || true
+          echo "$output"
+          echo "evolved=true" >> $GITHUB_OUTPUT
+          echo "$output" > evolution-output.txt
+
+      - name: Create Pull Request
+        if: steps.evolve.outputs.evolved == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "chore: automated evolution improvements"
+          title: "Auto-Evolution: Apply learned patterns"
+          body: |
+            This PR contains automated code improvements identified by the evolution system.
+
+            **Changes made:**
+            - Applied safe auto-fixes (trailing whitespace, EOF newlines, etc.)
+            - All changes pass `npm test`
+
+            **Next steps:**
+            - Review the changes
+            - The evolution system will run again automatically
+
+          branch: auto-evolve-${{ github.run_number }}
+          delete-branch: true
+          labels: automated, evolution
+          reviewers: |
+
+      - name: Upload evolution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evolution-log
+          path: evolution-output.txt

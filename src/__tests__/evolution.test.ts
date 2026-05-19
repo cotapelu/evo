@@ -37,7 +37,6 @@ describe('Pattern Evolution System', () => {
   });
 
   it('should detect async/await pattern issues', async () => {
-    // Create a temporary test file pattern
     const { readFile, unlink, writeFile } = await import('fs/promises');
     const { join } = await import('path');
 
@@ -53,12 +52,58 @@ async function example() {
     try {
       const results = await scanDirectory(process.cwd(), ['.ts']);
       const matches = results.get(testFile);
-
-      if (matches && matches.length > 0) {
-        expect(matches.some(m => m.patternId === 'use-async-await')).toBe(true);
-      }
+      expect(matches?.some(m => m.patternId === 'use-async-await')).toBe(true);
     } finally {
       await unlink(testFile);
+    }
+  });
+
+  it('should detect trailing whitespace', async () => {
+    const { writeFile, unlink } = await import('fs/promises');
+    const { join } = await import('path');
+
+    const testFile = join(process.cwd(), 'test-trailing.ts');
+    const testCode = 'line with trailing spaces   \nline without trailing\n';
+
+    await writeFile(testFile, testCode);
+
+    try {
+      const results = await scanDirectory(process.cwd(), ['.ts']);
+      const matches = results.get(testFile);
+      expect(matches?.some(m => m.patternId === 'trailing-whitespace')).toBe(true);
+    } finally {
+      await unlink(testFile);
+    }
+  });
+
+  it('should detect missing EOF newline', async () => {
+    const { writeFile, unlink } = await import('fs/promises');
+    const { join } = await import('path');
+
+    const testFile = join(process.cwd(), 'test-newline.ts');
+    // File without trailing newline
+    const testCode = 'line1\nline2';
+
+    await writeFile(testFile, testCode);
+
+    try {
+      const results = await scanDirectory(process.cwd(), ['.ts']);
+      const matches = results.get(testFile);
+      expect(matches?.some(m => m.patternId === 'missing-eof-newline')).toBe(true);
+    } finally {
+      await unlink(testFile);
+    }
+  });
+
+  it('should exclude specified directories', async () => {
+    const { scanDirectory } = await import('../evolution/patterns.js');
+
+    // Scan with excludes should not find files in __tests__
+    const results = await scanDirectory('src', ['.ts'], { exclude: ['__tests__'] });
+
+    // Should not have any entries from __tests__
+    for (const file of results.keys()) {
+      expect(file).not.toMatch(/__tests__/);
     }
   });
 });

@@ -33,12 +33,101 @@ export interface PatternMatch {
 
 export const patterns: Pattern[] = [
   {
+    id: 'trailing-whitespace',
+    name: 'Remove trailing whitespace',
+    description: 'Lines should not end with spaces or tabs',
+    severity: 'info',
+    check: (code) => {
+      const lines = code.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].match(/\s+$/)) {
+          return {
+            patternId: 'trailing-whitespace',
+            line: i + 1,
+            column: 1,
+            message: 'Trailing whitespace detected',
+            suggestedFix: 'Remove trailing spaces/tabs'
+          };
+        }
+      }
+      return null;
+    },
+    fix: (code) => {
+      return code.split('\n').map(line => line.replace(/\s+$/, '')).join('\n');
+    }
+  },
+  {
+    id: 'missing-eof-newline',
+    name: 'Ensure file ends with newline',
+    description: 'POSIX standard: text files should end with newline',
+    severity: 'info',
+    check: (code) => {
+      if (!code.endsWith('\n')) {
+        return {
+          patternId: 'missing-eof-newline',
+          line: code.split('\n').length + 1,
+          column: 1,
+          message: 'File does not end with newline',
+          suggestedFix: 'Add newline at end of file'
+        };
+      }
+      return null;
+    },
+    fix: (code) => {
+      return code.endsWith('\n') ? code : code + '\n';
+    }
+  },
+  {
+    id: 'trailing-whitespace',
+    name: 'Remove trailing whitespace',
+    description: 'Lines should not end with spaces or tabs',
+    severity: 'info',
+    check: (code) => {
+      const lines = code.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].match(/\s+$/)) {
+          return {
+            patternId: 'trailing-whitespace',
+            line: i + 1,
+            column: 1,
+            message: 'Trailing whitespace detected',
+            suggestedFix: 'Remove trailing spaces/tabs'
+          };
+        }
+      }
+      return null;
+    },
+    fix: (code) => {
+      return code.split('\n').map(line => line.replace(/\s+$/, '')).join('\n');
+    }
+  },
+  {
+    id: 'missing-eof-newline',
+    name: 'Ensure file ends with newline',
+    description: 'POSIX standard: text files should end with newline',
+    severity: 'info',
+    check: (code) => {
+      if (!code.endsWith('\n')) {
+        return {
+          patternId: 'missing-eof-newline',
+          line: code.split('\n').length + 1,
+          column: 1,
+          message: 'File does not end with newline',
+          suggestedFix: 'Add newline at end of file'
+        };
+      }
+      return null;
+    },
+    fix: (code) => {
+      return code.endsWith('\n') ? code : code + '\n';
+    }
+  },
+  {
     id: 'use-async-await',
     name: 'Prefer async/await over Promise chains',
     description: 'Use async/await for better readability in async functions',
     severity: 'warning',
     check: (code) => {
-      // Look for .then() chains in async functions
       const hasThen = /\.then\s*\(/.test(code);
       const hasAsync = /\basync\s+function/.test(code) || /\(\s*\)\s*=>\s*{[\s\S]*?async/.test(code);
       if (hasThen && hasAsync) {
@@ -52,35 +141,7 @@ export const patterns: Pattern[] = [
       }
       return null;
     },
-    fix: (code) => {
-      // Very basic transformation - a real implementation would use AST
-      return code.replace(/\.then\s*\(\s*\(([^)]+)\)\s*=>\s*{([\s\S]*?)}\s*\)\s*\.catch\s*\(\s*\(([^)]+)\)\s*=>\s*{([\s\S]*?)}\s*\)/g,
-        'try {\n  const $1 = await ...;\n  $2\n} catch ($3) {\n  $4\n}');
-    }
-  },
-  {
-    id: 'proper-error-handling',
-    name: 'Handle errors in async functions',
-    description: 'Async functions should have try/catch error handling',
-    severity: 'warning',
-    check: (code) => {
-      // Check for async functions without try/catch
-      const asyncFuncMatch = code.match(/\basync\s+function\s+\w+\s*\([^)]*\)\s*{([\s\S]*?)}/);
-      if (asyncFuncMatch) {
-        const body = asyncFuncMatch[1];
-        if (!body.includes('try') && !body.includes('catch')) {
-          return {
-            patternId: 'proper-error-handling',
-            line: 1,
-            column: 1,
-            message: 'Async function should include error handling',
-            suggestedFix: 'Wrap async code in try/catch'
-          };
-        }
-      }
-      return null;
-    },
-    fix: (code) => code // placeholder - would need AST transformation
+    fix: (code) => code // placeholder - requires AST
   },
   {
     id: 'avoid-global-object',
@@ -88,8 +149,7 @@ export const patterns: Pattern[] = [
     description: 'Do not use globalThis directly; use local scope',
     severity: 'error',
     check: (code) => {
-      // Detect usage of global object via globalThis (avoid false positive on pattern definition)
-      const pattern = new RegExp('\\bglobalThis\\b');;
+      const pattern = new RegExp('\bglobalThis\b');
       const lines = code.split('\n');
       for (let i = 0; i < lines.length; i++) {
         if (pattern.test(lines[i])) {
@@ -97,9 +157,9 @@ export const patterns: Pattern[] = [
             patternId: 'avoid-global-object',
             line: i + 1,
             column: 1,
-            message: 'Avoid using globalThis; use local variables or dependency injection',
-            suggestedFix: 'Replace globalThis with local scope or imported module'
-            };
+            message: 'Avoid using globalThis; use local scope',
+            suggestedFix: 'Replace with imported module or local variable'
+          };
         }
       }
       return null;
@@ -108,8 +168,14 @@ export const patterns: Pattern[] = [
   }
 ];
 
-export async function scanDirectory(dir: string, exts: string[] = ['.ts']): Promise<Map<string, PatternMatch[]>> {
+export async function scanDirectory(dir: string, exts: string[] = ['.ts'], options: { exclude?: string[] } = {}): Promise<Map<string, PatternMatch[]>> {
   const results = new Map<string, PatternMatch[]>();
+  const defaultExclude = ['node_modules', 'dist', '.git', '__tests__', '__mocks__'];
+  const excludeDirs = new Set([...defaultExclude, ...(options.exclude || [])]);
+
+  function shouldSkipDir(dirName: string): boolean {
+    return excludeDirs.has(dirName) || dirName.startsWith('.');
+  }
 
   async function walk(currentDir: string): Promise<void> {
     const entries = await readdir(currentDir, { withFileTypes: true });
@@ -117,7 +183,7 @@ export async function scanDirectory(dir: string, exts: string[] = ['.ts']): Prom
     for (const entry of entries) {
       const fullPath = join(currentDir, entry.name);
 
-      if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+      if (entry.isDirectory() && !(await shouldSkipDir(entry.name))) {
         await walk(fullPath);
       } else if (entry.isFile() && exts.includes(extname(fullPath))) {
         try {
