@@ -6,6 +6,7 @@
  */
 
 import { readFile, readdir, stat } from 'fs/promises';
+import { FileCache } from './cache.js';
 import { join, relative, extname, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -168,7 +169,11 @@ export const patterns: Pattern[] = [
   }
 ];
 
-export async function scanDirectory(dir: string, exts: string[] = ['.ts'], options: { exclude?: string[] } = {}): Promise<Map<string, PatternMatch[]>> {
+export async function scanDirectory(
+  dir: string,
+  exts: string[] = ['.ts'],
+  options: { exclude?: string[]; cache?: FileCache } = {}
+): Promise<Map<string, PatternMatch[]>> {
   const results = new Map<string, PatternMatch[]>();
   const defaultExclude = ['node_modules', 'dist', '.git', '__tests__', '__mocks__'];
   const excludeDirs = new Set([...defaultExclude, ...(options.exclude || [])]);
@@ -187,7 +192,23 @@ export async function scanDirectory(dir: string, exts: string[] = ['.ts'], optio
         await walk(fullPath);
       } else if (entry.isFile() && exts.includes(extname(fullPath))) {
         try {
-          const content = await readFile(fullPath, 'utf-8');
+          // Get file stat for cache validation
+          const statResult = await stat(fullPath);
+
+          // Try cache first
+          let content: string;
+          if (options.cache) {
+            const cached = await options.cache.get(fullPath, statResult);
+            if (cached !== null) {
+              content = cached;
+            } else {
+              content = await readFile(fullPath, 'utf-8');
+              options.cache.set(fullPath, content, statResult);
+            }
+          } else {
+            content = await readFile(fullPath, 'utf-8');
+          }
+
           const matches: PatternMatch[] = [];
 
           for (const pattern of patterns) {

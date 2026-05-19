@@ -137,10 +137,41 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-8",
+      "name": "Polish & Release Phase",
+      "tasks": [
+        {
+          "id": "task-20",
+          "content": "Add .gitignore improvements (bench-results, temp, .env)",
+          "status": "completed"
+        },
+        {
+          "id": "task-21",
+          "content": "Create SECURITY.md with vulnerability reporting guidelines",
+          "status": "completed"
+        },
+        {
+          "id": "task-22",
+          "content": "Add CONTRIBUTING.md with development setup instructions",
+          "status": "completed"
+        },
+        {
+          "id": "task-23",
+          "content": "Add incremental scanning optimization for large repos",
+          "status": "completed"
+        },
+        {
+          "id": "task-24",
+          "content": "Write comprehensive edge case tests for evolution engine",
+          "status": "completed"
+        }
+      ]
     }
   ],
-  "nextTaskId": 20,
-  "nextPhaseId": 8,
-  "updatedAt": "2026-05-19T13:29:30.648Z"
+  "nextTaskId": 25,
+  "nextPhaseId": 9,
+  "updatedAt": "2026-05-19T13:49:10.723Z"
 }
 }

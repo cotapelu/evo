@@ -9,6 +9,14 @@ dist/
 .env.local
 .env.*.local
 
+# Evo specific
+.evo/
+*.log
+bench-results/
+.piclaw/
+.evo-cache/
+
+
 # IDE
 .vscode/
 .idea/
