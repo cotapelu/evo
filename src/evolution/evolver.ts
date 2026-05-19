@@ -318,7 +318,7 @@ export class Evolver {
       try {
         await writeFile(originalPath, await readFile(backupFile, 'utf-8'));
       } catch (err) {
-        // File might have been deleted, skip
+        console.warn(`   Warning: Failed to restore ${originalPath}: ${err instanceof Error ? err.message : err}`);
       }
     }
   }

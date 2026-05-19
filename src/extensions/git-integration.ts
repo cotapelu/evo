@@ -207,8 +207,9 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 			if (ref) {
 				checkpoints.set(currentEntryId, ref);
 			}
-		} catch {
-			// Silent fail - checkpoints are optional
+		} catch (error: any) {
+			// Checkpoints are optional but log at debug level for observability
+			console.debug(`Checkpoint creation failed: ${error.message}`);
 		}
 	});
 
@@ -236,28 +237,34 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 
 	// Session shutdown - auto-commit
 	pi.on('session_shutdown', async (_event, ctx) => {
-		if (!CONFIG.enabled || !CONFIG.commitOnExit) return;
-		if (!(await isGitRepo())) return;
-		if (!(await hasUncommittedChanges())) return;
+		try {
+			if (!CONFIG.enabled || !CONFIG.commitOnExit) return;
+			if (!(await isGitRepo())) return;
+			if (!(await hasUncommittedChanges())) return;
 
-		const staged = await stageChanges();
-		if (!staged) {
-			ctx.ui.notify('Auto-commit skipped: staging failed', 'error');
-			return;
+			const staged = await stageChanges();
+			if (!staged) {
+				ctx.ui.notify('Auto-commit skipped: staging failed', 'error');
+				return;
+			}
+
+			let message = await generateCommitMessage(ctx);
+			message = sanitizeCommitMessage(message);
+			const { code } = await execGit(['commit', '-m', message]);
+
+			if (code === 0 && ctx.hasUI) {
+				ctx.ui.notify(`Auto-committed: ${message}`, 'info');
+			}
+
+			pi.appendEntry('git-integration-info', {
+				message: `Auto-commit: ${message}`,
+				committed: true
+			});
+		} catch (error: any) {
+			if (ctx.hasUI) {
+				ctx.ui.notify(`Auto-commit failed: ${error.message}`, 'error');
+			}
 		}
-
-		let message = await generateCommitMessage(ctx);
-		message = sanitizeCommitMessage(message);
-		const { code } = await execGit(['commit', '-m', message]);
-
-		if (code === 0 && ctx.hasUI) {
-			ctx.ui.notify(`Auto-committed: ${message}`, 'info');
-		}
-
-		pi.appendEntry('git-integration-info', {
-			message: `Auto-commit: ${message}`,
-			committed: true
-		});
 	});
 
 	// Agent end - cleanup
