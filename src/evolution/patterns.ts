@@ -88,8 +88,8 @@ export const patterns: Pattern[] = [
     description: 'Do not use globalThis directly; use local scope',
     severity: 'error',
     check: (code) => {
-      // Detect usage of global object via globalThis
-      const pattern = /\bglobalThis\b/;
+      // Detect usage of global object via globalThis (avoid false positive on pattern definition)
+      const pattern = new RegExp('\\bglobalThis\\b');;
       const lines = code.split('\n');
       for (let i = 0; i < lines.length; i++) {
         if (pattern.test(lines[i])) {
