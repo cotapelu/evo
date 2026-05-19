@@ -41,7 +41,9 @@ Events handled:
 Defines coding patterns to detect and optionally fix:
 - `use-async-await`: Prefer async/await over .then() chains
 - `proper-error-handling`: Ensure async functions have try/catch
-- `avoid-globals`: Prevent global variable leaks
+- `avoid-global-object`: Detect usage of `globalThis` (prefer local scope)
+
+Pattern detection is simple string-based and may produce false positives. The `avoid-global-object` pattern can flag the patterns module itself due to regex definitions; this is expected and can be ignored or the pattern refined.
 
 Scans directories and produces a report of matches.
 
