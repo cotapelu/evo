@@ -13,7 +13,8 @@
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint src/**/*.ts",
     "evolve": "node dist/src/evolution/cli.js",
-    "evolve:dry": "node dist/src/evolution/cli.js --dry"
+    "evolve:dry": "node dist/src/evolution/cli.js --dry",
+    "bench": "node dist/src/bench/benchmark.js"
   },
   "bin": {
     "evo": "./dist/src/main.js"

@@ -8,24 +8,76 @@
 
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 
-// Hardcoded configuration; can be made dynamic via custom entry settings later
-const CONFIG = {
+interface GitConfig {
+	enabled: boolean;
+	commitOnExit: boolean;
+	checkpointPerTurn: boolean;
+	stageAllChanges: boolean;
+	commitMessageSource: string;
+	gitTimeoutMs: number;
+	maxRetries: number;
+}
+
+function validateConfig(config: any): GitConfig {
+	if (typeof config !== 'object' || config === null) {
+		throw new Error('Git integration config must be an object');
+	}
+	return {
+		enabled: Boolean(config.enabled ?? true),
+		commitOnExit: Boolean(config.commitOnExit ?? true),
+		checkpointPerTurn: Boolean(config.checkpointPerTurn ?? true),
+		stageAllChanges: Boolean(config.stageAllChanges ?? false),
+		commitMessageSource: ['last-assistant', 'session-summary', 'last-user-message'].includes(config.commitMessageSource)
+			? config.commitMessageSource
+			: 'last-assistant',
+		gitTimeoutMs: Math.min(Math.max(config.gitTimeoutMs ?? 10000, 1000), 60000),
+		maxRetries: Math.min(Math.max(config.maxRetries ?? 2, 0), 5)
+	} as GitConfig;
+}
+
+const CONFIG = validateConfig({
 	enabled: true,
 	commitOnExit: true,
 	checkpointPerTurn: true,
 	stageAllChanges: false,
-	commitMessageSource: 'last-assistant' as 'last-assistant' | 'session-summary' | 'last-user-message'
-};
+	commitMessageSource: 'last-assistant',
+	gitTimeoutMs: 10000,
+	maxRetries: 2
+});
 
 export default function gitIntegrationExtension(pi: ExtensionAPI) {
 	const checkpoints = new Map<string, string>(); // entryId -> stash ref
 	let currentEntryId: string | undefined;
 	let isGitRepoCached: boolean | null = null;
 
+	// Safe git execution with timeout and retry
+	async function execGit(args: string[], attempt: number = 1): Promise<{ stdout: string; code: number }> {
+		const timeoutMs = CONFIG.gitTimeoutMs;
+		const timeoutPromise = new Promise((_, reject) => {
+			setTimeout(() => reject(new Error(`Git operation timed out after ${timeoutMs}ms`)), timeoutMs);
+		});;
+
+		try {
+			const execPromise = pi.exec('git', args);
+			return await Promise.race([execPromise, timeoutPromise]) as { stdout: string; code: number };
+		} catch (error: any) {
+			console.error(`Git operation failed (attempt ${attempt}/${CONFIG.maxRetries + 1}):`, error?.message || error);
+
+			if (attempt <= CONFIG.maxRetries) {
+				// Exponential backoff: 100ms, 200ms, 400ms
+				const backoff = 100 * Math.pow(2, attempt - 1);
+				await new Promise(resolve => setTimeout(resolve, backoff));
+				return execGit(args, attempt + 1);
+			}
+
+			throw error;
+		}
+	}
+
 	async function isGitRepo(): Promise<boolean> {
 		if (isGitRepoCached !== null) return isGitRepoCached;
 		try {
-			const { code } = await pi.exec('git', ['rev-parse', '--is-inside-work-tree']);
+			const { code } = await execGit(['rev-parse', '--is-inside-work-tree']);
 			isGitRepoCached = code === 0;
 		} catch {
 			isGitRepoCached = false;
@@ -35,7 +87,7 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 
 	async function hasUncommittedChanges(): Promise<boolean> {
 		try {
-			const { stdout } = await pi.exec('git', ['status', '--porcelain']);
+			const { stdout } = await execGit(['status', '--porcelain']);
 			return stdout.trim().length > 0;
 		} catch {
 			return false;
@@ -44,16 +96,22 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 
 	async function stageChanges(): Promise<boolean> {
 		try {
-			if (CONFIG.stageAllChanges) {
-				await pi.exec('git', ['add', '-A']);
-			} else {
-				await pi.exec('git', ['add', '-A']);
-			}
+			await execGit(['add', '-A']);
 			return true;
 		} catch (error) {
 			console.error('Git stage failed:', error);
 			return false;
 		}
+	}
+
+	function sanitizeCommitMessage(message: string): string {
+		// Remove newlines, control chars, and limit length
+		const maxLength = 72;
+		const sanitized = message
+			.replace(/[\r\n]+/g, ' ')
+			.replace(/[^\x20-\x7E]/g, '')
+			.trim();
+		return sanitized.length > maxLength ? sanitized.slice(0, maxLength - 3) + '...' : sanitized;
 	}
 
 	async function generateCommitMessage(ctx: ExtensionContext): Promise<string> {
@@ -144,7 +202,7 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 		if (!(await isGitRepo())) return;
 
 		try {
-			const { stdout } = await pi.exec('git', ['stash', 'create', '-m', `pi-checkpoint-${currentEntryId}`]);
+			const { stdout } = await execGit(['stash', 'create', '-m', `pi-checkpoint-${currentEntryId}`]);
 			const ref = stdout.trim();
 			if (ref) {
 				checkpoints.set(currentEntryId, ref);
@@ -168,7 +226,7 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 
 		if (choice?.startsWith('Yes')) {
 			try {
-				await pi.exec('git', ['stash', 'apply', ref]);
+				await execGit(['stash', 'apply', ref]);
 				ctx.ui.notify('Code restored to checkpoint', 'info');
 			} catch (error) {
 				ctx.ui.notify(`Failed to restore: ${error}`, 'error');
@@ -188,8 +246,9 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 			return;
 		}
 
-		const message = await generateCommitMessage(ctx);
-		const { code } = await pi.exec('git', ['commit', '-m', message]);
+		let message = await generateCommitMessage(ctx);
+		message = sanitizeCommitMessage(message);
+		const { code } = await execGit(['commit', '-m', message]);
 
 		if (code === 0 && ctx.hasUI) {
 			ctx.ui.notify(`Auto-committed: ${message}`, 'info');
