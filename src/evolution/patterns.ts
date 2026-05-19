@@ -83,29 +83,28 @@ export const patterns: Pattern[] = [
     fix: (code) => code // placeholder - would need AST transformation
   },
   {
-    id: 'avoid-globals',
-    name: 'Avoid global variables',
-    description: 'Use local scope instead of global variables',
+    id: 'avoid-global-object',
+    name: 'Avoid globalThis usage',
+    description: 'Do not use globalThis directly; use local scope',
     severity: 'error',
     check: (code) => {
-      // Look for top-level variable declarations without const/let in module scope
+      // Detect usage of global object via globalThis
+      const pattern = /\bglobalThis\b/;
       const lines = code.split('\n');
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        // Check for bare assignments to global-like names
-        if (/^[\w$]+\s*=\s*[^;]+;?$/.test(line) && !line.startsWith('const ') && !line.startsWith('let ') && !line.startsWith('var ')) {
+        if (pattern.test(lines[i])) {
           return {
-            patternId: 'avoid-globals',
+            patternId: 'avoid-global-object',
             line: i + 1,
             column: 1,
-            message: `Avoid global variable '${line.split('=')[0].trim()}' - use const/let`,
-            suggestedFix: 'Declare with const or let in appropriate scope'
-          };
+            message: 'Avoid using globalThis; use local variables or dependency injection',
+            suggestedFix: 'Replace globalThis with local scope or imported module'
+            };
         }
       }
       return null;
     },
-    fix: (code) => code // manual fix needed
+    fix: (code) => code // requires manual refactoring
   }
 ];
 

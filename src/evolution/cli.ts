@@ -10,13 +10,17 @@
  */
 
 import { evolve } from './evolver.js';
+import { join } from 'path';
 
 async function main() {
   const argv = process.argv.slice(2);
   const dryRun = argv.includes('--dry') || argv.includes('-d');
+  // Default target is the source directory
+  const targetArg = argv.find(arg => !arg.startsWith('-'));
+  const target = targetArg || join(process.cwd(), 'src');
 
   try {
-    const exitCode = await evolve({ dryRun });
+    const exitCode = await evolve({ dryRun, target });
     process.exit(exitCode);
   } catch (err) {
     console.error('Evolution failed:', err);
