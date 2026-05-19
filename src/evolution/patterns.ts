@@ -179,7 +179,8 @@ export async function scanDirectory(
             results.set(fullPath, matches);
           }
         } catch (err) {
-          // Skip files we can't read
+          // Skip files we can't read, but warn for visibility
+          console.warn(`   Warning: Skipping unreadable file: ${relative(process.cwd(), fullPath)} (${err instanceof Error ? err.message : err})`);
         }
       }
     }

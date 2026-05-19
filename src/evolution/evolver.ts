@@ -223,7 +223,8 @@ export class Evolver {
           }
         }
       } catch (err) {
-        // Skip files we can't read
+        // Skip files we can't read, but warn for visibility
+        console.warn(`   Warning: Could not read file ${file}: ${err instanceof Error ? err.message : err}`);
       }
     }
 
