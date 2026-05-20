@@ -3,7 +3,7 @@
  * Full-Featured Todo Tool - Complete implementation with all backup features
  * - 6 ops: delete, add_phase, add_task, update, remove_task, list
  * - Auto-normalize: one in_progress task
- * - File persistence: ./.piclaw/agent/todos.json
+ * - File persistence: ./.pi/agent/todos.json
  * - System messages + auto-continue
  * - Strict validation + mergeCallAndResult
  */
@@ -100,7 +100,7 @@ export interface TodoToolDetails {
 // ============================================================================
 
 function getProjectTodoFilePath(): string {
-  return join(process.cwd(), ".piclaw", "agent", "todos.json");
+  return join(process.cwd(), ".pi", "agent", "todos.json");
 }
 
 async function loadTodoFromFile(): Promise<TodoFile | null> {
@@ -786,7 +786,7 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
   return {
     name: "todos",
     label: "Todo",
-    description: "Complete todo management: add_phase, add_task, update, remove_task, delete, list. Auto-normalizes ONE in_progress task. Persists to .piclaw/agent/todos.json. add_task accepts phase name or ID. update supports batch update via ids array.",
+    description: "Complete todo management: add_phase, add_task, update, remove_task, delete, list. Auto-normalizes ONE in_progress task. Persists to .pi/agent/todos.json. add_task accepts phase name or ID. update supports batch update via ids array.",
     promptSnippet: "todos({ OPERATION: {...} }). All params are OBJECTS (not JSON strings). Ops: add_phase, add_task, update, remove_task, delete, list.",
     promptGuidelines: [
       "RULE: Operation is the KEY. todos({ OPERATION: params }), NOT { operation: name, params: {...} }",
@@ -804,7 +804,7 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
       "",
       "AUTO-RULES:",
       "• Only ONE task can be 'in_progress' (auto-normalizes others to 'pending')",
-      "• Data persists to .piclaw/agent/todos.json",
+      "• Data persists to .pi/agent/todos.json",
       "• Use 'details' field only for in_progress context (multiline)",
       "• Task IDs are auto: task-1, task-2... Find them by running todos({ list: {} })",
     ],
