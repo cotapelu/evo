@@ -12,22 +12,28 @@ import { registerSubToolLoaderExtension } from "./tools/index.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
 
 import piclawHeader from "./piclaw-header.js";
+import gitIntegrationExtension from "./git-integration.js";
+import { registerTeamTool } from "./team/index.js";
 
 export default function (api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
-  // Register providers
+  // ============================================
+  // PROVIDERS
+  // ============================================
   registerKiloProvider(api);
 
-  // Register custom tools
+  // ============================================
+  // CUSTOM TOOLS
+  // ============================================
   registerTodosTool(api);
   registerMemoryTool(api);
-
-  // Register universal tool (replaces echo and system_info)
   registerUniversalTool(api);
   registerSubToolLoaderExtension(api);
 
-  // Register Auto Continue Extension
+  // ============================================
+  // EXTENSIONS (Event Handlers, UI, etc.)
+  // ============================================
   autoContinueExtension(api);
-
-  // Register Piclaw Header
+  gitIntegrationExtension(api);
+  registerTeamTool(api);
   piclawHeader(api);
 }

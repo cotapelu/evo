@@ -14,9 +14,7 @@ import {
   type ExtensionFactory
 } from '@earendil-works/pi-coding-agent';
 
-// Import built-in extensions directly
-import gitIntegrationExtension from './extensions/git-integration.js';
-import teamAgentExtension from './extensions/team-agent/index.js';
+// Import extensions aggregator (registers all extensions)
 import extensionsAggregator from './extensions/index.js';
 
 // ============================================
@@ -102,11 +100,9 @@ async function main() {
           cwd: innerCwd,
           agentDir: innerAgentDir,
           authStorage,
-          // Register built-in extensions directly
+          // Register all extensions via aggregator
           resourceLoaderOptions: {
             extensionFactories: [
-              gitIntegrationExtension,
-              teamAgentExtension,
               extensionsAggregator
             ]
           }
