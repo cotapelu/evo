@@ -214,7 +214,7 @@ export class AgentTeam implements AgentTeamRuntime {
   async releaseTask(agentId: string, taskIndex: number): Promise<boolean> {
     return this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
-      if (!task || task.assignee !== agentId) {
+      if (!task || task.assignee !== agentId || task.status === 'completed') {
         return false;
       }
       task.assignee = null;
@@ -228,9 +228,10 @@ export class AgentTeam implements AgentTeamRuntime {
     await this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
       if (!task) return;
+      const agentId = task.assignee;
       task.status = 'completed';
       task.result = result;
-      const agentId = task.assignee;
+      task.assignee = null; // Clear assignment if any
       if (agentId) {
         const status = this.agentStatuses.get(agentId);
         if (status) {
@@ -249,6 +250,7 @@ export class AgentTeam implements AgentTeamRuntime {
       if (task.assignee !== agentId) return;
       task.status = 'completed';
       task.result = result;
+      task.assignee = null; // Clear assignment on completion
       const status = this.agentStatuses.get(agentId);
       if (status) {
         status.currentTaskIndex = null;
@@ -432,6 +434,11 @@ Use team_ops to continue. If all tasks done, finish up.`;
         turnCount++;
       } catch (err: any) {
         console.error(`Agent ${role} error:`, err.message);
+        // Release current task to prevent starvation
+        const currentTask = await team.getMyCurrentTask(role);
+        if (currentTask !== null) {
+          await team.releaseTask(role, currentTask);
+        }
         break;
       }
     }
