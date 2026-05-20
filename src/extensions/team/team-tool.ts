@@ -13,7 +13,7 @@ export function registerTeamTool(api: ExtensionAPI): void {
   api.registerTool(createTeamTool());
 }
 
-function createTeamTool(): ToolDefinition {
+export function createTeamTool(): ToolDefinition {
   return {
     name: "team_run",
     label: "Team Run",
@@ -50,7 +50,7 @@ function createTeamTool(): ToolDefinition {
       },
       required: ["tasks"]
     },
-    async execute(params: any, ctx: any) {
+    async execute(toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) {
       // Support LLM outputting JSON string or handle call references
       if (typeof params === "string") {
         // Detect call reference pattern (e.g., "call_abc123") which indicates unresolved reference
