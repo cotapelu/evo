@@ -17,7 +17,7 @@
     "bench": "node dist/src/bench/benchmark.js"
   },
   "bin": {
-    "evo": "./dist/src/main.js"
+    "evo": "./dist/evo.js"
   },
   "keywords": [
     "agent",
