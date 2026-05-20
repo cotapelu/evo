@@ -2,33 +2,24 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import { VERSION as PI_VERSION } from "@earendil-works/pi-coding-agent";
+import { VERSION as PI_VERSION, getAgentDir } from "@earendil-works/pi-coding-agent";
 
 // Default values (fallback)
 let PICLAW_APP_NAME = "piclaw";
 let PICLAW_VERSION = "0.0.1";
 
-// Try to read piclaw package.json from various locations
-const possiblePaths = [
-    join(process.cwd(), "package.json"),
-    join(process.cwd(), "..", "package.json"),
-    join(__dirname, "..", "..", "package.json"), // dist/extensions -> dist -> root
-    join(__dirname, "..", "..", "..", "package.json"), // src/extensions -> src -> root
-    join(__dirname, "..", "..", "..", "..", "package.json"),
-];
-
-for (const path of possiblePaths) {
-    try {
-        if (existsSync(path)) {
-            const content = readFileSync(path, "utf-8");
-            const pkg = JSON.parse(content);
-            if (pkg.name) PICLAW_APP_NAME = pkg.name;
-            if (pkg.version) PICLAW_VERSION = pkg.version;
-            break;
-        }
-    } catch {
-        // ignore
+// Try to read package.json from agent directory
+const agentDir = getAgentDir();
+const pkgPath = join(agentDir, "package.json");
+try {
+    if (existsSync(pkgPath)) {
+        const content = readFileSync(pkgPath, "utf-8");
+        const pkg = JSON.parse(content);
+        if (pkg.name) PICLAW_APP_NAME = pkg.name;
+        if (pkg.version) PICLAW_VERSION = pkg.version;
     }
+} catch {
+    // ignore
 }
 
 async function checkForUpdate(): Promise<string | undefined> {
