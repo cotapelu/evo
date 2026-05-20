@@ -47,6 +47,7 @@ export class AgentTeam implements AgentTeamRuntime {
   tasks: string[] = [];
   private taskStatuses: Map<number, { assignee: string | null; status: 'pending' | 'in_progress' | 'completed'; result: string }> = new Map();
   private agentStatuses: Map<string, { currentTaskIndex: number | null; status: string }> = new Map();
+  private roleByAgentId: Map<string, string> = new Map(); // maps session.id -> role
   private workspace: SharedWorkspace;
   private messageBus: Map<string, Array<{ from: string; content: string; timestamp: number }>> = new Map();
   private lockQueue: (() => void)[] = [];
@@ -191,35 +192,40 @@ export class AgentTeam implements AgentTeamRuntime {
   }
 
   async getMyCurrentTask(agentId: string): Promise<number | null> {
+    const role = this.roleByAgentId.get(agentId) ?? agentId;
     return this.withLock(() => {
-      return this.agentStatuses.get(agentId)?.currentTaskIndex ?? null;
+      return this.agentStatuses.get(role)?.currentTaskIndex ?? null;
     });
   }
 
   async claimTask(agentId: string): Promise<number | null> {
+    const role = this.roleByAgentId.get(agentId) ?? agentId;
     return this.withLock(() => {
       for (let i = 0; i < this.tasks.length; i++) {
         const task = this.taskStatuses.get(i);
         if (task && task.status === 'pending') {
-          task.assignee = agentId;
+          task.assignee = role; // assign by role
           task.status = 'in_progress';
-          this.agentStatuses.set(agentId, { currentTaskIndex: i, status: 'working' });
+          this.agentStatuses.set(role, { currentTaskIndex: i, status: 'working' });
+          console.log(`[DEBUG] Agent ${role} (session ${agentId}) claimed task ${i}: ${this.tasks[i].substring(0, 50)}...`);
           return i;
         }
       }
+      console.log(`[DEBUG] Agent ${role} found no pending tasks`);
       return null;
     });
   }
 
   async releaseTask(agentId: string, taskIndex: number): Promise<boolean> {
+    const role = this.roleByAgentId.get(agentId) ?? agentId;
     return this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
-      if (!task || task.assignee !== agentId || task.status === 'completed') {
+      if (!task || task.assignee !== role || task.status === 'completed') {
         return false;
       }
       task.assignee = null;
       task.status = 'pending';
-      this.agentStatuses.set(agentId, { currentTaskIndex: null, status: 'idle' });
+      this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
       return true;
     });
   }
@@ -227,7 +233,10 @@ export class AgentTeam implements AgentTeamRuntime {
   async reportResult(taskIndex: number, result: string): Promise<void> {
     await this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
-      if (!task) return;
+      if (!task) {
+        console.warn(`[DEBUG] reportResult: task ${taskIndex} not found`);
+        return;
+      }
       const agentId = task.assignee;
       task.status = 'completed';
       task.result = result;
@@ -239,19 +248,20 @@ export class AgentTeam implements AgentTeamRuntime {
           status.status = 'idle';
         }
       }
+      console.log(`[DEBUG] Task ${taskIndex} completed by ${agentId}. Result preview: ${result.substring(0, 100)}...`);
     });
   }
 
   async completeTask(agentId: string, taskIndex: number, result: string): Promise<void> {
+    const role = this.roleByAgentId.get(agentId) ?? agentId;
     await this.withLock(() => {
-      // Alias for reportResult but with agentId (used by team_ops)
       const task = this.taskStatuses.get(taskIndex);
       if (!task) return;
-      if (task.assignee !== agentId) return;
+      if (task.assignee !== role) return;
       task.status = 'completed';
       task.result = result;
       task.assignee = null; // Clear assignment on completion
-      const status = this.agentStatuses.get(agentId);
+      const status = this.agentStatuses.get(role);
       if (status) {
         status.currentTaskIndex = null;
         status.status = 'idle';
@@ -284,6 +294,7 @@ export class AgentTeam implements AgentTeamRuntime {
     this.runtimes.push(runtime);
     this.roles.push(role);
     this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
+    this.roleByAgentId.set((runtime.session as any).id, role);
     this.size = this.runtimes.length;
   }
 
@@ -417,19 +428,27 @@ Use team_ops to continue. If all tasks done, finish up.`;
     let turnCount = 0;
     const maxTurnsPerAgent = 50;
 
+    console.log(`[DEBUG] Agent ${role} starting loop`);
+
     while (true) {
       const status = await team.getTeamStatus();
+      console.log(`[DEBUG] Agent ${role} turn ${turnCount}: ${status.completedTasks}/${status.totalTasks} completed`);
       if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
+        console.log(`[DEBUG] Agent ${role} all tasks done, exiting`);
         break;
       }
 
-      if (turnCount >= maxTurnsPerAgent) break;
+      if (turnCount >= maxTurnsPerAgent) {
+        console.log(`[DEBUG] Agent ${role} max turns reached, exiting`);
+        break;
+      }
 
       try {
         const prompt = turnCount === 0
           ? getBootstrapPrompt(role)
           : await getContinuationPrompt(turnCount);
 
+        console.log(`[DEBUG] Agent ${role} sending prompt (turn ${turnCount})`);
         await runtime.session.prompt(prompt);
         turnCount++;
       } catch (err: any) {
@@ -442,6 +461,8 @@ Use team_ops to continue. If all tasks done, finish up.`;
         break;
       }
     }
+
+    console.log(`[DEBUG] Agent ${role} loop ended after ${turnCount} turns`);
   }
 
   // Start all child agents (skip parent at index 0)

@@ -83,10 +83,10 @@ export function createTeamTool(): ToolDefinition {
       }
 
       try {
-        // Get parent runtime from context
-        const parentRuntime = ctx.runtime;
+        // Get parent runtime from global (set by main.ts)
+        const parentRuntime = (globalThis as any).__PI_RUNTIME__;
         if (!parentRuntime) {
-          throw new Error("No runtime context available");
+          throw new Error("No runtime context available. Ensure main.ts sets globalThis.__PI_RUNTIME__");
         }
 
         // Boot team

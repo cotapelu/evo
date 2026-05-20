@@ -138,6 +138,9 @@ async function main() {
       sessionMs: sessionTime
     };
 
+    // Expose runtime globally for team tool (hack)
+    (globalThis as any).__PI_RUNTIME__ = runtime;
+
     // Print diagnostics and timing
     const allDiagnostics = [...services.diagnostics, ...runtime.diagnostics];
     printDiagnostics(allDiagnostics);
