@@ -19,6 +19,16 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
     name: "team_ops",
     label: "Team Ops",
     description: "Team collaboration: claim/release/complete tasks, workspace read/write, send/get messages, update status",
+    promptSnippet: "Manage tasks, workspace, and communication within a team",
+    promptGuidelines: [
+      "Use team_ops to interact with your team during collaborative work.",
+      "Start with action='claim_task' to get a task from the queue.",
+      "After completing work, use action='complete_task' with taskIndex and result.",
+      "Share data via workspace_write(key, value) and retrieve with workspace_read(key).",
+      "Communicate with teammates using send_message(channel, content).",
+      "Check team status with get_team_status to see progress.",
+      "Release tasks you cannot complete with release_task to free them for others."
+    ],
     parameters: {
       type: "object",
       properties: {

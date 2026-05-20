@@ -18,6 +18,15 @@ function createTeamTool(): ToolDefinition {
     name: "team_run",
     label: "Team Run",
     description: "Create a team and automatically execute tasks. The team will self-organize and complete all tasks without further intervention.",
+    promptSnippet: "Delegates tasks to a self-organizing multi-agent team",
+    promptGuidelines: [
+      "Use team_run when you need to parallelize work across multiple specialized agents.",
+      "Provide an array of clear, independent tasks as strings.",
+      "Specify teamSize (1-4) based on task complexity. Default is 2.",
+      "Optionally provide teamRoles (e.g., ['planner', 'coder', 'reviewer']) to specialize agents.",
+      "The team works autonomously - no need to monitor. Results returned after completion.",
+      "Tasks should be self-contained and not require heavy coordination between agents."
+    ],
     parameters: {
       type: "object",
       properties: {
