@@ -6,9 +6,9 @@ describe('AgentTeam', () => {
   beforeEach(() => {
     team = new AgentTeam();
     team.setTeamId('test-team');
-    // Register fake runtimes
-    team.registerRuntime({ session: { id: 'parent' } } as any, 'parent');
-    team.registerRuntime({ session: { id: 'agent1' } } as any, 'agent-1');
+    // Register fake runtimes with distinct session IDs
+    team.registerRuntime({ session: { id: 'parent-session-123' } } as any, 'parent');
+    team.registerRuntime({ session: { id: 'agent1-session-456' } } as any, 'agent-1');
   });
 
   afterEach(() => {
@@ -70,6 +70,35 @@ describe('AgentTeam', () => {
       expect(idx1).not.toBe(idx2);
       expect(await team.getMyCurrentTask('agent-1')).not.toBeNull();
       expect(await team.getMyCurrentTask('agent-2')).not.toBeNull();
+    });
+
+    it('should map session.id to role and allow task claiming', async () => {
+      await team.initialize(['taskA', 'taskB']);
+
+      // Use actual session.id from registered runtime
+      const sessionId = 'agent1-session-456';
+      const taskIdx = await team.claimTask(sessionId);
+      expect(taskIdx).toBe(0);
+      expect(await team.getMyCurrentTask(sessionId)).toBe(0);
+
+      await team.completeTask(sessionId, 0, 'resultA');
+      expect(await team.getMyCurrentTask(sessionId)).toBeNull();
+    });
+
+    it('should isolate agents: agent-1 cannot complete agent-2 task', async () => {
+      // Need agent-2 registered for role mapping
+      (team as any).registerRuntime({ session: { id: 'agent2-session-789' } } as any, 'agent-2');
+      await team.initialize(['taskX', 'taskY']);
+
+      // agent-1 claims task 0
+      await team.claimTask('agent1-session-456');
+
+      // agent-2 (different session) tries to complete (should be no-op)
+      await team.completeTask('agent2-session-789', 0, 'hacked');
+
+      // Verify task still pending (not completed)
+      const results = await team.getResults();
+      expect(results[0]).toBe('');
     });
   });
 });

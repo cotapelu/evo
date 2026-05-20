@@ -138,8 +138,10 @@ async function main() {
       sessionMs: sessionTime
     };
 
-    // Expose runtime globally for team tool (hack)
-    (globalThis as any).__PI_RUNTIME__ = runtime;
+    // Expose runtime globally for team tool (hapi)
+    // This is safe because the app has a single runtime at a time.
+    // Extensions can access it via globalThis.__EVO__RUNTIME__.
+    (globalThis as any).__EVO__RUNTIME__ = runtime;
 
     // Print diagnostics and timing
     const allDiagnostics = [...services.diagnostics, ...runtime.diagnostics];
