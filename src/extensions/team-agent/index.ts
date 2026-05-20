@@ -142,13 +142,13 @@ export default function (pi: ExtensionAPI) {
       try {
         const result = await team.runTask(params.agent_name, params.task);
         const elapsed = Date.now() - startTime;
-        
+
         // Stream updates while running? The agent's internal messages are not streamed to us
         // But we can at least report completion
-        
+
         return {
-          content: [{ 
-            type: 'text', 
+          content: [{
+            type: 'text',
             text: `[Agent: ${params.agent_name}] ${elapsed}ms\n\n${result.output}`
           }],
           details: {

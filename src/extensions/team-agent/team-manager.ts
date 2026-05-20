@@ -5,8 +5,8 @@
  * Agents are created on-demand and can be reused for multiple tasks.
  */
 
-import { 
-  createAgentSessionRuntime, 
+import {
+  createAgentSessionRuntime,
   createAgentSessionServices,
   createAgentSessionFromServices,
   type CreateAgentSessionRuntimeFactory,
@@ -54,11 +54,11 @@ class TeamManager {
       throw new Error(`Agent "${config.name}" already exists`);
     }
 
-    const factory: CreateAgentSessionRuntimeFactory = async ({ 
-      cwd, 
-      agentDir, 
-      sessionManager, 
-      sessionStartEvent 
+    const factory: CreateAgentSessionRuntimeFactory = async ({
+      cwd,
+      agentDir,
+      sessionManager,
+      sessionStartEvent
     }) => {
       // Use shared resources from main pi
       const services = await createAgentSessionServices({
@@ -151,11 +151,11 @@ class TeamManager {
 
     try {
       const session = runtime.session;
-      
+
       // Send task to agent. This resolves when the entire turn completes
       // (including any tool calls the agent makes).
       await session.prompt(task);
-      
+
       // After prompt, fetch the last assistant message from the session state
       const state = session.state;
       const messages = state.messages as any[]; // AgentMessage[]
@@ -163,7 +163,7 @@ class TeamManager {
       let inputTokens = 0;
       let outputTokens = 0;
       let cost = 0;
-      
+
       for (let i = messages.length - 1; i >= 0; i--) {
         const msg = messages[i];
         if (msg.role === 'assistant') {
