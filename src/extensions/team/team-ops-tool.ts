@@ -21,13 +21,16 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
     description: "Team collaboration: claim/release/complete tasks, workspace read/write, send/get messages, update status",
     promptSnippet: "Manage tasks, workspace, and communication within a team",
     promptGuidelines: [
+      "This tool is exclusively available to team member agents (child agents), NOT the main agent.",
       "Use team_ops to interact with your team during collaborative work.",
       "Start with action='claim_task' to get a task from the queue.",
       "After completing work, use action='complete_task' with taskIndex and result.",
       "Share data via workspace_write(key, value) and retrieve with workspace_read(key).",
       "Communicate with teammates using send_message(channel, content).",
       "Check team status with get_team_status to see progress.",
-      "Release tasks you cannot complete with release_task to free them for others."
+      "Release tasks you cannot complete with release_task to free them for others.",
+      "Note: Team members run autonomously in a loop - claim, work, complete, repeat.",
+      "Main agent cannot directly control team members; coordination happens via workspace and messages."
     ],
     parameters: {
       type: "object",

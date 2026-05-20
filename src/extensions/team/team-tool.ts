@@ -25,7 +25,10 @@ function createTeamTool(): ToolDefinition {
       "Specify teamSize (1-4) based on task complexity. Default is 2.",
       "Optionally provide teamRoles (e.g., ['planner', 'coder', 'reviewer']) to specialize agents.",
       "The team works autonomously - no need to monitor. Results returned after completion.",
-      "Tasks should be self-contained and not require heavy coordination between agents."
+      "Tasks should be self-contained and not require heavy coordination between agents.",
+      "team_run is blocking - it does not return until all tasks are finished.",
+      "Results are returned in the same order as the tasks array.",
+      "Note: team_run is called by the main agent to spawn a team of child agents."
     ],
     parameters: {
       type: "object",
