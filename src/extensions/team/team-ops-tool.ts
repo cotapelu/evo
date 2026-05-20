@@ -65,7 +65,20 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
       required: ["action"]
     },
     async execute(params: any, ctx: any) {
-      const { action } = params;
+      // Support LLM outputting JSON string
+      if (typeof params === "string") {
+        try {
+          params = JSON.parse(params);
+        } catch (e: any) {
+          return {
+            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${e.message}` }],
+            isError: true,
+            details: { error: "Invalid JSON" }
+          };
+        }
+      }
+
+      const { action } = params as { action: string };
 
       try {
         switch (action) {

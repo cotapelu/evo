@@ -51,7 +51,20 @@ function createTeamTool(): ToolDefinition {
       required: ["tasks"]
     },
     async execute(params: any, ctx: any) {
-      const { tasks, teamSize, teamRoles } = params;
+      // Support LLM outputting JSON string
+      if (typeof params === "string") {
+        try {
+          params = JSON.parse(params);
+        } catch (e: any) {
+          return {
+            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${e.message}` }],
+            isError: true,
+            details: { error: "Invalid JSON" }
+          };
+        }
+      }
+
+      const { tasks, teamSize, teamRoles } = params as { tasks: any; teamSize?: number; teamRoles?: string[] };
 
       if (!Array.isArray(tasks) || tasks.length === 0) {
         return {
