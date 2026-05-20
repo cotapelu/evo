@@ -356,7 +356,7 @@ Use team_ops to continue. If all tasks done, finish up.`;
     });
   });
 
-  // Monitor completion
+  // Monitor completion and cleanup
   team.monitorInterval = setInterval(() => {
     const status = team.getTeamStatus();
     if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
@@ -365,5 +365,12 @@ Use team_ops to continue. If all tasks done, finish up.`;
     }
   }, 1000);
 
-  await Promise.all(childPromises);
+  try {
+    await Promise.all(childPromises);
+  } finally {
+    if (team.monitorInterval) {
+      clearInterval(team.monitorInterval);
+      team.monitorInterval = null;
+    }
+  }
 }
