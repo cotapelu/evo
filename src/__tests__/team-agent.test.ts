@@ -9,6 +9,8 @@ const mockPi = {
   modelRegistry: {
     getModel: (id: string) => ({ id, provider: 'anthropic' } as any),
   } as any,
+  exec: jest.fn(() => Promise.resolve({ stdout: '', code: 0 })),
+  ui: { notify: jest.fn(), select: jest.fn(), input: jest.fn() },
 };
 
 describe('TeamManager', () => {
@@ -128,6 +130,45 @@ describe('TeamManager', () => {
       const agents = manager.listAgents();
       expect(agents.length).toBe(1);
       expect(agents[0]).toMatchObject(info);
+    });
+  });
+
+  describe('extension registration', () => {
+    it('should register all team tools when loaded', async () => {
+      const registerToolSpy = jest.fn();
+      const pi = {
+        ...mockPi,
+        registerTool: registerToolSpy,
+        on: jest.fn(),
+      };
+
+      const ext = await import('../extensions/team-agent/index.js');
+      ext.default(pi as any);
+
+      // Should register 5 team tools
+      expect(registerToolSpy).toHaveBeenCalledTimes(5);
+
+      const toolNames = registerToolSpy.mock.calls.map((call: any[]) => call[0].name);
+      expect(toolNames).toContain('team_create');
+      expect(toolNames).toContain('team_list');
+      expect(toolNames).toContain('team_run');
+      expect(toolNames).toContain('team_broadcast');
+      expect(toolNames).toContain('team_remove');
+    });
+
+    it('should bind session_start event for preloading agents', async () => {
+      const onSpy = jest.fn();
+      const pi = {
+        ...mockPi,
+        registerTool: jest.fn(),
+        on: onSpy,
+      };
+
+      const ext = await import('../extensions/team-agent/index.js');
+      ext.default(pi as any);
+
+      // Should bind session_start event
+      expect(onSpy).toHaveBeenCalledWith('session_start', expect.any(Function));
     });
   });
 });

@@ -16,6 +16,8 @@ import {
 
 // Import built-in extensions directly
 import gitIntegrationExtension from './extensions/git-integration.js';
+import teamAgentExtension from './extensions/team-agent/index.js';
+import extensionsAggregator from './extensions/index.js';
 
 // ============================================
 // GLOBAL CONSTANTS (reusable everywhere)
@@ -102,7 +104,11 @@ async function main() {
           authStorage,
           // Register built-in extensions directly
           resourceLoaderOptions: {
-            extensionFactories: [gitIntegrationExtension]
+            extensionFactories: [
+              gitIntegrationExtension,
+              teamAgentExtension,
+              extensionsAggregator
+            ]
           }
         });
 
