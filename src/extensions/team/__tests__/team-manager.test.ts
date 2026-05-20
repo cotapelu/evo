@@ -18,19 +18,19 @@ describe('AgentTeam', () => {
   });
 
   describe('monitorInterval cleanup', () => {
-    it('should clear interval when all tasks completed', () => {
-      team.initialize(['task1', 'task2']);
-      team.reportResult(0, 'done');
-      team.reportResult(1, 'done');
+    it('should clear interval when all tasks completed', async () => {
+      await team.initialize(['task1', 'task2']);
+      await team.reportResult(0, 'done');
+      await team.reportResult(1, 'done');
 
       // Simulate monitor check
-      const status = team.getTeamStatus();
+      const status = await team.getTeamStatus();
       expect(status.completedTasks).toBe(2);
       expect(status.totalTasks).toBe(2);
     });
 
     it('should clear interval on agent failure (finally block)', async () => {
-      team.initialize(['task1']);
+      await team.initialize(['task1']);
       // No task completed
 
       // Simulate the finally block logic manually since we can't easily trigger executeTeamTasks without full runtime
@@ -48,27 +48,28 @@ describe('AgentTeam', () => {
   });
 
   describe('task management', () => {
-    it('should claim and complete tasks correctly', () => {
-      team.initialize(['task1', 'task2']);
+    it('should claim and complete tasks correctly', async () => {
+      await team.initialize(['task1', 'task2']);
 
-      const taskIdx = team.claimTask('agent-1');
+      const taskIdx = await team.claimTask('agent-1');
       expect(taskIdx).toBe(0);
-      expect(team.getMyCurrentTask('agent-1')).toBe(0);
+      expect(await team.getMyCurrentTask('agent-1')).toBe(0);
 
-      team.completeTask('agent-1', 0, 'result1');
-      expect(team.getMyCurrentTask('agent-1')).toBeNull();
-      expect(team.getResults()[0]).toBe('result1');
+      await team.completeTask('agent-1', 0, 'result1');
+      expect(await team.getMyCurrentTask('agent-1')).toBeNull();
+      const results = await team.getResults();
+      expect(results[0]).toBe('result1');
     });
 
-    it('should distribute tasks to multiple agents', () => {
-      team.initialize(['t1', 't2', 't3', 't4']);
+    it('should distribute tasks to multiple agents', async () => {
+      await team.initialize(['t1', 't2', 't3', 't4']);
 
-      const idx1 = team.claimTask('agent-1');
-      const idx2 = team.claimTask('agent-2');
+      const idx1 = await team.claimTask('agent-1');
+      const idx2 = await team.claimTask('agent-2');
 
       expect(idx1).not.toBe(idx2);
-      expect(team.getMyCurrentTask('agent-1')).not.toBeNull();
-      expect(team.getMyCurrentTask('agent-2')).not.toBeNull();
+      expect(await team.getMyCurrentTask('agent-1')).not.toBeNull();
+      expect(await team.getMyCurrentTask('agent-2')).not.toBeNull();
     });
   });
 });

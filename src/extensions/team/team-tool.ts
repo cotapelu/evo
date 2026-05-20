@@ -99,7 +99,7 @@ export function createTeamTool(): ToolDefinition {
         await executeTeamTasks(team, tasks);
 
         // Get results
-        const results = team.getResults();
+        const results = await team.getResults();
 
         // Dispose team
         await team.dispose();

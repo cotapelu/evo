@@ -11,25 +11,25 @@ describe('AgentTeam Performance', () => {
     team.registerRuntime(mockRuntime, 'agent-1');
   });
 
-  test('claimTask linear scan is acceptable for typical sizes', () => {
+  test('claimTask linear scan is acceptable for typical sizes', async () => {
     const sizes = [10, 50, 100, 500];
     const iterations = 1000;
 
     for (const size of sizes) {
-      team.initialize(Array.from({ length: size }, (_, i) => `task${i}`));
+      await team.initialize(Array.from({ length: size }, (_, i) => `task${i}`));
 
       // Warm up
       for (let i = 0; i < size; i++) {
-        team.claimTask('agent-1');
-        team.completeTask('agent-1', i, `result${i}`);
+        await team.claimTask('agent-1');
+        await team.completeTask('agent-1', i, `result${i}`);
       }
 
       // Measure
       const start = Date.now();
       for (let iter = 0; iter < iterations; iter++) {
         for (let i = 0; i < size; i++) {
-          team.claimTask('agent-1');
-          team.completeTask('agent-1', i, `result${i}`);
+          await team.claimTask('agent-1');
+          await team.completeTask('agent-1', i, `result${i}`);
         }
       }
       const elapsed = Date.now() - start;
@@ -39,18 +39,18 @@ describe('AgentTeam Performance', () => {
     }
   });
 
-  test('getTeamStatus does not grow quadratically', () => {
+  test('getTeamStatus does not grow quadratically', async () => {
     const sizes = [10, 100, 500];
     for (const size of sizes) {
-      team.initialize(Array.from({ length: size }, (_, i) => `task${i}`));
+      await team.initialize(Array.from({ length: size }, (_, i) => `task${i}`));
       // Mark half as completed
       for (let i = 0; i < size / 2; i++) {
-        team.completeTask('agent-1', i, `result${i}`);
+        await team.completeTask('agent-1', i, `result${i}`);
       }
 
       const start = Date.now();
       for (let i = 0; i < 100; i++) {
-        team.getTeamStatus();
+        await team.getTeamStatus();
       }
       const elapsed = Date.now() - start;
       // Should be sublinear-ish in practice; 100 calls should be fast (<50ms even for 500 tasks)

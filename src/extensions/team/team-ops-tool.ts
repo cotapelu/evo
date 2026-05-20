@@ -84,7 +84,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
         switch (action) {
           // ==================== TASK MANAGEMENT ====================
           case "claim_task": {
-            const taskIndex = team.claimTask(ctx.session.id);
+            const taskIndex = await team.claimTask(ctx.session.id);
             if (taskIndex !== null) {
               return {
                 content: [{ type: "text", text: `Claimed task ${taskIndex}: ${team.tasks[taskIndex]}` }],
@@ -101,7 +101,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
           case "release_task": {
             const agentId = ctx.session.id;
-            const currentTask = team.getMyCurrentTask(agentId);
+            const currentTask = await team.getMyCurrentTask(agentId);
             if (currentTask === null) {
               return {
                 content: [{ type: "text", text: "No active task to release." }],
@@ -109,7 +109,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
                 isError: true,
               } as const;
             }
-            const released = team.releaseTask(agentId, currentTask);
+            const released = await team.releaseTask(agentId, currentTask);
             if (released) {
               return {
                 content: [{ type: "text", text: `Released task ${currentTask}` }],
@@ -134,7 +134,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
                 isError: true,
               } as const;
             }
-            const currentTask = team.getMyCurrentTask(agentId);
+            const currentTask = await team.getMyCurrentTask(agentId);
             if (currentTask !== taskIndex) {
               return {
                 content: [{ type: "text", text: `Task ${taskIndex} is not assigned to you.` }],
@@ -142,7 +142,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
                 isError: true,
               } as const;
             }
-            team.completeTask(agentId, taskIndex, result || "");
+            await team.completeTask(agentId, taskIndex, result || "");
             return {
               content: [{ type: "text", text: `Completed task ${taskIndex}` }],
               details: { taskIndex, result },
@@ -151,7 +151,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
           }
 
           case "get_team_status": {
-            const status = team.getTeamStatus();
+            const status = await team.getTeamStatus();
             return {
               content: [{ type: "text", text: JSON.stringify(status, null, 2) }],
               details: status,
@@ -165,7 +165,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
             if (!key) {
               return { content: [{ type: "text", text: "Missing key" }], details: undefined, isError: true } as const;
             }
-            const value = team.getWorkspace().get(key);
+            const value = await team.workspaceRead(key);
             return {
               content: [{ type: "text", text: value !== undefined ? String(value) : "(not found)" }],
               details: { key, value, exists: value !== undefined },
@@ -178,7 +178,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
             if (!key || value === undefined) {
               return { content: [{ type: "text", text: "Missing key or value" }], details: undefined, isError: true } as const;
             }
-            team.getWorkspace().set(key, String(value), ctx.session.id);
+            await team.workspaceWrite(key, String(value), ctx.session.id);
             return {
               content: [{ type: "text", text: `Wrote to workspace key: ${key}` }],
               details: { key },
@@ -192,7 +192,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
             if (!content) {
               return { content: [{ type: "text", text: "Missing content" }], details: undefined, isError: true } as const;
             }
-            team.publishMessage(channel, ctx.session.id, content);
+            await team.publishMessage(channel, ctx.session.id, content);
             return {
               content: [{ type: "text", text: `Sent to ${channel}` }],
               details: { channel },
@@ -202,7 +202,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
           case "get_messages": {
             const { channel = "team.chat", limit } = params;
-            const msgs = team.getMessages(channel, limit);
+            const msgs = await team.getMessages(channel, limit);
             const text = msgs.map(m => `[${new Date(m.timestamp).toLocaleTimeString()}] ${m.from}: ${m.content}`).join("\n");
             return {
               content: [{ type: "text", text: text || "(no messages)" }],
@@ -217,8 +217,8 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
             if (!status) {
               return { content: [{ type: "text", text: "Missing status" }], details: undefined, isError: true } as const;
             }
-            team.getMyCurrentTask(ctx.session.id); // ensures agent exists
-            const current = team.getMyCurrentTask(ctx.session.id);
+            await team.getMyCurrentTask(ctx.session.id); // ensures agent exists
+            const current = await team.getMyCurrentTask(ctx.session.id);
             // For simplicity, just record it; not used yet in minimal version
             return {
               content: [{ type: "text", text: `Status updated to: ${status}` }],
