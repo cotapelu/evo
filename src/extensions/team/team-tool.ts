@@ -51,8 +51,16 @@ function createTeamTool(): ToolDefinition {
       required: ["tasks"]
     },
     async execute(params: any, ctx: any) {
-      // Support LLM outputting JSON string
+      // Support LLM outputting JSON string or handle call references
       if (typeof params === "string") {
+        // Detect call reference pattern (e.g., "call_abc123") which indicates unresolved reference
+        if (params.startsWith('call_')) {
+          return {
+            content: [{ type: "text", text: `❌ Error: team_run expects a JSON object with tasks and optional teamSize. Received a call reference string (${params.substring(0, 20)}...). Call references must be resolved before passing to tools.` }],
+            isError: true,
+            details: { error: "Unresolved call reference" }
+          };
+        }
         try {
           params = JSON.parse(params);
         } catch (e: any) {
