@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Update team tool prompt guidelines",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Thêm promptSnippet và promptGuidelines vào team-tool.ts",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "content": "Kiểm tra xem cần cập nhật team-ops-tool không",
+          "status": "completed"
+        },
+        {
+          "id": "task-3",
+          "content": "Test team tool sau khi cập nhật",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 4,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-05-20T12:56:53.897Z"
+}
