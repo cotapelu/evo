@@ -175,36 +175,38 @@ export class AgentTeam implements AgentTeamRuntime {
   }
 
   async workspaceWrite(key: string, value: any, owner: string): Promise<void> {
-    this.workspace.set(key, value, owner);
-    // Notify workspace update
-    this.notifyUpdate(this.createUpdate(
-      `📝 ${owner} wrote to workspace: ${key}`,
-      { key, owner, valuePreview: String(value).substring(0, 150) }
-    ));
+    return this.withLock(() => {
+      this.workspace.set(key, value, owner);
+      // Notify workspace update
+      this.notifyUpdate(this.createUpdate(
+        `📝 ${owner} wrote to workspace: ${key}`,
+        { key, owner, valuePreview: String(value).substring(0, 150) }
+      ));
+    });
   }
 
   async workspaceRead(key: string): Promise<any> {
-    return this.workspace.get(key);
+    return this.withLock(() => this.workspace.get(key));
   }
 
   async workspaceGetEntry(key: string): Promise<WorkspaceEntry | undefined> {
-    return this.workspace.getEntry(key);
+    return this.withLock(() => this.workspace.getEntry(key));
   }
 
   async workspaceList(): Promise<string[]> {
-    return this.workspace.list();
+    return this.withLock(() => this.workspace.list());
   }
 
   async workspaceListByPrefix(prefix: string): Promise<string[]> {
-    return this.workspace.listByPrefix(prefix);
+    return this.withLock(() => this.workspace.listByPrefix(prefix));
   }
 
   async workspaceDelete(key: string): Promise<boolean> {
-    return this.workspace.delete(key);
+    return this.withLock(() => this.workspace.delete(key));
   }
 
   async workspaceToObject(): Promise<Record<string, any>> {
-    return this.workspace.toObject();
+    return this.withLock(() => this.workspace.toObject());
   }
 
   // Compatibility for team-tool
@@ -311,7 +313,12 @@ export class AgentTeam implements AgentTeamRuntime {
         task.assignee = role;
         task.status = 'in_progress';
         this.agentStatuses.set(role, { currentTaskIndex: idx, status: 'working' });
-        this.pendingIndices.splice(i, 1); // remove from pending
+        // Efficient removal: use shift() if at start
+        if (i === 0) {
+          this.pendingIndices.shift();
+        } else {
+          this.pendingIndices.splice(i, 1);
+        }
         this.notifyUpdate(this.createUpdate(
           `🔨 Agent ${role} claimed task ${idx}: ${this.tasks[idx].substring(0, 80)}...`,
           { agent: role, taskIndex: idx, taskPreview: this.tasks[idx].substring(0, 200), retryCount: task.retryCount }
