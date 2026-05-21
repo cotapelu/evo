@@ -52,14 +52,10 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 
 	// Safe git execution with timeout and retry
 	async function execGit(args: string[], attempt: number = 1): Promise<{ stdout: string; code: number }> {
-		const timeoutMs = CONFIG.gitTimeoutMs;
-		const timeoutPromise = new Promise((_, reject) => {
-			setTimeout(() => reject(new Error(`Git operation timed out after ${timeoutMs}ms`)), timeoutMs);
-		});;
-
 		try {
-			const execPromise = pi.exec('git', args);
-			return await Promise.race([execPromise, timeoutPromise]) as { stdout: string; code: number };
+			// Use pi.exec built-in timeout for reliable cancellation
+			const result = await pi.exec('git', args, { timeout: CONFIG.gitTimeoutMs });
+			return { stdout: result.stdout, code: result.code };
 		} catch (error: any) {
 			console.error(`Git operation failed (attempt ${attempt}/${CONFIG.maxRetries + 1}):`, error?.message || error);
 
@@ -89,7 +85,8 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 		try {
 			const { stdout } = await execGit(['status', '--porcelain']);
 			return stdout.trim().length > 0;
-		} catch {
+		} catch (error: any) {
+			console.debug('Git status check failed:', error.message);
 			return false;
 		}
 	}
@@ -112,6 +109,11 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 			.replace(/[^\x20-\x7E]/g, '')
 			.trim();
 		return sanitized.length > maxLength ? sanitized.slice(0, maxLength - 3) + '...' : sanitized;
+	}
+
+	function sanitizeStashMessage(message: string): string {
+		// Remove newlines and control chars; no length limit needed
+		return message.replace(/[\r\n\x00-\x1F\x7F]/g, '').trim();
 	}
 
 	async function generateCommitMessage(ctx: ExtensionContext): Promise<string> {
@@ -201,8 +203,12 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 		if (!currentEntryId) return;
 		if (!(await isGitRepo())) return;
 
+		// Sanitize entry ID to avoid control chars in stash message
+		const safeId = sanitizeStashMessage(currentEntryId);
+		if (!safeId) return; // skip if empty after sanitization
+
 		try {
-			const { stdout } = await execGit(['stash', 'create', '-m', `pi-checkpoint-${currentEntryId}`]);
+			const { stdout } = await execGit(['stash', 'create', '-m', `pi-checkpoint-${safeId}`]);
 			const ref = stdout.trim();
 			if (ref) {
 				checkpoints.set(currentEntryId, ref);
@@ -264,6 +270,10 @@ export default function gitIntegrationExtension(pi: ExtensionAPI) {
 			if (ctx.hasUI) {
 				ctx.ui.notify(`Auto-commit failed: ${error.message}`, 'error');
 			}
+		} finally {
+			// Always clear checkpoints and cache on shutdown
+			checkpoints.clear();
+			isGitRepoCached = null;
 		}
 	});
 
