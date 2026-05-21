@@ -22,6 +22,7 @@ const MAX_TEAM_SIZE = 4;
 const DEFAULT_MAX_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 1000; // 1 second
 const MAX_RETRY_DELAY_MS = 60000; // 60 seconds
+const AGENT_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes for zombie detection
 
 function calculateRetryDelay(retryCount: number): number {
   const delay = BASE_RETRY_DELAY_MS * Math.pow(2, retryCount - 1);
@@ -64,6 +65,7 @@ export class AgentTeam implements AgentTeamRuntime {
   private pendingIndices: number[] = []; // sorted list of indices with status 'pending' (including backoff)
   private agentStatuses: Map<string, { currentTaskIndex: number | null; status: string }> = new Map();
   private roleByAgentId: Map<string, string> = new Map(); // maps session.id -> role
+  private agentLastSeen: Map<string, number> = new Map(); // role -> timestamp of last activity
   private workspace: SharedWorkspace;
   private messageBus: Map<string, Array<{ from: string; content: string; timestamp: number }>> = new Map();
   private lockQueue: (() => void)[] = [];
@@ -318,6 +320,51 @@ export class AgentTeam implements AgentTeamRuntime {
       }
       return null;
     });
+  }
+
+  // Reclaim tasks from zombie agents (no heartbeat within timeout)
+  private reclaimZombieAgents(): void {
+    const now = Date.now();
+    const zombies: string[] = [];
+
+    for (const [role, lastSeen] of this.agentLastSeen.entries()) {
+      const status = this.agentStatuses.get(role);
+      if (status && status.status === 'working' && now - lastSeen > AGENT_TIMEOUT_MS) {
+        zombies.push(role);
+      }
+    }
+
+    if (zombies.length === 0) return;
+
+    for (const role of zombies) {
+      this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
+      this.agentLastSeen.delete(role);
+
+      for (const [taskIndex, task] of this.taskStatuses.entries()) {
+        if (task.assignee === role && task.status === 'in_progress') {
+          task.assignee = null;
+          task.retryCount++;
+          if (task.retryCount >= DEFAULT_MAX_RETRIES) {
+            task.status = 'failed';
+            task.result = 'Agent zombie timeout';
+            const pendingIdx = this.pendingIndices.indexOf(taskIndex);
+            if (pendingIdx !== -1) {
+              this.pendingIndices.splice(pendingIdx, 1);
+            }
+          } else {
+            task.status = 'pending';
+            const delay = calculateRetryDelay(task.retryCount);
+            task.retryAvailableAt = now + delay;
+            this.insertPendingIndexSorted(taskIndex);
+          }
+          this.notifyUpdate(this.createUpdate(
+            `🧟 Zombie agent ${role} detected on task ${taskIndex}, reclaiming${task.status === 'failed' ? '' : `, retry ${task.retryCount}/${DEFAULT_MAX_RETRIES}`}`,
+            { agent: role, taskIndex, status: task.status, retryCount: task.retryCount },
+            task.status === 'failed'
+          ));
+        }
+      }
+    }
   }
 
   async releaseTask(agentId: string, taskIndex: number): Promise<boolean> {
