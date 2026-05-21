@@ -89,14 +89,25 @@ export function createTeamTool(): ToolDefinition {
           throw new Error("No runtime context available. Ensure main.ts sets globalThis.__EVO__RUNTIME__");
         }
 
+        // Send initial update
+        onUpdate?.({
+          content: [{ type: "text", text: `🚀 Starting team with ${teamSize || 2} agents for ${tasks.length} tasks` }],
+          details: { teamSize, teamRoles, taskCount: tasks.length }
+        });
+
         // Boot team
         const team = await bootPiclawTeam(parentRuntime, {
           teamSize,
           teamRoles
         });
 
+        onUpdate?.({
+          content: [{ type: "text", text: `✅ Team booted: ${team.roles.join(", ")}` }],
+          details: { roles: team.roles, teamId: team.id }
+        });
+
         // Execute tasks (this blocks until all tasks done)
-        await executeTeamTasks(team, tasks);
+        await executeTeamTasks(team, tasks, onUpdate);
 
         // Get results
         const results = await team.getResults();
@@ -120,6 +131,12 @@ export function createTeamTool(): ToolDefinition {
           isError: false
         };
       } catch (error: any) {
+        // Send error update before returning
+        onUpdate?.({
+          content: [{ type: "text", text: `❌ Team execution failed: ${error.message}` }],
+          details: { error: error.message, stack: error.stack },
+          isError: true
+        });
         return {
           content: [{ type: "text", text: `❌ Team execution failed: ${error.message}` }],
           details: { error: error.message, stack: error.stack },

@@ -53,6 +53,29 @@ export class AgentTeam implements AgentTeamRuntime {
   private lockQueue: (() => void)[] = [];
   private locked = false;
   monitorInterval: any = null;
+  private onUpdate?: (update: any) => void;
+
+  public notifyUpdate(update: any): void {
+    if (this.onUpdate) {
+      try {
+        this.onUpdate(update);
+      } catch (e) {
+        // Ignore update errors - don't break team execution
+        console.warn('Failed to send update:', e);
+      }
+    }
+  }
+
+  // Helper to create consistent update format
+  public createUpdate(content: string, details?: any, isError?: boolean): any {
+    return {
+      content: [{ type: "text", text: content }],
+      details,
+      isError: isError || false
+    };
+  }
+
+  // Locking mechanism for concurrency control
 
   constructor() {
     this.dispose = async () => {
@@ -73,6 +96,10 @@ export class AgentTeam implements AgentTeamRuntime {
 
   setTeamId(id: string): void {
     this.id = id;
+  }
+
+  setOnUpdate(fn: ((update: any) => void) | undefined): void {
+    this.onUpdate = fn;
   }
 
   getWorkspace(): SharedWorkspace {
@@ -118,6 +145,11 @@ export class AgentTeam implements AgentTeamRuntime {
 
   async workspaceWrite(key: string, value: any, owner: string): Promise<void> {
     this.workspace.set(key, value, owner);
+    // Notify workspace update
+    this.notifyUpdate(this.createUpdate(
+      `📝 ${owner} wrote to workspace: ${key}`,
+      { key, owner, valuePreview: String(value).substring(0, 150) }
+    ));
   }
 
   async workspaceRead(key: string): Promise<any> {
@@ -174,6 +206,11 @@ export class AgentTeam implements AgentTeamRuntime {
         this.messageBus.set(channel, []);
       }
       this.messageBus.get(channel)!.push({ from, content, timestamp: Date.now() });
+      // Notify message sent
+      this.notifyUpdate(this.createUpdate(
+        `📢 [${channel}] ${from}: ${content.substring(0, 100)}`,
+        { channel, from, contentPreview: content.substring(0, 200) }
+      ));
     });
   }
 
@@ -208,6 +245,11 @@ export class AgentTeam implements AgentTeamRuntime {
           task.status = 'in_progress';
           this.agentStatuses.set(role, { currentTaskIndex: i, status: 'working' });
           console.log(`[DEBUG] Agent ${role} (session ${agentId}) claimed task ${i}: ${this.tasks[i].substring(0, 50)}...`);
+          // Notify task claimed
+          this.notifyUpdate(this.createUpdate(
+            `🔨 Agent ${role} claimed task ${i}: ${this.tasks[i].substring(0, 80)}...`,
+            { agent: role, taskIndex: i, taskPreview: this.tasks[i].substring(0, 200) }
+          ));
           return i;
         }
       }
@@ -226,6 +268,11 @@ export class AgentTeam implements AgentTeamRuntime {
       task.assignee = null;
       task.status = 'pending';
       this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
+      // Notify task released
+      this.notifyUpdate(this.createUpdate(
+        `↩️ Agent ${role} released task ${taskIndex}`,
+        { agent: role, taskIndex: taskIndex }
+      ));
       return true;
     });
   }
@@ -266,6 +313,11 @@ export class AgentTeam implements AgentTeamRuntime {
         status.currentTaskIndex = null;
         status.status = 'idle';
       }
+      // Notify task completed
+      this.notifyUpdate(this.createUpdate(
+        `✅ Agent ${role} completed task ${taskIndex}`,
+        { agent: role, taskIndex: taskIndex, resultPreview: result.substring(0, 150) }
+      ));
     });
   }
 
@@ -312,6 +364,11 @@ export class AgentTeam implements AgentTeamRuntime {
         this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
       }
     });
+    // Notify team initialized
+    this.notifyUpdate(this.createUpdate(
+      `📋 Team initialized with ${tasks.length} tasks`,
+      { totalTasks: tasks.length, agents: this.roles }
+    ));
   }
 }
 
@@ -388,8 +445,11 @@ export async function bootPiclawTeam(
 
 export async function executeTeamTasks(
   team: AgentTeam,
-  tasks: string[]
+  tasks: string[],
+  onUpdate?: (update: any) => void
 ): Promise<void> {
+  // Set onUpdate for the team
+  team.setOnUpdate(onUpdate);
   await team.initialize(tasks);
 
   const bootstrapTasksList = tasks.map((t, i) => `[${i}] ${t}`).join("\n");
@@ -429,17 +489,38 @@ Use team_ops to continue. If all tasks done, finish up.`;
     const maxTurnsPerAgent = 50;
 
     console.log(`[DEBUG] Agent ${role} starting loop`);
+    team.notifyUpdate?.(team.createUpdate(
+      `🤖 Agent ${role} started working`,
+      { role, status: 'started' }
+    ));
 
     while (true) {
       const status = await team.getTeamStatus();
       console.log(`[DEBUG] Agent ${role} turn ${turnCount}: ${status.completedTasks}/${status.totalTasks} completed`);
+      
+      // Notify progress at start of each turn (but not on first turn since we already announced start)
+      if (turnCount > 0) {
+        team.notifyUpdate?.(team.createUpdate(
+          `🔄 Agent ${role} turn ${turnCount}: ${status.completedTasks}/${status.totalTasks} tasks done`,
+          { role, turn: turnCount, completedTasks: status.completedTasks, totalTasks: status.totalTasks }
+        ));
+      }
+
       if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
         console.log(`[DEBUG] Agent ${role} all tasks done, exiting`);
+        team.notifyUpdate?.(team.createUpdate(
+          `✅ Agent ${role}: all tasks completed!`,
+          { role, status: 'finished' }
+        ));
         break;
       }
 
       if (turnCount >= maxTurnsPerAgent) {
         console.log(`[DEBUG] Agent ${role} max turns reached, exiting`);
+        team.notifyUpdate?.(team.createUpdate(
+          `⚠️ Agent ${role}: max turns (${maxTurnsPerAgent}) reached`,
+          { role, status: 'max_turns' }
+        ));
         break;
       }
 
@@ -453,6 +534,11 @@ Use team_ops to continue. If all tasks done, finish up.`;
         turnCount++;
       } catch (err: any) {
         console.error(`Agent ${role} error:`, err.message);
+        team.notifyUpdate?.(team.createUpdate(
+          `❌ Agent ${role} error: ${err.message}`,
+          { role, error: err.message, status: 'error' },
+          true
+        ));
         // Release current task to prevent starvation
         const currentTask = await team.getMyCurrentTask(role);
         if (currentTask !== null) {
@@ -490,4 +576,11 @@ Use team_ops to continue. If all tasks done, finish up.`;
       team.monitorInterval = null;
     }
   }
+
+  // Final status update
+  const finalStatus = await team.getTeamStatus();
+  onUpdate?.(team.createUpdate(
+    `🎉 Team execution complete: ${finalStatus.completedTasks}/${finalStatus.totalTasks} tasks done`,
+    { completed: finalStatus.completedTasks, total: finalStatus.totalTasks }
+  ));
 }
