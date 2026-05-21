@@ -8,6 +8,7 @@
 
 import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
 import type { ToolDefinition, ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { getGlobalRuntime } from "../../runtime-runner.js";
 
 export function registerTeamTool(api: ExtensionAPI): void {
   api.registerTool(createTeamTool());
@@ -182,10 +183,10 @@ export function createTeamTool(): ToolDefinition {
       }
 
       try {
-        // Get parent runtime from tool context (explicit dependency)
-        const parentRuntime = ctx?.runtime;
+        // Get parent runtime from tool context or global fallback
+        const parentRuntime = ctx?.runtime || getGlobalRuntime();
         if (!parentRuntime) {
-          throw new Error("No runtime context available. Team tool must be called from an active session");
+          throw new Error("No runtime context available. Team tool must be called from an active session (InteractiveMode not running?)");
         }
 
         // For new team, we want to accumulate onUpdate messages
