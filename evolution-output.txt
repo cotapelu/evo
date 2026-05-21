@@ -1,0 +1,36 @@
+
+> evo-agent@0.0.1 evolve
+> node dist/src/evolution/cli.js
+
+
+🧬 Starting evolution analysis...
+   Target: src
+   Dry run: false
+📦 Loaded cache: 37 entries
+
+📊 Scanning for patterns...
+   Found 6 issues across 5 files
+
+🔧 Generating proposed changes...
+   1 changes proposed
+
+💾 Creating backup...
+   Backup saved to: .evolution-backup
+
+✏️  Applying changes...
+
+🧪 Running tests...
+   ❌ Tests failed! Rolling back...
+Evolution failed: Error: ENOENT: no such file or directory, scandir '/home/runner/work/evo/evo/.evolution-backup'
+    at async readdir (node:internal/fs/promises:950:18)
+    at async walk (file:///home/runner/work/evo/evo/dist/src/evolution/evolver.js:273:29)
+    at async Evolver.listFiles (file:///home/runner/work/evo/evo/dist/src/evolution/evolver.js:284:9)
+    at async Evolver.restoreBackup (file:///home/runner/work/evo/evo/dist/src/evolution/evolver.js:258:29)
+    at async Evolver.run (file:///home/runner/work/evo/evo/dist/src/evolution/evolver.js:108:17)
+    at async evolve (file:///home/runner/work/evo/evo/dist/src/evolution/evolver.js:357:20)
+    at async main (file:///home/runner/work/evo/evo/dist/src/evolution/cli.js:19:26) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: '/home/runner/work/evo/evo/.evolution-backup'
+}
