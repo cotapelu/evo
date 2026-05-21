@@ -138,10 +138,8 @@ async function main() {
       sessionMs: sessionTime
     };
 
-    // Expose runtime globally for team tool (hapi)
-    // This is safe because the app has a single runtime at a time.
-    // Extensions can access it via globalThis.__EVO__RUNTIME__.
-    (globalThis as any).__EVO__RUNTIME__ = runtime;
+    // NOTE: Removed globalThis.__EVO__RUNTIME__ dependency.
+    // Team system now receives parentRuntime explicitly via bootPiclawTeam().
 
     // Print diagnostics and timing
     const allDiagnostics = [...services.diagnostics, ...runtime.diagnostics];

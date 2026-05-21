@@ -182,10 +182,10 @@ export function createTeamTool(): ToolDefinition {
       }
 
       try {
-        // Get parent runtime from global (set by main.ts)
-        const parentRuntime = (globalThis as any).__EVO__RUNTIME__;
+        // Get parent runtime from tool context (explicit dependency)
+        const parentRuntime = ctx?.runtime;
         if (!parentRuntime) {
-          throw new Error("No runtime context available. Ensure main.ts sets globalThis.__EVO__RUNTIME__");
+          throw new Error("No runtime context available. Team tool must be called from an active session");
         }
 
         // For new team, we want to accumulate onUpdate messages
