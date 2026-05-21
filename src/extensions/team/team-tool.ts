@@ -22,22 +22,22 @@ export function createTeamTool(): ToolDefinition {
     promptSnippet: "Delegates tasks to a self-organizing multi-agent team",
     promptGuidelines: [
       "Use team_run to create and manage agent teams.",
-      "To create a new team: provide tasks array, and optionally teamSize and teamRoles. Default: wait=false (non-blocking).",
-      "To wait for a team's completion: provide teamId and set wait=true. This blocks until all tasks done.",
-      "To check status without waiting: provide teamId only (wait defaults to false).",
+      "To create a new team: provide tasks array, and optionally teamSize and teamRoles. Teams always run non-blocking in background.",
+      // Removed: wait concept - teams always non-blocking
+      "To check status: provide teamId. (Teams always run non-blocking in background.)",
       "Tips:",
       "  - Create first: team_run({tasks: [...]}) → returns teamId.",
       "  - Do other work...",
-      "  - Then check status: team_run({teamId: '...'}) or wait: team_run({teamId: '...', wait: true}).",
+      "  - Then check status: team_run({teamId: '...'}).",
       "  - Progress updates are automatically sent during execution.",
-      "  - Teams auto-dispose after wait completion."
+      "  - Teams run in background until all tasks complete."
     ],
     parameters: {
       type: "object",
       properties: {
         teamId: {
           type: "string",
-          description: "ID of an existing team to query or wait for (optional)"
+          description: "ID of an existing team to query (optional)"
         },
         tasks: {
           type: "array",
@@ -53,10 +53,7 @@ export function createTeamTool(): ToolDefinition {
           items: { type: "string" },
           description: "Optional roles for each agent (e.g., ['planner', 'coder', 'reviewer'])"
         },
-        wait: {
-          type: "boolean",
-          description: "If true, block until team completes (only valid with teamId). For new teams, use non-blocking (default)."
-        }
+        // 'wait' parameter removed - teams always run non-blocking in background
       },
       required: []
     },
@@ -82,12 +79,11 @@ export function createTeamTool(): ToolDefinition {
         }
       }
 
-      const { teamId, tasks, teamSize, teamRoles, wait } = params as { 
+      const { teamId, tasks, teamSize, teamRoles } = params as { 
         teamId?: string; 
         tasks?: any; 
         teamSize?: number; 
         teamRoles?: string[]; 
-        wait?: boolean 
       };
 
       // Prepare onUpdate wrapper for message accumulation (used for both new team and query)
@@ -113,7 +109,7 @@ export function createTeamTool(): ToolDefinition {
         wrappedOnUpdate = undefined;
       }
 
-      // If teamId is provided, we're querying/waiting on an existing team
+            // If teamId is provided, query existing team status (always non-blocking)
       if (teamId) {
         const registry = TeamRegistry.getInstance();
         const team = registry.get(teamId);
@@ -125,54 +121,17 @@ export function createTeamTool(): ToolDefinition {
           };
         }
 
-        // Check if wait is requested
-        const shouldWait = wait === true;
+        // Reset auto-dispose timer on query
+        registry.resetAutoDisposeTimer(teamId);
 
-        if (shouldWait) {
-          wrappedOnUpdate?.({
-            content: [{ type: "text", text: `⏳ Waiting for team ${teamId} to complete...` }],
-            details: { teamId, wait: true }
-          });
-
-          // Wait for completion (with timeout)
-          const completed = await registry.waitForTeam(teamId, 300000); // 5 min timeout
-
-          if (!completed) {
-            return {
-              content: [{ type: "text", text: `⏰ Team ${teamId} did not complete within timeout` }],
-              details: { teamId, completed: false },
-              isError: false
-            };
-          }
-
-          // Get results
-          const results = await team.getResults();
-          // Dispose team
-          await team.dispose();
-
-          // Format output
-          const output = results.map((result: string, idx: number) => {
-            const taskPreview = team.tasks[idx]?.length > 50 ? team.tasks[idx].substring(0, 50) + "..." : team.tasks[idx];
-            const resultPreview = result.length > 100 ? result.substring(0, 100) + "..." : result;
-            return `Task ${idx}: ${taskPreview}\nResult: ${resultPreview || "(empty)"}`;
-          }).join("\n\n");
-
-          return {
-            content: [{ type: "text", text: `✅ Team ${teamId} completed ${results.length} tasks.\n\n${output}` }],
-            details: { teamId, totalTasks: results.length, results },
-            isError: false
-          };
-        } else {
-          // Just return current status
-          const status = await team.getTeamStatus();
-          return {
-            content: [{ type: "text", text: `📊 Team ${teamId} status: ${status.completedTasks}/${status.totalTasks} tasks completed, ${status.agents.length} agents` }],
-            details: { teamId, status },
-            isError: false
-          };
-        }
+        // Always non-blocking: return current status immediately
+        const status = await team.getTeamStatus();
+        return {
+          content: [{ type: "text", text: `📊 Team ${teamId} status: ${status.completedTasks}/${status.totalTasks} tasks completed, ${status.agents.length} agents` }],
+          details: { teamId, status, running: status.completedTasks < status.totalTasks },
+          isError: false
+        };
       }
-
       // New team creation
       if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
         return {
@@ -225,12 +184,12 @@ export function createTeamTool(): ToolDefinition {
           details: { roles: team.roles, teamId: team.id }
         });
 
-        // Execute tasks NON-BLOCKING (wait: false by default)
-        await executeTeamTasks(team, tasks, wrappedOnUpdate, { wait: false });
+        // Execute tasks in background (non-blocking)
+        await executeTeamTasks(team, tasks, wrappedOnUpdate, {});
 
         // Return immediately with teamId (non-blocking)
         return {
-          content: [{ type: "text", text: `✅ Team started: ${team.id}\nAgents: ${team.roles.join(", ")}\nTasks: ${tasks.length}\n\nProgress updates will be shown automatically.\nTo wait for completion, call team_run({teamId: "${team.id}", wait: true}).` }],
+          content: [{ type: "text", text: `✅ Team started: ${team.id}\nAgents: ${team.roles.join(", ")}\nTasks: ${tasks.length}\n\nProgress updates will be shown automatically.\nTo check status, call team_run({teamId: "${team.id}").` }],
           details: {
             teamId: team.id,
             agentCount: team.roles.length,

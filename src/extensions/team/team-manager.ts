@@ -398,6 +398,8 @@ export class TeamRegistry {
   private static instance: TeamRegistry | null = null;
   private teams: Map<string, AgentTeam> = new Map();
   private locked = false;
+  private autoDisposeTimers: Map<string, NodeJS.Timeout> = new Map();
+  private readonly AUTO_DISPOSE_DELAY = 5 * 60 * 1000; // 5 minutes
 
   private constructor() {}
 
@@ -414,6 +416,7 @@ export class TeamRegistry {
   }
 
   unregister(teamId: string): void {
+    this.clearAutoDisposeTimer(teamId);
     this.teams.delete(teamId);
     console.log(`[TeamRegistry] Unregistered team ${teamId}`);
   }
@@ -428,6 +431,41 @@ export class TeamRegistry {
 
   getAll(): Map<string, AgentTeam> {
     return new Map(this.teams);
+  }
+
+  // Reset auto-dispose timer for a team (called on query)
+  resetAutoDisposeTimer(teamId: string): void {
+    this.clearAutoDisposeTimer(teamId);
+    const team = this.teams.get(teamId);
+    if (team) {
+      const timer = setTimeout(() => {
+        this.autoDisposeTeam(teamId);
+      }, this.AUTO_DISPOSE_DELAY).unref?.();
+      if (timer) {
+        this.autoDisposeTimers.set(teamId, timer);
+      }
+    }
+  }
+
+  private clearAutoDisposeTimer(teamId: string): void {
+    const timer = this.autoDisposeTimers.get(teamId);
+    if (timer) {
+      clearTimeout(timer);
+      this.autoDisposeTimers.delete(teamId);
+    }
+  }
+
+  private async autoDisposeTeam(teamId: string): Promise<void> {
+    const team = this.teams.get(teamId);
+    if (team) {
+      try {
+        await team.dispose();
+        this.unregister(teamId);
+        console.log(`[TeamRegistry] Auto-disposed team ${teamId} after inactivity`);
+      } catch (e) {
+        console.error(`[TeamRegistry] Failed to auto-dispose team ${teamId}:`, e);
+      }
+    }
   }
 
   async waitForTeam(teamId: string, timeoutMs?: number): Promise<boolean> {
@@ -458,6 +496,8 @@ export class TeamRegistry {
   } | null> {
     const team = this.teams.get(teamId);
     if (!team) return null;
+    // Reset auto-dispose timer on any query
+    this.resetAutoDisposeTimer(teamId);
     return await team.getTeamStatus();
   }
 }
@@ -658,12 +698,19 @@ Use team_ops to continue. If all tasks done, finish up.`;
   // Save childPromises to team for later disposal
   team.childPromises = childPromises;
 
-  // Monitor completion and cleanup
+  // Monitor completion and auto-dispose
   team.monitorInterval = setInterval(async () => {
     const status = await team.getTeamStatus();
     if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
       clearInterval(team.monitorInterval);
       team.monitorInterval = null;
+      // Schedule auto-dispose after delay (5 min)
+      try {
+        const registry = TeamRegistry.getInstance();
+        registry.resetAutoDisposeTimer(team.id);
+      } catch (e) {
+        console.warn('Failed to schedule auto-dispose:', e);
+      }
     }
   }, 1000);
 
