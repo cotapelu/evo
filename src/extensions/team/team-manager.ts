@@ -19,6 +19,14 @@ import { SharedWorkspace, type WorkspaceEntry } from "./workspace.js";
 import { createTeamOpsTool } from "./team-ops-tool.js";
 
 const MAX_TEAM_SIZE = 4;
+const DEFAULT_MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 1000; // 1 second
+const MAX_RETRY_DELAY_MS = 60000; // 60 seconds
+
+function calculateRetryDelay(retryCount: number): number {
+  const delay = BASE_RETRY_DELAY_MS * Math.pow(2, retryCount - 1);
+  return Math.min(delay, MAX_RETRY_DELAY_MS);
+}
 
 function validateOptions(teamSize: number, teamRoles: string[]): { size: number; roles: string[] } {
   const size = Math.max(1, Math.min(teamSize, MAX_TEAM_SIZE));
@@ -46,7 +54,13 @@ export class AgentTeam implements AgentTeamRuntime {
 
   // State
   tasks: string[] = [];
-  private taskStatuses: Map<number, { assignee: string | null; status: 'pending' | 'in_progress' | 'completed'; result: string }> = new Map();
+  private taskStatuses: Map<number, {
+    assignee: string | null;
+    status: 'pending' | 'in_progress' | 'completed' | 'failed';
+    result: string;
+    retryCount: number;
+    retryAvailableAt?: number; // timestamp when task becomes claimable again after backoff
+  }> = new Map();
   private agentStatuses: Map<string, { currentTaskIndex: number | null; status: string }> = new Map();
   private roleByAgentId: Map<string, string> = new Map(); // maps session.id -> role
   private workspace: SharedWorkspace;
@@ -230,16 +244,29 @@ export class AgentTeam implements AgentTeamRuntime {
 
   async getTeamStatus(): Promise<{
     agents: Array<{ id: string; currentTaskIndex: number | null; status: string }>;
-    tasks: Array<{ index: number; assignee: string | null; status: string; result: string }>;
+    tasks: Array<{ index: number; assignee: string | null; status: 'pending' | 'in_progress' | 'completed' | 'failed'; result: string; retryCount: number; retryAvailableAt?: number }>;
     completedTasks: number;
+    failedTasks: number;
+    pendingTasks: number;
     totalTasks: number;
+    isComplete: boolean; // true when all tasks are either completed or failed
   }> {
-    return this.withLock(() => ({
-      agents: Array.from(this.agentStatuses.entries()).map(([id, status]) => ({ id, ...status })),
-      tasks: Array.from(this.taskStatuses.entries()).map(([idx, status]) => ({ index: idx, ...status })),
-      completedTasks: Array.from(this.taskStatuses.values()).filter(t => t.status === 'completed').length,
-      totalTasks: this.tasks.length,
-    }));
+    return this.withLock(() => {
+      const tasksArray = Array.from(this.taskStatuses.entries()).map(([idx, status]) => ({ index: idx, ...status }));
+      const completed = Array.from(this.taskStatuses.values()).filter(t => t.status === 'completed').length;
+      const failed = Array.from(this.taskStatuses.values()).filter(t => t.status === 'failed').length;
+      const pending = Array.from(this.taskStatuses.values()).filter(t => t.status === 'pending').length;
+      const total = this.tasks.length;
+      return {
+        agents: Array.from(this.agentStatuses.entries()).map(([id, status]) => ({ id, ...status })),
+        tasks: tasksArray,
+        completedTasks: completed,
+        failedTasks: failed,
+        pendingTasks: pending,
+        totalTasks: total,
+        isComplete: completed + failed === total && total > 0,
+      };
+    });
   }
 
   async getMyCurrentTask(agentId: string): Promise<number | null> {
@@ -255,19 +282,24 @@ export class AgentTeam implements AgentTeamRuntime {
       for (let i = 0; i < this.tasks.length; i++) {
         const task = this.taskStatuses.get(i);
         if (task && task.status === 'pending') {
+          // Check if task is on backoff (retryAvailableAt in future)
+          if (task.retryAvailableAt && task.retryAvailableAt > Date.now()) {
+            continue; // Skip this task, not yet claimable
+          }
+          // Clear any backoff timestamp when claiming
+          task.retryAvailableAt = undefined;
           task.assignee = role; // assign by role
           task.status = 'in_progress';
           this.agentStatuses.set(role, { currentTaskIndex: i, status: 'working' });
-          // Debug: task claimed (silenced)
           // Notify task claimed
           this.notifyUpdate(this.createUpdate(
             `🔨 Agent ${role} claimed task ${i}: ${this.tasks[i].substring(0, 80)}...`,
-            { agent: role, taskIndex: i, taskPreview: this.tasks[i].substring(0, 200) }
+            { agent: role, taskIndex: i, taskPreview: this.tasks[i].substring(0, 200), retryCount: task.retryCount }
           ));
           return i;
         }
       }
-      // Debug: no pending tasks (silenced)
+      // No claimable tasks
       return null;
     });
   }
@@ -276,18 +308,60 @@ export class AgentTeam implements AgentTeamRuntime {
     const role = this.roleByAgentId.get(agentId) ?? agentId;
     return this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
-      if (!task || task.assignee !== role || task.status === 'completed') {
+      if (!task || task.assignee !== role || task.status === 'completed' || task.status === 'failed') {
         return false;
       }
       task.assignee = null;
       task.status = 'pending';
+      task.retryAvailableAt = undefined; // immediate claimable
       this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
       // Notify task released
       this.notifyUpdate(this.createUpdate(
         `↩️ Agent ${role} released task ${taskIndex}`,
-        { agent: role, taskIndex: taskIndex }
+        { agent: role, taskIndex: taskIndex, retryCount: task.retryCount }
       ));
       return true;
+    });
+  }
+
+  async handleAgentFailure(agentId: string, taskIndex: number, error?: any): Promise<void> {
+    const role = this.roleByAgentId.get(agentId) ?? agentId;
+    await this.withLock(() => {
+      const task = this.taskStatuses.get(taskIndex);
+      if (!task || task.assignee !== role) {
+        return; // Not assigned to this agent or task doesn't exist
+      }
+
+      task.assignee = null;
+      task.retryCount++;
+
+      if (task.retryCount >= DEFAULT_MAX_RETRIES) {
+        // Max retries exceeded - mark as failed
+        task.status = 'failed';
+        task.result = error?.message || error?.toString() || 'Unknown error';
+        task.retryAvailableAt = undefined;
+        this.notifyUpdate(this.createUpdate(
+          `❌ Task ${taskIndex} failed after ${task.retryCount} retries (agent: ${role})`,
+          { agent: role, taskIndex, retryCount: task.retryCount, error: task.result },
+          true
+        ));
+      } else {
+        // Retry with backoff
+        const delay = calculateRetryDelay(task.retryCount);
+        task.status = 'pending';
+        task.retryAvailableAt = Date.now() + delay;
+        this.notifyUpdate(this.createUpdate(
+          `⚠️ Agent ${role} failed task ${taskIndex} (retry ${task.retryCount}/${DEFAULT_MAX_RETRIES}), retry in ${delay}ms`,
+          { agent: role, taskIndex, retryCount: task.retryCount, delay }
+        ));
+      }
+
+      // Clear agent's current task
+      const agentStatus = this.agentStatuses.get(role);
+      if (agentStatus) {
+        agentStatus.currentTaskIndex = null;
+        agentStatus.status = 'idle';
+      }
     });
   }
 
@@ -369,7 +443,7 @@ export class AgentTeam implements AgentTeamRuntime {
       this.tasks = tasks;
       this.taskStatuses.clear();
       for (let i = 0; i < tasks.length; i++) {
-        this.taskStatuses.set(i, { assignee: null, status: 'pending', result: '' });
+        this.taskStatuses.set(i, { assignee: null, status: 'pending', result: '', retryCount: 0 });
       }
       this.messageBus.clear();
       await this.workspaceClear();
@@ -677,10 +751,10 @@ Use team_ops to continue. If all tasks done, finish up.`;
           { role, error: err.message, status: 'error' },
           true
         ));
-        // Release current task to prevent starvation
+        // Handle agent failure with retry logic
         const currentTask = await team.getMyCurrentTask(role);
         if (currentTask !== null) {
-          await team.releaseTask(role, currentTask);
+          await team.handleAgentFailure(role, currentTask, err);
         }
         break;
       }
@@ -701,7 +775,8 @@ Use team_ops to continue. If all tasks done, finish up.`;
   // Monitor completion and auto-dispose
   team.monitorInterval = setInterval(async () => {
     const status = await team.getTeamStatus();
-    if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
+    // Team completes when all tasks are either completed or failed (terminal states)
+    if (status.isComplete && status.totalTasks > 0) {
       clearInterval(team.monitorInterval);
       team.monitorInterval = null;
       // Schedule auto-dispose after delay (5 min)
