@@ -323,7 +323,7 @@ export class AgentTeam implements AgentTeamRuntime {
   }
 
   // Reclaim tasks from zombie agents (no heartbeat within timeout)
-  private reclaimZombieAgents(): void {
+  public reclaimZombieAgents(): void {
     const now = Date.now();
     const zombies: string[] = [];
 
@@ -853,6 +853,8 @@ Use team_ops to continue. If all tasks done, finish up.`;
 
   // Monitor completion and auto-dispose
   team.monitorInterval = setInterval(async () => {
+    // Reclaim tasks from zombie agents
+    team.reclaimZombieAgents();
     const status = await team.getTeamStatus();
     // Team completes when all tasks are either completed or failed (terminal states)
     if (status.isComplete && status.totalTasks > 0) {
