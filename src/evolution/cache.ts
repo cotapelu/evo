@@ -6,7 +6,7 @@
  */
 
 import { readFile, stat, writeFile, mkdir } from 'fs/promises';
-import { join, relative } from 'path';
+import { join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,9 +22,11 @@ class FileCache {
   private cache: Map<string, CacheEntry> = new Map();
   private cachePath: string;
   private dirty: boolean = false;
+  public maxSize: number = 1000;
 
-  constructor(cacheDir?: string) {
+  constructor(cacheDir?: string, maxSize: number = 1000) {
     this.cachePath = join(cacheDir || process.cwd(), '.evo-cache', 'manifest.json');
+    if (maxSize > 0) this.maxSize = maxSize;
   }
 
   async load(): Promise<void> {
@@ -44,8 +46,10 @@ class FileCache {
   async save(): Promise<void> {
     if (!this.dirty) return;
     try {
+      // Take a snapshot to avoid holding the map during async I/O
+      const snapshot = new Map(this.cache);
       const obj: Record<string, CacheEntry> = {};
-      for (const [path, entry] of this.cache) {
+      for (const [path, entry] of snapshot) {
         obj[path] = entry;
       }
       await mkdir(join(this.cachePath, '..'), { recursive: true });
@@ -57,10 +61,10 @@ class FileCache {
   }
 
   async get(filePath: string, statResult?: any): Promise<string | null> {
-    const relPath = relative(process.cwd(), filePath);
+    const absPath = resolve(filePath);
 
-    if (statResult && this.cache.has(relPath)) {
-      const cached = this.cache.get(relPath)!;
+    if (statResult && this.cache.has(absPath)) {
+      const cached = this.cache.get(absPath)!;
       // Compare mtime (to ms precision) and size
       if (cached.mtime === statResult.mtimeMs && cached.size === statResult.size) {
         return cached.content;
@@ -71,18 +75,23 @@ class FileCache {
   }
 
   set(filePath: string, content: string, statResult: any): void {
-    const relPath = relative(process.cwd(), filePath);
-    this.cache.set(relPath, {
-      content,
-      mtime: statResult.mtimeMs,
-      size: statResult.size
-    });
+    const absPath = resolve(filePath);
+    // Ensure we have valid stat; if missing, use zeros (will cause cache miss on get with proper stat)
+    const mtime = statResult?.mtimeMs ?? 0;
+    const size = statResult?.size ?? 0;
+    this.cache.set(absPath, { content, mtime, size });
     this.dirty = true;
+    // Evict oldest entries if over maxSize (FIFO using Map insertion order)
+    while (this.cache.size > this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey === undefined) break;
+      this.cache.delete(oldestKey);
+    }
   }
 
   invalidate(filePath: string): void {
-    const relPath = relative(process.cwd(), filePath);
-    this.cache.delete(relPath);
+    const absPath = resolve(filePath);
+    this.cache.delete(absPath);
     this.dirty = true;
   }
 
