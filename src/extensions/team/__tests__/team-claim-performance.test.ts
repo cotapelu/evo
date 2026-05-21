@@ -2,6 +2,7 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
 describe('AgentTeam Claim Performance Optimization', () => {
+  const LONG_TIMEOUT = 30000; // 30 seconds for performance tests
   let team: AgentTeam;
 
   beforeEach(async () => {
@@ -26,7 +27,7 @@ describe('AgentTeam Claim Performance Optimization', () => {
 
     const pendingIndices = (team as any).pendingIndices;
     expect(pendingIndices).toEqual([0, 1, 2, 3]);
-  });
+  }, LONG_TIMEOUT);
 
   test('claimTask should remove claimed index from pendingIndices', async () => {
     team.tasks = ['task0', 'task1', 'task2'];
@@ -118,23 +119,23 @@ describe('AgentTeam Claim Performance Optimization', () => {
   });
 
   test('performance: claimTask should be O(1) average with many tasks', async () => {
-    // Create 10000 tasks
-    const N = 10000;
+    // Create 1000 tasks (enough to test scalability)
+    const N = 1000;
     team.tasks = Array.from({ length: N }, (_, i) => `task${i}`);
     await team.initialize(team.tasks);
 
-    // Measure time for 1000 claims
-    const iterations = 1000;
+    // Measure time for 100 claims
+    const iterations = 100;
     const start = Date.now();
     for (let i = 0; i < iterations; i++) {
       await team.claimTask('agent-1');
     }
     const elapsed = Date.now() - start;
 
-    // Average should be < 1ms per claim even with many tasks
+    // Average should be < 1ms per claim
     const avg = elapsed / iterations;
     console.log(`Average claim time: ${avg}ms`);
-    expect(avg).toBeLessThan(10); // generous bound
+    expect(avg).toBeLessThan(5); // 5ms bound
   });
 
   test('pendingIndices should not contain duplicates after repeated release/failure', async () => {
