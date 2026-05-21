@@ -258,7 +258,7 @@ export class AgentTeam implements AgentTeamRuntime {
           task.assignee = role; // assign by role
           task.status = 'in_progress';
           this.agentStatuses.set(role, { currentTaskIndex: i, status: 'working' });
-          console.log(`[DEBUG] Agent ${role} (session ${agentId}) claimed task ${i}: ${this.tasks[i].substring(0, 50)}...`);
+          // Debug: task claimed (silenced)
           // Notify task claimed
           this.notifyUpdate(this.createUpdate(
             `🔨 Agent ${role} claimed task ${i}: ${this.tasks[i].substring(0, 80)}...`,
@@ -267,7 +267,7 @@ export class AgentTeam implements AgentTeamRuntime {
           return i;
         }
       }
-      console.log(`[DEBUG] Agent ${role} found no pending tasks`);
+      // Debug: no pending tasks (silenced)
       return null;
     });
   }
@@ -295,7 +295,7 @@ export class AgentTeam implements AgentTeamRuntime {
     await this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
       if (!task) {
-        console.warn(`[DEBUG] reportResult: task ${taskIndex} not found`);
+        // Warning: task not found (silenced for cleaner logs)
         return;
       }
       const agentId = task.assignee;
@@ -309,7 +309,7 @@ export class AgentTeam implements AgentTeamRuntime {
           status.status = 'idle';
         }
       }
-      console.log(`[DEBUG] Task ${taskIndex} completed by ${agentId}. Result preview: ${result.substring(0, 100)}...`);
+      // Debug: task completed (silenced)
     });
   }
 
@@ -547,11 +547,12 @@ export async function executeTeamTasks(
   team: AgentTeam,
   tasks: string[],
   onUpdate?: (update: any) => void,
-  options?: { wait?: boolean }
+  options?: { wait?: boolean; maxTurnsPerAgent?: number }
 ): Promise<AgentTeam> {
   // Set onUpdate for the team
   team.setOnUpdate(onUpdate);
   await team.initialize(tasks);
+  const maxTurnsPerAgent = options?.maxTurnsPerAgent ?? 50;
 
   const bootstrapTasksList = tasks.map((t, i) => `[${i}] ${t}`).join("\n");
 
@@ -587,9 +588,8 @@ Use team_ops to continue. If all tasks done, finish up.`;
 
   async function runAgentLoop(runtime: AgentSessionRuntime, role: string): Promise<void> {
     let turnCount = 0;
-    const maxTurnsPerAgent = 50;
+    // Use configured maxTurnsPerAgent from outer scope
 
-    console.log(`[DEBUG] Agent ${role} starting loop`);
     team.notifyUpdate?.(team.createUpdate(
       `🤖 Agent ${role} started working`,
       { role, status: 'started' }
@@ -597,7 +597,7 @@ Use team_ops to continue. If all tasks done, finish up.`;
 
     while (true) {
       const status = await team.getTeamStatus();
-      console.log(`[DEBUG] Agent ${role} turn ${turnCount}: ${status.completedTasks}/${status.totalTasks} completed`);
+      // Debug: turn progress (silenced)
       
       // Notify progress at start of each turn (but not on first turn since we already announced start)
       if (turnCount > 0) {
@@ -608,7 +608,6 @@ Use team_ops to continue. If all tasks done, finish up.`;
       }
 
       if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
-        console.log(`[DEBUG] Agent ${role} all tasks done, exiting`);
         team.notifyUpdate?.(team.createUpdate(
           `✅ Agent ${role}: all tasks completed!`,
           { role, status: 'finished' }
@@ -617,7 +616,6 @@ Use team_ops to continue. If all tasks done, finish up.`;
       }
 
       if (turnCount >= maxTurnsPerAgent) {
-        console.log(`[DEBUG] Agent ${role} max turns reached, exiting`);
         team.notifyUpdate?.(team.createUpdate(
           `⚠️ Agent ${role}: max turns (${maxTurnsPerAgent}) reached`,
           { role, status: 'max_turns' }
@@ -630,11 +628,10 @@ Use team_ops to continue. If all tasks done, finish up.`;
           ? getBootstrapPrompt(role)
           : await getContinuationPrompt(turnCount);
 
-        console.log(`[DEBUG] Agent ${role} sending prompt (turn ${turnCount})`);
         await runtime.session.prompt(prompt);
         turnCount++;
       } catch (err: any) {
-        console.error(`Agent ${role} error:`, err.message);
+        // Error already reported via notifyUpdate below
         team.notifyUpdate?.(team.createUpdate(
           `❌ Agent ${role} error: ${err.message}`,
           { role, error: err.message, status: 'error' },
@@ -648,8 +645,6 @@ Use team_ops to continue. If all tasks done, finish up.`;
         break;
       }
     }
-
-    console.log(`[DEBUG] Agent ${role} loop ended after ${turnCount} turns`);
   }
 
   // Start all child agents (skip parent at index 0)
