@@ -61,6 +61,7 @@ export class AgentTeam implements AgentTeamRuntime {
     retryCount: number;
     retryAvailableAt?: number; // timestamp when task becomes claimable again after backoff
   }> = new Map();
+  private pendingIndices: number[] = []; // sorted list of indices with status 'pending' (including backoff)
   private agentStatuses: Map<string, { currentTaskIndex: number | null; status: string }> = new Map();
   private roleByAgentId: Map<string, string> = new Map(); // maps session.id -> role
   private workspace: SharedWorkspace;
@@ -276,30 +277,45 @@ export class AgentTeam implements AgentTeamRuntime {
     });
   }
 
+  // Helper: insert index into pendingIndices while maintaining sorted order
+  private insertPendingIndexSorted(idx: number): void {
+    // Binary search để tìm vị trí insert
+    let low = 0;
+    let high = this.pendingIndices.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (this.pendingIndices[mid] < idx) low = mid + 1;
+      else high = mid;
+    }
+    // Check not already present (to avoid duplicates)
+    if (low > 0 && this.pendingIndices[low - 1] === idx) return; // already there
+    if (low < this.pendingIndices.length && this.pendingIndices[low] === idx) return;
+    this.pendingIndices.splice(low, 0, idx);
+  }
+
   async claimTask(agentId: string): Promise<number | null> {
     const role = this.roleByAgentId.get(agentId) ?? agentId;
     return this.withLock(() => {
-      for (let i = 0; i < this.tasks.length; i++) {
-        const task = this.taskStatuses.get(i);
-        if (task && task.status === 'pending') {
-          // Check if task is on backoff (retryAvailableAt in future)
-          if (task.retryAvailableAt && task.retryAvailableAt > Date.now()) {
-            continue; // Skip this task, not yet claimable
-          }
-          // Clear any backoff timestamp when claiming
-          task.retryAvailableAt = undefined;
-          task.assignee = role; // assign by role
-          task.status = 'in_progress';
-          this.agentStatuses.set(role, { currentTaskIndex: i, status: 'working' });
-          // Notify task claimed
-          this.notifyUpdate(this.createUpdate(
-            `🔨 Agent ${role} claimed task ${i}: ${this.tasks[i].substring(0, 80)}...`,
-            { agent: role, taskIndex: i, taskPreview: this.tasks[i].substring(0, 200), retryCount: task.retryCount }
-          ));
-          return i;
+      for (let i = 0; i < this.pendingIndices.length; i++) {
+        const idx = this.pendingIndices[i];
+        const task = this.taskStatuses.get(idx);
+        if (!task || task.status !== 'pending') continue; // should not happen, but safe
+        // Check backoff
+        if (task.retryAvailableAt && task.retryAvailableAt > Date.now()) {
+          continue; // not yet claimable
         }
+        // Claim this task
+        task.retryAvailableAt = undefined; // clear any backoff
+        task.assignee = role;
+        task.status = 'in_progress';
+        this.agentStatuses.set(role, { currentTaskIndex: idx, status: 'working' });
+        this.pendingIndices.splice(i, 1); // remove from pending
+        this.notifyUpdate(this.createUpdate(
+          `🔨 Agent ${role} claimed task ${idx}: ${this.tasks[idx].substring(0, 80)}...`,
+          { agent: role, taskIndex: idx, taskPreview: this.tasks[idx].substring(0, 200), retryCount: task.retryCount }
+        ));
+        return idx;
       }
-      // No claimable tasks
       return null;
     });
   }
@@ -315,6 +331,8 @@ export class AgentTeam implements AgentTeamRuntime {
       task.status = 'pending';
       task.retryAvailableAt = undefined; // immediate claimable
       this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
+      // Re-add to pendingIndices
+      this.insertPendingIndexSorted(taskIndex);
       // Notify task released
       this.notifyUpdate(this.createUpdate(
         `↩️ Agent ${role} released task ${taskIndex}`,
@@ -340,6 +358,11 @@ export class AgentTeam implements AgentTeamRuntime {
         task.status = 'failed';
         task.result = error?.message || error?.toString() || 'Unknown error';
         task.retryAvailableAt = undefined;
+        // Remove from pendingIndices if present
+        const pendingIdx = this.pendingIndices.indexOf(taskIndex);
+        if (pendingIdx !== -1) {
+          this.pendingIndices.splice(pendingIdx, 1);
+        }
         this.notifyUpdate(this.createUpdate(
           `❌ Task ${taskIndex} failed after ${task.retryCount} retries (agent: ${role})`,
           { agent: role, taskIndex, retryCount: task.retryCount, error: task.result },
@@ -350,6 +373,8 @@ export class AgentTeam implements AgentTeamRuntime {
         const delay = calculateRetryDelay(task.retryCount);
         task.status = 'pending';
         task.retryAvailableAt = Date.now() + delay;
+        // Re-add to pendingIndices so it can be claimed after backoff
+        this.insertPendingIndexSorted(taskIndex);
         this.notifyUpdate(this.createUpdate(
           `⚠️ Agent ${role} failed task ${taskIndex} (retry ${task.retryCount}/${DEFAULT_MAX_RETRIES}), retry in ${delay}ms`,
           { agent: role, taskIndex, retryCount: task.retryCount, delay }
@@ -396,6 +421,11 @@ export class AgentTeam implements AgentTeamRuntime {
       task.status = 'completed';
       task.result = result;
       task.assignee = null; // Clear assignment on completion
+      // Remove from pendingIndices if present
+      const pendingIdx = this.pendingIndices.indexOf(taskIndex);
+      if (pendingIdx !== -1) {
+        this.pendingIndices.splice(pendingIdx, 1);
+      }
       const status = this.agentStatuses.get(role);
       if (status) {
         status.currentTaskIndex = null;
@@ -442,8 +472,10 @@ export class AgentTeam implements AgentTeamRuntime {
     await this.withLock(async () => {
       this.tasks = tasks;
       this.taskStatuses.clear();
+      this.pendingIndices = [];
       for (let i = 0; i < tasks.length; i++) {
         this.taskStatuses.set(i, { assignee: null, status: 'pending', result: '', retryCount: 0 });
+        this.pendingIndices.push(i);
       }
       this.messageBus.clear();
       await this.workspaceClear();
