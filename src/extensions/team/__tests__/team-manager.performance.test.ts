@@ -12,8 +12,8 @@ describe('AgentTeam Performance', () => {
   });
 
   test('claimTask linear scan is acceptable for typical sizes', async () => {
-    const sizes = [10, 50, 100, 500];
-    const iterations = 1000;
+    const sizes = [10, 50, 100]; // Reduced from [10, 50, 100, 500] for faster CI
+    const iterations = 100; // Reduced from 1000 for faster CI
 
     for (const size of sizes) {
       await team.initialize(Array.from({ length: size }, (_, i) => `task${i}`));

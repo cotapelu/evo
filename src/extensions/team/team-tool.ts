@@ -91,23 +91,26 @@ export function createTeamTool(): ToolDefinition {
 
       // Prepare onUpdate wrapper for message accumulation (used for both new team and query)
       let wrappedOnUpdate: ((update: any) => void) | undefined;
-      wrappedOnUpdate = onUpdate ? ((update: any) => {
-        // Append new text messages from this update to history
-        if (update.content && Array.isArray(update.content)) {
-          const messageHistory: Array<{ type: string; text: string }> = []; // Note: this resets each time, ideally we accumulate across calls
-          for (const block of update.content) {
-            if (block.type === 'text') {
-              messageHistory.push({ type: 'text', text: block.text });
+      if (onUpdate) {
+        // Accumulate all text messages across updates for complete history
+        const messageHistory: Array<{ type: string; text: string }> = [];
+        wrappedOnUpdate = (update: any) => {
+          if (update.content && Array.isArray(update.content)) {
+            for (const block of update.content) {
+              if (block.type === 'text') {
+                messageHistory.push({ type: 'text', text: block.text });
+              }
             }
+            onUpdate({
+              content: [...messageHistory],
+              details: update.details,
+              isError: update.isError || false
+            });
           }
-          // Send accumulated messages
-          onUpdate({
-            content: [...messageHistory],
-            details: update.details,
-            isError: update.isError || false
-          });
-        }
-      }) : undefined;
+        };
+      } else {
+        wrappedOnUpdate = undefined;
+      }
 
       // If teamId is provided, we're querying/waiting on an existing team
       if (teamId) {

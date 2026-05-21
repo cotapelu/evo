@@ -481,50 +481,57 @@ export async function bootPiclawTeam(
   const team = new AgentTeam();
   team.registerRuntime(parentRuntime, "parent");
 
-  for (let i = 0; i < teamSize; i++) {
-    const factory: CreateAgentSessionRuntimeFactory = async ({
-      cwd: sessionCwd,
+  // Define factory and startEvent once (same for all agents)
+  const factory: CreateAgentSessionRuntimeFactory = async ({
+    cwd: sessionCwd,
+    agentDir: sessionAgentDir,
+    sessionManager,
+    sessionStartEvent,
+  }) => {
+    const services = await createAgentSessionServices({
+      cwd,
       agentDir: sessionAgentDir,
+      authStorage: parentRuntime.services.authStorage,
+      settingsManager: parentRuntime.services.settingsManager,
+      modelRegistry: parentRuntime.services.modelRegistry,
+    });
+
+    const sessionResult = await createAgentSessionFromServices({
+      services,
       sessionManager,
       sessionStartEvent,
-    }) => {
-      const services = await createAgentSessionServices({
-        cwd,
-        agentDir: sessionAgentDir,
-        authStorage: parentRuntime.services.authStorage,
-        settingsManager: parentRuntime.services.settingsManager,
-        modelRegistry: parentRuntime.services.modelRegistry,
-      });
+      tools: options.tools,
+      customTools: [createTeamOpsTool(team)],
+    });
 
-      const sessionResult = await createAgentSessionFromServices({
-        services,
-        sessionManager,
-        sessionStartEvent,
-        tools: options.tools,
-        customTools: [createTeamOpsTool(team)],
-      });
+    return {
+      session: sessionResult.session,
+      services,
+      diagnostics: services.diagnostics,
+    } as CreateAgentSessionRuntimeResult;
+  };
 
-      return {
-        session: sessionResult.session,
-        services,
-        diagnostics: services.diagnostics,
-      } as CreateAgentSessionRuntimeResult;
-    };
+  const startEvent: SessionStartEvent = {
+    type: "session_start",
+    reason: "new"
+  };
 
-    const startEvent: SessionStartEvent = {
-      type: "session_start",
-      reason: "new"
-    };
-
-    // eslint-disable-next-line no-await-in-loop
+  // Create all agents in parallel while preserving order
+  const bootPromises = normalizedRoles.map(async (role, idx) => {
     const runtime = await createAgentSessionRuntime(factory, {
       cwd,
       agentDir,
       sessionManager: parentRuntime.session.sessionManager,
       sessionStartEvent: startEvent,
     });
+    return { idx, role, runtime };
+  });
 
-    team.registerRuntime(runtime, normalizedRoles[i]);
+  const results = await Promise.all(bootPromises);
+  // Sort by original index to maintain order
+  results.sort((a, b) => a.idx - b.idx);
+  for (const { role, runtime } of results) {
+    team.registerRuntime(runtime, role);
   }
 
   team.id = `team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
