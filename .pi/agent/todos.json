@@ -1,7 +1,44 @@
 {
   "version": 1,
-  "phases": [],
-  "nextTaskId": 1,
-  "nextPhaseId": 1,
-  "updatedAt": "2026-05-21T12:17:27.324Z"
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Chuan bi sua doan code",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Them TeamRegistry vao team-manager.ts",
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "content": "Sua executeTeamTasks de ho tro wait parameter",
+          "status": "completed"
+        },
+        {
+          "id": "task-3",
+          "content": "Cap nhat team_run tool de non-blocking",
+          "status": "completed"
+        },
+        {
+          "id": "task-4",
+          "content": "Them tool team_wait",
+          "status": "completed"
+        },
+        {
+          "id": "task-5",
+          "content": "Cap nhat promptGuidelines",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Test thu",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 7,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-05-21T13:27:01.236Z"
 }

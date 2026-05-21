@@ -42,6 +42,7 @@ export class AgentTeam implements AgentTeamRuntime {
   roles: string[] = [];
   size = 0;
   dispose: () => Promise<void>;
+  childPromises: Promise<void>[] = [];
 
   // State
   tasks: string[] = [];
@@ -83,6 +84,10 @@ export class AgentTeam implements AgentTeamRuntime {
         clearInterval(this.monitorInterval);
         this.monitorInterval = null;
       }
+      // Wait for all child agent loops to finish (if any)
+      if (this.childPromises && this.childPromises.length > 0) {
+        await Promise.allSettled(this.childPromises);
+      }
       await Promise.allSettled(
         this.runtimes.slice(1).map(rt =>
           rt.dispose().catch(err =>
@@ -90,6 +95,15 @@ export class AgentTeam implements AgentTeamRuntime {
           )
         )
       );
+      // Unregister from TeamRegistry
+      try {
+        const registry = TeamRegistry.getInstance();
+        if (this.id) {
+          registry.unregister(this.id);
+        }
+      } catch (e) {
+        console.warn('Failed to unregister team from registry:', e);
+      }
     };
     this.workspace = new SharedWorkspace();
   }
@@ -372,6 +386,82 @@ export class AgentTeam implements AgentTeamRuntime {
   }
 }
 
+// ============================================
+// TEAM REGISTRY
+// ============================================
+
+/**
+ * Global registry for managing active teams.
+ * Allows querying team status and waiting for completion from outside the team execution.
+ */
+export class TeamRegistry {
+  private static instance: TeamRegistry | null = null;
+  private teams: Map<string, AgentTeam> = new Map();
+  private locked = false;
+
+  private constructor() {}
+
+  static getInstance(): TeamRegistry {
+    if (!TeamRegistry.instance) {
+      TeamRegistry.instance = new TeamRegistry();
+    }
+    return TeamRegistry.instance;
+  }
+
+  register(teamId: string, team: AgentTeam): void {
+    this.teams.set(teamId, team);
+    console.log(`[TeamRegistry] Registered team ${teamId}`);
+  }
+
+  unregister(teamId: string): void {
+    this.teams.delete(teamId);
+    console.log(`[TeamRegistry] Unregistered team ${teamId}`);
+  }
+
+  get(teamId: string): AgentTeam | undefined {
+    return this.teams.get(teamId);
+  }
+
+  has(teamId: string): boolean {
+    return this.teams.has(teamId);
+  }
+
+  getAll(): Map<string, AgentTeam> {
+    return new Map(this.teams);
+  }
+
+  async waitForTeam(teamId: string, timeoutMs?: number): Promise<boolean> {
+    const team = this.teams.get(teamId);
+    if (!team) {
+      throw new Error(`Team ${teamId} not found in registry`);
+    }
+
+    const startTime = Date.now();
+    while (true) {
+      const status = await team.getTeamStatus();
+      if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
+        return true;
+      }
+      if (timeoutMs && Date.now() - startTime > timeoutMs) {
+        return false;
+      }
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+
+  async getTeamStatus(teamId: string): Promise<{
+    agents: Array<{ id: string; currentTaskIndex: number | null; status: string }>;
+    tasks: Array<{ index: number; assignee: string | null; status: string; result: string }>;
+    completedTasks: number;
+    totalTasks: number;
+  } | null> {
+    const team = this.teams.get(teamId);
+    if (!team) return null;
+    return await team.getTeamStatus();
+  }
+}
+
 export async function bootPiclawTeam(
   parentRuntime: AgentSessionRuntime,
   options: {
@@ -440,14 +530,18 @@ export async function bootPiclawTeam(
   team.id = `team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   (team as any)._parentRuntime = parentRuntime;
 
+  // Register team in global registry
+  TeamRegistry.getInstance().register(team.id, team);
+
   return team;
 }
 
 export async function executeTeamTasks(
   team: AgentTeam,
   tasks: string[],
-  onUpdate?: (update: any) => void
-): Promise<void> {
+  onUpdate?: (update: any) => void,
+  options?: { wait?: boolean }
+): Promise<AgentTeam> {
   // Set onUpdate for the team
   team.setOnUpdate(onUpdate);
   await team.initialize(tasks);
@@ -559,6 +653,9 @@ Use team_ops to continue. If all tasks done, finish up.`;
     });
   });
 
+  // Save childPromises to team for later disposal
+  team.childPromises = childPromises;
+
   // Monitor completion and cleanup
   team.monitorInterval = setInterval(async () => {
     const status = await team.getTeamStatus();
@@ -568,19 +665,28 @@ Use team_ops to continue. If all tasks done, finish up.`;
     }
   }, 1000);
 
-  try {
-    await Promise.all(childPromises);
-  } finally {
-    if (team.monitorInterval) {
-      clearInterval(team.monitorInterval);
-      team.monitorInterval = null;
+  if (options?.wait) {
+    try {
+      await Promise.all(childPromises);
+    } finally {
+      if (team.monitorInterval) {
+        clearInterval(team.monitorInterval);
+        team.monitorInterval = null;
+      }
     }
+    // Final status update
+    const finalStatus = await team.getTeamStatus();
+    onUpdate?.(team.createUpdate(
+      `🎉 Team execution complete: ${finalStatus.completedTasks}/${finalStatus.totalTasks} tasks done`,
+      { completed: finalStatus.completedTasks, total: finalStatus.totalTasks }
+    ));
+  } else {
+    // Non-blocking: return immediately, team continues in background
+    onUpdate?.(team.createUpdate(
+      `✅ Team started in background (teamId: ${team.id}). Use team_wait to wait for completion.`,
+      { teamId: team.id, agentCount: team.roles.length, totalTasks: tasks.length }
+    ));
   }
 
-  // Final status update
-  const finalStatus = await team.getTeamStatus();
-  onUpdate?.(team.createUpdate(
-    `🎉 Team execution complete: ${finalStatus.completedTasks}/${finalStatus.totalTasks} tasks done`,
-    { completed: finalStatus.completedTasks, total: finalStatus.totalTasks }
-  ));
+  return team;
 }
