@@ -40,8 +40,27 @@ class Mutex {
   }
 }
 
-// Global mutex shared across all instances (state is global anyway)
-const stateMutex = new Mutex();
+// Global mutex for file operations (serialize writes)
+const fileMutex = new Mutex();
+
+// Per-session state storage
+interface TodoSessionState {
+  state: TodoState;
+  mutex: Mutex;
+  autoTriggering: boolean;
+}
+const sessionStates = new WeakMap<ExtensionContext, TodoSessionState>();
+
+function getSessionState(ctx: ExtensionContext): TodoSessionState {
+  let s = sessionStates.get(ctx);
+  if (!s) {
+    const mutex = new Mutex();
+    const state = new TodoState();
+    s = { state, mutex, autoTriggering: false };
+    sessionStates.set(ctx, s);
+  }
+  return s;
+}
 
 // ============================================================================
 // Types
@@ -720,19 +739,21 @@ function renderTodosResult(result: { details?: TodoToolDetails }, options: { exp
 // ============================================================================
 
 function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails> {
-  const state = new TodoState();
-  let autoTriggering = false;
+  // No per-session state; global constants only
 
   api.on("session_start", async (_event, ctx) => {
-    const release = await stateMutex.lock();
+    const session = getSessionState(ctx);
+    const release = await session.mutex.lock();
     try {
-      // Try to reconstruct from session history first (backward compatibility)
-      state.reconstructFromEntries(ctx.sessionManager.getBranch());
-      // Then load from file (file takes precedence if exists)
-      const loaded = await state.loadFromFile();
-      if (!loaded) {
-        // If no file, mark as memory/session storage
-        state.setStorageType("memory");
+      session.state.reconstructFromEntries(ctx.sessionManager.getBranch());
+      const fileRelease = await fileMutex.lock();
+      try {
+        await session.state.loadFromFile();
+      } finally {
+        fileRelease();
+      }
+      if (!existsSync(getProjectTodoFilePath())) {
+        session.state.setStorageType("memory");
       }
     } finally {
       release();
@@ -740,46 +761,24 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
   });
 
   api.on("session_tree", async (_event, ctx) => {
-    const release = await stateMutex.lock();
+    const session = getSessionState(ctx);
+    const release = await session.mutex.lock();
     try {
-      state.reconstructFromEntries(ctx.sessionManager.getBranch());
-      await state.loadFromFile();
-      // If we reconstructed from entries but file exists, file is source of truth
-      // If file doesn't exist, we're in memory/session mode
+      session.state.reconstructFromEntries(ctx.sessionManager.getBranch());
+      const fileRelease = await fileMutex.lock();
+      try {
+        await session.state.loadFromFile();
+      } finally {
+        fileRelease();
+      }
       const filePath = getProjectTodoFilePath();
       if (!existsSync(filePath)) {
-        state.setStorageType("memory");
+        session.state.setStorageType("memory");
       } else {
-        state.setStorageType("file");
+        session.state.setStorageType("file");
       }
     } finally {
       release();
-    }
-  });
-
-  // Auto-continue: only when agent ends (idle), check if there are pending tasks
-  api.on("agent_end", async () => {
-    if (autoTriggering) return; // Avoid re-entrancy
-
-    const phases = state.getPhases();
-    const hasPendingTasks = phases.some(phase =>
-      phase.tasks.some(task => task.status !== "completed" && task.status !== "abandoned")
-    );
-
-    if (!hasPendingTasks) return;
-
-    autoTriggering = true;
-    try {
-      await api.sendMessage({
-        customType: "todo-auto-continue",
-        content: "Continue with the next task. If no tasks remain, validate the work and add new tasks.",
-        display: false,
-        details: { autoTrigger: true, timestamp: Date.now() }
-      }, { triggerTurn: true, deliverAs: "followUp" });
-    } catch (e) {
-      console.error("[todos] Auto-continue failed:", e);
-    } finally {
-      setTimeout(() => { autoTriggering = false; }, 500);
     }
   });
 
@@ -810,79 +809,88 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
     ],
     parameters: {},
 
-    async execute(_toolCallId: string, params: any, signal: AbortSignal | undefined, onUpdate: ((update: any) => void) | undefined, ctx: ExtensionContext) {
-      let p: any;
+    async execute(_toolCallId: string, params: any, _signal: AbortSignal | undefined, _onUpdate: any, ctx: ExtensionContext) {
+      const session = getSessionState(ctx);
+      const release = await session.mutex.lock();
       try {
-        if (typeof params === "string") params = JSON.parse(params);
-        if (typeof params !== "object" || params === null) throw new Error("object required");
-        p = params;
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return { content: [{ type: "text", text: `❌ Error: ${msg}` }], details: { phases: state.getPhases(), storage: state.storageType, error: msg }, isError: true };
-      }
-
-      // Normalize - parse JSON strings
-      try {
-        p = normalizeParams(p);
-      } catch (e: any) {
-        return { content: [{ type: "text", text: `❌ Error: ${e.message}` }], details: { phases: state.getPhases(), storage: state.storageType, error: e.message }, isError: true };
-      }
-
-      const errors: string[] = [];
-
-      const opCount = countOperations(p);
-      if (opCount === 0) errors.push("No operation specified. Use: add_phase, add_task, update, remove_task, delete, or list");
-      if (opCount > 1) errors.push("Multiple operations detected. Use only ONE operation per call.");
-
-      const opName = getOperationName(p);
-      const op = opName === "unknown" ? null : opName;
-      if (!op) { errors.push("No operation. Use: add_phase, add_task, update, remove_task, list"); }
-
-      // Apply pure operation
-      const { phases: newPhases, nextTaskId: newTid, nextPhaseId: newPid, errors: opErrors } = applyOp(
-        state.phases,
-        state.nextTaskId,
-        state.nextPhaseId,
-        p
-      );
-      errors.push(...opErrors);
-
-      // Update state
-      state.phases = newPhases;
-      state.nextTaskId = newTid;
-      state.nextPhaseId = newPid;
-
-      if (errors.length === 0 && op !== "list") {
+        let p: any;
         try {
-          await state.saveToFile();
-          state.setStorageType("file");
-        } catch (e: any) {
-          errors.push(`Save failed: ${e.message}`);
-          state.setStorageType("memory");
+          if (typeof params === "string") params = JSON.parse(params);
+          if (typeof params !== "object" || params === null) throw new Error("object required");
+          p = params;
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return { content: [{ type: "text", text: `❌ Error: ${msg}` }], details: { phases: session.state.getPhases(), storage: session.state.storageType, error: msg }, isError: true };
         }
-      }
 
-      const resultPhases = state.getPhases();
-      const summaryText = formatSummary(resultPhases, errors);
-
-      // System message
-      if (op && op !== "list" && errors.length === 0) {
+        // Normalize - parse JSON strings
         try {
-          await api.sendMessage({
-            customType: "todo_update",
-            content: `[System: Todo ${op}] ${summaryText.split("\n")[0]}`,
-            display: false
-          }, { triggerTurn: false });
-        } catch {}
+          p = normalizeParams(p);
+        } catch (e: any) {
+          return { content: [{ type: "text", text: `❌ Error: ${e.message}` }], details: { phases: session.state.getPhases(), storage: session.state.storageType, error: e.message }, isError: true };
+        }
+
+        const errors: string[] = [];
+
+        const opCount = countOperations(p);
+        if (opCount === 0) errors.push("No operation specified. Use: add_phase, add_task, update, remove_task, delete, or list");
+        if (opCount > 1) errors.push("Multiple operations detected. Use only ONE operation per call.");
+
+        const opName = getOperationName(p);
+        const op = opName === "unknown" ? null : opName;
+        if (!op) { errors.push("No operation. Use: add_phase, add_task, update, remove_task, list"); }
+
+        // Apply pure operation
+        const { phases: newPhases, nextTaskId: newTid, nextPhaseId: newPid, errors: opErrors } = applyOp(
+          session.state.phases,
+          session.state.nextTaskId,
+          session.state.nextPhaseId,
+          p
+        );
+        errors.push(...opErrors);
+
+        // Update state
+        session.state.phases = newPhases;
+        session.state.nextTaskId = newTid;
+        session.state.nextPhaseId = newPid;
+
+        if (errors.length === 0 && op !== "list") {
+          try {
+            const fileRelease = await fileMutex.lock();
+            try {
+              await session.state.saveToFile();
+              session.state.setStorageType("file");
+            } finally {
+              fileRelease();
+            }
+          } catch (e: any) {
+            errors.push(`Save failed: ${e.message}`);
+            session.state.setStorageType("memory");
+          }
+        }
+
+        const resultPhases = session.state.getPhases();
+        const summaryText = formatSummary(resultPhases, errors);
+
+        // System message (optional)
+        if (op && op !== "list" && errors.length === 0) {
+          try {
+            await api.sendMessage({
+              customType: "todo_update",
+              content: `[System: Todo ${op}] ${summaryText.split("\n")[0]}`,
+              display: false
+            }, { triggerTurn: false });
+          } catch {}
+        }
+
+        return {
+          content: [{ type: "text", text: summaryText }],
+          details: { phases: resultPhases, storage: session.state.storageType, error: errors.length ? errors.join("; ") : undefined },
+          isError: errors.length > 0
+        };
+      } finally {
+        release();
       }
-
-
-
-      return {
-        content: [{ type: "text", text: summaryText }],
-        details: { phases: resultPhases, storage: state.storageType, error: errors.length ? errors.join("; ") : undefined },
-        isError: errors.length > 0
-      };
     },
 
     renderCall: renderTodosCall,
