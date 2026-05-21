@@ -5,7 +5,7 @@
  * Cache persisted to .evo-cache/manifest.json in project root.
  */
 
-import { readFile, stat, writeFile, mkdir } from 'fs/promises';
+import { readFile, stat, writeFile, mkdir, copyFile, rename, unlink } from 'fs/promises';
 import { join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -29,31 +29,46 @@ class FileCache {
     if (maxSize > 0) this.maxSize = maxSize;
   }
 
-  async load(): Promise<void> {
+  async load(): Promise<boolean> {
     try {
       const data = await readFile(this.cachePath, 'utf-8');
       const parsed = JSON.parse(data);
+      this.cache.clear();
       for (const [path, entry] of Object.entries(parsed)) {
         this.cache.set(path, entry as CacheEntry);
       }
       console.log(`📦 Loaded cache: ${this.cache.size} entries`);
-    } catch (err) {
-      // Cache doesn't exist or is invalid - start fresh
+      return true;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        this.cache.clear();
+        return false;
+      }
+      console.warn('Failed to load cache:', err);
       this.cache.clear();
+      return false;
     }
   }
 
   async save(): Promise<void> {
     if (!this.dirty) return;
     try {
-      // Take a snapshot to avoid holding the map during async I/O
       const snapshot = new Map(this.cache);
       const obj: Record<string, CacheEntry> = {};
       for (const [path, entry] of snapshot) {
         obj[path] = entry;
       }
+      const data = JSON.stringify(obj, null, 2);
       await mkdir(join(this.cachePath, '..'), { recursive: true });
-      await writeFile(this.cachePath, JSON.stringify(obj, null, 2));
+
+      // Write to a temp file then atomically rename
+      const tmp = `${this.cachePath}.tmp.${Date.now()}.${process.pid}.json`;
+      await writeFile(tmp, data, 'utf-8');
+      await rename(tmp, this.cachePath);
+
+      // Create/update backup with the new manifest
+      await copyFile(this.cachePath, `${this.cachePath}.bak`);
+
       this.dirty = false;
     } catch (err) {
       console.warn('Failed to save cache:', err);
@@ -74,7 +89,7 @@ class FileCache {
     return null;
   }
 
-  set(filePath: string, content: string, statResult: any): void {
+  set(filePath: string, content: string, statResult?: any): void {
     const absPath = resolve(filePath);
     // Ensure we have valid stat; if missing, use zeros (will cause cache miss on get with proper stat)
     const mtime = statResult?.mtimeMs ?? 0;
@@ -98,6 +113,12 @@ class FileCache {
   clear(): void {
     this.cache.clear();
     this.dirty = true;
+  }
+
+  async clearPersistence(): Promise<void> {
+    // Remove both manifest and backup if they exist
+    try { await unlink(this.cachePath); } catch {}
+    try { await unlink(`${this.cachePath}.bak`); } catch {}
   }
 
   get size(): number {
