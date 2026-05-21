@@ -82,6 +82,7 @@ export function createTeamTool(): ToolDefinition {
         };
       }
 
+      let wrappedOnUpdate: ((update: any) => void) | undefined;
       try {
         // Get parent runtime from global (set by main.ts)
         const parentRuntime = (globalThis as any).__EVO__RUNTIME__;
@@ -89,8 +90,27 @@ export function createTeamTool(): ToolDefinition {
           throw new Error("No runtime context available. Ensure main.ts sets globalThis.__EVO__RUNTIME__");
         }
 
-        // Send initial update
-        onUpdate?.({
+        // Accumulate messages for better UI visibility (append instead of replace)
+        const messageHistory: Array<{ type: string; text: string }> = [];
+        wrappedOnUpdate = onUpdate ? ((update: any) => {
+          // Append new text messages from this update to history
+          if (update.content && Array.isArray(update.content)) {
+            for (const block of update.content) {
+              if (block.type === 'text') {
+                messageHistory.push({ type: 'text', text: block.text });
+              }
+            }
+          }
+          // Send accumulated messages
+          onUpdate({
+            content: [...messageHistory],
+            details: update.details,
+            isError: update.isError || false
+          });
+        }) : undefined;
+
+        // Send initial update (will be accumulated)
+        wrappedOnUpdate?.({
           content: [{ type: "text", text: `🚀 Starting team with ${teamSize || 2} agents for ${tasks.length} tasks` }],
           details: { teamSize, teamRoles, taskCount: tasks.length }
         });
@@ -101,13 +121,13 @@ export function createTeamTool(): ToolDefinition {
           teamRoles
         });
 
-        onUpdate?.({
+        wrappedOnUpdate?.({
           content: [{ type: "text", text: `✅ Team booted: ${team.roles.join(", ")}` }],
           details: { roles: team.roles, teamId: team.id }
         });
 
         // Execute tasks (this blocks until all tasks done)
-        await executeTeamTasks(team, tasks, onUpdate);
+        await executeTeamTasks(team, tasks, wrappedOnUpdate);
 
         // Get results
         const results = await team.getResults();
@@ -131,8 +151,9 @@ export function createTeamTool(): ToolDefinition {
           isError: false
         };
       } catch (error: any) {
-        // Send error update before returning
-        onUpdate?.({
+        // Send error update before returning (use wrappedOnUpdate if available to preserve history)
+        const notify = wrappedOnUpdate || onUpdate;
+        notify?.({
           content: [{ type: "text", text: `❌ Team execution failed: ${error.message}` }],
           details: { error: error.message, stack: error.stack },
           isError: true
