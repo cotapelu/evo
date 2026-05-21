@@ -29,13 +29,31 @@ class Mutex {
   }
 }
 
-const stateMutex = new Mutex();
-
 export interface Memory {
   id: number;
   text: string;
   tags?: string[];
   created: number;
+}
+
+// Per-session state holder
+interface MemorySessionState {
+  memories: Memory[];
+  nextId: number;
+  mutex: Mutex;
+}
+
+// WeakMap to associate state with context; auto GC when context disposed
+const sessionStates = new WeakMap<ExtensionContext, MemorySessionState>();
+
+function getSessionState(ctx: ExtensionContext): MemorySessionState {
+  let state = sessionStates.get(ctx);
+  if (!state) {
+    const mutex = new Mutex();
+    state = { memories: [], nextId: 1, mutex };
+    sessionStates.set(ctx, state);
+  }
+  return state;
 }
 
 class MemoryListComponent {
@@ -104,20 +122,18 @@ class MemoryListComponent {
 }
 
 export function registerMemoryTool(api: ExtensionAPI): void {
-  let memories: Memory[] = [];
-  let nextId = 1;
-
   const reconstructState = async (ctx: ExtensionContext) => {
-    const release = await stateMutex.lock();
+    const state = getSessionState(ctx);
+    const release = await state.mutex.lock();
     try {
-      memories = [];
-      nextId = 1;
+      state.memories = [];
+      state.nextId = 1;
       for (const entry of ctx.sessionManager.getBranch()) {
         if (entry.type === "message" && entry.message.role === "toolResult" && entry.message.toolName === "memory") {
           const details = (entry.message.details as any);
           if (details && Array.isArray(details.memories)) {
-            memories = details.memories;
-            nextId = details.nextId;
+            state.memories = details.memories;
+            state.nextId = details.nextId;
           }
         }
       }
@@ -151,14 +167,15 @@ export function registerMemoryTool(api: ExtensionAPI): void {
     parameters: {},
 
     async execute(_toolCallId: string, params: any, _signal: AbortSignal | undefined, _onUpdate: any, ctx: ExtensionContext) {
-      const release = await stateMutex.lock();
+      const state = getSessionState(ctx);
+      const release = await state.mutex.lock();
       try {
-        // Parse JSON string if needed (like todos-tool)
+        // Parse JSON string if needed
         if (typeof params === "string") {
           try {
             params = JSON.parse(params);
           } catch (e: any) {
-            return { content: [{ type: "text", text: `Error: Invalid JSON - ${e.message}` }], details: { action: "unknown", memories: [...memories], nextId, error: "Invalid JSON" }, isError: false };
+            return { content: [{ type: "text", text: `Error: Invalid JSON - ${e.message}` }], details: { action: "unknown", memories: [...state.memories], nextId: state.nextId, error: "Invalid JSON" }, isError: false };
           }
         }
 
@@ -168,78 +185,78 @@ export function registerMemoryTool(api: ExtensionAPI): void {
           case "add": {
             const text = params.text as string | undefined;
             if (!text) {
-              return { content: [{ type: "text", text: "Error: text required for add" }], details: { action, memories: [...memories], nextId, error: "text required" }, isError: false };
+              return { content: [{ type: "text", text: "Error: text required for add" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "text required" }, isError: false };
             }
             const mem: Memory = {
-              id: nextId++,
+              id: state.nextId++,
               text,
               tags: params.tags as string[] | undefined,
               created: Date.now(),
             };
-            memories.push(mem);
+            state.memories.push(mem);
             api.appendEntry("memory", mem);
-            return { content: [{ type: "text", text: `Stored memory #${mem.id}` }], details: { action, memories: [...memories], nextId }, isError: false };
+            return { content: [{ type: "text", text: `Stored memory #${mem.id}` }], details: { action, memories: [...state.memories], nextId: state.nextId }, isError: false };
           }
 
           case "list": {
-            const details = { action, memories: [...memories], nextId };
-            if (memories.length === 0) {
+            const details = { action, memories: [...state.memories], nextId: state.nextId };
+            if (state.memories.length === 0) {
               return { content: [{ type: "text", text: "No memories stored." }], details, isError: false };
             }
-            const lines = memories.map(m => `#${m.id}: ${m.text.length > 80 ? m.text.substring(0, 80) + "..." : m.text}${m.tags ? ` [${m.tags.join(", ")}]` : ""}`);
+            const lines = state.memories.map(m => `#${m.id}: ${m.text.length > 80 ? m.text.substring(0, 80) + "..." : m.text}${m.tags ? ` [${m.tags.join(", ")}]` : ""}`);
             return { content: [{ type: "text", text: lines.join("\n") }], details, isError: false };
           }
 
           case "get": {
             const id = params.id as number | undefined;
             if (id === undefined) {
-              return { content: [{ type: "text", text: "Error: id required for get" }], details: { action, memories: [...memories], nextId, error: "id required" }, isError: false };
+              return { content: [{ type: "text", text: "Error: id required for get" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "id required" }, isError: false };
             }
-            const mem = memories.find(m => m.id === id);
+            const mem = state.memories.find(m => m.id === id);
             if (!mem) {
-              return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...memories], nextId, targetId: id, error: `#${id} not found` }, isError: false };
+              return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...state.memories], nextId: state.nextId, targetId: id, error: `#${id} not found` }, isError: false };
             }
-            return { content: [{ type: "text", text: mem.text }], details: { action, memories: [...memories], nextId, targetId: id }, isError: false };
+            return { content: [{ type: "text", text: mem.text }], details: { action, memories: [...state.memories], nextId: state.nextId, targetId: id }, isError: false };
           }
 
           case "delete": {
             const id = params.id as number | undefined;
             if (id === undefined) {
-              return { content: [{ type: "text", text: "Error: id required for delete" }], details: { action, memories: [...memories], nextId, error: "id required" }, isError: false };
+              return { content: [{ type: "text", text: "Error: id required for delete" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "id required" }, isError: false };
             }
-            const index = memories.findIndex(m => m.id === id);
+            const index = state.memories.findIndex(m => m.id === id);
             if (index === -1) {
-              return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...memories], nextId, targetId: id, error: `#${id} not found` }, isError: false };
+              return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...state.memories], nextId: state.nextId, targetId: id, error: `#${id} not found` }, isError: false };
             }
-            const deleted = memories.splice(index, 1)[0];
+            const deleted = state.memories.splice(index, 1)[0];
             api.appendEntry("memory", { ...deleted, _deleted: true });
-            return { content: [{ type: "text", text: `Deleted memory #${id}` }], details: { action, memories: [...memories], nextId, targetId: id }, isError: false };
+            return { content: [{ type: "text", text: `Deleted memory #${id}` }], details: { action, memories: [...state.memories], nextId: state.nextId, targetId: id }, isError: false };
           }
 
           case "clear": {
-            const count = memories.length;
-            for (const mem of memories) {
+            const count = state.memories.length;
+            for (const mem of state.memories) {
               api.appendEntry("memory", { ...mem, _deleted: true });
             }
-            memories = [];
-            nextId = 1;
+            state.memories = [];
+            state.nextId = 1;
             return { content: [{ type: "text", text: `Cleared ${count} memories` }], details: { action, memories: [], nextId: 1 }, isError: false };
           }
 
           case "search": {
             const query = params.query as string | undefined;
             if (!query) {
-              return { content: [{ type: "text", text: "Error: query required for search" }], details: { action, memories: [...memories], nextId, error: "query required" }, isError: false };
+              return { content: [{ type: "text", text: "Error: query required for search" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "query required" }, isError: false };
             }
             const q = query.toLowerCase();
-            const results = memories.filter(m => m.text.toLowerCase().includes(q) || (m.tags?.some(t => t.toLowerCase().includes(q))));
+            const results = state.memories.filter(m => m.text.toLowerCase().includes(q) || (m.tags?.some(t => t.toLowerCase().includes(q))));
             const lines = results.map(m => `#${m.id}: ${m.text}${m.tags ? ` [${m.tags.join(", ")}]` : ""}`);
-            const summary = `Found ${results.length} of ${memories.length} memories:\n` + lines.join("\n");
-            return { content: [{ type: "text", text: summary }], details: { action: "search", memories: results, nextId }, isError: false };
+            const summary = `Found ${results.length} of ${state.memories.length} memories:\n` + lines.join("\n");
+            return { content: [{ type: "text", text: summary }], details: { action: "search", memories: results, nextId: state.nextId }, isError: false };
           }
 
           default: {
-            return { content: [{ type: "text", text: `Unknown action: ${action}` }], details: { action: "list", memories: [...memories], nextId }, isError: false };
+            return { content: [{ type: "text", text: `Unknown action: ${action}` }], details: { action: "list", memories: [...state.memories], nextId: state.nextId }, isError: false };
           }
         }
       } finally {
