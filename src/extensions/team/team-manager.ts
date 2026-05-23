@@ -798,7 +798,7 @@ Use team_ops to continue. If all tasks done, finish up.`;
     while (true) {
       const status = await team.getTeamStatus();
       // Debug: turn progress (silenced)
-      
+
       // Notify progress at start of each turn (but not on first turn since we already announced start)
       if (turnCount > 0) {
         team.notifyUpdate?.(team.createUpdate(
