@@ -79,11 +79,11 @@ export function createTeamTool(): ToolDefinition {
         }
       }
 
-      const { teamId, tasks, teamSize, teamRoles } = params as { 
-        teamId?: string; 
-        tasks?: any; 
-        teamSize?: number; 
-        teamRoles?: string[]; 
+      const { teamId, tasks, teamSize, teamRoles } = params as {
+        teamId?: string;
+        tasks?: any;
+        teamSize?: number;
+        teamRoles?: string[];
       };
 
       // Prepare onUpdate wrapper for message accumulation (used for both new team and query)
