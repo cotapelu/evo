@@ -4,7 +4,7 @@
  * Applies learned patterns to improve codebase with full verification.
  */
 
-import { readFile, writeFile, mkdir, readdir, rm } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir, rm, realpath } from 'fs/promises';
 import { join, relative, dirname, resolve, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
@@ -42,13 +42,33 @@ export class Evolver {
   async run(targetDir?: string): Promise<EvolutionResult> {
     const startTime = Date.now();
     // Resolve target directory: use provided or default to ./src within cwd
-    const target = targetDir ? resolve(targetDir) : join(process.cwd(), 'src');
+    let target = targetDir ? resolve(targetDir) : join(process.cwd(), 'src');
 
-    // Security: ensure target is within the project root (cwd)
-    const cwd = process.cwd();
-    const relativeTarget = relative(cwd, target);
-    if (relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) {
+    const cwd = process.cwd(); // Use original cwd for relative paths, logging, and initial check
+
+    // First, simple check using path string (without symlink resolution) to ensure target is within cwd
+    const relTarget = relative(cwd, target);
+    if (relTarget.startsWith('..') || isAbsolute(relTarget)) {
       throw new Error(`Target directory must be within project root (${cwd}). Found: ${target}`);
+    }
+
+    // Additional security: resolve symlinks to prevent bypass via symlink
+    try {
+      const [cwdReal, targetReal] = await Promise.all([
+        realpath(cwd),
+        realpath(target)
+      ]);
+      const cwdNorm = resolve(cwdReal);
+      const targetNorm = resolve(targetReal);
+      // Check that resolved target is within resolved cwd
+      if (!targetNorm.startsWith(cwdNorm + '/') && targetNorm !== cwdNorm) {
+        throw new Error(`Target directory must be within project root (${cwd}). Symlink check failed: ${target} -> ${targetNorm}`);
+      }
+      // Use the symlink-resolved target for scanning (more secure)
+      target = targetNorm;
+    } catch (err) {
+      // If realpath fails (e.g., path doesn't exist or inaccessible), we'll continue with the original target
+      // The scan will likely fail, but that's acceptable as it's a separate error condition
     }
 
     console.log(`\n🧬 Starting evolution analysis...`);
@@ -344,7 +364,9 @@ export class Evolver {
 
   protected async runTests(): Promise<{ success: boolean; output: string }> {
     return new Promise((resolve) => {
-      const testProc = spawn('npm', ['test'], { stdio: 'pipe' });
+      const command = 'npm';
+      const args = ['test'];
+      const testProc = spawn(command, args, { stdio: 'pipe' });
 
       let stdout = '';
       let stderr = '';
@@ -357,29 +379,47 @@ export class Evolver {
         stderr += data.toString();
       });
 
+      const timeoutMs = 60000;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      let resolved = false;
+      const doResolve = (result: { success: boolean; output: string }) => {
+        if (resolved) return;
+        resolved = true;
+        if (timeoutId) clearTimeout(timeoutId);
+        resolve(result);
+      };
+
       testProc.on('close', (code) => {
         const success = code === 0;
-        resolve({
-          success,
-          output: stdout + stderr
-        });
+        if (stderr && !success) {
+          // Prefix stderr lines for clarity in combined output
+          const prefixed = stderr.split('\n').map(line => `[stderr] ${line}`).join('\n');
+          doResolve({ success, output: stdout + (prefixed ? '\n' + prefixed : '') + `\n[Exit code: ${code}]` });
+        } else {
+          doResolve({ success, output: stdout + stderr });
+        }
       });
 
-      testProc.on('error', (err) => {
-        resolve({
-          success: false,
-          output: `Test process error: ${err}`
-        });
+      testProc.on('error', (err: any) => {
+        const errorMsg = `Test process error: ${err?.message || err} (errno: ${err?.errno}, syscall: ${err?.syscall})`;
+        doResolve({ success: false, output: errorMsg });
       });
 
       // Timeout after 60 seconds
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        // Try graceful termination first
         testProc.kill('SIGTERM');
-        resolve({
+        // Force kill after 5 seconds if still alive
+        setTimeout(() => {
+          if (!testProc.killed) {
+            testProc.kill('SIGKILL');
+          }
+        }, 5000).unref();
+        doResolve({
           success: false,
-          output: 'Tests timed out after 60 seconds'
+          output: 'Tests timed out after 60 seconds (SIGTERM sent, followed by SIGKILL if needed)'
         });
-      }, 60000);
+      }, timeoutMs);
     });
   }
 
@@ -401,22 +441,45 @@ export class Evolver {
     }
   }
 
-  private async gitCmd(cmd: string, args: string[]): Promise<void> {
+  private async gitCmd(cmd: string, args: string[], timeoutMs?: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      const proc = spawn('git', [cmd, ...args], { stdio: 'pipe' });
+      const command = 'git';
+      const fullArgs = [cmd, ...args];
+      const proc = spawn(command, fullArgs, { stdio: 'pipe' });
 
+      let stdout = '';
       let stderr = '';
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
+
+      proc.stdout.on('data', (data) => { stdout += data.toString(); });
+      proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
+      const timeout = timeoutMs ?? 30000;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      let resolved = false;
+      const doResolve = (value: void) => { if (!resolved) { resolved = true; if (timeoutId) clearTimeout(timeoutId); resolve(value); } };
+      const doReject = (err: Error) => { if (!resolved) { resolved = true; if (timeoutId) clearTimeout(timeoutId); reject(err); } };
 
       proc.on('close', (code) => {
         if (code === 0) {
-          resolve();
+          doResolve();
         } else {
-          reject(new Error(stderr || `git ${cmd} failed with code ${code}`));
+          const msg = `git command failed: ${command} ${fullArgs.join(' ')} (exit code: ${code})\nSTDERR: ${stderr || '(empty)'}\nSTDOUT: ${stdout || '(empty)'}`;
+          doReject(new Error(msg));
         }
       });
+
+      proc.on('error', (err: any) => {
+        const msg = `git command error: ${command} ${fullArgs.join(' ')} (errno: ${err?.errno}, syscall: ${err?.syscall})\n${err?.message || err}`;
+        doReject(new Error(msg));
+      });
+
+      timeoutId = setTimeout(() => {
+        proc.kill('SIGTERM');
+        setTimeout(() => {
+          if (!proc.killed) proc.kill('SIGKILL');
+        }, 5000).unref();
+        doReject(new Error(`git command timed out after ${timeout}ms: ${command} ${fullArgs.join(' ')}`));
+      }, timeout);
     });
   }
 }

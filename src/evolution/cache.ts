@@ -3,9 +3,10 @@
  *
  * Stores file content, mtime, and size to avoid re-reading unchanged files.
  * Cache persisted to .evo-cache/manifest.json in project root.
+ * Uses LRU eviction policy when maxSize is exceeded.
  */
 
-import { readFile, stat, writeFile, mkdir, copyFile, rename, unlink } from 'fs/promises';
+import { readFile, writeFile, mkdir, copyFile, rename, unlink } from 'fs/promises';
 import { join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,6 +17,7 @@ interface CacheEntry {
   content: string;
   mtime: number;
   size: number;
+  lastAccessed: number; // Unix timestamp in ms, used for LRU eviction
 }
 
 class FileCache {
@@ -35,7 +37,12 @@ class FileCache {
       const parsed = JSON.parse(data);
       this.cache.clear();
       for (const [path, entry] of Object.entries(parsed)) {
-        this.cache.set(path, entry as CacheEntry);
+        // Ensure lastAccessed is initialized; if missing from old cache, set to Date.now()
+        const cacheEntry = entry as CacheEntry;
+        if (typeof cacheEntry.lastAccessed !== 'number') {
+          cacheEntry.lastAccessed = Date.now();
+        }
+        this.cache.set(path, cacheEntry);
       }
       console.log(`📦 Loaded cache: ${this.cache.size} entries`);
       return true;
@@ -79,10 +86,13 @@ class FileCache {
     const absPath = resolve(filePath);
 
     if (statResult && this.cache.has(absPath)) {
-      const cached = this.cache.get(absPath)!;
+      const entry = this.cache.get(absPath)!;
       // Compare mtime (to ms precision) and size
-      if (cached.mtime === statResult.mtimeMs && cached.size === statResult.size) {
-        return cached.content;
+      if (entry.mtime === statResult.mtimeMs && entry.size === statResult.size) {
+        // Update lastAccessed timestamp for LRU
+        entry.lastAccessed = Date.now();
+        this.dirty = true; // mark dirty to persist updated timestamps
+        return entry.content;
       }
     }
 
@@ -94,13 +104,30 @@ class FileCache {
     // Ensure we have valid stat; if missing, use zeros (will cause cache miss on get with proper stat)
     const mtime = statResult?.mtimeMs ?? 0;
     const size = statResult?.size ?? 0;
-    this.cache.set(absPath, { content, mtime, size });
+    const now = Date.now();
+    this.cache.set(absPath, { content, mtime, size, lastAccessed: now });
     this.dirty = true;
-    // Evict oldest entries if over maxSize (FIFO using Map insertion order)
-    while (this.cache.size > this.maxSize) {
-      const oldestKey = this.cache.keys().next().value;
-      if (oldestKey === undefined) break;
-      this.cache.delete(oldestKey);
+
+    // Evict least recently used entries if over maxSize
+    if (this.cache.size > this.maxSize) {
+      this.evictLRU();
+    }
+  }
+
+  private evictLRU(): void {
+    if (this.cache.size <= this.maxSize) return;
+
+    // Find entry with smallest lastAccessed (oldest)
+    let lruKey: string | null = null;
+    let lruTime = Infinity;
+    for (const [key, entry] of this.cache) {
+      if (entry.lastAccessed < lruTime) {
+        lruTime = entry.lastAccessed;
+        lruKey = key;
+      }
+    }
+    if (lruKey !== null) {
+      this.cache.delete(lruKey);
     }
   }
 

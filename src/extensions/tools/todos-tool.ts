@@ -147,7 +147,10 @@ async function saveTodoToFile(todo: TodoFile): Promise<void> {
     nextPhaseId: todo.nextPhaseId,
     updatedAt: new Date().toISOString(),
   };
-  await fs.writeFile(filePath, JSON.stringify(persisted, null, 2));
+  // Atomic write: write to temp file then rename
+  const tempPath = filePath + `.tmp.${Date.now()}.${process.pid}.json`;
+  await fs.writeFile(tempPath, JSON.stringify(persisted, null, 2));
+  await fs.rename(tempPath, filePath);
 }
 
 // ============================================================================

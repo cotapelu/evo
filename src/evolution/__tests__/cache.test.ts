@@ -158,4 +158,40 @@ describe('FileCache', () => {
     // Should not throw or corrupt state
     expect(cache.size).toBeGreaterThanOrEqual(0);
   });
+
+  test('should evict least recently used entry based on access time', async () => {
+    const lruCache = new FileCache(cacheDir);
+    // @ts-ignore – set small maxSize for test
+    lruCache.maxSize = 3;
+
+    const base = Date.now();
+    const statA = { mtimeMs: base, size: 1 };
+    const statB = { mtimeMs: base + 1, size: 1 };
+    const statC = { mtimeMs: base + 2, size: 1 };
+    const statD = { mtimeMs: base + 3, size: 1 };
+
+    lruCache.set('a', 'a', statA);
+    lruCache.set('b', 'b', statB);
+    lruCache.set('c', 'c', statC);
+
+    // Ensure time passes so access timestamp changes
+    await new Promise(resolve => setTimeout(resolve, 5));
+
+    // Access 'a' to make it recently used
+    await lruCache.get('a', statA);
+
+    await new Promise(resolve => setTimeout(resolve, 5));
+
+    lruCache.set('d', 'd', statD);
+
+    // Size should be 3
+    expect(lruCache.size).toBe(3);
+    // 'a' should still be present (recently accessed)
+    expect(await lruCache.get('a', statA)).toBe('a');
+    // 'b' should be evicted (least recently used)
+    expect(await lruCache.get('b', statB)).toBeNull();
+    // 'c' and 'd' should be present
+    expect(await lruCache.get('c', statC)).toBe('c');
+    expect(await lruCache.get('d', statD)).toBe('d');
+  });
 });

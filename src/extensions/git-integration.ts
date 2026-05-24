@@ -22,17 +22,53 @@ function validateConfig(config: any): GitConfig {
 	if (typeof config !== 'object' || config === null) {
 		throw new Error('Git integration config must be an object');
 	}
+
+	// Helper to get field with type validation
+	function getBooleanField(name: string, defaultValue: boolean): boolean {
+		const value = config[name];
+		if (value === undefined || value === null) return defaultValue;
+		if (typeof value !== 'boolean') {
+			throw new Error(`Git config: '${name}' must be a boolean, got ${typeof value}`);
+		}
+		return value;
+	}
+
+	function getNumberField(name: string, defaultValue: number, min: number, max: number): number {
+		const value = config[name];
+		if (value === undefined || value === null) return defaultValue;
+		if (typeof value !== 'number' || !Number.isFinite(value)) {
+			throw new Error(`Git config: '${name}' must be a finite number, got ${typeof value}`);
+		}
+		if (!Number.isInteger(value)) {
+			throw new Error(`Git config: '${name}' must be an integer, got ${value}`);
+		}
+		if (value < min || value > max) {
+			throw new Error(`Git config: '${name}' must be between ${min} and ${max}, got ${value}`);
+		}
+		return value;
+	}
+
+	function getEnumField(name: string, allowed: readonly string[], defaultValue: string): string {
+		const value = config[name];
+		if (value === undefined || value === null) return defaultValue;
+		if (typeof value !== 'string') {
+			throw new Error(`Git config: '${name}' must be a string, got ${typeof value}`);
+		}
+		if (!allowed.includes(value)) {
+			throw new Error(`Git config: '${name}' must be one of: ${allowed.join(', ')}; got '${value}'`);
+		}
+		return value;
+	}
+
 	return {
-		enabled: Boolean(config.enabled ?? true),
-		commitOnExit: Boolean(config.commitOnExit ?? true),
-		checkpointPerTurn: Boolean(config.checkpointPerTurn ?? true),
-		stageAllChanges: Boolean(config.stageAllChanges ?? false),
-		commitMessageSource: ['last-assistant', 'session-summary', 'last-user-message'].includes(config.commitMessageSource)
-			? config.commitMessageSource
-			: 'last-assistant',
-		gitTimeoutMs: Math.min(Math.max(config.gitTimeoutMs ?? 10000, 1000), 60000),
-		maxRetries: Math.min(Math.max(config.maxRetries ?? 2, 0), 5)
-	} as GitConfig;
+		enabled: getBooleanField('enabled', true),
+		commitOnExit: getBooleanField('commitOnExit', true),
+		checkpointPerTurn: getBooleanField('checkpointPerTurn', true),
+		stageAllChanges: getBooleanField('stageAllChanges', false),
+		commitMessageSource: getEnumField('commitMessageSource', ['last-assistant', 'session-summary', 'last-user-message'], 'last-assistant'),
+		gitTimeoutMs: getNumberField('gitTimeoutMs', 10000, 1000, 60000),
+		maxRetries: getNumberField('maxRetries', 2, 0, 5)
+	};
 }
 
 const CONFIG = validateConfig({
