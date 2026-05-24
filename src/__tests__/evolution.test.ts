@@ -36,27 +36,7 @@ describe('Pattern Evolution System', () => {
     expect(report).toContain('Total issues found: 1');
   });
 
-  it('should detect async/await pattern issues', async () => {
-    const { readFile, unlink, writeFile } = await import('fs/promises');
-    const { join } = await import('path');
 
-    const testFile = join(process.cwd(), 'test-async-pattern.ts');
-    const testCode = `
-async function example() {
-  return fetch(url).then(res => res.json()).catch(err => { throw err; });
-}
-`;
-
-    await writeFile(testFile, testCode);
-
-    try {
-      const results = await scanDirectory(process.cwd(), ['.ts']);
-      const matches = results.get(testFile);
-      expect(matches?.some(m => m.patternId === 'use-async-await')).toBe(true);
-    } finally {
-      await unlink(testFile);
-    }
-  });
 
   it('should detect trailing whitespace', async () => {
     const { writeFile, unlink } = await import('fs/promises');
@@ -106,21 +86,5 @@ async function example() {
       expect(file).not.toMatch(/__tests__/);
     }
   });
-  it('should detect globalThis usage', async () => {
-    const { writeFile, unlink } = await import('fs/promises');
-    const { join } = await import('path');
 
-    const testFile = join(process.cwd(), 'test-globalThis.ts');
-    const testCode = 'const x = globalThis.someValue;';
-
-    await writeFile(testFile, testCode);
-
-    try {
-      const results = await scanDirectory(process.cwd(), ['.ts']);
-      const matches = results.get(testFile);
-      expect(matches?.some(m => m.patternId === 'avoid-global-object')).toBe(true);
-    } finally {
-      await unlink(testFile);
-    }
-  });
 });

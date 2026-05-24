@@ -78,52 +78,7 @@ export const patterns: Pattern[] = [
       return code.endsWith('\n') ? code : code + '\n';
     }
   },
-  {
-    id: 'use-async-await',
-    name: 'Prefer async/await over Promise chains',
-    description: 'Use async/await for better readability in async functions',
-    severity: 'warning',
-    check: (code) => {
-      const hasThen = /\.then\s*\(/.test(code);
-      const hasAsync = /\basync\s+function/.test(code) || /\(\s*\)\s*=>\s*{[\s\S]*?async/.test(code);
-      if (hasThen && hasAsync) {
-        return {
-          patternId: 'use-async-await',
-          line: 1,
-          column: 1,
-          message: 'Consider using async/await instead of .then() chains',
-          suggestedFix: 'Rewrite Promise chains as async/await'
-        };
-      }
-      return null;
-    },
-    // NOTE: AST-based transformation required for proper conversion. Currently a placeholder.
-    fix: (code) => code
-  },
-  {
-    id: 'avoid-global-object',
-    name: 'Avoid globalThis usage',
-    description: 'Do not use globalThis directly; use imported module or local variable',
-    severity: 'error',
-    check: (code) => {
-      const pattern = /\bglobalThis\b/;
-      const lines = code.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        if (pattern.test(lines[i])) {
-          return {
-            patternId: 'avoid-global-object',
-            line: i + 1,
-            column: 1,
-            message: 'Avoid using globalThis; use local scope',
-            suggestedFix: 'Replace with imported module or local variable'
-          };
-        }
-      }
-      return null;
-    },
-    // NOTE: Requires manual refactoring based on context. Placeholder.
-    fix: (code) => code
-  }
+
 ];
 
 export async function scanDirectory(
