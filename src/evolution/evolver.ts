@@ -224,15 +224,21 @@ export class Evolver {
     let counter = 0;
 
     for (const [file, matches] of results) {
+      let original: string;
       try {
-        const original = await readFile(file, 'utf-8');
+        original = await readFile(file, 'utf-8');
+      } catch (err) {
+        // File read error
+        console.warn(`   Warning: Could not read file ${file}: ${err instanceof Error ? err.message : err}`);
+        continue; // Skip this file entirely
+      }
 
-        for (const match of matches) {
+      for (const match of matches) {
+        try {
           const pattern = patterns.find((p: Pattern) => p.id === match.patternId);
           if (!pattern) continue;
 
-          // Simple string-based transformation (for demo)
-          // In production, would use AST-based transformations
+          // Apply pattern fix (may be string-based or AST-based)
           const modified = pattern.fix(original, file);
 
           if (modified !== original) {
@@ -246,10 +252,10 @@ export class Evolver {
               match
             });
           }
+        } catch (err) {
+          // Pattern execution error – log and continue with other patterns
+          console.warn(`   Warning: Pattern ${match.patternId} failed on ${file}: ${err instanceof Error ? err.message : err}`);
         }
-      } catch (err) {
-        // Skip files we can't read, but warn for visibility
-        console.warn(`   Warning: Could not read file ${file}: ${err instanceof Error ? err.message : err}`);
       }
     }
 
