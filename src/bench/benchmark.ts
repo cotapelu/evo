@@ -103,8 +103,8 @@ async function benchPatternCheck(runner: BenchmarkRunner): Promise<void> {
   // Load sample file content
   const sampleCode = await readFile(join(process.cwd(), 'src', 'extensions', 'git-integration.ts'), 'utf-8');
 
-  await runner.measure('Single pattern check (avoid-global-object)', async () => {
-    const pattern = patterns.find(p => p.id === 'avoid-global-object');
+  await runner.measure('Single pattern check (trailing-whitespace)', async () => {
+    const pattern = patterns.find(p => p.id === 'trailing-whitespace');
     if (pattern) {
       pattern.check(sampleCode, 'test.ts');
     }
