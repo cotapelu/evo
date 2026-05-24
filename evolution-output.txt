@@ -1,0 +1,100 @@
+
+> evo-agent@0.0.1 evolve
+> node dist/src/evolution/cli.js
+
+
+🧬 Starting evolution analysis...
+   Target: src
+   Dry run: false
+📦 Loaded cache: 40 entries
+
+📊 Scanning for patterns...
+   Found 7 issues across 6 files
+
+🔧 Generating proposed changes...
+   4 changes proposed
+
+💾 Creating backup...
+   Backup saved to: .evolution-backup
+
+✏️  Applying changes...
+
+🧪 Running tests...
+   ✅ All tests passed!
+
+📝 Committing changes...
+   ⚠️  Git commit skipped: Error: Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <runner@runnervmg397c.3efhi5j0urxudl1u5xhnkcmdbc.dx.internal.cloudapp.net>) not allowed
+
+
+Pattern Analysis Report
+======================
+
+File: src/bench/benchmark.ts
+  Line 1: [use-async-await] Consider using async/await instead of .then() chains
+    Severity: warning
+    Suggestion: Use async/await for better readability in async functions
+
+File: src/evolution/patterns.ts
+  Line 1: [use-async-await] Consider using async/await instead of .then() chains
+    Severity: warning
+    Suggestion: Use async/await for better readability in async functions
+  Line 105: [avoid-global-object] Avoid using globalThis; use local scope
+    Severity: error
+    Suggestion: Do not use globalThis directly; use imported module or local variable
+
+File: src/extensions/providers/models/custom-models.generated.ts
+  Line 4398: [missing-eof-newline] File does not end with newline
+    Severity: info
+    Suggestion: POSIX standard: text files should end with newline
+
+File: src/extensions/team/team-manager.ts
+  Line 801: [trailing-whitespace] Trailing whitespace detected
+    Severity: info
+    Suggestion: Lines should not end with spaces or tabs
+
+File: src/extensions/team/team-tool.ts
+  Line 82: [trailing-whitespace] Trailing whitespace detected
+    Severity: info
+    Suggestion: Lines should not end with spaces or tabs
+
+File: src/extensions/tools/memory-tool.ts
+  Line 314: [missing-eof-newline] File does not end with newline
+    Severity: info
+    Suggestion: POSIX standard: text files should end with newline
+
+Total issues found: 7
+
+Proposed Changes:
+
+[evo-1] src/extensions/providers/models/custom-models.generated.ts
+  Pattern: missing-eof-newline
+  Message: File does not end with newline
+
+[evo-2] src/extensions/team/team-manager.ts
+  Pattern: trailing-whitespace
+  Message: Trailing whitespace detected
+
+[evo-3] src/extensions/team/team-tool.ts
+  Pattern: trailing-whitespace
+  Message: Trailing whitespace detected
+
+[evo-4] src/extensions/tools/memory-tool.ts
+  Pattern: missing-eof-newline
+  Message: File does not end with newline
+
+
+
+Evolution completed in 26525ms
+4 improvements applied successfully.
