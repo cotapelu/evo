@@ -53,11 +53,18 @@ export class Evolver {
     }
 
     // Additional security: resolve symlinks to prevent bypass via symlink
+    let cwdReal: string | null = null;
+    let targetReal: string | null = null;
     try {
-      const [cwdReal, targetReal] = await Promise.all([
+      [cwdReal, targetReal] = await Promise.all([
         realpath(cwd),
         realpath(target)
       ]);
+    } catch (err) {
+      // realpath may fail if path doesn't exist or permissions denied; we'll continue with original target
+    }
+
+    if (cwdReal && targetReal) {
       const cwdNorm = resolve(cwdReal);
       const targetNorm = resolve(targetReal);
       // Check that resolved target is within resolved cwd
@@ -66,10 +73,8 @@ export class Evolver {
       }
       // Use the symlink-resolved target for scanning (more secure)
       target = targetNorm;
-    } catch (err) {
-      // If realpath fails (e.g., path doesn't exist or inaccessible), we'll continue with the original target
-      // The scan will likely fail, but that's acceptable as it's a separate error condition
     }
+    // If realpath failed, we keep original target
 
     console.log(`\n🧬 Starting evolution analysis...`);
     console.log(`   Target: ${relative(process.cwd(), target)}`);
