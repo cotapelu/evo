@@ -193,4 +193,23 @@ describe('Todos Tool – Isolation & Concurrency', () => {
     const result = await tool.execute('1', {}, undefined, undefined, ctx);
     expect(result.isError).toBe(true);
   });
+
+  test('atomic writes: no leftover temp files after save', async () => {
+    const ctx = createMockContext();
+    const filePath = join(todosDir, 'todos.json');
+
+    // Perform an operation that triggers save
+    await tool.execute('1', { add_phase: { name: 'Atomic Test', tasks: [{ content: 'Check temp cleanup' }] } }, undefined, undefined, ctx);
+
+    // Manually trigger save (though it's saved automatically)
+    const saveHandlers = api.getHandlers()['session_end'] || [];
+    if (saveHandlers.length > 0) {
+      await saveHandlers[0](null, ctx);
+    }
+
+    // List files in todosDir, ensure no .tmp.*.json files exist
+    const files = await fs.readdir(todosDir);
+    const tempFiles = files.filter(f => f.endsWith('.json') && f.includes('.tmp.'));
+    expect(tempFiles).toHaveLength(0);
+  });
 });
