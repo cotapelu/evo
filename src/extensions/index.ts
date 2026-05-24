@@ -9,6 +9,7 @@
 import { registerKiloProvider } from "./providers/kilo-provider.js";
 import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "./tools/index.js";
 import { registerSubToolLoaderExtension } from "./tools/index.js";
+import { registerToolboxTool } from "./tools/index.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
 
 import piclawHeader from "./piclaw-header.js";
@@ -28,6 +29,7 @@ export default function (api: import("@earendil-works/pi-coding-agent").Extensio
   registerMemoryTool(api);
   registerUniversalTool(api);
   registerSubToolLoaderExtension(api);
+  registerToolboxTool(api);
 
   // ============================================
   // EXTENSIONS (Event Handlers, UI, etc.)
