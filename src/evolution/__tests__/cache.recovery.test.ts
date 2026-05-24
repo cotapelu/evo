@@ -35,8 +35,8 @@ describe('FileCache – Recovery & Atomicity', () => {
     await cache.load(); // ensures directory
     const key1 = resolve('k1');
     const key2 = join(cacheDir, 'some', 'path.txt');
-    cache.set(key1, 'value1', null);
-    cache.set(key2, 'value2', null);
+    cache.set(key1, 'value1');
+    cache.set(key2, 'value2');
     await cache.save();
 
     // New instance
@@ -52,7 +52,7 @@ describe('FileCache – Recovery & Atomicity', () => {
 
     // Add entry and save
     const key1 = resolve('k1');
-    cache.set(key1, 'v1', null);
+    cache.set(key1, 'v1');
     await cache.save();
 
     expect(existsSync(backupPath(cacheDir))).toBe(true);
@@ -65,7 +65,7 @@ describe('FileCache – Recovery & Atomicity', () => {
   test('save: produces valid manifest and backup', async () => {
     await cache.load();
     const key1 = resolve('k1');
-    cache.set(key1, 'v1', null);
+    cache.set(key1, 'v1');
     await cache.save();
 
     const manifest = manifestPath(cacheDir);

@@ -20,6 +20,12 @@ interface CacheEntry {
   lastAccessed: number; // Unix timestamp in ms, used for LRU eviction
 }
 
+/** Minimal file stat information needed for cache validation */
+interface FileStat {
+  mtimeMs: number;
+  size: number;
+}
+
 class FileCache {
   private cache: Map<string, CacheEntry> = new Map();
   private cachePath: string;
@@ -82,7 +88,7 @@ class FileCache {
     }
   }
 
-  async get(filePath: string, statResult?: any): Promise<string | null> {
+  async get(filePath: string, statResult?: FileStat): Promise<string | null> {
     const absPath = resolve(filePath);
 
     if (statResult && this.cache.has(absPath)) {
@@ -99,7 +105,7 @@ class FileCache {
     return null;
   }
 
-  set(filePath: string, content: string, statResult?: any): void {
+  set(filePath: string, content: string, statResult?: FileStat): void {
     const absPath = resolve(filePath);
     // Ensure we have valid stat; if missing, use zeros (will cause cache miss on get with proper stat)
     const mtime = statResult?.mtimeMs ?? 0;
