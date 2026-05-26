@@ -9,4 +9,5 @@ export { registerMemoryTool } from "./memory-tool.js";
 export { registerUniversalTool } from "./universal-tool.js";
 export { registerSubToolLoaderExtension } from "./subtool-loader.js";
 export { registerToolboxTool } from "./toolbox.js";
-export { registerKicadboxTool } from "./kicadbox.js";
+export { registerKicadSchTool } from "./kicad-sch.js";
+export { registerKicadPcbTool } from "./kicad-pcb.js";
