@@ -90,7 +90,7 @@ describe('Kicadbox Tool', () => {
         tool: 'kicad_sch',
         args: { input: 'schematic.kicad_sch', format: 'pdf' }
       }, undefined, undefined, ctx);
-      expect(api.exec).toHaveBeenCalledWith('kicad-cli', expect.arrayContaining(['export', 'schematic.kicad_sch', '--output', 'schematic.pdf', '--format', 'pdf']), { cwd: '/test/project', signal: undefined });
+      expect(api.exec).toHaveBeenCalledWith('kicad-cli', expect.arrayContaining(['export', 'schematic.kicad_sch', '--output', 'schematic.pdf', '--format', 'pdf']), { cwd: '/test/project', signal: undefined, timeout: 300 });
       expect(result.isError).toBe(false);
     });
 
@@ -99,7 +99,7 @@ describe('Kicadbox Tool', () => {
         tool: 'kicad_pcb',
         args: { input: 'board.kicad_pcb', format: 'gerber', layers: ['F.Cu', 'B.Cu'] }
       }, undefined, undefined, ctx);
-      expect(api.exec).toHaveBeenCalledWith('kicad-cli', expect.arrayContaining(['plot', 'board.kicad_pcb', '--output', 'board_gerber', '--format', 'gerber', '--layers', 'F.Cu', 'B.Cu']), { cwd: '/test/project', signal: undefined });
+      expect(api.exec).toHaveBeenCalledWith('kicad-cli', expect.arrayContaining(['plot', 'board.kicad_pcb', '--output', 'board_gerber', '--format', 'gerber', '--layers', 'F.Cu', 'B.Cu']), { cwd: '/test/project', signal: undefined, timeout: 300 });
     });
 
     test('kicad_drc: runs design rule check', async () => {
@@ -107,7 +107,7 @@ describe('Kicadbox Tool', () => {
         tool: 'kicad_drc',
         args: { input: 'board.kicad_pcb', format: 'json' }
       }, undefined, undefined, ctx);
-      expect(api.exec).toHaveBeenCalledWith('kicad-cli', ['drc', 'board.kicad_pcb', '--format', 'json'], { cwd: '/test/project', signal: undefined });
+      expect(api.exec).toHaveBeenCalledWith('kicad-cli', ['drc', 'board.kicad_pcb', '--format', 'json'], { cwd: '/test/project', signal: undefined, timeout: 300 });
     });
 
     test('kicad_lib: lists library contents', async () => {
@@ -115,7 +115,7 @@ describe('Kicadbox Tool', () => {
         tool: 'kicad_lib',
         args: { library: 'mylib.kicad_mod', operation: 'list' }
       }, undefined, undefined, ctx);
-      expect(api.exec).toHaveBeenCalledWith('kicad-cli', ['lib', 'list', 'mylib.kicad_mod'], { cwd: '/test/project', signal: undefined });
+      expect(api.exec).toHaveBeenCalledWith('kicad-cli', ['lib', 'list', 'mylib.kicad_mod'], { cwd: '/test/project', signal: undefined, timeout: 300 });
     });
 
     test('kicad_gerber: generates complete gerber package', async () => {
@@ -123,7 +123,7 @@ describe('Kicadbox Tool', () => {
         tool: 'kicad_gerber',
         args: { input: 'board.kicad_pcb', layers: ['F.Cu', 'B.Cu', 'F.SilkS'] }
       }, undefined, undefined, ctx);
-      expect(api.exec).toHaveBeenCalledWith('kicad-cli', ['pcb', 'plot', 'board.kicad_pcb', '--output', 'board_gerber', '--format', 'gerber', '--layers', 'F.Cu', 'B.Cu', 'F.SilkS', '--drill', '--map'], { cwd: '/test/project', signal: undefined });
+      expect(api.exec).toHaveBeenCalledWith('kicad-cli', ['pcb', 'plot', 'board.kicad_pcb', '--output', 'board_gerber', '--format', 'gerber', '--layers', 'F.Cu', 'B.Cu', 'F.SilkS', '--drill', '--map'], { cwd: '/test/project', signal: undefined, timeout: 300 });
     });
   });
 
