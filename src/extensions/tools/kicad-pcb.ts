@@ -5,7 +5,6 @@
  * Registry-based super-tool with modular commands
  */
 
-import { Type } from "typebox";
 import { ToolDefinition } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
