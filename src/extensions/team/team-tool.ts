@@ -9,6 +9,7 @@
 import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
 import type { ToolDefinition, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getGlobalRuntime } from "../../runtime-runner.js";
+import type { TeamRunParams, TeamToolDetails } from "../utils/tool-types.js";
 
 export function registerTeamTool(api: ExtensionAPI): void {
   api.registerTool(createTeamTool());
@@ -57,6 +58,16 @@ export function createTeamTool(): ToolDefinition {
       },
       required: []
     },
+    /**
+     * Execute team_run operation.
+     *
+     * @param toolCallId - Unique identifier for this tool call
+     * @param params - Parameters for team operation (object) or JSON string
+     * @param signal - AbortSignal (unused)
+     * @param onUpdate - Optional callback for progress updates
+     * @param ctx - Extension context
+     * @returns Promise resolving to tool result
+     */
     async execute(toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) {
       // Support LLM outputting JSON string or handle call references
       if (typeof params === "string") {

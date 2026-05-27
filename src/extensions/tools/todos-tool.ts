@@ -6,39 +6,27 @@
  * - File persistence: ./.pi/agent/todos.json
  * - System messages + auto-continue
  * - Strict validation + mergeCallAndResult
+ *
+ * @module tools/todos-tool
  */
 
 import { existsSync, mkdirSync, promises as fs } from "node:fs";
 import { dirname, join } from "node:path";
 import type { ToolDefinition, ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
+import { Mutex } from "../utils/mutex.js";
+import type {
+  TodosParams,
+  TodoPhase,
+  TodoToolDetails,
+  TodoStatus,
+  TodoItem,
+  TodoTaskInput,
+  TodoPhaseInput,
+} from "../utils/tool-types.js";
 
-// ============================================================================
-// Simple async mutex to prevent race conditions
-// ============================================================================
-class Mutex {
-  private locked = false;
-  private queue: (() => void)[] = [];
-
-  async lock(): Promise<() => void> {
-    if (!this.locked) {
-      this.locked = true;
-      return () => this.unlock();
-    }
-    return new Promise(resolve => {
-      this.queue.push(() => resolve(() => this.unlock()));
-    });
-  }
-
-  private unlock() {
-    if (this.queue.length > 0) {
-      const next = this.queue.shift()!;
-      next();
-    } else {
-      this.locked = false;
-    }
-  }
-}
+// Re-export types for external use
+export type { TodoStatus, TodoItem, TodoPhase, TodoToolDetails, TodosParams };
 
 // Global mutex for file operations (serialize writes)
 const fileMutex = new Mutex();
@@ -62,25 +50,6 @@ function getSessionState(ctx: ExtensionContext): TodoSessionState {
   return s;
 }
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type TodoStatus = "pending" | "in_progress" | "completed" | "abandoned";
-
-export interface TodoItem {
-  id: string;
-  content: string;
-  status: TodoStatus;
-  notes?: string;
-  details?: string;
-}
-
-export interface TodoPhase {
-  id: string;
-  name: string;
-  tasks: TodoItem[];
-}
 
 export interface TodoFile {
   phases: TodoPhase[];
@@ -96,12 +65,6 @@ interface PersistedTodo {
   updatedAt: string;
 }
 
-// BACKUP: storage detection - session vs file
-export interface TodoToolDetails {
-  phases: TodoPhase[];
-  storage: "session" | "memory" | "file";  // Added "file" for extension
-  error?: string;
-}
 
 // ============================================================================
 // Schemas - REMOVED: Using manual validation inside execute to reduce token size
@@ -812,7 +775,23 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
     ],
     parameters: {},
 
-    async execute(_toolCallId: string, params: any, _signal: AbortSignal | undefined, _onUpdate: any, ctx: ExtensionContext) {
+    /**
+     * Execute a todos operation.
+     *
+     * @param toolCallId - Unique identifier for this tool call
+     * @param params - Operation parameters (TodosParams) or JSON string
+     * @param _signal - Optional abort signal
+     * @param _onUpdate - Optional update callback
+     * @param ctx - Extension context containing session manager
+     * @returns Promise resolving to tool result with content, details, and error flag
+     */
+    async execute(
+      toolCallId: string,
+      params: TodosParams | string,
+      _signal: AbortSignal | undefined,
+      _onUpdate: (update: any) => void | undefined,
+      ctx: ExtensionContext
+    ) {
       const session = getSessionState(ctx);
       const release = await session.mutex.lock();
       try {
@@ -823,14 +802,22 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
           p = params;
         } catch (e: unknown) {
           const msg = e instanceof Error ? e.message : String(e);
-          return { content: [{ type: "text", text: `❌ Error: ${msg}` }], details: { phases: session.state.getPhases(), storage: session.state.storageType, error: msg }, isError: true };
+          return {
+            content: [{ type: "text", text: `❌ Error: ${msg}` }],
+            details: { phases: session.state.getPhases(), storage: session.state.storageType, error: msg },
+            isError: true
+          };
         }
 
         // Normalize - parse JSON strings
         try {
-          p = normalizeParams(p);
+          p = normalizeParams(p) as TodosParams;
         } catch (e: any) {
-          return { content: [{ type: "text", text: `❌ Error: ${e.message}` }], details: { phases: session.state.getPhases(), storage: session.state.storageType, error: e.message }, isError: true };
+          return {
+            content: [{ type: "text", text: `❌ Error: ${e.message}` }],
+            details: { phases: session.state.getPhases(), storage: session.state.storageType, error: e.message },
+            isError: true
+          };
         }
 
         const errors: string[] = [];
@@ -878,6 +865,8 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
         // System message (optional)
         if (op && op !== "list" && errors.length === 0) {
           try {
+            // api is captured from outer closure
+            // @ts-ignore - api is injected via closure
             await api.sendMessage({
               customType: "todo_update",
               content: `[System: Todo ${op}] ${summaryText.split("\n")[0]}`,

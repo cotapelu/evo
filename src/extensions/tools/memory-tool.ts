@@ -1,40 +1,17 @@
 #!/usr/bin/env node
 
 import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
-import { Type, StringEnum } from "@earendil-works/pi-ai";
 import { matchesKey, Text } from "@earendil-works/pi-tui";
-
-// Simple async mutex to prevent race conditions
-class Mutex {
-  private locked = false;
-  private queue: (() => void)[] = [];
-
-  async lock(): Promise<() => void> {
-    if (!this.locked) {
-      this.locked = true;
-      return () => this.unlock();
-    }
-    return new Promise(resolve => {
-      this.queue.push(() => resolve(() => this.unlock()));
-    });
-  }
-
-  private unlock() {
-    if (this.queue.length > 0) {
-      const next = this.queue.shift()!;
-      next();
-    } else {
-      this.locked = false;
-    }
-  }
-}
-
-export interface Memory {
-  id: number;
-  text: string;
-  tags?: string[];
-  created: number;
-}
+import { Mutex } from "../utils/mutex.js";
+import type {
+  Memory,
+  MemoryParams,
+  MemoryToolDetails,
+  MemoryAddParams,
+  MemoryGetParams,
+  MemoryDeleteParams,
+  MemorySearchParams
+} from "../utils/tool-types.js";
 
 // Per-session state holder
 interface MemorySessionState {
@@ -166,31 +143,50 @@ export function registerMemoryTool(api: ExtensionAPI): void {
     ],
     parameters: {},
 
-    async execute(_toolCallId: string, params: any, _signal: AbortSignal | undefined, _onUpdate: any, ctx: ExtensionContext) {
+    /**
+     * Execute memory operation.
+     *
+     * @param toolCallId - Unique identifier for this tool call
+     * @param params - Action parameters (MemoryParams) or JSON string
+     * @param _signal - Optional abort signal
+     * @param _onUpdate - Optional update callback
+     * @param ctx - Extension context
+     * @returns Promise resolving to tool result
+     */
+    async execute(
+      toolCallId: string,
+      params: MemoryParams | string,
+      _signal: AbortSignal | undefined,
+      _onUpdate: (update: any) => void | undefined,
+      ctx: ExtensionContext
+    ) {
       const state = getSessionState(ctx);
       const release = await state.mutex.lock();
       try {
-        // Parse JSON string if needed
+        // Parse and validate parameters
+        let p: MemoryParams;
         if (typeof params === "string") {
           try {
-            params = JSON.parse(params);
+            p = JSON.parse(params) as MemoryParams;
           } catch (e: any) {
             return { content: [{ type: "text", text: `Error: Invalid JSON - ${e.message}` }], details: { action: "unknown", memories: [...state.memories], nextId: state.nextId, error: "Invalid JSON" }, isError: false };
           }
+        } else {
+          p = params as MemoryParams;
         }
 
-        const action = params.action as string;
-
-        switch (action) {
+        const action = p.action;
+        switch (p.action) {
           case "add": {
-            const text = params.text as string | undefined;
+            const addParams = p as MemoryAddParams;
+            const text = addParams.text;
             if (!text) {
               return { content: [{ type: "text", text: "Error: text required for add" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "text required" }, isError: false };
             }
             const mem: Memory = {
               id: state.nextId++,
               text,
-              tags: params.tags as string[] | undefined,
+              tags: addParams.tags,
               created: Date.now(),
             };
             state.memories.push(mem);
@@ -208,10 +204,12 @@ export function registerMemoryTool(api: ExtensionAPI): void {
           }
 
           case "get": {
-            const id = params.id as number | undefined;
-            if (id === undefined) {
+            const getParams = p as MemoryGetParams;
+            const id = getParams.id;
+            if (typeof id === 'undefined') {
               return { content: [{ type: "text", text: "Error: id required for get" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "id required" }, isError: false };
             }
+
             const mem = state.memories.find(m => m.id === id);
             if (!mem) {
               return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...state.memories], nextId: state.nextId, targetId: id, error: `#${id} not found` }, isError: false };
@@ -220,10 +218,12 @@ export function registerMemoryTool(api: ExtensionAPI): void {
           }
 
           case "delete": {
-            const id = params.id as number | undefined;
-            if (id === undefined) {
+            const delParams = p as MemoryDeleteParams;
+            const id = delParams.id;
+            if (typeof id === 'undefined') {
               return { content: [{ type: "text", text: "Error: id required for delete" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "id required" }, isError: false };
             }
+
             const index = state.memories.findIndex(m => m.id === id);
             if (index === -1) {
               return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...state.memories], nextId: state.nextId, targetId: id, error: `#${id} not found` }, isError: false };
@@ -244,7 +244,8 @@ export function registerMemoryTool(api: ExtensionAPI): void {
           }
 
           case "search": {
-            const query = params.query as string | undefined;
+            const searchParams = p as MemorySearchParams;
+            const query = searchParams.query;
             if (!query) {
               return { content: [{ type: "text", text: "Error: query required for search" }], details: { action, memories: [...state.memories], nextId: state.nextId, error: "query required" }, isError: false };
             }
