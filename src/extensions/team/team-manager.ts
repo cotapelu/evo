@@ -281,6 +281,11 @@ export class AgentTeam implements AgentTeamRuntime {
     });
   }
 
+  // Heartbeat để theo dõi agent còn sống không
+  public updateHeartbeat(role: string): void {
+    this.agentLastSeen.set(role, Date.now());
+  }
+
   // Helper: insert index into pendingIndices while maintaining sorted order
   private insertPendingIndexSorted(idx: number): void {
     // Binary search để tìm vị trí insert
@@ -537,6 +542,8 @@ export class AgentTeam implements AgentTeamRuntime {
       for (const role of this.roles) {
         this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
       }
+      // Clear heartbeat tracking
+      this.agentLastSeen.clear();
     });
     // Notify team initialized
     this.notifyUpdate(this.createUpdate(
@@ -796,6 +803,9 @@ Use team_ops to continue. If all tasks done, finish up.`;
     ));
 
     while (true) {
+      // Update heartbeat mỗi turn
+      team.updateHeartbeat(role);
+
       const status = await team.getTeamStatus();
       // Debug: turn progress (silenced)
 
