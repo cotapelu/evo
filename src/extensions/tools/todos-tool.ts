@@ -35,7 +35,6 @@ const fileMutex = new Mutex();
 interface TodoSessionState {
   state: TodoState;
   mutex: Mutex;
-  autoTriggering: boolean;
 }
 const sessionStates = new WeakMap<ExtensionContext, TodoSessionState>();
 
@@ -44,7 +43,7 @@ function getSessionState(ctx: ExtensionContext): TodoSessionState {
   if (!s) {
     const mutex = new Mutex();
     const state = new TodoState();
-    s = { state, mutex, autoTriggering: false };
+    s = { state, mutex };
     sessionStates.set(ctx, s);
   }
   return s;
@@ -505,24 +504,6 @@ function applyOp(
     nextPhaseId: updated.nextPhaseId,
     errors
   };
-}
-
-// BACKUP: getLatestTodoPhasesFromEntries (reconstruct from history)
-export function getLatestTodoPhasesFromEntries(entries: any[]): TodoPhase[] {
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const entry = entries[i];
-    if (entry.type !== "message") continue;
-
-    const message = entry.message as { role?: string; toolName?: string; details?: unknown; isError?: boolean };
-    if (message.role !== "toolResult" || (message.toolName !== "todos" && message.toolName !== "todo_write") || message.isError) continue;
-
-    const details = message.details as { phases?: unknown } | undefined;
-    if (!details || !Array.isArray(details.phases)) continue;
-
-    return clonePhases(details.phases as TodoPhase[]);
-  }
-
-  return [];
 }
 
 // ============================================================================
