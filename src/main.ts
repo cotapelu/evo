@@ -7,7 +7,7 @@
 import { createAndRunRuntime, printBanner, printDiagnostics, printStartupMetrics } from './runtime-provider.js';
 import { runInteractiveMode, setupShutdownHandlers } from './interactive-provider.js';
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   printBanner();
   console.log('🚀 Initializing...');
 
@@ -34,4 +34,4 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+

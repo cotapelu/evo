@@ -14,27 +14,27 @@ import { ToolDefinition } from "@earendil-works/pi-coding-agent";
 
 const commands: Record<string, () => Promise<any>> = {
 // @ts-ignore
-  export: () => import('./commands/export.js'),
+  export: () => import('./kicad-sch/commands/export.js'),
 // @ts-ignore
-  plot: () => import('./commands/plot.js'),
+  plot: () => import('./kicad-sch/commands/plot.js'),
 // @ts-ignore
-  diff: () => import('./commands/diff.js'),
+  diff: () => import('./kicad-sch/commands/diff.js'),
 // @ts-ignore
-  generate_netlist: () => import('./commands/netlist.js'),
+  generate_netlist: () => import('./kicad-sch/commands/netlist.js'),
 // @ts-ignore
-  erc: () => import('./commands/erc.js'),
+  erc: () => import('./kicad-sch/commands/erc.js'),
 // @ts-ignore
-  drc: () => import('./commands/drc.js'),
+  drc: () => import('./kicad-sch/commands/drc.js'),
 // @ts-ignore
-  annotate: () => import('./commands/annotate.js'),
+  annotate: () => import('./kicad-sch/commands/annotate.js'),
 // @ts-ignore
-  symbol_check: () => import('./commands/symbol-check.js'),
+  symbol_check: () => import('./kicad-sch/commands/symbol-check.js'),
 // @ts-ignore
-  field_edit: () => import('./commands/field-edit.js'),
+  field_edit: () => import('./kicad-sch/commands/field-edit.js'),
 // @ts-ignore
-  replace_fonts: () => import('./commands/replace-fonts.js'),
+  replace_fonts: () => import('./kicad-sch/commands/replace-fonts.js'),
 // @ts-ignore
-  update_ids: () => import('./commands/update-ids.js'),
+  update_ids: () => import('./kicad-sch/commands/update-ids.js'),
 };
 
 // ============================================================================
@@ -73,6 +73,10 @@ export function createKicadSchTool(): ToolDefinition {
         const mod = await loader();
         const cwd = ctx.session?.cwd ?? process.cwd();
         const result = await mod.execute(args, cwd, signal, ctx);
+        // Treat non-zero exit as error
+        if (result.code !== 0) {
+          throw new Error(result.stderr || `Command ${command} exited with code ${result.code}`);
+        }
         return { content: [{ type: "text", text: result.stdout }], details: result as any, isError: false } as const;
       } catch (error: any) {
         return { content: [{ type: "text", text: `kicad_sch ${command} error: ${error.message}` }], details: null, isError: true } as const;

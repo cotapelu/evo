@@ -14,55 +14,55 @@ import { ToolDefinition } from "@earendil-works/pi-coding-agent";
 
 const commands: Record<string, () => Promise<any>> = {
 // @ts-ignore
-  plot: () => import('./commands/plot.js'),
+  plot: () => import('./kicad-pcb/commands/plot.js'),
 // @ts-ignore
-  export: () => import('./commands/export.js'),
+  export: () => import('./kicad-pcb/commands/export.js'),
 // @ts-ignore
-  drc: () => import('./commands/drc.js'),
+  drc: () => import('./kicad-pcb/commands/drc.js'),
 // @ts-ignore
-  fill_zone: () => import('./commands/fill-zone.js'),
+  fill_zone: () => import('./kicad-pcb/commands/fill-zone.js'),
 // @ts-ignore
-  copper_pour: () => import('./commands/copper-pour.js'),
+  copper_pour: () => import('./kicad-pcb/commands/copper-pour.js'),
 // @ts-ignore
-  route: () => import('./commands/route.js'),
+  route: () => import('./kicad-pcb/commands/route.js'),
 // @ts-ignore
-  ratsnest: () => import('./commands/ratsnest.js'),
+  ratsnest: () => import('./kicad-pcb/commands/ratsnest.js'),
 // @ts-ignore
-  drill: () => import('./commands/drill.js'),
+  drill: () => import('./kicad-pcb/commands/drill.js'),
 // @ts-ignore
-  optimize: () => import('./commands/optimize.js'),
+  optimize: () => import('./kicad-pcb/commands/optimize.js'),
 // @ts-ignore
-  teardrops: () => import('./commands/teardrops.js'),
+  teardrops: () => import('./kicad-pcb/commands/teardrops.js'),
 // @ts-ignore
-  zone_filling: () => import('./commands/zone-filling.js'),
+  zone_filling: () => import('./kicad-pcb/commands/zone-filling.js'),
 // @ts-ignore
-  clearance: () => import('./commands/clearance.js'),
+  clearance: () => import('./kicad-pcb/commands/clearance.js'),
 // @ts-ignore
-  length_tuning: () => import('./commands/length-tuning.js'),
+  length_tuning: () => import('./kicad-pcb/commands/length-tuning.js'),
 // @ts-ignore
-  fanout: () => import('./commands/fanout.js'),
+  fanout: () => import('./kicad-pcb/commands/fanout.js'),
 // @ts-ignore
-  gloss: () => import('./commands/gloss.js'),
+  gloss: () => import('./kicad-pcb/commands/gloss.js'),
 // @ts-ignore
-  swap: () => import('./commands/swap.js'),
+  swap: () => import('./kicad-pcb/commands/swap.js'),
 // @ts-ignore
-  tie: () => import('./commands/tie.js'),
+  tie: () => import('./kicad-pcb/commands/tie.js'),
 // @ts-ignore
-  clean: () => import('./commands/clean.js'),
+  clean: () => import('./kicad-pcb/commands/clean.js'),
 // @ts-ignore
-  inspect: () => import('./commands/inspect.js'),
+  inspect: () => import('./kicad-pcb/commands/inspect.js'),
 // @ts-ignore
-  measure: () => import('./commands/measure.js'),
+  measure: () => import('./kicad-pcb/commands/measure.js'),
 // @ts-ignore
-  footprint: () => import('./commands/footprint.js'),
+  footprint: () => import('./kicad-pcb/commands/footprint.js'),
 // @ts-ignore
-  pad: () => import('./commands/pad.js'),
+  pad: () => import('./kicad-pcb/commands/pad.js'),
 // @ts-ignore
-  via: () => import('./commands/via.js'),
+  via: () => import('./kicad-pcb/commands/via.js'),
 // @ts-ignore
-  track: () => import('./commands/track.js'),
+  track: () => import('./kicad-pcb/commands/track.js'),
 // @ts-ignore
-  zone: () => import('./commands/zone.js'),
+  zone: () => import('./kicad-pcb/commands/zone.js'),
 };
 
 // ============================================================================
@@ -101,6 +101,10 @@ export function createKicadPcbTool(): ToolDefinition {
         const mod = await loader();
         const cwd = ctx.session?.cwd ?? process.cwd();
         const result = await mod.execute(args, cwd, signal, ctx);
+        // Treat non-zero exit as error
+        if (result.code !== 0) {
+          throw new Error(result.stderr || `Command ${command} exited with code ${result.code}`);
+        }
         return { content: [{ type: "text", text: result.stdout }], details: result as any, isError: false } as const;
       } catch (error: any) {
         return { content: [{ type: "text", text: `kicad_pcb ${command} error: ${error.message}` }], details: null, isError: true } as const;

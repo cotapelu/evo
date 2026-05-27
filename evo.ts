@@ -6,4 +6,6 @@
  *
  */
 
-import './src/main.js';
+import { main } from './src/main.js';
+
+await main();
