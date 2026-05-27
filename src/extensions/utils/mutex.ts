@@ -41,9 +41,3 @@ export class Mutex {
   }
 }
 
-/**
- * Factory to create a new Mutex instance
- */
-export function createMutex(): Mutex {
-  return new Mutex();
-}
