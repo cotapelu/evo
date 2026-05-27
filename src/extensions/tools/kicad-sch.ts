@@ -2,279 +2,39 @@
 
 /**
  * KiCad Schematic Tool
- * All commands in one file (pattern: subtool_loader simplified)
+ * Registry-based super-tool with modular commands
  */
 
 import { Type } from "typebox";
 import { ToolDefinition } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
-// Command Definitions
+// Load Commands
 // ============================================================================
 
-const exportCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    output: Type.Optional(Type.String()),
-    format: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.export', args.input];
-    if (args.output) cmd.push('--output', args.output);
-    if (args.format) cmd.push('--format', args.format);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const plotCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    output: Type.Optional(Type.String()),
-    format: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.plot', args.input];
-    if (args.output) cmd.push('--output', args.output);
-    if (args.format) cmd.push('--format', args.format);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const diffCommand = {
-  schema: Type.Object({
-    file1: Type.String(),
-    file2: Type.String(),
-    output: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.diff', args.file1, args.file2];
-    if (args.output) cmd.push('--output', args.output);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const netlistCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    format: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.generate_netlist', args.input];
-    if (args.format) cmd.push('--format', args.format);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const ercCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    format: Type.Optional(Type.String()),
-    severity: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.erc', args.input];
-    if (args.format) cmd.push('--format', args.format);
-    if (args.severity) cmd.push('--severity', args.severity);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const drcCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    format: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.drc', args.input];
-    if (args.format) cmd.push('--format', args.format);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const annotateCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    reset: Type.Optional(Type.Boolean()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.annotate', args.input];
-    if (args.reset) cmd.push('--reset');
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const symbolCheckCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    library: Type.Optional(Type.String()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.symbol_check', args.input];
-    if (args.library) cmd.push('--library', args.library);
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const fieldEditCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    field_name: Type.String(),
-    field_value: Type.String(),
-    edit_all: Type.Optional(Type.Boolean()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.field_edit', args.input, '--field-name', args.field_name, '--field-value', args.field_value];
-    if (args.edit_all) cmd.push('--edit-all');
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const replaceFontsCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    old_font: Type.String(),
-    new_font: Type.String(),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.replace_fonts', args.input, '--old-font', args.old_font, '--new-font', args.new_font];
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const updateIdsCommand = {
-  schema: Type.Object({
-    input: Type.String(),
-    dry_run: Type.Optional(Type.Boolean()),
-  }),
-  execute: async (args: any, cwd: string, signal?: AbortSignal, ctx?: any) => {
-    const { spawn } = await import('child_process');
-    const python = process.env.PYTHON || 'python3';
-    const cmd = [python, '-m', 'kicad.sch.update_ids', args.input];
-    if (args.dry_run) cmd.push('--dry-run');
-    return new Promise((resolve, reject) => {
-      const p = spawn(python, cmd.slice(1), { cwd });
-      let out = '', err = '';
-      p.stdout.on('data', d => out += d.toString());
-      p.stderr.on('data', d => err += d.toString());
-      p.on('close', code => code === 0 ? resolve({ stdout: out, stderr: err, code }) : reject(new Error(err || `Exit ${code}`)));
-      p.on('error', reject);
-      signal?.addEventListener('abort', () => p.kill('SIGTERM'));
-    });
-  }
-};
-
-const commands = {
-  export: exportCommand,
-  plot: plotCommand,
-  diff: diffCommand,
-  generate_netlist: netlistCommand,
-  erc: ercCommand,
-  drc: drcCommand,
-  annotate: annotateCommand,
-  symbol_check: symbolCheckCommand,
-  field_edit: fieldEditCommand,
-  replace_fonts: replaceFontsCommand,
-  update_ids: updateIdsCommand,
+const commands: Record<string, () => Promise<any>> = {
+// @ts-ignore
+  export: () => import('./commands/export.js'),
+// @ts-ignore
+  plot: () => import('./commands/plot.js'),
+// @ts-ignore
+  diff: () => import('./commands/diff.js'),
+// @ts-ignore
+  generate_netlist: () => import('./commands/netlist.js'),
+// @ts-ignore
+  erc: () => import('./commands/erc.js'),
+// @ts-ignore
+  drc: () => import('./commands/drc.js'),
+// @ts-ignore
+  annotate: () => import('./commands/annotate.js'),
+// @ts-ignore
+  symbol_check: () => import('./commands/symbol-check.js'),
+// @ts-ignore
+  field_edit: () => import('./commands/field-edit.js'),
+// @ts-ignore
+  replace_fonts: () => import('./commands/replace-fonts.js'),
+// @ts-ignore
+  update_ids: () => import('./commands/update-ids.js'),
 };
 
 // ============================================================================
@@ -305,14 +65,15 @@ export function createKicadSchTool(): ToolDefinition {
     },
     async execute(_toolCallId: string, params: any, signal: AbortSignal | undefined, _onUpdate: any, ctx: any) {
       const { command, args } = params;
-      const cmd = (commands as any)[command];
-      if (!cmd) {
+      const loader = commands[command];
+      if (!loader) {
         return { content: [{ type: "text", text: `Unknown command: ${command}. Use: ${Object.keys(commands).join(', ')}` }], details: null, isError: true } as const;
       }
       try {
+        const mod = await loader();
         const cwd = ctx.session?.cwd ?? process.cwd();
-        const result = await cmd.execute(args, cwd, signal, ctx, _onUpdate);
-        return { content: [{ type: "text", text: result.stdout }], details: result, isError: false } as const;
+        const result = await mod.execute(args, cwd, signal, ctx);
+        return { content: [{ type: "text", text: result.stdout }], details: result as any, isError: false } as const;
       } catch (error: any) {
         return { content: [{ type: "text", text: `kicad_sch ${command} error: ${error.message}` }], details: null, isError: true } as const;
       }
