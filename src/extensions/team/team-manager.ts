@@ -107,7 +107,7 @@ export class AgentTeam implements AgentTeamRuntime {
       }
       await Promise.allSettled(
         this.runtimes.slice(1).map(rt =>
-          rt.dispose().catch(err =>
+          (rt.dispose ? rt.dispose() : Promise.resolve()).catch(err =>
             console.error("Failed to dispose child agent:", err)
           )
         )
