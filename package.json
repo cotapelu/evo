@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node dist/src/main.js",
     "dev": "ts-node --esm src/main.ts",
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/evo.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
