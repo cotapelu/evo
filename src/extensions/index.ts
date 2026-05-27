@@ -11,7 +11,6 @@ import { registerTodosTool, registerMemoryTool, registerKicadSchTool, registerKi
 import autoContinueExtension from "./hooks/auto-continue.js";
 
 import piclawHeader from "./piclaw-header.js";
-import gitIntegrationExtension from "./git-integration.js";
 import { registerTeamTool } from "./team/index.js";
 
 export default function (api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
@@ -32,7 +31,6 @@ export default function (api: import("@earendil-works/pi-coding-agent").Extensio
   // EXTENSIONS (Event Handlers, UI, etc.)
   // ============================================
   autoContinueExtension(api);
-  gitIntegrationExtension(api);
   registerTeamTool(api);
   piclawHeader(api);
 }
