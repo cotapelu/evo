@@ -79,7 +79,9 @@ export async function createAndRunRuntime(): Promise<{
       sessionStartTime = Date.now();
       result = await createAgentSessionFromServices({
         services,
-        sessionManager: innerSessionManager
+        sessionManager: innerSessionManager,
+        // Enable full coding capabilities
+        tools: ['read', 'write', 'edit', 'bash', 'grep', 'find', 'ls']
       });
 
       return {
