@@ -80,8 +80,8 @@ export async function createAndRunRuntime(): Promise<{
       result = await createAgentSessionFromServices({
         services,
         sessionManager: innerSessionManager,
-        // Enable full coding capabilities
-        tools: ['read', 'write', 'edit', 'bash', 'grep', 'find', 'ls']
+        // Enable full coding capabilities + custom tools
+        tools: ['read', 'write', 'edit', 'bash', 'grep', 'find', 'ls', 'todos', 'memory', 'kicad_sch', 'kicad_pcb', 'team_run']
       });
 
       return {
