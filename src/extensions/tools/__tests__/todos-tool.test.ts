@@ -3,6 +3,7 @@ import { registerTodosTool } from '../todos-tool.js';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync, promises as fs } from 'fs';
 import { join } from 'path';
+import os from 'node:os';
 
 // Mock API
 function createMockApi() {
@@ -21,6 +22,7 @@ function createMockApi() {
 
 function createMockContext(custom?: any): ExtensionContext {
   return {
+    cwd: process.cwd(),
     sessionManager: {
       getBranch: jest.fn(() => []),
     },
@@ -211,5 +213,35 @@ describe('Todos Tool – Isolation & Concurrency', () => {
     const files = await fs.readdir(todosDir);
     const tempFiles = files.filter(f => f.endsWith('.json') && f.includes('.tmp.'));
     expect(tempFiles).toHaveLength(0);
+  });
+
+  test('uses session cwd for file storage', async () => {
+    const tmpDirA = join(os.tmpdir(), 'evo-todos-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    const tmpDirB = join(os.tmpdir(), 'evo-todos-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    mkdirSync(tmpDirA, { recursive: true });
+    mkdirSync(tmpDirB, { recursive: true });
+    try {
+      const ctxA = createMockContext({ cwd: tmpDirA });
+      const resultA = await tool.execute('1', { add_phase: { name: 'A Phase', tasks: [{ content: 'Task A' }] } }, undefined, undefined, ctxA);
+      expect(resultA.isError).toBe(false);
+      const filePathA = join(tmpDirA, '.pi', 'agent', 'todos.json');
+      expect(existsSync(filePathA)).toBe(true);
+      const contentA = JSON.parse(readFileSync(filePathA, 'utf-8'));
+      expect(contentA.phases.length).toBe(1);
+
+      const ctxB = createMockContext({ cwd: tmpDirB });
+      const sessionStartHandlers = api.getHandlers()['session_start'];
+      if (sessionStartHandlers.length > 0) {
+        await sessionStartHandlers[0](null, ctxB);
+      }
+      const resultB = await tool.execute('2', { list: {} }, undefined, undefined, ctxB);
+      expect(resultB.isError).toBe(false);
+      expect(resultB.details.phases.length).toBe(0);
+    } finally {
+      [tmpDirA, tmpDirB].forEach(dir => {
+        try { rmSync(join(dir, '.pi'), { recursive: true, force: true }); } catch {}
+        try { rmSync(dir, { recursive: true, force: true }); } catch {}
+      });
+    }
   });
 });

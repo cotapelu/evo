@@ -80,12 +80,12 @@ interface PersistedTodo {
 // File I/O - Project-based storage
 // ============================================================================
 
-function getProjectTodoFilePath(): string {
-  return join(process.cwd(), ".pi", "agent", "todos.json");
+function getProjectTodoFilePath(cwd: string): string {
+  return join(cwd, ".pi", "agent", "todos.json");
 }
 
-async function loadTodoFromFile(): Promise<TodoFile | null> {
-  const filePath = getProjectTodoFilePath();
+async function loadTodoFromFile(cwd: string): Promise<TodoFile | null> {
+  const filePath = getProjectTodoFilePath(cwd);
   if (!existsSync(filePath)) return null;
   try {
     const content = await fs.readFile(filePath, "utf-8");
@@ -98,8 +98,8 @@ async function loadTodoFromFile(): Promise<TodoFile | null> {
   }
 }
 
-async function saveTodoToFile(todo: TodoFile): Promise<void> {
-  const filePath = getProjectTodoFilePath();
+async function saveTodoToFile(cwd: string, todo: TodoFile): Promise<void> {
+  const filePath = getProjectTodoFilePath(cwd);
   const dir = dirname(filePath);
   if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true });
   const persisted: PersistedTodo = {
@@ -520,8 +520,8 @@ class TodoState {
   subscribe(listener: () => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); }
   private notify() { for (const l of this.listeners) l(); }
 
-  async loadFromFile(): Promise<boolean> {
-    const fileData = await loadTodoFromFile();
+  async loadFromFile(cwd: string): Promise<boolean> {
+    const fileData = await loadTodoFromFile(cwd);
     if (!fileData) { this.phases = []; this.nextTaskId = 1; this.nextPhaseId = 1; this.storageType = "file"; return false; }
     this.phases = clonePhases(fileData.phases);
     this.nextTaskId = fileData.nextTaskId;
@@ -531,13 +531,14 @@ class TodoState {
     return true;
   }
 
-  async saveToFile(): Promise<void> {
+  async saveToFile(cwd: string): Promise<void> {
     const ids = getNextIds(this.phases);
-    await saveTodoToFile({ phases: clonePhases(this.phases), nextTaskId: ids.nextTaskId, nextPhaseId: ids.nextPhaseId });
+    await saveTodoToFile(cwd, { phases: clonePhases(this.phases), nextTaskId: ids.nextTaskId, nextPhaseId: ids.nextPhaseId });
   }
 
   // BACKUP: reconstructFromEntries (identical logic)
-  reconstructFromEntries(entries: any[]): void {
+  reconstructFromEntries(entries: any[]): boolean {
+    let found = false;
     for (let i = entries.length - 1; i >= 0; i--) {
       const e = entries[i];
       if (e.type !== "message") continue;
@@ -549,9 +550,11 @@ class TodoState {
         const ids = getNextIds(this.phases);
         this.nextTaskId = ids.nextTaskId;
         this.nextPhaseId = ids.nextPhaseId;
+        found = true;
         break;
       }
     }
+    return found;
   }
 
   // BACKUP: All these methods are identical
@@ -690,17 +693,23 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
 
   api.on("session_start", async (_event, ctx) => {
     const session = getSessionState(ctx);
+    const cwd = ctx.cwd;
     const release = await session.mutex.lock();
     try {
-      session.state.reconstructFromEntries(ctx.sessionManager.getBranch());
-      const fileRelease = await fileMutex.lock();
-      try {
-        await session.state.loadFromFile();
-      } finally {
-        fileRelease();
-      }
-      if (!existsSync(getProjectTodoFilePath())) {
-        session.state.setStorageType("memory");
+      const found = session.state.reconstructFromEntries(ctx.sessionManager.getBranch());
+      if (!found) {
+        const fileRelease = await fileMutex.lock();
+        try {
+          const loaded = await session.state.loadFromFile(cwd);
+          if (!loaded) {
+            session.state.setStorageType("memory");
+          }
+          // If loaded, loadFromFile already set storage to "file"
+        } finally {
+          fileRelease();
+        }
+      } else {
+        session.state.setStorageType("session");
       }
     } finally {
       release();
@@ -709,20 +718,23 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
 
   api.on("session_tree", async (_event, ctx) => {
     const session = getSessionState(ctx);
+    const cwd = ctx.cwd;
     const release = await session.mutex.lock();
     try {
-      session.state.reconstructFromEntries(ctx.sessionManager.getBranch());
-      const fileRelease = await fileMutex.lock();
-      try {
-        await session.state.loadFromFile();
-      } finally {
-        fileRelease();
-      }
-      const filePath = getProjectTodoFilePath();
-      if (!existsSync(filePath)) {
-        session.state.setStorageType("memory");
+      const found = session.state.reconstructFromEntries(ctx.sessionManager.getBranch());
+      if (!found) {
+        const fileRelease = await fileMutex.lock();
+        try {
+          const loaded = await session.state.loadFromFile(cwd);
+          if (!loaded) {
+            session.state.setStorageType("memory");
+          }
+          // If loaded, loadFromFile already set storage to "file"
+        } finally {
+          fileRelease();
+        }
       } else {
-        session.state.setStorageType("file");
+        session.state.setStorageType("session");
       }
     } finally {
       release();
@@ -829,7 +841,7 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
           try {
             const fileRelease = await fileMutex.lock();
             try {
-              await session.state.saveToFile();
+              await session.state.saveToFile(ctx.cwd);
               session.state.setStorageType("file");
             } finally {
               fileRelease();
