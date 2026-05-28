@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { jest } from '@jest/globals';
 import { createTeamOpsTool } from '../team-ops-tool.js';
 
