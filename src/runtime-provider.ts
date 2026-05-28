@@ -79,9 +79,8 @@ export async function createAndRunRuntime(): Promise<{
       sessionStartTime = Date.now();
       result = await createAgentSessionFromServices({
         services,
-        sessionManager: innerSessionManager,
-        // Enable full coding capabilities + custom tools
-        tools: ['read', 'write', 'edit', 'bash', 'grep', 'find', 'ls', 'todos', 'memory', 'kicad_sch', 'kicad_pcb', 'team_run']
+        sessionManager: innerSessionManager
+        // No explicit tools list - all built-in + extension tools are enabled by default
       });
 
       return {
