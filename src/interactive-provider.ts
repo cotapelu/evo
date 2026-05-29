@@ -9,7 +9,7 @@ import { spawnSync } from "child_process";
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { AssistantMessage, ImageContent } from "@earendil-works/pi-ai";
-import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings } from "@earendil-works/pi-tui";
+import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, fuzzyFilter } from "@earendil-works/pi-tui";
 import {
 	AgentSessionRuntime,
 	CustomEditor,
@@ -19,6 +19,7 @@ import {
 	AssistantMessageComponent,
 	UserMessageComponent,
 	ToolExecutionComponent,
+	BUILTIN_SLASH_COMMANDS,
 } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
@@ -454,12 +455,93 @@ export class InteractiveMode {
 		this.setupAutocompleteProvider();
 	}
 
+	private createBaseAutocompleteProvider(): AutocompleteProvider {
+		// Define commands
+		const slashCommands: SlashCommand[] = BUILTIN_SLASH_COMMANDS.map((cmd: any) => ({
+			name: cmd.name,
+			description: cmd.description,
+		}));
+
+		// Add prompt templates
+		const templates = (this.session as any).promptTemplates || [];
+		const templateCommands: SlashCommand[] = templates.map((t: any) => ({
+			name: t.name,
+			description: t.description,
+		}));
+
+		// Add skill commands if enabled
+		const skillCommands: SlashCommand[] = [];
+		if ((this.settingsManager as any).getEnableSkillCommands) {
+			const skills = (this.session.resourceLoader as any).getSkills?.()?.skills || [];
+			for (const skill of skills) {
+				skillCommands.push({ name: `skill:${skill.name}`, description: skill.description });
+			}
+		}
+
+		// Combine
+		const allCommands = [...slashCommands, ...templateCommands, ...skillCommands];
+
+		return new CombinedAutocompleteProvider(allCommands, this.sessionManager.getCwd(), this.fdPath);
+	}
+
 	private setupAutocompleteProvider(): void {
-		// Stub
+		const provider = this.createBaseAutocompleteProvider();
+		(this.defaultEditor as any).setAutocompleteProvider?.(provider);
+		if (this.editor !== this.defaultEditor) {
+			(this.editor as any).setAutocompleteProvider?.(provider);
+		}
 	}
 
 	private showLoadedResources(options?: { extensions?: any[]; force?: boolean; showDiagnosticsWhenQuiet?: boolean }): void {
-		// Stub - already called in bind
+		const chatContainer = this.chatContainer;
+		const session = this.session;
+		const settingsManager = this.settingsManager;
+
+		const showListing = options?.force || this.options.verbose || !settingsManager.getQuietStartup();
+		const showDiagnostics = showListing || options?.showDiagnosticsWhenQuiet === true;
+		if (!showListing && !showDiagnostics) return;
+
+		chatContainer.addChild(new Spacer(1));
+		chatContainer.addChild(new Text(theme().bold(theme().fg('accent', 'Loaded Resources')), 0, 0));
+		chatContainer.addChild(new Spacer(1));
+
+		// Skills
+		const skillsResult = (session.resourceLoader as any).getSkills?.() || { skills: [] };
+		const skills = skillsResult.skills || [];
+		if (skills.length > 0) {
+			chatContainer.addChild(new Text(`Skills: ${skills.map((s: any) => s.name).join(', ')}`, 0, 0));
+		}
+
+		// Prompts
+		const promptsResult = (session.resourceLoader as any).getPrompts?.() || { prompts: [] };
+		const prompts = promptsResult.prompts || [];
+		if (prompts.length > 0) {
+			chatContainer.addChild(new Text(`Prompts: ${prompts.map((p: any) => p.name).join(', ')}`, 0, 0));
+		}
+
+		// Extensions
+		const extensionsResult = (session.resourceLoader as any).getExtensions?.() || { extensions: [] };
+		const extensions = extensionsResult.extensions || [];
+		if (extensions.length > 0) {
+			chatContainer.addChild(new Text(`Extensions: ${extensions.length} loaded`, 0, 0));
+		}
+
+		// Themes (custom only)
+		const themesResult = (session.resourceLoader as any).getThemes?.() || { themes: [] };
+		const themes = themesResult.themes || [];
+		const customThemes = themes.filter((t: any) => t.sourcePath);
+		if (customThemes.length > 0) {
+			chatContainer.addChild(new Text(`Themes: ${customThemes.length} custom`, 0, 0));
+		}
+
+		// Context files
+		const agentsFiles = (session.resourceLoader as any).getAgentsFiles?.() || { agentsFiles: [] };
+		const contextFiles = agentsFiles.agentsFiles || [];
+		if (contextFiles.length > 0) {
+			chatContainer.addChild(new Text(`Context: ${contextFiles.length} files`, 0, 0));
+		}
+
+		chatContainer.addChild(new Spacer(1));
 	}
 
 	private renderInitialMessages(): void {
