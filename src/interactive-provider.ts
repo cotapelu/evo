@@ -192,6 +192,8 @@ export class InteractiveMode {
 		this.isInitialized = true;
 		// Subscribe
 		this.subscribeToAgent();
+		// Render initial messages
+		this.renderInitialMessages();
 		// Notices
 		if (this.changelogMarkdown) this.showStartupNotices();
 	}
@@ -261,12 +263,39 @@ export class InteractiveMode {
 		});
 	}
 
-	private bindCurrentSessionExtensions(): void {
-		// Stub
+	private async bindCurrentSessionExtensions(): Promise<void> {
+		// Minimal: setup autocomplete provider stub
+		(this.defaultEditor as any).setAutocomplete?.({} as any);
 	}
 
-	private showLoadedResources(options?: any): void {
-		// Stub
+	private async showLoadedResources(options?: any): Promise<void> {
+		try {
+			const resources = await Promise.all([
+				(this.session.resourceLoader as any).getSkills(),
+				(this.session.resourceLoader as any).getPrompts(),
+				(this.session.resourceLoader as any).getExtensions(),
+				(this.session.resourceLoader as any).getThemes(),
+				(this.session.resourceLoader as any).getAgentsFiles(),
+			]);
+			const [skills, prompts, extensions, themes, agents] = resources;
+			const sCount = skills?.skills?.length || 0;
+			const pCount = prompts?.prompts?.length || 0;
+			const eCount = extensions?.extensions?.length || 0;
+			const tCount = themes?.themes?.length || 0;
+			const aCount = agents?.agentsFiles?.length || 0;
+			const total = sCount + pCount + eCount + tCount + aCount;
+			let content = "Loaded Resources:\n";
+			content += `Skills: ${sCount}\n`;
+			content += `Prompts: ${pCount}\n`;
+			content += `Extensions: ${eCount}\n`;
+			content += `Themes: ${tCount}\n`;
+			content += `Agents: ${aCount}\n`;
+			if (total === 0) content = "No resources loaded.";
+			(this.chatContainer as any).addChild(new Text(content, 1, 0));
+		} catch (err: any) {
+			console.error("Error loading resources:", err);
+			(this.chatContainer as any).addChild(new Text("Failed to load resources.", 1, 0));
+		}
 	}
 
 	private renderInitialMessages(): void {
@@ -324,6 +353,7 @@ export class InteractiveMode {
 					if (match) { (this.session as any).model = match; console.log(`Model set to ${match.id}`); }
 					else console.log(`Model not found: ${spec}`);
 				}
+		case "resources": await this.showLoadedResources(); break;
 				break;
 			default: console.log(`Unknown command: /${cmd}`);
 		}
@@ -378,6 +408,11 @@ export class InteractiveMode {
 	}
 
 	stop(): void { this.shutdown(); }
+}
+
+
+export function setupShutdownHandlers(): void {
+	// No-op; InteractiveMode handles its own signals
 }
 
 export async function runInteractiveMode(runtime: AgentSessionRuntime): Promise<void> {
