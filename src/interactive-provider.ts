@@ -56,6 +56,7 @@ function rawKeyHint(keys: string | string[], desc: string): string { return `${k
 // COMPONENT: ExpandableText
 // ============================================================================
 
+// ExpandableText - Minimal custom (package doesn't export this specific component)
 class ExpandableText extends Text {
 	constructor(collapsed: string, expanded: string, expandedInitially = false, paddingX = 0, paddingY = 0) {
 		super(expandedInitially ? expanded : collapsed, paddingX, paddingY);
@@ -64,7 +65,7 @@ class ExpandableText extends Text {
 }
 
 // ============================================================================
-// FOOTER DATA PROVIDER (minimal)
+// FOOTER DATA PROVIDER (minimal custom - package only exports type)
 // ============================================================================
 
 class FooterDataProvider {
@@ -84,8 +85,10 @@ class FooterDataProvider {
 }
 type ReadonlyFooterDataProvider = Pick<FooterDataProvider, 'getGitBranch' | 'onBranchChange' | 'getExtensionStatuses' | 'getAvailableProviderCount'>;
 
+// KeybindingsManager - Using package export
+
 // ============================================================================
-// KEYBINDINGS MANAGER (minimal)
+// INTERACTIVE MODE
 // ============================================================================
 
 class KeybindingsManager {
@@ -93,10 +96,6 @@ class KeybindingsManager {
 	getKey(binding: string): string { return ""; }
 	getKeys(binding: string): string[] { return []; }
 }
-
-// ============================================================================
-// INTERACTIVE MODE
-// ============================================================================
 
 export class InteractiveMode {
 	private runtimeHost: AgentSessionRuntime;
@@ -109,7 +108,7 @@ export class InteractiveMode {
 	private editorContainer = new Container();
 	private widgetContainerAbove = new Container();
 	private widgetContainerBelow = new Container();
-	private keybindings = KeybindingsManager.create();
+	private keybindings = KeybindingsManager.create(); // Custom minimal (package exports type only)
 	private defaultEditor!: CustomEditor;
 	private editor!: any;
 	private footerDataProvider!: FooterDataProvider;
@@ -142,7 +141,7 @@ export class InteractiveMode {
 		});
 		this.editor = this.defaultEditor;
 		this.editorContainer.addChild(this.editor as any);
-		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd());
+		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd()); // Using package export
 		this.footer = new FooterComponent(this.session, this.footerDataProvider);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
 		initTheme((this.settingsManager as any).getTheme(), true);
