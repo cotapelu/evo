@@ -685,8 +685,32 @@ export class InteractiveMode {
 	}
 
 	// Placeholder methods (to be implemented later if needed)
-	private applyRuntimeSettings(): void {}
-	private rebindCurrentSession(): Promise<void> { return Promise.resolve(); }
+	private applyRuntimeSettings(): void {
+		this.footer.setSession?.(this.session);
+		this.footer.setAutoCompactEnabled?.(this.session.autoCompactionEnabled);
+		(this.footerDataProvider as any).setCwd?.(this.sessionManager.getCwd());
+		this.hideThinkingBlock = (this.settingsManager as any).getHideThinkingBlock?.() ?? false;
+		(this.ui as any).setShowHardwareCursor?.((this.settingsManager as any).getShowHardwareCursor?.());
+		(this.ui as any).setClearOnShrink?.((this.settingsManager as any).getClearOnShrink?.());
+		const editorPaddingX = (this.settingsManager as any).getEditorPaddingX?.();
+		const autocompleteMaxVisible = (this.settingsManager as any).getAutocompleteMaxVisible?.();
+		(this.defaultEditor as any).setPaddingX?.(editorPaddingX);
+		(this.defaultEditor as any).setAutocompleteMaxVisible?.(autocompleteMaxVisible);
+		if (this.editor !== this.defaultEditor) {
+			(this.editor as any).setPaddingX?.(editorPaddingX);
+			(this.editor as any).setAutocompleteMaxVisible?.(autocompleteMaxVisible);
+		}
+	}
+
+	private async rebindCurrentSession(): Promise<void> {
+		this.unsubscribe?.();
+		this.unsubscribe = undefined;
+		this.applyRuntimeSettings();
+		await this.bindCurrentSessionExtensions();
+		this.subscribeToAgent();
+		// Update terminal title
+		this.updateTerminalTitle();
+	}
 	private getMarkdownThemeWithSettings(): any { return {}; }
 	private updateAvailableProviderCount(): Promise<void> { return Promise.resolve(); }
 	private updateEditorBorderColor(): void {}
