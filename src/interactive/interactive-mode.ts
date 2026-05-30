@@ -121,6 +121,7 @@ export class InteractiveMode {
 
   async init(): Promise<void> {
     if (this.isInitialized) return;
+    const initStart = Date.now();
     this.registerSignalHandlers();
 
     // Load changelog
@@ -220,6 +221,9 @@ export class InteractiveMode {
     this.subscribeToAgent();
     this.renderInitialMessages();
     if (this.changelogMarkdown) this.showStartupNotices();
+
+    const initDuration = Date.now() - initStart;
+    console.log(`⏱️  InteractiveMode init: ${initDuration}ms`);
   }
 
   private buildHeader(): void {
