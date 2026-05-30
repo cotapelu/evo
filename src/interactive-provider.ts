@@ -23,6 +23,8 @@ import {
 	ThinkingSelectorComponent,
 	ModelSelectorComponent,
 } from "@earendil-works/pi-coding-agent";
+import { KeybindingsManager } from "./runtime/keybindings-manager.js";
+import { FooterDataProvider } from "./runtime/footer-data-provider.js";
 import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
@@ -65,37 +67,8 @@ class ExpandableText extends Text {
 }
 
 // ============================================================================
-// FOOTER DATA PROVIDER (minimal custom - package only exports type)
-// ============================================================================
-
-class FooterDataProvider {
-	private cwd: string;
-	private branch: string | null = null;
-	private listeners = new Set<() => void>();
-	constructor(cwd: string) { this.cwd = cwd; }
-	getGitBranch(): string | null { return this.branch; }
-	onBranchChange(cb: () => void): () => void { this.listeners.add(cb); return () => this.listeners.delete(cb); }
-	setCwd(cwd: string): void {}
-	dispose(): void { this.listeners.clear(); }
-	getExtensionStatuses(): Map<string, string> { return new Map(); }
-	getAvailableProviderCount(): number { return 0; }
-	setExtensionStatus(_: string, __: string | undefined): void {}
-	clearExtensionStatuses(): void {}
-	setAvailableProviderCount(_: number): void {}
-}
-type ReadonlyFooterDataProvider = Pick<FooterDataProvider, 'getGitBranch' | 'onBranchChange' | 'getExtensionStatuses' | 'getAvailableProviderCount'>;
-
-// KeybindingsManager - Using package export
-
-// ============================================================================
 // INTERACTIVE MODE
 // ============================================================================
-
-class KeybindingsManager {
-	static create(): KeybindingsManager { return new KeybindingsManager(); }
-	getKey(binding: string): string { return ""; }
-	getKeys(binding: string): string[] { return []; }
-}
 
 export class InteractiveMode {
 	private runtimeHost: AgentSessionRuntime;
@@ -108,7 +81,7 @@ export class InteractiveMode {
 	private editorContainer = new Container();
 	private widgetContainerAbove = new Container();
 	private widgetContainerBelow = new Container();
-	private keybindings = KeybindingsManager.create(); // Custom minimal (package exports type only)
+	private keybindings = KeybindingsManager.create();
 	private defaultEditor!: CustomEditor;
 	private editor!: any;
 	private footerDataProvider!: FooterDataProvider;
@@ -134,7 +107,7 @@ export class InteractiveMode {
 		this.options = options;
 		setKeybindings(this.keybindings as any);
 		initTheme((this.settingsManager as any).getTheme(), true);
-		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd()); // Using package export
+		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd());
 		this.footer = new FooterComponent(this.session, this.footerDataProvider);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
 	}
@@ -255,7 +228,6 @@ export class InteractiveMode {
 		this.chatContainer.addChild(new DynamicBorder());
 	}
 
-
 	private showThinkingSelector(): void {
 		const currentLevel = this.session.thinkingLevel;
 		const availableLevels: Array<"off" | "minimal" | "low" | "medium" | "high" | "xhigh"> = 
@@ -295,6 +267,7 @@ export class InteractiveMode {
 		);
 		this.ui.showOverlay(component);
 	}
+
 	private subscribeToAgent(): void {
 		this.unsubscribe = this.session.subscribe((event: any) => {
 			if (event.type === "message_end" && event.message?.role === "assistant") {
@@ -307,7 +280,6 @@ export class InteractiveMode {
 					expandByDefault: this.toolOutputExpanded,
 					hideThinking: this.hideThinkingBlock,
 				});
-				// Set initial expansion state
 				(toolComp as any).setExpanded?.(this.toolOutputExpanded);
 				this.toolComponents.push(toolComp as any);
 				(this.chatContainer as any).addChild(toolComp);
@@ -317,7 +289,6 @@ export class InteractiveMode {
 	}
 
 	private async bindCurrentSessionExtensions(): Promise<void> {
-		// Minimal: setup autocomplete provider stub
 		(this.defaultEditor as any).setAutocomplete?.({} as any);
 	}
 
@@ -363,9 +334,7 @@ export class InteractiveMode {
 		}
 	}
 
-	private setupKeyHandlers(): void {
-		// No global handlers
-	}
+	private setupKeyHandlers(): void {}
 
 	private setupEditorSubmitHandler(): void {
 		const onSubmit = async (text: string) => {
@@ -406,14 +375,13 @@ export class InteractiveMode {
 					if (match) { (this.session as any).model = match; console.log(`Model set to ${match.id}`); }
 					else console.log(`Model not found: ${spec}`);
 				}
-				case "thinking": await this.showThinkingSelector(); break;
-	case "models": await this.showModelSelector(); break;
-		case "resources": await this.showLoadedResources(); break;
 				break;
+			case "thinking": await this.showThinkingSelector(); break;
+			case "models": await this.showModelSelector(); break;
+			case "resources": await this.showLoadedResources(); break;
 			default: console.log(`Unknown command: /${cmd}`);
 		}
 	}
-
 
 	private handleGlobalKey(data: string): { consume?: boolean } | undefined {
 		if (matchesKey(data, "app.thinking.toggle" as KeyId)) {
@@ -429,13 +397,12 @@ export class InteractiveMode {
 			this.session.setThinkingLevel(levels[nextIdx]);
 			return { consume: true };
 		}
-	if (matchesKey(data, "app.model.select" as KeyId)) {
-		this.showModelSelector();
-		return { consume: true };
-	}
+		if (matchesKey(data, "app.model.select" as KeyId)) {
+			this.showModelSelector();
+			return { consume: true };
+		}
 		if (matchesKey(data, "app.tools.expand" as KeyId)) {
 			this.toolOutputExpanded = !this.toolOutputExpanded;
-			// Update existing tool components
 			for (const comp of this.toolComponents) {
 				(comp as any).setExpanded?.(this.toolOutputExpanded);
 			}
@@ -444,6 +411,7 @@ export class InteractiveMode {
 		}
 		return undefined;
 	}
+
 	private handleBash(noContext: boolean): void {
 		const text = this.editor.getText();
 		if (!text.trim()) return;
@@ -486,7 +454,6 @@ export class InteractiveMode {
 
 	async run(): Promise<void> {
 		await this.init();
-		// Version check (stub)
 		while (!this.shutdownRequested) {
 			await new Promise(r => setTimeout(r, 100));
 		}
@@ -495,10 +462,7 @@ export class InteractiveMode {
 	stop(): void { this.shutdown(); }
 }
 
-
-export function setupShutdownHandlers(): void {
-	// No-op; InteractiveMode handles its own signals
-}
+export function setupShutdownHandlers(): void {}
 
 export async function runInteractiveMode(runtime: AgentSessionRuntime): Promise<void> {
 	await new InteractiveMode(runtime).run();
