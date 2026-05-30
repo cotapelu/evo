@@ -19,9 +19,11 @@ import {
 	ToolExecutionComponent,
 	DynamicBorder,
 	getMarkdownTheme,
+	getSelectListTheme,
 	ThinkingSelectorComponent,
 	ModelSelectorComponent,
 } from "@earendil-works/pi-coding-agent";
+import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
 // CONFIG
@@ -37,16 +39,11 @@ function parseChangelog(content: string): any[] { return []; }
 function getNewEntries(all: any[], last: string): any[] { return []; }
 async function ensureTool(name: "fd" | "rg"): Promise<string> { return ""; }
 
-// ============================================================================
-// THEME (minimal)
-// ============================================================================
-
-interface Theme { bold(t: string): string; fg(c: string, t: string): string; }
-const defaultTheme: Theme = { bold: t => t, fg: (_, t) => t };
-let currentTheme = defaultTheme;
-function theme(): Theme { return currentTheme; }
-function initTheme(name: string, silent: boolean): void {}
-
+// Minimal theme for internal use
+const minimalTheme = { bold: (t: string) => t, fg: (_: string, t: string) => t };
+let currentTheme = minimalTheme;
+function theme() { return currentTheme; }
+function initTheme(name: string, silent: boolean) { piInitTheme(name, silent); }
 // ============================================================================
 // KEYBINDING HELPERS
 // ============================================================================
@@ -136,19 +133,10 @@ export class InteractiveMode {
 		this.runtimeHost = runtimeHost;
 		this.options = options;
 		setKeybindings(this.keybindings as any);
-		const editorPaddingX = (this.settingsManager as any).getEditorPaddingX();
-		const autocompleteMaxVisible = (this.settingsManager as any).getAutocompleteMaxVisible();
-		const themeObj = getMarkdownTheme() as any;
-		this.defaultEditor = new CustomEditor(undefined as any, themeObj, this.keybindings as any, {
-			paddingX: editorPaddingX,
-			autocompleteMaxVisible,
-		});
-		this.editor = this.defaultEditor;
-		this.editorContainer.addChild(this.editor as any);
+		initTheme((this.settingsManager as any).getTheme(), true);
 		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd()); // Using package export
 		this.footer = new FooterComponent(this.session, this.footerDataProvider);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
-		initTheme((this.settingsManager as any).getTheme(), true);
 	}
 
 	async init(): Promise<void> {
@@ -176,6 +164,19 @@ export class InteractiveMode {
 		// TUI
 		this.ui = new TUI(new ProcessTerminal(), (this.settingsManager as any).getShowHardwareCursor());
 		this.ui.setClearOnShrink((this.settingsManager as any).getClearOnShrink());
+		// Editor
+		const editorPaddingX = (this.settingsManager as any).getEditorPaddingX();
+		const autocompleteMaxVisible = (this.settingsManager as any).getAutocompleteMaxVisible();
+		const editorTheme = {
+			borderColor: (s: string) => theme().fg("border", s),
+			selectList: getSelectListTheme()
+		};
+		this.defaultEditor = new CustomEditor(this.ui, editorTheme as any, this.keybindings as any, {
+			paddingX: editorPaddingX,
+			autocompleteMaxVisible,
+		});
+		this.editor = this.defaultEditor;
+		this.editorContainer.addChild(this.editor as any);
 		// Layout
 		this.ui.addChild(this.headerContainer);
 		this.buildHeader();
@@ -385,7 +386,7 @@ export class InteractiveMode {
 				console.error("Prompt error:", error?.message || error);
 			}
 		};
-		(this.editor as any).on("submit", onSubmit);
+		this.editor.onSubmit = onSubmit;
 	}
 
 	private async handleSlashCommand(text: string): Promise<void> {
