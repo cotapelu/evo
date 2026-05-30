@@ -15,10 +15,15 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
     setClearOnShrink: jest.fn(),
   })),
   ProcessTerminal: jest.fn(),
-  Container: jest.fn().mockImplementation(() => ({
-    addChild: jest.fn(),
-    clear: jest.fn(),
-  })),
+  Container: jest.fn().mockImplementation(() => {
+    const instance = {
+      children: [],
+      addChild: jest.fn(function(child) { instance.children.push(child); }),
+      removeChild: jest.fn(function(child) { instance.children = instance.children.filter(c => c !== child); }),
+      clear: jest.fn(function() { instance.children = []; }),
+    };
+    return instance;
+  }),
   Text: (jest.fn() as any).mockImplementation((text?: string, px?: number, py?: number) => ({ text, px, py })),
   Spacer: jest.fn(),
   ExpandableText: jest.fn(),
@@ -27,7 +32,10 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
   fuzzyFilter: (items: any[], prefix: string, fn: any) => items,
   Markdown: jest.fn(),
   matchesKey: jest.fn(),
-  Loader: jest.fn(),
+  Loader: jest.fn().mockImplementation(() => ({
+    start: jest.fn(),
+    stop: jest.fn(),
+  })),
   TUI_KEYBINDINGS: {},
 }));
 
@@ -530,6 +538,47 @@ describe('InteractiveMode', () => {
     expect(fdPath).toBeNull();
     // Also verify mode.fdPath is set
     expect((mode as any).fdPath).toBe('');
+  });
+
+
+  describe('working indicator', () => {
+    it('shows loader on turn_start', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      // Override ui to have requestRender mock
+      mode.ui = { requestRender: jest.fn() };
+      const cb = session._cb;
+      cb({ type: 'turn_start' } as any);
+      expect(mode.loadingAnimation).toBeDefined();
+      expect(mode.statusContainer.addChild).toHaveBeenCalledWith(mode.loadingAnimation);
+      expect(mode.loadingAnimation.start).toHaveBeenCalled();
+      expect(mode.ui.requestRender).toHaveBeenCalled();
+    });
+
+    it('hides loader on turn_end', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      mode.ui = { requestRender: jest.fn() };
+      const cb = session._cb;
+      // First show
+      cb({ type: 'turn_start' } as any);
+      expect(mode.loadingAnimation).toBeDefined();
+      // Then hide
+      cb({ type: 'turn_end' } as any);
+      expect(mode.loadingAnimation.stop).toHaveBeenCalled();
+      expect(mode.statusContainer.removeChild).toHaveBeenCalledWith(mode.loadingAnimation);
+      expect(mode.ui.requestRender).toHaveBeenCalled();
+    });
+
+    it('does not show loader if workingVisible is false', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      mode.workingVisible = false;
+      await (mode as any).init();
+      mode.ui = { requestRender: jest.fn() };
+      const cb = session._cb;
+      cb({ type: 'turn_start' } as any);
+      expect(mode.loadingAnimation).toBeUndefined();
+    });
   });
 
   });
