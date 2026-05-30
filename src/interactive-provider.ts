@@ -30,7 +30,6 @@ import {
 import { KeybindingsManager } from "./runtime/keybindings-manager.js";
 import { FooterDataProvider } from "./runtime/footer-data-provider.js";
 import { ExpandableText } from "./interactive/components/expandable-text.js";
-import { SlashAutocompleteProvider } from "./interactive/slash-autocomplete.js";
 import { getChangelogPath, parseChangelog, getNewEntries } from "./interactive/utils/changelog.js";
 import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
@@ -95,7 +94,7 @@ export class InteractiveMode {
 	private toolComponents: ToolExecutionComponent[] = [];
 	private skillCommands = new Map<string, string>();
 	private shutdownRequested = false;
-	private fdPath?: string;
+	private fdPath = '';
 	private loadingAnimation?: any;
 	private defaultWorkingMessage = "Working...";
 	private workingVisible = true;
@@ -136,8 +135,16 @@ export class InteractiveMode {
 				}
 			}
 		} catch {}
-		// Ensure tools
-		try { await ensureTool("fd"); } catch (e) { console.warn("fd not available"); }
+
+		// Ensure tools (fd for file autocomplete)
+		let fdPath = '';
+		try {
+			fdPath = await ensureTool('fd');
+		} catch (e) {
+			console.warn('fd not available for file autocomplete');
+		}
+		this.fdPath = fdPath;
+		// TUI
 		// TUI
 		this.ui = new TUI(new ProcessTerminal(), (this.settingsManager as any).getShowHardwareCursor());
 		this.ui.setClearOnShrink((this.settingsManager as any).getClearOnShrink());
@@ -153,10 +160,21 @@ export class InteractiveMode {
 			autocompleteMaxVisible,
 		});
 		this.editor = this.defaultEditor;
-		// Setup autocomplete for slash commands
-		const slashProvider = new SlashAutocompleteProvider(BUILTIN_SLASH_COMMANDS);
-		(this.editor as any).setAutocomplete?.(slashProvider);
+
+		// Setup autocomplete
+		const slashCommands = BUILTIN_SLASH_COMMANDS.map(cmd => ({
+			value: cmd.name,
+			label: cmd.name,
+			description: cmd.description,
+		}));
+		const autocompleteProvider = new CombinedAutocompleteProvider(
+			slashCommands,
+			this.sessionManager.getCwd(),
+			this.fdPath || null
+		);
+		(this.editor as any).setAutocomplete?.(autocompleteProvider);
 		this.editorContainer.addChild(this.editor as any);
+
 		// Layout
 		this.ui.addChild(this.headerContainer);
 		this.buildHeader();

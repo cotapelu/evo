@@ -512,5 +512,25 @@ describe('InteractiveMode', () => {
       await (mode as any).showModelSelector();
       expect((mode as any).ui.showOverlay).toHaveBeenCalled();
     });
+
+  it('sets up CombinedAutocompleteProvider with slash commands, cwd and fdPath', async () => {
+    const { CombinedAutocompleteProvider } = await import('@earendil-works/pi-tui');
+    const mode = new (InteractiveMode as any)(runtime);
+    await (mode as any).init();
+    expect(CombinedAutocompleteProvider).toHaveBeenCalledTimes(1);
+    const [commands, cwd, fdPath] = (CombinedAutocompleteProvider as jest.Mock).mock.calls[0];
+    expect(Array.isArray(commands)).toBe(true);
+    expect(commands[0]).toMatchObject({
+      value: 'clear',
+      label: 'clear',
+      description: 'Clear chat',
+    });
+    expect(cwd).toBe('/tmp');
+    // fdPath should be null when fdPath is empty (this.fdPath || null)
+    expect(fdPath).toBeNull();
+    // Also verify mode.fdPath is set
+    expect((mode as any).fdPath).toBe('');
+  });
+
   });
 });
