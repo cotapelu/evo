@@ -9,6 +9,8 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
     stop: jest.fn(),
     keyHandler: jest.fn(),
     requestRender: jest.fn(),
+    addInputListener: jest.fn().mockReturnValue(() => {}),
+    showOverlay: jest.fn().mockReturnValue({ hide: jest.fn() }),
     terminal: { setTitle: jest.fn() },
     setClearOnShrink: jest.fn(),
   })),
@@ -23,6 +25,8 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
   setKeybindings: jest.fn(),
   CombinedAutocompleteProvider: jest.fn(),
   fuzzyFilter: (items: any[], prefix: string, fn: any) => items,
+  Markdown: jest.fn(),
+  matchesKey: jest.fn(),
 }));
 
 await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
@@ -43,6 +47,10 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   AssistantMessageComponent: jest.fn(),
   UserMessageComponent: jest.fn(),
   ToolExecutionComponent: jest.fn(),
+  DynamicBorder: jest.fn(),
+  getMarkdownTheme: jest.fn().mockReturnValue({}),
+  ThinkingSelectorComponent: jest.fn(),
+  ModelSelectorComponent: jest.fn(),
 }));
 
 await jest.unstable_mockModule('child_process', () => ({
@@ -458,6 +466,38 @@ describe('InteractiveMode', () => {
       await (mode as any).bindCurrentSessionExtensions();
 
       expect(mode.defaultEditor.setAutocomplete).toHaveBeenCalled();
+    });
+  });
+
+  describe('slash commands and UI', () => {
+    it('invokes showThinkingSelector on /thinking', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showThinkingSelector');
+      await (mode as any).handleSlashCommand('/thinking');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes showModelSelector on /models', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showModelSelector');
+      await (mode as any).handleSlashCommand('/models');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('showThinkingSelector calls ui.showOverlay', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      await (mode as any).showThinkingSelector();
+      expect((mode as any).ui.showOverlay).toHaveBeenCalled();
+    });
+
+    it('showModelSelector calls ui.showOverlay', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      await (mode as any).showModelSelector();
+      expect((mode as any).ui.showOverlay).toHaveBeenCalled();
     });
   });
 });

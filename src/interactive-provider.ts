@@ -7,7 +7,7 @@ import * as path from "node:path";
 import { spawnSync } from "child_process";
 
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings } from "@earendil-works/pi-tui";
+import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, Markdown, matchesKey, type KeyId } from "@earendil-works/pi-tui";
 
 import {
 	AgentSessionRuntime,
@@ -17,6 +17,10 @@ import {
 	AssistantMessageComponent,
 	UserMessageComponent,
 	ToolExecutionComponent,
+	DynamicBorder,
+	getMarkdownTheme,
+	ThinkingSelectorComponent,
+	ModelSelectorComponent,
 } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
@@ -42,7 +46,6 @@ const defaultTheme: Theme = { bold: t => t, fg: (_, t) => t };
 let currentTheme = defaultTheme;
 function theme(): Theme { return currentTheme; }
 function initTheme(name: string, silent: boolean): void {}
-function getMarkdownTheme(): any { return {}; }
 
 // ============================================================================
 // KEYBINDING HELPERS
@@ -120,6 +123,7 @@ export class InteractiveMode {
 	private startupNoticesShown = false;
 	private toolOutputExpanded = false;
 	private hideThinkingBlock = false;
+	private toolComponents: ToolExecutionComponent[] = [];
 	private skillCommands = new Map<string, string>();
 	private shutdownRequested = false;
 	private fdPath?: string;
@@ -188,6 +192,7 @@ export class InteractiveMode {
 		this.setupEditorSubmitHandler();
 		// Start
 		this.ui.start();
+		this.ui.addInputListener(this.handleGlobalKey.bind(this));
 		this.isInitialized = true;
 		// Subscribe
 		this.subscribeToAgent();
@@ -238,12 +243,57 @@ export class InteractiveMode {
 		if (this.startupNoticesShown || !this.changelogMarkdown) return;
 		this.startupNoticesShown = true;
 		if (this.chatContainer.children.length > 0) this.chatContainer.addChild(new Spacer(1));
+		// Top border
+		this.chatContainer.addChild(new DynamicBorder());
 		this.chatContainer.addChild(new Text(theme().bold(theme().fg("accent", "What's New")), 1, 0));
 		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Text(this.changelogMarkdown.slice(0, 1000), 1, 0));
-		this.chatContainer.addChild(new Spacer(1));
+		// Render full changelog as Markdown
+		const mdTheme = getMarkdownTheme();
+		this.chatContainer.addChild(new Markdown(this.changelogMarkdown, 1, 0, mdTheme));
+		// Bottom border
+		this.chatContainer.addChild(new DynamicBorder());
 	}
 
+
+	private showThinkingSelector(): void {
+		const currentLevel = this.session.thinkingLevel;
+		const availableLevels: Array<"off" | "minimal" | "low" | "medium" | "high" | "xhigh"> = 
+			["off", "minimal", "low", "medium", "high", "xhigh"];
+		const component = new ThinkingSelectorComponent(
+			currentLevel,
+			availableLevels,
+			(level) => {
+				this.session.setThinkingLevel(level);
+				this.ui.hideOverlay();
+			},
+			() => {
+				this.ui.hideOverlay();
+			}
+		);
+		this.ui.showOverlay(component);
+	}
+
+	private showModelSelector(): void {
+		const currentModel = this.session.model;
+		const settingsManager = this.session.settingsManager;
+		const modelRegistry = this.session.modelRegistry;
+		const scopedModels = this.session.scopedModels;
+		const component = new ModelSelectorComponent(
+			this.ui,
+			currentModel,
+			settingsManager,
+			modelRegistry,
+			scopedModels,
+			(model) => {
+				this.session.model = model;
+				this.ui.hideOverlay();
+			},
+			() => {
+				this.ui.hideOverlay();
+			}
+		);
+		this.ui.showOverlay(component);
+	}
 	private subscribeToAgent(): void {
 		this.unsubscribe = this.session.subscribe((event: any) => {
 			if (event.type === "message_end" && event.message?.role === "assistant") {
@@ -256,6 +306,9 @@ export class InteractiveMode {
 					expandByDefault: this.toolOutputExpanded,
 					hideThinking: this.hideThinkingBlock,
 				});
+				// Set initial expansion state
+				(toolComp as any).setExpanded?.(this.toolOutputExpanded);
+				this.toolComponents.push(toolComp as any);
 				(this.chatContainer as any).addChild(toolComp);
 				(this.ui as any).requestRender();
 			}
@@ -352,12 +405,44 @@ export class InteractiveMode {
 					if (match) { (this.session as any).model = match; console.log(`Model set to ${match.id}`); }
 					else console.log(`Model not found: ${spec}`);
 				}
+				case "thinking": await this.showThinkingSelector(); break;
+	case "models": await this.showModelSelector(); break;
 		case "resources": await this.showLoadedResources(); break;
 				break;
 			default: console.log(`Unknown command: /${cmd}`);
 		}
 	}
 
+
+	private handleGlobalKey(data: string): { consume?: boolean } | undefined {
+		if (matchesKey(data, "app.thinking.toggle" as KeyId)) {
+			this.showThinkingSelector();
+			return { consume: true };
+		}
+		if (matchesKey(data, "app.thinking.cycle" as KeyId)) {
+			const current = this.session.thinkingLevel;
+			const levels: Array<"off" | "minimal" | "low" | "medium" | "high" | "xhigh"> = 
+				["off", "minimal", "low", "medium", "high", "xhigh"];
+			const idx = levels.indexOf(current as any);
+			const nextIdx = (idx + 1) % levels.length;
+			this.session.setThinkingLevel(levels[nextIdx]);
+			return { consume: true };
+		}
+	if (matchesKey(data, "app.model.select" as KeyId)) {
+		this.showModelSelector();
+		return { consume: true };
+	}
+		if (matchesKey(data, "app.tools.expand" as KeyId)) {
+			this.toolOutputExpanded = !this.toolOutputExpanded;
+			// Update existing tool components
+			for (const comp of this.toolComponents) {
+				(comp as any).setExpanded?.(this.toolOutputExpanded);
+			}
+			this.ui.requestRender();
+			return { consume: true };
+		}
+		return undefined;
+	}
 	private handleBash(noContext: boolean): void {
 		const text = this.editor.getText();
 		if (!text.trim()) return;
