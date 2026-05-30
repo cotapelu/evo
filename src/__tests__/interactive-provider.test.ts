@@ -57,7 +57,9 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   parseSkillBlock: jest.fn(),
   AssistantMessageComponent: jest.fn(),
   UserMessageComponent: jest.fn(),
-  ToolExecutionComponent: jest.fn(),
+  ToolExecutionComponent: jest.fn().mockImplementation(() => ({
+    setExpanded: jest.fn(),
+  })),
   BashExecutionComponent: jest.fn().mockImplementation(() => ({
     appendOutput: jest.fn(),
     setComplete: jest.fn(),
@@ -625,6 +627,40 @@ describe('InteractiveMode', () => {
       expect(mode.chatContainer.addChild).toHaveBeenCalledWith(
         expect.objectContaining({ text: expect.stringContaining('Error') })
       );
+    });
+  });
+
+
+  describe('tool output expansion', () => {
+    it('toggles toolOutputExpanded and calls setExpanded on all tool components on app.tools.expand', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      // Mock matchesKey to treat ctrl+o as matching app.tools.expand
+      const { matchesKey } = await import('@earendil-works/pi-tui');
+      (matchesKey as jest.Mock).mockImplementation((data: string, keyId: string) => {
+        return keyId === 'app.tools.expand' && data === 'ctrl+o';
+      });
+
+      // Create mock tool components
+      const tool1 = { setExpanded: jest.fn() };
+      const tool2 = { setExpanded: jest.fn() };
+      mode.toolComponents = [tool1, tool2];
+
+      // Simulate pressing ctrl+o (first toggle)
+      const result = (mode as any).handleGlobalKey('ctrl+o');
+      expect(result?.consume).toBe(true);
+      expect(mode.toolOutputExpanded).toBe(true);
+      expect(tool1.setExpanded).toHaveBeenCalledWith(true);
+      expect(tool2.setExpanded).toHaveBeenCalledWith(true);
+
+      // Reset mocks
+      tool1.setExpanded.mockClear();
+      tool2.setExpanded.mockClear();
+      // Toggle back (second call)
+      (mode as any).handleGlobalKey('ctrl+o');
+      expect(mode.toolOutputExpanded).toBe(false);
+      expect(tool1.setExpanded).toHaveBeenCalledWith(false);
+      expect(tool2.setExpanded).toHaveBeenCalledWith(false);
     });
   });
 
