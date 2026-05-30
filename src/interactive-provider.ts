@@ -381,11 +381,24 @@ export class InteractiveMode {
 		const messages = (state as any).messages || [];
 		for (const msg of messages) {
 			if (msg.role === "user") {
-				this.chatContainer.addChild(new UserMessageComponent(msg as any));
+				const text = this.extractTextFromMessage(msg as any);
+				this.chatContainer.addChild(new UserMessageComponent(text));
 			} else if (msg.role === "assistant") {
 				this.chatContainer.addChild(new AssistantMessageComponent(msg as any));
 			}
 		}
+	}
+
+	private extractTextFromMessage(msg: any): string {
+		if (!msg.content) return "";
+		if (typeof msg.content === "string") return msg.content;
+		if (Array.isArray(msg.content)) {
+			return msg.content
+				.filter((c: any) => c.type === "text")
+				.map((c: any) => c.text)
+				.join("\n");
+		}
+		return "";
 	}
 
 	private setupKeyHandlers(): void {}
@@ -401,8 +414,7 @@ export class InteractiveMode {
 				this.handleBash(text.startsWith("!!"));
 				return;
 			}
-			const userMsg = { role: "user" as const, content: [{ type: "text" as const, text }] };
-			this.chatContainer.addChild(new UserMessageComponent(userMsg as any));
+			this.chatContainer.addChild(new UserMessageComponent(text));
 			try {
 				await this.session.prompt(text);
 			} catch (error: any) {
