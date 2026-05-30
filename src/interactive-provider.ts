@@ -30,6 +30,7 @@ import {
 import { KeybindingsManager } from "./runtime/keybindings-manager.js";
 import { FooterDataProvider } from "./runtime/footer-data-provider.js";
 import { ExpandableText } from "./interactive/components/expandable-text.js";
+import { SlashAutocompleteProvider } from "./interactive/slash-autocomplete.js";
 import { getChangelogPath, parseChangelog, getNewEntries } from "./interactive/utils/changelog.js";
 import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
@@ -148,6 +149,9 @@ export class InteractiveMode {
 			autocompleteMaxVisible,
 		});
 		this.editor = this.defaultEditor;
+		// Setup autocomplete for slash commands
+		const slashProvider = new SlashAutocompleteProvider(BUILTIN_SLASH_COMMANDS);
+		(this.editor as any).setAutocomplete?.(slashProvider);
 		this.editorContainer.addChild(this.editor as any);
 		// Layout
 		this.ui.addChild(this.headerContainer);
