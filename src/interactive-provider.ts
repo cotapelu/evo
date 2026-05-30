@@ -6,7 +6,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { spawnSync } from "child_process";
 
-import type { AssistantMessage } from "@earendil-works/pi-ai";
+import type { AssistantMessage, UserMessage } from "@earendil-works/pi-ai";
 import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, Markdown, matchesKey, type KeyId, CombinedAutocompleteProvider, Loader } from "@earendil-works/pi-tui";
 
 import {
@@ -381,7 +381,7 @@ export class InteractiveMode {
 		const messages = (state as any).messages || [];
 		for (const msg of messages) {
 			if (msg.role === "user") {
-				const text = this.extractTextFromMessage(msg as any);
+				const text = this.extractTextFromMessage(msg as UserMessage);
 				this.chatContainer.addChild(new UserMessageComponent(text));
 			} else if (msg.role === "assistant") {
 				this.chatContainer.addChild(new AssistantMessageComponent(msg as any));
@@ -389,16 +389,14 @@ export class InteractiveMode {
 		}
 	}
 
-	private extractTextFromMessage(msg: any): string {
+	private extractTextFromMessage(msg: UserMessage): string {
 		if (!msg.content) return "";
 		if (typeof msg.content === "string") return msg.content;
-		if (Array.isArray(msg.content)) {
-			return msg.content
-				.filter((c: any) => c.type === "text")
-				.map((c: any) => c.text)
-				.join("\n");
-		}
-		return "";
+		// Content is Array<TextContent | ImageContent>
+		return (msg.content as Array<{ type: string; text?: string }>)
+			.filter((c) => c.type === "text" && typeof c.text === "string")
+			.map((c) => c.text)
+			.join("\n");
 	}
 
 	private setupKeyHandlers(): void {}
