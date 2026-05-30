@@ -7,7 +7,7 @@ import * as path from "node:path";
 import { spawnSync } from "child_process";
 
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, Markdown, matchesKey, type KeyId } from "@earendil-works/pi-tui";
+import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, Markdown, matchesKey, type KeyId, CombinedAutocompleteProvider } from "@earendil-works/pi-tui";
 
 import {
 	AgentSessionRuntime,
@@ -37,6 +37,18 @@ import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
 const APP_NAME = "Pi";
 const VERSION = "0.1.0";
+
+// Built-in slash commands (minimal set)
+const BUILTIN_SLASH_COMMANDS = [
+	{ name: 'clear', description: 'Clear chat' },
+	{ name: 'exit', description: 'Exit' },
+	{ name: 'quit', description: 'Exit' },
+	{ name: 'compact', description: 'Compact session' },
+	{ name: 'model', description: 'Cycle or select model' },
+	{ name: 'thinking', description: 'Select thinking level' },
+	{ name: 'models', description: 'Open model selector' },
+	{ name: 'resources', description: 'Show loaded resources' },
+];
 
 function getAgentDir(): string { return path.join(os.homedir(), ".pi"); }
 function getDocsPath(): string { return path.join(getAgentDir(), "docs"); }
