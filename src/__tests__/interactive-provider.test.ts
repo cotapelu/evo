@@ -458,10 +458,14 @@ describe('InteractiveMode', () => {
       };
 
       mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
 
       await (mode as any).renderInitialMessages();
 
       expect(mode.chatContainer.addChild).toHaveBeenCalledTimes(2);
+      // Check that user message was created with the extracted text
+      const userMsgCall = UserMessageComponent.mock.calls.find(call => call[0] === 'hello');
+      expect(userMsgCall).toBeDefined();
     });
 
     it('should handle empty messages', async () => {
@@ -474,6 +478,141 @@ describe('InteractiveMode', () => {
       await (mode as any).renderInitialMessages();
 
       expect(mode.chatContainer.addChild).not.toHaveBeenCalled();
+    });
+
+    it('should handle user message with string content (legacy format)', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+
+      session.state = {
+        messages: [
+          { role: 'user', content: 'plain text message' },
+        ],
+      };
+
+      mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
+
+      await (mode as any).renderInitialMessages();
+
+      // Should call UserMessageComponent with the string directly
+      expect(UserMessageComponent).toHaveBeenCalledWith('plain text message');
+    });
+
+    it('should concatenate multiple text blocks from array content', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+
+      session.state = {
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'first part' },
+              { type: 'text', text: 'second part' },
+              { type: 'text', text: 'third part' },
+            ],
+          },
+        ],
+      };
+
+      mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
+
+      await (mode as any).renderInitialMessages();
+
+      // Should concatenate with newlines
+      expect(UserMessageComponent).toHaveBeenCalledWith('first part\nsecond part\nthird part');
+    });
+
+    it('should filter out non-text blocks from content array', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+
+      session.state = {
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', mediaType: 'image/png', data: 'abc' } },
+              { type: 'text', text: 'only text shown' },
+              { type: 'toolResult', toolName: 'test', result: {} },
+            ],
+          },
+        ],
+      };
+
+      mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
+
+      await (mode as any).renderInitialMessages();
+
+      // Should only extract text blocks
+      expect(UserMessageComponent).toHaveBeenCalledWith('only text shown');
+    });
+
+    it('should handle user message with empty content array', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+
+      session.state = {
+        messages: [
+          { role: 'user', content: [] },
+        ],
+      };
+
+      mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
+
+      await (mode as any).renderInitialMessages();
+
+      expect(UserMessageComponent).toHaveBeenCalledWith('');
+    });
+
+    it('should handle user message with null or undefined content', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+
+      session.state = {
+        messages: [
+          { role: 'user', content: null },
+          { role: 'user', content: undefined },
+        ],
+      };
+
+      mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
+
+      await (mode as any).renderInitialMessages();
+
+      expect(UserMessageComponent).toHaveBeenCalledTimes(2);
+      const calls = UserMessageComponent.mock.calls;
+      expect(calls[0][0]).toBe('');
+      expect(calls[1][0]).toBe('');
+    });
+
+    it('should handle user message with no text blocks in array', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+
+      session.state = {
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', mediaType: 'image/png', data: 'abc' } },
+              { type: 'toolResult', toolName: 'test', result: {} },
+            ],
+          },
+        ],
+      };
+
+      mode.chatContainer.addChild = jest.fn();
+      const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
+
+      await (mode as any).renderInitialMessages();
+
+      expect(UserMessageComponent).toHaveBeenCalledWith('');
     });
   });
 
