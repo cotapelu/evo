@@ -58,6 +58,10 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   AssistantMessageComponent: jest.fn(),
   UserMessageComponent: jest.fn(),
   ToolExecutionComponent: jest.fn(),
+  BashExecutionComponent: jest.fn().mockImplementation(() => ({
+    appendOutput: jest.fn(),
+    setComplete: jest.fn(),
+  })),
   DynamicBorder: jest.fn(),
   getMarkdownTheme: jest.fn().mockReturnValue({}),
   getSelectListTheme: jest.fn().mockReturnValue({}),
@@ -582,4 +586,46 @@ describe('InteractiveMode', () => {
   });
 
   });
+
+  describe('bash handling', () => {
+    it('uses BashExecutionComponent for ! commands', async () => {
+      const { BashExecutionComponent } = await import('@earendil-works/pi-coding-agent');
+      const { spawnSync } = await import('child_process');
+      const BashComp = BashExecutionComponent as jest.Mock;
+      (spawnSync as any).mockReturnValue({ stdout: 'output', stderr: '', exitCode: 0 });
+
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      mode.defaultEditor.getText = () => '!cmd';
+      mode.chatContainer.addChild = jest.fn();
+
+      const submit = (mode.defaultEditor as any).onSubmit;
+      await submit('!cmd');
+
+      expect(BashComp).toHaveBeenCalledTimes(1);
+      expect(BashComp).toHaveBeenCalledWith('cmd', mode.ui, false);
+      const instance = BashComp.mock.results[0]?.value;
+      expect(instance?.appendOutput).toHaveBeenCalledWith('output');
+      expect(instance?.setComplete).toHaveBeenCalledWith(0, false, undefined, undefined);
+      expect(mode.chatContainer.addChild).toHaveBeenCalledWith(instance);
+    });
+
+    it('shows error Text on bash exception', async () => {
+      const { spawnSync } = await import('child_process');
+      (spawnSync as any).mockImplementation(() => { throw new Error('fail'); });
+
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      mode.defaultEditor.getText = () => '!bad';
+      mode.chatContainer.addChild = jest.fn();
+
+      const submit = (mode.defaultEditor as any).onSubmit;
+      await submit('!bad');
+
+      expect(mode.chatContainer.addChild).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('Error') })
+      );
+    });
+  });
+
 });

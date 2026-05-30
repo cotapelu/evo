@@ -473,9 +473,13 @@ export class InteractiveMode {
 		try {
 			const result = spawnSync(cmd, { shell: true, encoding: "utf8" });
 			const output = result.stdout || result.stderr || "";
-			const header = theme().bold(`$ ${cmd}`);
-			const outputStyled = output.split('\n').map(line => theme().dim(line)).join('\n');
-			this.chatContainer.addChild(new Text(`${header}\n${outputStyled}`, 1, 0) as any);
+			// Use BashExecutionComponent for better display
+			const BashComp = BashExecutionComponent as any;
+			const bashComponent = new BashComp(cmd, this.ui, noContext);
+			bashComponent.appendOutput(output);
+			const exitCode = (result as any).exitCode ?? (result as any).status ?? 0;
+			bashComponent.setComplete(exitCode, false, undefined, undefined);
+			this.chatContainer.addChild(bashComponent as any);
 			this.ui.requestRender();
 		} catch (e: any) {
 			this.chatContainer.addChild(new Text(`Error: ${e.message}`, 1, 0) as any);
