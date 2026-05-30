@@ -27,6 +27,8 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
   fuzzyFilter: (items: any[], prefix: string, fn: any) => items,
   Markdown: jest.fn(),
   matchesKey: jest.fn(),
+  Loader: jest.fn(),
+  TUI_KEYBINDINGS: {},
 }));
 
 await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
@@ -36,6 +38,7 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
     off: jest.fn(),
     setText: jest.fn(),
     getText: () => '',
+    onSubmit: undefined as any,
   })),
   FooterComponent: jest.fn().mockImplementation(() => ({
     setSession: jest.fn(),
@@ -49,6 +52,11 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   ToolExecutionComponent: jest.fn(),
   DynamicBorder: jest.fn(),
   getMarkdownTheme: jest.fn().mockReturnValue({}),
+  getSelectListTheme: jest.fn().mockReturnValue({}),
+  keyHint: jest.fn((a,b)=>a),
+  keyText: jest.fn((a)=>a),
+  rawKeyHint: jest.fn((a,b)=>a),
+  initTheme: jest.fn(),
   ThinkingSelectorComponent: jest.fn(),
   ModelSelectorComponent: jest.fn(),
 }));
@@ -132,12 +140,17 @@ describe('InteractiveMode', () => {
       expect(mode.hideThinkingBlock).toBe(false);
     });
 
-    it('creates keybindings and components', () => {
+    it('creates keybindings and footer data provider', () => {
       const mode = new (InteractiveMode as any)(runtime);
       expect(mode.keybindings).toBeDefined();
+      expect(mode.footerDataProvider).toBeDefined();
+    });
+
+    it('initializes editor in init', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
       expect(mode.defaultEditor).toBeDefined();
       expect(mode.footer).toBeDefined();
-      expect(mode.footerDataProvider).toBeDefined();
     });
   });
 
@@ -317,7 +330,7 @@ describe('InteractiveMode', () => {
       await (mode as any).init();
       mode.defaultEditor.getText = () => 'test';
       mode.defaultEditor.setText = jest.fn();
-      const submitHandler = mode.defaultEditor.on.mock.calls.find((c: any) => c[0] === 'submit')[1];
+      const submitHandler = (mode.defaultEditor as any).onSubmit;
       await submitHandler('test');
       expect(session.prompt).toHaveBeenCalledWith('test');
     });
@@ -327,7 +340,7 @@ describe('InteractiveMode', () => {
       await (mode as any).init();
       mode.defaultEditor.getText = () => 'test';
       mode.defaultEditor.setText = jest.fn();
-      const submitHandler = mode.defaultEditor.on.mock.calls.find((c: any) => c[0] === 'submit')[1];
+      const submitHandler = (mode.defaultEditor as any).onSubmit;
       await submitHandler('test');
       expect(mode.defaultEditor.setText).toHaveBeenCalledWith('');
     });
@@ -337,7 +350,7 @@ describe('InteractiveMode', () => {
       await (mode as any).init();
       mode.defaultEditor.getText = () => 'test';
       const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
-      const submitHandler = mode.defaultEditor.on.mock.calls.find((c: any) => c[0] === 'submit')[1];
+      const submitHandler = (mode.defaultEditor as any).onSubmit;
       await submitHandler('test');
       expect(mode.chatContainer.addChild).toHaveBeenCalledWith(expect.any(UserMessageComponent));
     });
@@ -348,7 +361,7 @@ describe('InteractiveMode', () => {
       const mode = new (InteractiveMode as any)(runtime);
       await (mode as any).init();
       mode.defaultEditor.getText = () => 'test';
-      const submitHandler = mode.defaultEditor.on.mock.calls.find((c: any) => c[0] === 'submit')[1];
+      const submitHandler = (mode.defaultEditor as any).onSubmit;
       await submitHandler('test');
       expect(log).toHaveBeenCalledWith(expect.stringContaining('Prompt error'), expect.anything());
       log.mockRestore();
