@@ -30,6 +30,7 @@ import {
 import { KeybindingsManager } from "./runtime/keybindings-manager.js";
 import { FooterDataProvider } from "./runtime/footer-data-provider.js";
 import { ExpandableText } from "./interactive/components/expandable-text.js";
+import { getChangelogPath, parseChangelog, getNewEntries } from "./interactive/utils/changelog.js";
 import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
@@ -51,11 +52,6 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'resources', description: 'Show loaded resources' },
 ];
 
-function getAgentDir(): string { return path.join(os.homedir(), ".pi"); }
-function getDocsPath(): string { return path.join(getAgentDir(), "docs"); }
-function getChangelogPath(): string { return path.join(getDocsPath(), "CHANGELOG.md"); }
-function parseChangelog(content: string): any[] { return []; }
-function getNewEntries(all: any[], last: string): any[] { return []; }
 async function ensureTool(name: "fd" | "rg"): Promise<string> { return ""; }
 
 // Minimal theme for internal use
