@@ -56,7 +56,11 @@ const BUILTIN_SLASH_COMMANDS = [
 async function ensureTool(name: "fd" | "rg"): Promise<string> { return ""; }
 
 // Minimal theme for internal use
-const minimalTheme = { bold: (t: string) => t, fg: (_: string, t: string) => t };
+const minimalTheme = { 
+	bold: (t: string) => t, 
+	fg: (_: string, t: string) => t,
+	dim: (t: string) => t
+};
 let currentTheme = minimalTheme;
 function theme() { return currentTheme; }
 function initTheme(name: string, silent: boolean) { piInitTheme(name, silent); }
@@ -451,10 +455,12 @@ export class InteractiveMode {
 		try {
 			const result = spawnSync(cmd, { shell: true, encoding: "utf8" });
 			const output = result.stdout || result.stderr || "";
-			this.chatContainer.addChild(new Text(`$ ${cmd}\n${output}`, 0, 0) as any);
+			const header = theme().bold(`$ ${cmd}`);
+			const outputStyled = output.split('\n').map(line => theme().dim(line)).join('\n');
+			this.chatContainer.addChild(new Text(`${header}\n${outputStyled}`, 1, 0) as any);
 			this.ui.requestRender();
 		} catch (e: any) {
-			this.chatContainer.addChild(new Text(`Error: ${e.message}`, 0, 0) as any);
+			this.chatContainer.addChild(new Text(`Error: ${e.message}`, 1, 0) as any);
 			this.ui.requestRender();
 		}
 		this.editor.setText("");
