@@ -22,9 +22,13 @@ import {
 	getSelectListTheme,
 	ThinkingSelectorComponent,
 	ModelSelectorComponent,
+	keyHint,
+	keyText,
+	rawKeyHint,
 } from "@earendil-works/pi-coding-agent";
 import { KeybindingsManager } from "./runtime/keybindings-manager.js";
 import { FooterDataProvider } from "./runtime/footer-data-provider.js";
+import { ExpandableText } from "./interactive/components/expandable-text.js";
 import { initTheme as piInitTheme } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
@@ -46,25 +50,6 @@ const minimalTheme = { bold: (t: string) => t, fg: (_: string, t: string) => t }
 let currentTheme = minimalTheme;
 function theme() { return currentTheme; }
 function initTheme(name: string, silent: boolean) { piInitTheme(name, silent); }
-// ============================================================================
-// KEYBINDING HELPERS
-// ============================================================================
-
-function keyHint(keybinding: string, desc: string): string { return `${keybinding} ${desc}`; }
-function keyText(keyId: string): string { return keyId; }
-function rawKeyHint(keys: string | string[], desc: string): string { return `${keys} ${desc}`; }
-
-// ============================================================================
-// COMPONENT: ExpandableText
-// ============================================================================
-
-// ExpandableText - Minimal custom (package doesn't export this specific component)
-class ExpandableText extends Text {
-	constructor(collapsed: string, expanded: string, expandedInitially = false, paddingX = 0, paddingY = 0) {
-		super(expandedInitially ? expanded : collapsed, paddingX, paddingY);
-	}
-	setExpanded(e: boolean): void {}
-}
 
 // ============================================================================
 // INTERACTIVE MODE
