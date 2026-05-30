@@ -17,6 +17,7 @@ import {
 	AssistantMessageComponent,
 	UserMessageComponent,
 	ToolExecutionComponent,
+	BashExecutionComponent,
 	DynamicBorder,
 	getMarkdownTheme,
 	getSelectListTheme,
