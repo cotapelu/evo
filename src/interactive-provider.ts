@@ -7,7 +7,7 @@ import * as path from "node:path";
 import { spawnSync } from "child_process";
 
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, Markdown, matchesKey, type KeyId, CombinedAutocompleteProvider } from "@earendil-works/pi-tui";
+import { TUI, ProcessTerminal, Container, Text, Spacer, setKeybindings, Markdown, matchesKey, type KeyId, CombinedAutocompleteProvider, Loader } from "@earendil-works/pi-tui";
 
 import {
 	AgentSessionRuntime,
@@ -95,6 +95,11 @@ export class InteractiveMode {
 	private skillCommands = new Map<string, string>();
 	private shutdownRequested = false;
 	private fdPath?: string;
+	private loadingAnimation?: any;
+	private defaultWorkingMessage = "Working...";
+	private workingVisible = true;
+	private lastStatusSpacer?: any;
+	private lastStatusText?: any;
 
 	private get session(): any { return this.runtimeHost.session; }
 	private get settingsManager(): any { return this.session.settingsManager; }
@@ -268,7 +273,11 @@ export class InteractiveMode {
 
 	private subscribeToAgent(): void {
 		this.unsubscribe = this.session.subscribe((event: any) => {
-			if (event.type === "message_end" && event.message?.role === "assistant") {
+			if (event.type === "turn_start") {
+				this.showWorkingIndicator();
+			} else if (event.type === "turn_end") {
+				this.hideWorkingIndicator();
+			} else if (event.type === "message_end" && event.message?.role === "assistant") {
 				const comp = new AssistantMessageComponent(event.message);
 				this.chatContainer.addChild(comp);
 				this.ui.requestRender();
@@ -284,6 +293,31 @@ export class InteractiveMode {
 				(this.ui as any).requestRender();
 			}
 		});
+	}
+
+	private showWorkingIndicator(): void {
+		if (!this.workingVisible) return;
+		if (!this.loadingAnimation) {
+			this.loadingAnimation = new Loader(
+				this.ui,
+				(spinner) => theme().fg("accent", spinner),
+				(text) => theme().fg("muted", text),
+				this.defaultWorkingMessage
+			);
+		}
+		if (this.statusContainer.children.indexOf(this.loadingAnimation) === -1) {
+			this.statusContainer.addChild(this.loadingAnimation);
+		}
+		this.loadingAnimation.start();
+		(this.ui as any).requestRender();
+	}
+
+	private hideWorkingIndicator(): void {
+		if (this.loadingAnimation) {
+			this.loadingAnimation.stop();
+			this.statusContainer.removeChild(this.loadingAnimation);
+			(this.ui as any).requestRender();
+		}
 	}
 
 	private async bindCurrentSessionExtensions(): Promise<void> {
