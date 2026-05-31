@@ -17,7 +17,7 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, DynamicBorder, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -541,6 +541,10 @@ export class InteractiveMode {
 		return textParts.join('\n');
 	}
 
+	private getRegisteredToolDefinition(toolName: string): any {
+		return this.session.getToolDefinition?.(toolName);
+	}
+
 	private updatePendingMessagesDisplay(): void {
 		// Minimal: no queue support yet
 		this.pendingMessagesContainer.clear?.();
@@ -584,8 +588,30 @@ export class InteractiveMode {
 	}
 
 	private async handleModelCommand(text: string): Promise<void> {
-		// TODO: model selection
-		this.showError?.('Model selection not implemented yet');
+		try {
+			const search = text.replace(/^\/model\s*/, '').trim();
+			if (!search) {
+				// Cycle forward
+				const result = await this.session.cycleModel?.('forward');
+				if (result) {
+				 this.showStatus?.(`Model: ${result.model?.id ?? 'unknown'}`);
+				} else {
+					this.showStatus?.('No model change');
+				}
+			} else {
+				// Find exact match among available models
+				const models = await this.session.modelRegistry.getAvailable?.();
+				const match = models?.find((m: any) => m.id === search || `${m.provider}/${m.id}` === search);
+				if (match) {
+					await this.session.setModel?.(match);
+					this.showStatus?.(`Model: ${match.id}`);
+				} else {
+					this.showError?.(`Model not found: ${search}`);
+				}
+			}
+		} catch (e: any) {
+			this.showError?.(e.message ?? 'Model error');
+		}
 	}
 
 	private async handleBashCommand(command: string, exclude: boolean): Promise<void> {
