@@ -73,6 +73,9 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   initTheme: jest.fn(),
   ThinkingSelectorComponent: jest.fn(),
   ModelSelectorComponent: jest.fn(),
+  SettingsSelectorComponent: jest.fn(),
+  SessionSelectorComponent: jest.fn(),
+  TreeSelectorComponent: jest.fn(),
 }));
 
 await jest.unstable_mockModule('child_process', () => ({

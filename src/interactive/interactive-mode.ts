@@ -6,9 +6,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -17,8 +17,7 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, SessionSelectorComponent, TreeSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
-import { SessionManager } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, ThinkingSelectorComponent, SessionSelectorComponent, TreeSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -93,6 +92,7 @@ export class InteractiveMode {
 	private streamingComponent?: any;
 	private streamingMessage?: any;
 	private pendingTools = new Map<string, any>();
+	private toolComponents: any[] = []; // for global toggle expansion
 	private autoCompactionLoader?: Loader;
 	private autoCompactionEscapeHandler?: () => void;
 	private compactionQueuedMessages: Array<{ text: string; mode: 'steer' | 'followUp' }> = [];
@@ -158,12 +158,6 @@ export class InteractiveMode {
 		this.editor = this.defaultEditor;
 		this.editorContainer.addChild?.(this.editor as any);
 
-		// Simple autocomplete with slash commands only
-		const slashCommands = BUILTIN_SLASH_COMMANDS.map((cmd: any) => ({ value: cmd.name, label: cmd.name, description: cmd.description }));
-		// @ts-ignore
-		const autocompleteProvider = new CombinedAutocompleteProvider(slashCommands, this.sessionManager.getCwd?.() ?? process.cwd(), this.fdPath || null);
-		this.defaultEditor.setAutocompleteProvider?.(autocompleteProvider);
-
 		// Layout
 		this.ui.addChild?.(this.headerContainer);
 		this.buildHeader();
@@ -184,9 +178,12 @@ export class InteractiveMode {
 		// Setup
 		this.setupKeyHandlers?.();
 		this.setupEditorSubmitHandler?.();
+		this.bindCurrentSessionExtensions?.();
 
 		// Start
 		this.ui.start?.();
+		// Subscribe to agent events
+		this.subscribeToAgent?.();
 		this.isInitialized = true;
 
 		// Bind extensions
@@ -233,45 +230,18 @@ export class InteractiveMode {
 	}
 
 	private setupEditorSubmitHandler(): void {
-		const self = this;
 		this.defaultEditor.onSubmit = async (text: string) => {
 			text = text.trim();
 			if (!text) return;
 
-			if (text === '/clear' || text === '/new') {
-				this.handleClearCommand?.();
+			// Slash commands
+			if (text.startsWith('/')) {
 				this.editor.setText?.('');
+				await this.handleSlashCommand?.(text);
 				return;
 			}
-			if (text === '/exit' || text === '/quit') {
-				void this.shutdown?.();
-				return;
-			}
-			if (text === '/tree') {
-				this.editor.setText?.('');
-				this.showTreeSelector?.();
-				return;
-			}
-			if (text === '/session' || text === '/resume') {
-				this.editor.setText?.('');
-				this.showSessionSelector?.();
-				return;
-			}
-			if (text === '/models') {
-				this.editor.setText?.('');
-				await this.handleModelsCommand?.();
-				return;
-			}
-			if (text.startsWith('/model')) {
-				this.editor.setText?.('');
-				await this.handleModelCommand?.(text);
-				return;
-			}
-			if (text === '/settings') {
-				this.editor.setText?.('');
-				await this.showSettingsSelector?.();
-				return;
-			}
+
+			// Bash commands
 			if (text.startsWith('!')) {
 				const isExcluded = text.startsWith('!!');
 				const cmd = isExcluded ? text.slice(2).trim() : text.slice(1).trim();
@@ -282,6 +252,7 @@ export class InteractiveMode {
 				return;
 			}
 
+			// Normal prompt
 			this.chatContainer.addChild?.(new UserMessageComponent(text, this.getMarkdownThemeWithSettings?.()));
 			try {
 				await this.session.prompt?.(text);
@@ -289,6 +260,91 @@ export class InteractiveMode {
 				this.showError?.(error?.message || 'Error');
 			}
 		};
+	}
+
+	/** Handle slash command routing */
+	private async handleSlashCommand(command: string): Promise<void> {
+		switch (command) {
+			case '/clear':
+			case '/new':
+				await this.handleClearCommand?.();
+				break;
+			case '/exit':
+			case '/quit':
+				void this.shutdown?.();
+				break;
+			case '/thinking':
+				this.showThinkingSelector?.();
+				break;
+			case '/models':
+				this.showModelSelector?.();
+				break;
+			case '/tree':
+				this.showTreeSelector?.();
+				break;
+			case '/session':
+			case '/resume':
+				await this.showSessionSelector?.();
+				break;
+			case '/settings':
+				await this.showSettingsSelector?.();
+				break;
+			case '/reload':
+				// TODO: reload extensions
+				this.showStatus?.('Reload not implemented');
+				break;
+			case '/hotkeys':
+				// TODO: show hotkeys
+				this.showStatus?.('Hotkeys not implemented');
+				break;
+			default:
+				if (command.startsWith('/model')) {
+					await this.handleModelCommand?.(command);
+					break;
+				}
+				this.showWarning?.(`Unknown command: ${command}`);
+				break;
+		}
+	}
+
+	/** Bind session extensions including autocomplete provider */
+	private bindCurrentSessionExtensions(): void {
+		// Build slash command list for autocomplete
+		const slashCommands = BUILTIN_SLASH_COMMANDS.map((cmd: any) => ({
+			value: cmd.name,
+			label: cmd.name,
+			description: cmd.description,
+		}));
+		// @ts-ignore: CombinedAutocompleteProvider expects provider implementations
+		const autocompleteProvider = new CombinedAutocompleteProvider(
+			slashCommands,
+			this.sessionManager.getCwd?.() ?? process.cwd(),
+			this.fdPath || null
+		);
+		this.defaultEditor.setAutocompleteProvider?.(autocompleteProvider);
+	}
+
+	/** Handle global keypresses (e.g., from keybindings manager) */
+	private handleGlobalKey(keyData: string): { consume: boolean } | undefined {
+		// Tool output expansion toggle
+		if (matchesKey(keyData, 'app.tools.expand' as any)) {
+			this.toolOutputExpanded = !this.toolOutputExpanded;
+			// Apply to all tracked tool components
+			if (this.toolComponents.length > 0) {
+				this.toolComponents.forEach((t) => t.setExpanded?.(this.toolOutputExpanded));
+			} else {
+				for (const child of this.chatContainer.children) {
+					// @ts-ignore
+					if (child instanceof ToolExecutionComponent) {
+						// @ts-ignore
+						child.setExpanded?.(this.toolOutputExpanded);
+					}
+				}
+			}
+			return { consume: true };
+		}
+		// Add more global keys here if needed
+		return undefined;
 	}
 
 	private getUserInput(): Promise<string> {
@@ -347,7 +403,8 @@ export class InteractiveMode {
 		const messages = state.messages || [];
 		for (const msg of messages) {
 			if (msg.role === 'user') {
-				this.chatContainer.addChild?.(new UserMessageComponent(msg.content, this.getMarkdownThemeWithSettings?.()));
+				const textContent = this.getUserMessageText?.(msg);
+				this.chatContainer.addChild?.(new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings?.()));
 			} else if (msg.role === 'assistant') {
 				this.chatContainer.addChild?.(new AssistantMessageComponent(msg, false, this.getMarkdownThemeWithSettings?.()));
 			}
@@ -416,10 +473,12 @@ export class InteractiveMode {
 
 		switch (event.type) {
 			case 'agent_start':
+			case 'turn_start':
 				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(true);
 				this.showWorkingIndicator?.();
 				break;
 			case 'agent_end':
+			case 'turn_end':
 				this.stopWorkingLoader?.();
 				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(false);
 				await this.checkShutdownRequested?.();
@@ -475,6 +534,8 @@ export class InteractiveMode {
 					component.setExpanded?.(this.toolOutputExpanded);
 					this.chatContainer.addChild?.(component);
 					this.pendingTools.set?.(event.toolCallId, component);
+					// Track for global expansion toggle
+					this.toolComponents.push(component);
 				}
 				component.markExecutionStarted?.();
 				this.ui.requestRender?.();
@@ -645,7 +706,30 @@ export class InteractiveMode {
 		this.ui.showOverlay?.(selector);
 	}
 
-	private showSessionSelector(): void {
+	private showThinkingSelector(): void {
+		const currentLevel = this.session.thinkingLevel || 'off';
+		const availableLevels = this.session.getAvailableThinkingLevels?.() ?? ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
+		const selector = new ThinkingSelectorComponent(
+			currentLevel,
+			availableLevels,
+			async (level) => {
+				this.ui.hideOverlay?.();
+				await this.session.setThinkingLevel?.(level);
+				this.footer.invalidate?.();
+				this.updateEditorBorderColor?.();
+				this.showStatus?.(`Thinking level: ${level}`);
+			},
+			() => {
+				this.ui.hideOverlay?.();
+			}
+		);
+		this.ui.showOverlay?.(selector);
+	}
+
+	private async showSessionSelector(): Promise<void> {
+		// Dynamic import to avoid top-level dependency in tests
+		const { SessionManager } = await import('@earendil-works/pi-coding-agent');
+
 		// Loaders for SessionSelectorComponent
 		const currentSessionsLoader: any = async (onProgress?: any) => {
 			const cwd = this.sessionManager.getCwd?.();
@@ -915,6 +999,16 @@ export class InteractiveMode {
 	}
 
 	private async handleBashCommand(command: string, exclude: boolean): Promise<void> {
+		// Reject null bytes for safety
+		if (command.includes('\0')) {
+			this.showError?.('Command contains null bytes');
+			return;
+		}
+		// Warn on dangerous patterns
+		if (/rm\s+-rf\s+\//.test(command)) {
+			console.warn('Security warning: potentially dangerous command', command);
+		}
+
 		try {
 			const result = spawnSync(command, { shell: true, encoding: 'utf8' });
 			const output = result.stdout || result.stderr || '';
@@ -925,6 +1019,8 @@ export class InteractiveMode {
 			this.chatContainer.addChild?.(bashComponent);
 			this.ui.requestRender?.();
 		} catch (e: any) {
+			// Log to console.error for diagnostic
+			console.error('BashCommandError:', command, e);
 			this.showError?.(`Bash error: ${e.message}`);
 		}
 	}
