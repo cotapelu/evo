@@ -433,6 +433,50 @@ export class InteractiveMode {
 					this.ui.requestRender?.();
 				}
 				break;
+
+			case 'tool_execution_start': {
+				let component = this.pendingTools.get?.(event.toolCallId);
+				if (!component) {
+					component = new ToolExecutionComponent(
+						event.toolName,
+						event.toolCallId,
+						event.args,
+						{
+							showImages: this.settingsManager.getShowImages?.(),
+							imageWidthCells: this.settingsManager.getImageWidthCells?.(),
+						},
+						this.getRegisteredToolDefinition?.(event.toolName),
+						this.ui,
+						this.sessionManager.getCwd?.(),
+					);
+					component.setExpanded?.(this.toolOutputExpanded);
+					this.chatContainer.addChild?.(component);
+					this.pendingTools.set?.(event.toolCallId, component);
+				}
+				component.markExecutionStarted?.();
+				this.ui.requestRender?.();
+				break;
+			}
+
+			case 'tool_execution_update': {
+				const component = this.pendingTools.get?.(event.toolCallId);
+				if (component) {
+					component.updateResult?.({ ...event.partialResult, isError: false }, true);
+					this.ui.requestRender?.();
+				}
+				break;
+			}
+
+			case 'tool_execution_end': {
+				const component = this.pendingTools.get?.(event.toolCallId);
+				if (component) {
+					component.updateResult?.({ ...event.result, isError: event.isError });
+					this.pendingTools.delete?.(event.toolCallId);
+					this.ui.requestRender?.();
+				}
+				break;
+			}
+
 			default:
 				break;
 		}
