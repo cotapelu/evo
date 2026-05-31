@@ -36,6 +36,12 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
     start: jest.fn(),
     stop: jest.fn(),
   })),
+  SelectList: jest.fn().mockImplementation(() => ({
+    handleInput: jest.fn(),
+    onSelect: undefined as any,
+    onCancel: undefined as any,
+    setSelected: jest.fn(),
+  })),
   TUI_KEYBINDINGS: {},
 }));
 

@@ -18,31 +18,34 @@ This file tracks the step-by-step migration of `src/interactive/interactive-mode
 - ✅ Working indicator (loader)
 - ✅ Basic slash commands: /clear, /exit, /quit, /model, /models (stub)
 
-### Phase 3: Upgrade Slash Commands & Dialogs (In Progress)
+### Phase 3: Upgrade Slash Commands & Dialogs (Completed)
 - ✅ Model selector overlay (`showModelSelector`, ModelSelectorComponent)
 - ✅ `/models` command working
 - ✅ Settings selector (`showSettingsSelector`, SettingsSelectorComponent) with all settings callbacks
 - ✅ Tree selector (`showTreeSelector`, TreeSelectorComponent) with navigation
 - ✅ Session selector (`showSessionSelector`, SessionSelectorComponent) with resume, rename
 - ✅ `/tree` and `/session` commands
+- ✅ `/thinking` command (ThinkingSelectorComponent)
 - ✅ Tool rendering (BashExecutionComponent, ToolExecutionComponent)
 - ✅ Header and startup notices
 - ✅ Build passes and commits made
 
 ### Phase 4: Remaining Features
-- ⏳ `/thinking` command ( ThinkingSelectorComponent )
 - ⏳ `/hotkeys` command (display keybindings)
 - ⏳ `/clone` and `/fork` commands
 - ⏳ `/export` and `/import` commands
 - ⏳ `/name` command (session naming)
 - ⏳ `/changelog` command
 - ⏳ `/debug` command
-- ⏳ `/reload` command (extensions)
+- ⏳ `/reload` command (extensions - full implementation)
 - ⏳ Extension UI context (`createExtensionUIContext`)
-- ⏳ Compaction UI (auto-compaction loader, escape handling)
+- ⏳ Compaction UI enhancements (auto-compaction loader visual, escape handling)
 - ⏳ Follow-up and queue UI
 - ⏳ Resource loading display with diagnostics
-- ⏳ Full tests
+- ⏳ Full tests (unit + integration)
+- ⏳ Error handling improvements and edge cases
+- ⏳ Performance benchmarks
+- ⏳ Final verification (manual smoke tests)
 
 ### Phase 5: Polish & Optimization
 - Error handling improvements
@@ -65,10 +68,26 @@ This file tracks the step-by-step migration of `src/interactive/interactive-mode
 | Settings selection | ✅ | SettingsSelectorComponent overlay |
 | Tree navigation | ✅ | TreeSelectorComponent + navigateTree |
 | Session management | ✅ | SessionSelectorComponent + switchSession |
+| Thinking selection | ✅ | ThinkingSelectorComponent |
 | Theme handling | ✅ | initTheme, settings callbacks |
 | Autocomplete | ✅ | slash commands + fd/rg |
 | Startup notices | ✅ | changelog, version check |
 | Build | ✅ | `npm run build` passes |
+| Extension UI context | ⏳ | createExtensionUIContext needed |
+| Hotkeys display | ⏳ | `/hotkeys` command stub |
+| Session operations (clone/fork) | ⏳ | `/clone`, `/fork` missing |
+| Export/Import | ⏳ | `/export`, `/import` missing |
+| Session naming | ⏳ | `/name` missing |
+| Changelog display | ⏳ | `/changelog` missing |
+| Debug info | ⏳ | `/debug` missing |
+| Reload extensions | ⏳ | `/reload` stub only |
+| Compaction UI | ⏳ | Auto-compaction loader visual, escape handling |
+| Follow-up & queue UI | ⏳ | Not implemented |
+| Resource loading diagnostics | ⏳ | showLoadedResources stub only |
+| Full tests | ⏳ | Unit + integration tests |
+| Error handling | ⏳ | Edge cases, better error messages |
+| Performance | ⏳ | Benchmarks, optimizations |
+| Final verification | ⏳ | Manual smoke tests |
 
 ---
 

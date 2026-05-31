@@ -8,7 +8,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -24,7 +24,7 @@ import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/change
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
-import { theme } from './theme/theme.js';
+import { theme, initTheme as localInitTheme } from './theme/theme.js';
 
 // Minimal slash commands (since package may not export directly)
 const BUILTIN_SLASH_COMMANDS = [
@@ -37,6 +37,9 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'models', description: 'Open model selector' },
 	{ name: 'tree', description: 'Session tree navigation' },
 	{ name: 'session', description: 'Resume or manage sessions' },
+	{ name: 'hotkeys', description: 'Show keybindings' },
+	{ name: 'clone', description: 'Clone current session to a new file' },
+	{ name: 'fork', description: 'Fork session at a point' },
 	{ name: 'reload', description: 'Reload extensions' },
 ];
 
@@ -139,6 +142,9 @@ export class InteractiveMode {
 			console.error('[Changelog]', e);
 		}
 
+
+		// Initialize theme
+		piInitTheme?.();
 
 		// TUI
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
@@ -297,12 +303,56 @@ export class InteractiveMode {
 				await this.showSettingsSelector?.();
 				break;
 			case '/reload':
-				// TODO: reload extensions
-				this.showStatus?.('Reload not implemented');
+				this.reloadResources?.();
 				break;
 			case '/hotkeys':
-				// TODO: show hotkeys
-				this.showStatus?.('Hotkeys not implemented');
+				this.showHotkeys?.();
+				break;
+			case '/clone':
+				const cloneArg = command.slice(6).trim();
+				if (!cloneArg) {
+					this.showWarning?.('Usage: /clone <new session name>');
+				} else {
+					await this.cloneSession?.(cloneArg);
+				}
+				break;
+			case '/fork':
+				const forkArg = command.slice(5).trim();
+				if (!forkArg) {
+					this.showWarning?.('Usage: /fork <new session name>');
+				} else {
+					await this.forkSession?.(forkArg);
+				}
+				break;
+			case '/debug':
+				this.toggleDebug?.();
+				break;
+			case '/changelog':
+				this.showChangelog?.();
+				break;
+			case '/name':
+				const nameArg = command.slice(5).trim();
+				if (!nameArg) {
+					this.showWarning?.('Usage: /name <new name>');
+				} else {
+					this.renameSession?.(nameArg);
+				}
+				break;
+			case '/export':
+				const exportArg = command.slice(7).trim();
+				if (exportArg) {
+					this.exportSession?.(exportArg);
+				} else {
+					this.exportSession?.();
+				}
+				break;
+			case '/import':
+				const importArg = command.slice(7).trim();
+				if (importArg) {
+					this.importSession?.(importArg);
+				} else {
+					this.showWarning?.('Usage: /import <file path>');
+				}
 				break;
 			default:
 				if (command === '/model') {
@@ -895,7 +945,8 @@ export class InteractiveMode {
 				await piInitTheme?.();
 				this.ui.invalidate?.();
 			},
-			onHideThinkingBlockChange: (hidden) => {
+
+		onHideThinkingBlockChange: (hidden) => {
 				this.hideThinkingBlock = hidden;
 				this.settingsManager.setHideThinkingBlock?.(hidden);
 				// Rebuild chat to apply visibility
@@ -960,6 +1011,40 @@ export class InteractiveMode {
 		this.editorContainer.addChild?.(selector);
 		this.ui.setFocus?.(selector);
 		this.ui.requestRender?.();
+	}
+
+	// ============================================================================
+	// Hotkeys Selector
+	// ============================================================================
+
+	private showHotkeys(): void {
+		const config = this.keybindings.getEffectiveConfig();
+		const items = Object.entries(config).map(([key, keys]) => {
+			const keyDisplay = Array.isArray(keys) ? keys.join(', ') : keys;
+			return {
+				value: key,
+				label: `${keyText(key as any)} (${keyDisplay})`,
+				description: '',
+			};
+		}).sort((a, b) => a.label.localeCompare(b.label));
+
+		const selector = new SelectList(
+			items,
+			Math.min(items.length, 15),
+			{
+				selectedPrefix: (t: string) => this.theme().fg('accent', '►'),
+				selectedText: (t: string) => this.theme().fg('accent', t),
+				description: (t: string) => this.theme().fg('dim', t),
+				scrollInfo: (t: string) => this.theme().fg('muted', t),
+				noMatch: (t: string) => this.theme().fg('warning', t),
+			}
+		);
+		selector.onSelect = () => {}; // no-op, just view
+		selector.onCancel = () => {
+			this.ui.hideOverlay?.();
+		};
+
+		this.ui.showOverlay?.(selector);
 	}
 
 	// ============================================================================
@@ -1033,6 +1118,107 @@ export class InteractiveMode {
 	private async handleModelsCommand(): Promise<void> {
 		// Show model selector
 		await this.showModelSelector?.();
+	}
+
+	// ============================================================================
+	// Additional Slash Command Handlers
+	// ============================================================================
+
+	private reloadResources(): void {
+		// TODO: implement full extension reload logic
+		this.showStatus?.('Reload not implemented');
+	}
+
+	private toggleDebug(): void {
+		// TODO: show debug info
+		this.showStatus?.('Debug toggle not implemented');
+	}
+
+	private showChangelog(): void {
+		if (this.changelogMarkdown) {
+			if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
+			this.chatContainer.addChild?.(new DynamicBorder());
+			const th = this.theme();
+			this.chatContainer.addChild?.(new Text(th.bold(th.fg('accent', "Changelog")), 1, 0));
+			this.chatContainer.addChild?.(new Spacer(1));
+			const mdTheme = getMarkdownTheme?.();
+			this.chatContainer.addChild?.(new Markdown(this.changelogMarkdown, 1, 0, mdTheme));
+			this.chatContainer.addChild?.(new DynamicBorder());
+			this.ui.requestRender?.();
+		} else {
+			this.showStatus?.('No changelog available');
+		}
+	}
+
+	private renameSession(name: string): void {
+		try {
+			this.sessionManager.appendSessionInfo?.(name);
+			this.showStatus?.(`Session renamed to: ${name}`);
+		} catch (e: any) {
+			this.showError?.(`Rename failed: ${e.message}`);
+		}
+	}
+
+	private async cloneSession(newName: string): Promise<void> {
+		const leafId = this.sessionManager.getLeafId?.();
+		if (!leafId) {
+			this.showError?.('No current entry to clone');
+			return;
+		}
+		try {
+			const result = await this.runtimeHost.fork?.(leafId, { position: 'at' });
+			if (result?.cancelled) {
+				this.showStatus?.('Clone cancelled');
+				return;
+			}
+			// After fork, the runtimeHost.session points to new session; optionally rename
+			if (newName) {
+				this.sessionManager.appendSessionInfo?.(newName);
+			}
+			// Refresh UI
+			this.chatContainer.clear?.();
+			this.renderCurrentSessionState?.();
+			this.editor.setText?.('');
+			this.showStatus?.(`Session cloned${newName ? ` as ${newName}` : ''}`);
+		} catch (e: any) {
+			console.error('Clone error:', e);
+			this.showError?.(`Clone failed: ${e.message}`);
+		}
+	}
+
+	private async forkSession(newName: string): Promise<void> {
+		const leafId = this.sessionManager.getLeafId?.();
+		if (!leafId) {
+			this.showError?.('No entry to fork from');
+			return;
+		}
+		try {
+			const result = await this.runtimeHost.fork?.(leafId);
+			if (result?.cancelled) {
+				this.showStatus?.('Fork cancelled');
+				return;
+			}
+			if (newName) {
+				this.sessionManager.appendSessionInfo?.(newName);
+			}
+			this.chatContainer.clear?.();
+			this.renderCurrentSessionState?.();
+			this.editor.setText?.('');
+			this.showStatus?.(`Session forked${newName ? ` as ${newName}` : ''}`);
+		} catch (e: any) {
+			console.error('Fork error:', e);
+			this.showError?.(`Fork failed: ${e.message}`);
+		}
+	}
+
+	private exportSession(filePath?: string): void {
+		// TODO: implement session export
+		this.showStatus?.(`Export not implemented${filePath ? `: ${filePath}` : ''}`);
+	}
+
+	private importSession(filePath: string): void {
+		// TODO: implement session import
+		this.showStatus?.(`Import not implemented: ${filePath}`);
 	}
 
 	/** Execute a bash command string (internal) */
