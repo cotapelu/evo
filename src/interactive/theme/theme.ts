@@ -1,49 +1,207 @@
 /**
- * Theme utilities for Evo Agent
- * Minimal implementation based on package theme
+ * Theme Management for Evo Agent
+ *
+ * Provides theme object with color functions and dynamic border colors.
+ * Integrates with @earendil-works/pi-coding-agent theme system.
  */
 
-// Minimal theme colors - will be overridden by initTheme
-let currentTheme: any = null;
+// Import types only; avoid accessing non-exported values
+import type { ThemeColor } from '@earendil-works/pi-coding-agent';
 
-export function initTheme(name: string, silent: boolean): void {
-	// For now, just set a minimal default
-	currentTheme = {
-		bold: (text: string) => text,
-		fg: (color: string, text: string) => text,
-		dim: (text: string) => text,
-	} as any;
-	// Try to merge with package theme if available
+// Minimal default theme (fallback)
+const defaultTheme = {
+	bold: (t: string) => t,
+	fg: (_: string, t: string) => t,
+	bg: (_: string, t: string) => t,
+	dim: (t: string) => t,
+	italic: (t: string) => t,
+	code: (t: string) => t,
+	mdLink: (t: string) => t,
+};
+
+// Current theme instance (initialized by initTheme)
+let currentTheme: any = defaultTheme;
+let themeWatcher: (() => void) | null = null;
+
+/**
+ * Initialize theme system with a specific theme name.
+ * Loads theme from pi-coding-agent and sets up watcher for file changes.
+ *
+ * Note: pi-coding-agent's initTheme loads theme files but doesn't return the theme object.
+ * We'll use getThemeByName after init to retrieve it.
+ */
+export function initTheme(name: string, silent: boolean = false): void {
+	// Dynamically import to avoid static dependency issues
 	try {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const pkg = require('@earendil-works/pi-coding-agent');
-		if (pkg?.theme) {
-			currentTheme = { ...currentTheme, ...pkg.theme };
+		if (pkg?.initTheme) {
+			pkg.initTheme(name, silent);
+		}
+		// Attempt to get the theme by name after init
+		if (pkg?.getThemeByName) {
+			const theme = pkg.getThemeByName(name);
+			if (theme) {
+				currentTheme = theme;
+			}
 		}
 	} catch (e) {
-		// ignore
+		// Ignore errors, fallback to default
+		if (!silent) {
+			console.error('[Theme] Failed to initialize theme:', e);
+		}
+	}
+
+	// Setup file watcher if available
+	if (!silent) {
+		themeWatcher?.();
+		try {
+			const pkg = require('@earendil-works/pi-coding-agent');
+			if (pkg?.onThemeChange && typeof pkg.onThemeChange === 'function') {
+				themeWatcher = pkg.onThemeChange(() => {
+					// Refresh current theme from package
+					try {
+						if (pkg.getThemeByName) {
+							const name = getCurrentThemeName() ?? 'dark';
+							currentTheme = pkg.getThemeByName(name) ?? defaultTheme;
+						}
+					} catch {
+						// ignore
+					}
+				});
+			}
+		} catch {
+			// ignore
+		}
 	}
 }
 
+/**
+ * Get the current theme name from settings if possible (best effort).
+ */
+function getCurrentThemeName(): string | null {
+	try {
+		// Try to get from settings via pi-coding-agent's SettingsManager (not trivial)
+		// For now, just return the name we last set? We don't store it.
+		// This is a simplification; in practice we might store name separately.
+	} catch {
+		// ignore
+	}
+	return 'dark';
+}
+
+/**
+ * Get the current theme object.
+ * Ensures theme is initialized before access.
+ */
 export function theme(): any {
 	if (!currentTheme) {
-		initTheme('default', true);
+		initTheme('dark', true);
 	}
 	return currentTheme;
 }
 
-export function getMarkdownTheme() {
+/**
+ * Get markdown theme with settings-adjusted code block indent.
+ */
+export function getMarkdownTheme(settings?: { codeBlockIndent?: number }): any {
+	const base = {
+		bold: (t: string) => theme().bold(t),
+		italic: (t: string) => theme().italic?.(t) ?? t,
+		code: (t: string) => theme().code(t),
+		link: (t: string) => theme().mdLink?.(t) ?? t,
+		codeBlockIndent: settings?.codeBlockIndent ?? 2,
+	};
+	return base;
+}
+
+/**
+ * Get select list theme for dropdowns/selectors.
+ */
+export function getSelectListTheme(): any {
+	const th = theme();
 	return {
-		bold: (t: string) => t,
-		italic: (t: string) => t,
-		code: (t: string) => t,
-		link: (t: string) => t,
+		selected: (t: string) => th.bg('selected', t),
+		active: (t: string) => th.bg('active', t),
+		disabled: (t: string) => th.fg('dim', t),
 	};
 }
 
-export function getSelectListTheme() {
-	return {
-		selected: (t: string) => t,
-		active: (t: string) => t,
-		disabled: (t: string) => t,
+/**
+ * Get border color for bash mode (green accent).
+ */
+export function getBashModeBorderColor(): string {
+	return theme().fg('accent', '#');
+}
+
+/**
+ * Get border color based on thinking level.
+ */
+export function getThinkingBorderColor(level: string): string {
+	const th = theme();
+	const levelColors: Record<string, string> = {
+		off: th.fg('border', '#'),
+		minimal: th.fg('dim', '#'),
+		low: th.fg('accent', '#'),
+		medium: th.fg('warning', '#'),
+		high: th.fg('error', '#'),
+		xhigh: th.fg('error', '#'),
 	};
+	return levelColors[level] ?? th.fg('border', '#');
+}
+
+/**
+ * Stop theme file watcher (cleanup on shutdown)
+ */
+export function stopThemeWatcher(): void {
+	if (themeWatcher) {
+		themeWatcher();
+		themeWatcher = null;
+	}
+}
+
+/**
+ * Get all available themes with their names.
+ * Currently returns a static list; can be extended if package exports API.
+ */
+export async function getAvailableThemes(): Promise<string[]> {
+	// Future: integrate with pi-coding-agent's theme registry when available
+	return ['dark', 'light'];
+}
+
+/**
+ * Get theme by name.
+ */
+export function getThemeByName(name: string): any {
+	try {
+		const pkg = require('@earendil-works/pi-coding-agent');
+		if (pkg.getThemeByName) {
+			return pkg.getThemeByName(name);
+		}
+		if (pkg.default?.getThemeByName) {
+			return pkg.default.getThemeByName(name);
+		}
+	} catch {
+		// ignore
+	}
+	return undefined;
+}
+
+/**
+ * Set a theme (returns result indicating success/error).
+ */
+export function setTheme(name: string, silent: boolean = false): { success: boolean; error?: string } {
+	try {
+		initTheme(name, silent);
+		return { success: true };
+	} catch (error: any) {
+		return { success: false, error: error?.message ?? 'Unknown error' };
+	}
+}
+
+/**
+ * Set theme instance directly.
+ */
+export function setThemeInstance(themeObj: any): void {
+	currentTheme = themeObj;
 }

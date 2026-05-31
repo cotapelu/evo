@@ -1,15 +1,16 @@
 /**
- * Minimal KeybindingsManager implementation for Evo Agent
- * Provides keybinding matching functionality
+ * KeybindingsManager for Evo Agent
+ * Manages keybinding registration and matching for app and extension shortcuts.
  */
 
-import { TUI_KEYBINDINGS, matchesKey } from '@earendil-works/pi-tui';
+import { TUI_KEYBINDINGS, matchesKey, type KeyId } from '@earendil-works/pi-tui';
 
 export class KeybindingsManager {
 	private keysById = new Map<string, string[]>();
+	private extensionShortcuts = new Map<string, { handler: () => void | { consume?: boolean; data?: string } }>();
 
 	constructor() {
-		// Initialize with TUI keybindings
+		// Initialize with TUI keybindings (editor navigation, etc.)
 		for (const [id, def] of Object.entries(TUI_KEYBINDINGS)) {
 			const keys = Array.isArray(def.defaultKeys) ? def.defaultKeys : [def.defaultKeys];
 			this.keysById.set(id, keys);
@@ -37,13 +38,12 @@ export class KeybindingsManager {
 	}
 
 	/**
-	 * Check if input data matches a keybinding
+	 * Check if input data matches a keybinding (app or extension)
 	 */
 	matches(data: string, keybinding: string): boolean {
 		const keys = this.keysById.get(keybinding) || [];
 		for (const key of keys) {
-			// @ts-expect-error matchesKey expects KeyId but string works at runtime
-			if (matchesKey(data, key)) return true;
+			if (matchesKey(data, key as KeyId)) return true;
 		}
 		return false;
 	}
@@ -61,6 +61,51 @@ export class KeybindingsManager {
 	 */
 	getKeys(binding: string): string[] {
 		return this.keysById.get(binding) || [];
+	}
+
+	/**
+	 * Get the effective keybinding config (for extension conflict checking)
+	 * Returns a record of binding ID to its key strings (single or array).
+	 */
+	getEffectiveConfig(): Record<string, string | string[]> {
+		const config: Record<string, string | string[]> = {};
+		for (const [id, keys] of this.keysById) {
+			config[id] = keys.length === 1 ? keys[0] : keys;
+		}
+		return config;
+	}
+
+	/**
+	 * Register an extension shortcut.
+	 * @param keybinding - The key combination string (e.g., 'ctrl+e')
+	 * @param handler - Function to call when shortcut triggered
+	 */
+	registerExtensionShortcut(keybinding: string, handler: () => void | { consume?: boolean; data?: string }): void {
+		this.keysById.set(`extension:${keybinding}`, [keybinding]);
+		this.extensionShortcuts.set(keybinding, { handler });
+	}
+
+	/**
+	 * Get all registered extension shortcuts as a Map.
+	 * Key: keybinding string, Value: { handler, description?, extensionPath? }
+	 */
+	getExtensionShortcuts(): Map<string, { handler: () => void | { consume?: boolean; data?: string } }> {
+		return new Map(this.extensionShortcuts);
+	}
+
+	/**
+	 * Handle a key data event, checking extension shortcuts.
+	 * Returns result if handled, undefined if not.
+	 */
+	handleExtensionShortcut(data: string): { consume?: boolean; data?: string } | undefined {
+		for (const [key, { handler }] of this.extensionShortcuts) {
+			if (matchesKey(data, key as KeyId)) {
+				const result = handler();
+				// Cast to allow void returns (treat as undefined)
+				return result as { consume?: boolean; data?: string } | undefined;
+			}
+		}
+		return undefined;
 	}
 
 	/**
