@@ -767,6 +767,63 @@ describe('InteractiveMode', () => {
         expect.objectContaining({ text: expect.stringContaining('Error') })
       );
     });
+
+    it('rejects command with null byte', async () => {
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      mode.defaultEditor.getText = () => '!echo\0bad';
+      mode.chatContainer.addChild = jest.fn();
+      const { spawnSync } = await import('child_process');
+
+      const submit = (mode.defaultEditor as any).onSubmit;
+      await submit('!echo\0bad');
+
+      expect(spawnSync).not.toHaveBeenCalled();
+      expect(mode.chatContainer.addChild).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('null bytes') })
+      );
+    });
+
+    it('logs warning for dangerous command pattern', async () => {
+      const warnSpy = jest.spyOn(console, 'warn');
+      const { spawnSync } = await import('child_process');
+      (spawnSync as any).mockReturnValue({ status: 0, stdout: '', stderr: '' });
+
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      mode.defaultEditor.getText = () => '!rm -rf /';
+      mode.chatContainer.addChild = jest.fn();
+
+      const submit = (mode.defaultEditor as any).onSubmit;
+      await submit('!rm -rf /');
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Security'),
+        expect.stringContaining('rm -rf /')
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('logs error with command context on spawn failure', async () => {
+      const errorSpy = jest.spyOn(console, 'error');
+      const { spawnSync } = await import('child_process');
+      (spawnSync as any).mockImplementation(() => { throw new Error('spawn failed'); });
+
+      const mode = new (InteractiveMode as any)(runtime);
+      await (mode as any).init();
+      mode.defaultEditor.getText = () => '!failing-cmd';
+      mode.chatContainer.addChild = jest.fn();
+
+      const submit = (mode.defaultEditor as any).onSubmit;
+      await submit('!failing-cmd');
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('BashCommandError'),
+        expect.stringContaining('failing-cmd'),
+        expect.any(Error)
+      );
+      errorSpy.mockRestore();
+    });
   });
 
 

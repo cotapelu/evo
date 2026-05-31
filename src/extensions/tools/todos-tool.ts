@@ -224,8 +224,9 @@ function normalizeParams(params: unknown): any {
         if (typeof parsed === "object" && parsed !== null) {
           normalized.add_phase = parsed;
         }
-      } catch {
+      } catch (e) {
         // Keep original if parse fails
+        console.debug('[TodosTool] Failed to parse addPhase.name as JSON, keeping as string:', e instanceof Error ? e.message : e);
       }
     }
   }
@@ -235,8 +236,10 @@ function normalizeParams(params: unknown): any {
     if (addPhase.tasks && typeof addPhase.tasks === "string") {
       try {
         addPhase.tasks = JSON.parse(addPhase.tasks);
-      } catch {
+      } catch (e) {
+        // Fallback: comma-separated list
         addPhase.tasks = (addPhase.tasks as string).split(",").map((s) => ({ content: s.trim() }));
+        console.debug('[TodosTool] tasks string not JSON, interpreted as comma-separated list:', e instanceof Error ? e.message : e);
       }
     }
   }
@@ -865,7 +868,10 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
               content: `[System: Todo ${op}] ${summaryText.split("\n")[0]}`,
               display: false
             }, { triggerTurn: false });
-          } catch {}
+          } catch (e) {
+            // Non-critical: system message failure shouldn't break the tool
+            console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          }
         }
 
         return {

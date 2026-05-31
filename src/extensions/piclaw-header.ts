@@ -18,8 +18,8 @@ try {
         if (pkg.name) PICLAW_APP_NAME = pkg.name;
         if (pkg.version) PICLAW_VERSION = pkg.version;
     }
-} catch {
-    // ignore
+} catch (e) {
+    console.debug('[PiclawHeader] Using default app name/version (could not read package.json):', e instanceof Error ? e.message : e);
 }
 
 async function checkForUpdate(): Promise<string | undefined> {
@@ -37,8 +37,11 @@ async function checkForUpdate(): Promise<string | undefined> {
         if (latestVersion && latestVersion !== PI_VERSION) {
             return latestVersion;
         }
-    } catch {
-        // ignore errors
+    } catch (e) {
+        // Only log at debug level - network errors are common and expected
+        if (!process.env.PI_SKIP_VERSION_CHECK && !process.env.PI_OFFLINE) {
+          console.debug('[PiclawHeader] Version check failed (network or parse error):', e instanceof Error ? e.message : e);
+        }
     }
     return undefined;
 }

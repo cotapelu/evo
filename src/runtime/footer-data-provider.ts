@@ -34,7 +34,7 @@ export class FooterDataProvider {
 	}
 
 	getExtensionStatuses(): Map<string, string> {
-		return this.extensionStatuses;
+		return new Map(this.extensionStatuses);
 	}
 
 	getAvailableProviderCount(): number {

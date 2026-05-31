@@ -30,9 +30,49 @@ import { getChangelogPath, parseChangelog, getNewEntries } from './utils/changel
 import { spawnSync } from 'child_process';
 
 // Modular components
-import { KeyboardManager } from './keyboard-manager';
-import { SlashCommandHandler, SlashCommandContext } from './slash-command-handler';
-import { MessageRenderer } from './message-renderer';
+import { KeyboardManager } from './keyboard-manager.js';
+import { SlashCommandHandler, SlashCommandContext } from './slash-command-handler.js';
+import { MessageRenderer } from './message-renderer.js';
+
+// === Type definitions for reducing 'as any' casts ===
+interface EvoSettingsManager {
+  getTheme(): string;
+  getShowHardwareCursor(): boolean;
+  getClearOnShrink(): boolean;
+  getEditorPaddingX(): number;
+  getAutocompleteMaxVisible(): number;
+  getQuietStartup(): boolean;
+  getLastChangelogVersion(): string | undefined;
+  setLastChangelogVersion(version: string): void;
+}
+
+interface EditorWithAutocomplete {
+  setAutocomplete?(provider: any): void;
+}
+
+interface ResourceLoaderExt {
+  getSkills(): any;
+  getPrompts(): any;
+  getExtensions(): any;
+  getThemes(): any;
+  getAgentsFiles(): any;
+}
+
+interface ToolExecutionComp {
+  setExpanded?(expanded: boolean): void;
+  setComplete(code: number, success: boolean, details?: any, error?: any): void;
+}
+
+interface BashExecutionComp {
+  appendOutput(output: string): void;
+  setComplete(exitCode: number, success: boolean, details?: any, error?: any): void;
+}
+
+interface DynamicBorderComp {}
+
+type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+
+const EMPTY_PROVIDER: any = {};
 
 const APP_NAME = "Pi";
 const VERSION = "0.1.0";
@@ -100,6 +140,20 @@ export class InteractiveMode {
   private lastStatusSpacer?: any;
   private lastStatusText?: any;
 
+  // Typed getters to reduce 'as any' casts
+  private get typedSettings(): EvoSettingsManager {
+    return this.settingsManager as EvoSettingsManager;
+  }
+  private get typedEditor(): EditorWithAutocomplete {
+    return this.editor as EditorWithAutocomplete;
+  }
+  private get typedDefaultEditor(): EditorWithAutocomplete {
+    return this.defaultEditor as EditorWithAutocomplete;
+  }
+  private get typedResourceLoader(): ResourceLoaderExt {
+    return this.session.resourceLoader as ResourceLoaderExt;
+  }
+
   // Handlers (injected during init)
   private keyboardManager!: KeyboardManager;
   private slashCommandHandler!: SlashCommandHandler;
@@ -113,7 +167,7 @@ export class InteractiveMode {
     this.runtimeHost = runtimeHost;
     this.options = options;
     setKeybindings(this.keybindings as any);
-    initTheme((this.settingsManager as any).getTheme(), true);
+    initTheme(this.typedSettings.getTheme(), true);
     this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd());
     this.footer = new FooterComponent(this.session, this.footerDataProvider);
     this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
@@ -130,17 +184,19 @@ export class InteractiveMode {
       if (typeof require !== "undefined" && require("fs").existsSync(cp)) {
         const content = require("fs").readFileSync(cp, "utf8");
         const entries = parseChangelog(content);
-        const last = (this.settingsManager as any).getLastChangelogVersion();
-        if (!last) (this.settingsManager as any).setLastChangelogVersion(VERSION);
+        const last = this.typedSettings.getLastChangelogVersion();
+        if (!last) this.typedSettings.setLastChangelogVersion(VERSION);
         else {
           const newE = getNewEntries(entries, last);
           if (newE.length > 0) {
             this.changelogMarkdown = newE.map((e: any) => e.content).join("\n\n");
-            (this.settingsManager as any).setLastChangelogVersion(VERSION);
+            this.typedSettings.setLastChangelogVersion(VERSION);
           }
         }
       }
-    } catch {}
+    } catch (e: any) {
+      console.error('[Changelog] Failed to load or parse changelog:', e?.message || e);
+    }
 
     // Ensure tools
     let fdPath = '';
@@ -152,17 +208,17 @@ export class InteractiveMode {
     this.fdPath = fdPath;
 
     // TUI
-    this.ui = new TUI(new ProcessTerminal(), (this.settingsManager as any).getShowHardwareCursor());
-    this.ui.setClearOnShrink((this.settingsManager as any).getClearOnShrink());
+    this.ui = new TUI(new ProcessTerminal(), this.typedSettings.getShowHardwareCursor());
+    this.ui.setClearOnShrink(this.typedSettings.getClearOnShrink());
 
     // Editor
-    const editorPaddingX = (this.settingsManager as any).getEditorPaddingX();
-    const autocompleteMaxVisible = (this.settingsManager as any).getAutocompleteMaxVisible();
-    const editorTheme = {
+    const editorPaddingX = this.typedSettings.getEditorPaddingX();
+    const autocompleteMaxVisible = this.typedSettings.getAutocompleteMaxVisible();
+    const editorTheme: any = {
       borderColor: (s: string) => theme().fg("border", s),
       selectList: getSelectListTheme()
     };
-    this.defaultEditor = new CustomEditor(this.ui, editorTheme as any, this.keybindings as any, {
+    this.defaultEditor = new CustomEditor(this.ui, editorTheme, this.keybindings as any, {
       paddingX: editorPaddingX,
       autocompleteMaxVisible,
     });
@@ -175,13 +231,13 @@ export class InteractiveMode {
       description: cmd.description,
     }));
     // Using CombinedAutocompleteProvider with dynamic signature
-    const AutocompleteProviderCtor = CombinedAutocompleteProvider as any;
+    const AutocompleteProviderCtor = CombinedAutocompleteProvider as new (slashCommands: any[], cwd: string, fdPath: string | null) => any;
     const autocompleteProvider = new AutocompleteProviderCtor(
       slashCommands,
       this.sessionManager.getCwd(),
       this.fdPath || null
     );
-    (this.editor as any).setAutocomplete?.(autocompleteProvider);
+    this.typedEditor.setAutocomplete?.(autocompleteProvider);
     this.editorContainer.addChild(this.editor as any);
 
     // Layout
@@ -227,7 +283,7 @@ export class InteractiveMode {
   }
 
   private buildHeader(): void {
-    if (this.options.verbose || !(this.settingsManager as any).getQuietStartup()) {
+    if (this.options.verbose || !this.typedSettings.getQuietStartup()) {
       const logo = theme().bold(theme().fg("accent", APP_NAME)) + theme().fg("dim", ` v${VERSION}`);
       const expanded = [
         keyHint("app.interrupt", "to interrupt"),
@@ -368,11 +424,11 @@ export class InteractiveMode {
   private async showLoadedResources(options?: any): Promise<void> {
     try {
       const resources = await Promise.all([
-        (this.session.resourceLoader as any).getSkills(),
-        (this.session.resourceLoader as any).getPrompts(),
-        (this.session.resourceLoader as any).getExtensions(),
-        (this.session.resourceLoader as any).getThemes(),
-        (this.session.resourceLoader as any).getAgentsFiles(),
+        this.typedResourceLoader.getSkills(),
+        this.typedResourceLoader.getPrompts(),
+        this.typedResourceLoader.getExtensions(),
+        this.typedResourceLoader.getThemes(),
+        this.typedResourceLoader.getAgentsFiles(),
       ]);
       const [skills, prompts, extensions, themes, agents] = resources;
       const sCount = skills?.skills?.length || 0;
@@ -396,31 +452,31 @@ export class InteractiveMode {
   }
 
   private renderInitialMessages(): void {
-    const state = this.session.state;
-    const messages = (state as any).messages || [];
+    const state = this.session.state as { messages?: any[] };
+    const messages = state.messages || [];
     this.messageRenderer.render(messages);
   }
 
   private setupKeyHandlers(): void {
-    // Register global key handlers via KeyboardManager (cast to any to bypass KeyId type)
-    (this.keyboardManager as any).register('app.thinking.toggle', () => {
+    // Register global key handlers via KeyboardManager
+    this.keyboardManager.register('app.thinking.toggle', () => {
       this.showThinkingSelector();
       return { consume: true };
     });
-    (this.keyboardManager as any).register('app.thinking.cycle', () => {
+    this.keyboardManager.register('app.thinking.cycle', () => {
       const current = this.session.thinkingLevel;
       const levels: Array<"off" | "minimal" | "low" | "medium" | "high" | "xhigh"> = 
         ["off", "minimal", "low", "medium", "high", "xhigh"];
-      const idx = levels.indexOf(current as any);
+      const idx = levels.indexOf(current as ThinkingLevel);
       const nextIdx = (idx + 1) % levels.length;
       this.session.setThinkingLevel(levels[nextIdx]);
       return { consume: true };
     });
-    (this.keyboardManager as any).register('app.model.select', () => {
+    this.keyboardManager.register('app.model.select', () => {
       this.showModelSelector();
       return { consume: true };
     });
-    (this.keyboardManager as any).register('app.tools.expand', () => {
+    this.keyboardManager.register('app.tools.expand', () => {
       this.toolOutputExpanded = !this.toolOutputExpanded;
       for (const comp of this.toolComponents) {
         (comp as any).setExpanded?.(this.toolOutputExpanded);
@@ -466,25 +522,49 @@ export class InteractiveMode {
     const text = this.editor.getText();
     if (!text.trim()) return;
     const cmd = text.replace(/^!+/, "").trim();
+    
+    // Input validation: reject null bytes
+    if (cmd.includes('\0')) {
+      this.showError('Command contains null bytes - rejected');
+      return;
+    }
+    
+    // Warn about potentially dangerous patterns (but still allow - user responsibility)
+    const dangerousPatterns = [
+      /^rm\s+-rf\s+\//,
+      /^\(/,
+      /^dd\s+if=\/dev\/zero/,
+      /^mkfs/,
+      /^chmod\s+-R\s+777\s+\//,
+    ];
+    if (dangerousPatterns.some(p => p.test(cmd))) {
+      console.warn('[Security] Potentially dangerous bash command executed:', cmd);
+    }
+    
     try {
       const result = spawnSync(cmd, { shell: true, encoding: "utf8" });
       const output = result.stdout || result.stderr || "";
       const BashComp = BashExecutionComponent as any;
       const bashComponent = new BashComp(cmd, this.ui, noContext);
       bashComponent.appendOutput(output);
-      const exitCode = (result as any).exitCode ?? (result as any).status ?? 0;
+      const exitCode = result.status ?? 0;
       bashComponent.setComplete(exitCode, false, undefined, undefined);
       this.chatContainer.addChild(bashComponent as any);
       this.ui.requestRender();
     } catch (e: any) {
-      this.chatContainer.addChild(new Text(`Error: ${e.message}`, 1, 0) as any);
+      console.error('[BashCommandError] Failed command:', cmd, e);
+      this.showError(`Bash error: ${e.message}`);
       this.ui.requestRender();
     }
     this.editor.setText("");
   }
 
+  private showError(message: string): void {
+    this.chatContainer.addChild(new Text(`Error: ${message}`, 1, 0));
+  }
+
   private async bindCurrentSessionExtensions(): Promise<void> {
-    (this.defaultEditor as any).setAutocomplete?.({} as any);
+    this.typedDefaultEditor.setAutocomplete?.(EMPTY_PROVIDER);
   }
 
   private registerSignalHandlers(): void {
