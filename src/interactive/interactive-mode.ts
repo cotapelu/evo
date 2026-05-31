@@ -214,14 +214,7 @@ export class InteractiveMode {
 		}
 	}
 
-	private theme(): any {
-		try {
-			const pkg = require('@earendil-works/pi-coding-agent');
-			return pkg.theme;
-		} catch {
-			return { bold: (t: string) => t, fg: (_: string, t: string) => t, dim: (t: string) => t };
-		}
-	}
+
 
 	private setupKeyHandlers(): void {
 		// Basic key handlers can be added later
@@ -406,35 +399,8 @@ export class InteractiveMode {
 		});
 	}
 
-	private showStatus(message: string): void {
-		const children = this.chatContainer.children;
-		const last = children[children.length - 1];
-		const secondLast = children[children.length - 2];
-		if (last && secondLast && last === this.lastStatusText && secondLast === this.lastStatusSpacer) {
-			(last as Text).setText?.(this.theme().fg('dim', message));
-			this.ui.requestRender?.();
-			return;
-		}
-		const spacer = new Spacer(1);
-		const text = new Text(this.theme().fg('dim', message), 1, 0);
-		this.chatContainer.addChild?.(spacer);
-		this.chatContainer.addChild?.(text);
-		this.lastStatusSpacer = spacer;
-		this.lastStatusText = text;
-		this.ui.requestRender?.();
-	}
 
-	private showError(message: string): void {
-		this.chatContainer.addChild?.(new Spacer(1));
-		this.chatContainer.addChild?.(new Text(this.theme().fg('error', `Error: ${message}`), 1, 0));
-		this.ui.requestRender?.();
-	}
 
-	private showWarning(message: string): void {
-		this.chatContainer.addChild?.(new Spacer(1));
-		this.chatContainer.addChild?.(new Text(this.theme().fg('warning', `Warning: ${message}`), 1, 0));
-		this.ui.requestRender?.();
-	}
 
 	private getMarkdownThemeWithSettings(): any {
 		const base = getMarkdownTheme?.() ?? {};
@@ -485,27 +451,7 @@ export class InteractiveMode {
 		}
 	}
 
-	private registerSignalHandlers(): void {
-		const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-		for (const sig of signals) {
-			const handler = () => { killTrackedDetachedChildren?.(); void this.shutdown?.(); };
-			process.on(sig, handler);
-			this.signalCleanupHandlers.push(() => process.off(sig, handler));
-		}
-	}
 
-	private async shutdown(): Promise<void> {
-		this.shutdownRequested = true;
-		this.unregisterSignalHandlers?.();
-		this.unsubscribe?.();
-		this.ui.stop?.();
-		process.exit(0);
-	}
-
-	private unregisterSignalHandlers(): void {
-		for (const cleanup of this.signalCleanupHandlers) cleanup();
-		this.signalCleanupHandlers.length = 0;
-	}
 
 	// Placeholder methods to satisfy references (will implement later)
 	// ============================================================================
