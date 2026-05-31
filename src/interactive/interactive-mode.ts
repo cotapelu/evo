@@ -25,6 +25,7 @@ import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { ensureTool } from '../utils/tools-manager.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
+import { theme } from './theme/theme.js';
 
 // Minimal slash commands (since package may not export directly)
 const BUILTIN_SLASH_COMMANDS = [
@@ -108,6 +109,10 @@ export class InteractiveMode {
 	constructor(runtimeHost: AgentSessionRuntime, options: InteractiveModeOptions = {}) {
 		this.runtimeHost = runtimeHost;
 		this.options = options;
+		// Initialize footer data provider early for tests
+		this.footerDataProvider = new FooterDataProvider(
+			runtimeHost.session?.sessionManager?.getCwd?.() ?? process.cwd()
+		);
 		setKeybindings(this.keybindings as any);
 	}
 
@@ -247,7 +252,7 @@ export class InteractiveMode {
 				const cmd = isExcluded ? text.slice(2).trim() : text.slice(1).trim();
 				if (cmd) {
 					this.editor.addToHistory?.(text);
-					await this.handleBashCommand?.(cmd, isExcluded);
+					await this.executeBash?.(cmd, isExcluded);
 				}
 				return;
 			}
@@ -257,12 +262,18 @@ export class InteractiveMode {
 			try {
 				await this.session.prompt?.(text);
 			} catch (error: any) {
+				// Log to console.error for diagnostics
+				console.error('Error:', error);
 				this.showError?.(error?.message || 'Error');
+			} finally {
+				// Clear editor after submitted
+				this.defaultEditor.setText?.('');
 			}
 		};
 	}
 
 	/** Handle slash command routing */
+	// Regression: ensure showWarning exists, but default uncertain commands use console.log
 	private async handleSlashCommand(command: string): Promise<void> {
 		switch (command) {
 			case '/clear':
@@ -271,7 +282,17 @@ export class InteractiveMode {
 				break;
 			case '/exit':
 			case '/quit':
-				void this.shutdown?.();
+				// Set flag for graceful exit
+				this.shutdownRequested = true;
+				await this.shutdown?.();
+				break;
+			case '/compact':
+				try {
+					await this.session.compact?.();
+					this.showStatus?.('Compaction completed');
+				} catch (e: any) {
+					this.showError?.(`Compaction failed: ${e.message}`);
+				}
 				break;
 			case '/thinking':
 				this.showThinkingSelector?.();
@@ -298,11 +319,43 @@ export class InteractiveMode {
 				this.showStatus?.('Hotkeys not implemented');
 				break;
 			default:
-				if (command.startsWith('/model')) {
-					await this.handleModelCommand?.(command);
+				if (command === '/model') {
+					// Cycle to next model
+					const result = await this.session.cycleModel?.();
+					if (result?.model) {
+						this.showStatus?.(`Model: ${result.model.id}`);
+					} else {
+						this.showStatus?.('No models available to cycle');
+					}
+					break;
+				} else if (command.startsWith('/model ')) {
+					const spec = command.slice(6).trim();
+					if (!spec) {
+						await this.session.cycleModel?.();
+						break;
+					}
+					const models = await this.session.modelRegistry.getAvailable?.() ?? [];
+					let target: any = null;
+					// Try exact id match
+					target = models.find((m: any) => m.id === spec);
+					if (!target) {
+						// Try provider/id
+						const parts = spec.split('/');
+						if (parts.length === 2) {
+							const [provider, id] = parts;
+							target = models.find((m: any) => m.provider === provider && m.id === id);
+						}
+					}
+					if (target) {
+						await this.session.setModel?.(target);
+						this.showStatus?.(`Model: ${target.id}`);
+					} else {
+						this.showError?.(`Model not found: ${spec}`);
+					}
 					break;
 				}
-				this.showWarning?.(`Unknown command: ${command}`);
+				// Uncertain command
+				console.log(`Unknown command: ${command}`);
 				break;
 		}
 	}
@@ -389,6 +442,16 @@ export class InteractiveMode {
 	private getMarkdownThemeWithSettings(): any {
 		const base = getMarkdownTheme?.() ?? {};
 		return { ...base, codeBlockIndent: this.settingsManager.getCodeBlockIndent?.() ?? 2 };
+	}
+
+	/** Get the current theme singleton */
+	private theme(): any {
+		return theme;
+	}
+
+	/** Get the current theme */
+	private theme(): any {
+		return theme;
 	}
 
 	private updateEditorBorderColor(): void {
@@ -560,6 +623,18 @@ export class InteractiveMode {
 				}
 				break;
 			}
+
+			case 'message_end': {
+				const msg = event.message;
+				if (msg?.role === 'assistant') {
+					this.chatContainer.addChild?.(new AssistantMessageComponent(msg, false, this.getMarkdownThemeWithSettings?.()));
+					this.ui.requestRender?.();
+				}
+				break;
+			}
+			case 'shutdown_requested':
+				this.shutdownRequested = true;
+				break;
 
 			default:
 				break;
@@ -981,10 +1056,8 @@ export class InteractiveMode {
 	// Command Handlers (Basic)
 	// ============================================================================
 
-	private handleClearCommand(): Promise<void> {
-		// TODO: implement new session
-		this.showStatus?.('Cleared (TODO: new session)');
-		return Promise.resolve();
+	private async handleClearCommand(): Promise<void> {
+		this.chatContainer.clear?.();
 	}
 
 	private handleModelCommand(text: string): Promise<void> {
@@ -998,13 +1071,14 @@ export class InteractiveMode {
 		await this.showModelSelector?.();
 	}
 
-	private async handleBashCommand(command: string, exclude: boolean): Promise<void> {
-		// Reject null bytes for safety
+	/** Execute a bash command string (internal) */
+	private async executeBash(command: string, exclude: boolean): Promise<void> {
+		// Null byte check
 		if (command.includes('\0')) {
 			this.showError?.('Command contains null bytes');
 			return;
 		}
-		// Warn on dangerous patterns
+		// Dangerous pattern warning
 		if (/rm\s+-rf\s+\//.test(command)) {
 			console.warn('Security warning: potentially dangerous command', command);
 		}
@@ -1018,11 +1092,54 @@ export class InteractiveMode {
 			bashComponent.setComplete?.(result.status ?? 0, false, undefined, undefined);
 			this.chatContainer.addChild?.(bashComponent);
 			this.ui.requestRender?.();
+			// Clear editor after successful execution
+			this.defaultEditor.setText?.('');
 		} catch (e: any) {
-			// Log to console.error for diagnostic
 			console.error('BashCommandError:', command, e);
 			this.showError?.(`Bash error: ${e.message}`);
 		}
+	}
+
+	/** Handle bash command from editor (reads text) */
+	private async handleBash(exclude: boolean): Promise<void> {
+		const text = this.defaultEditor.getText?.()?.trim() || '';
+		if (!text) return;
+		await this.executeBash?.(text, exclude);
+	}
+
+	/** Display an error message in chat */
+	private showError(errorMessage: string): void {
+		this.chatContainer.addChild?.(new Spacer(1));
+		this.chatContainer.addChild?.(new Text(theme.fg('error', `Error: ${errorMessage}`), 1, 0));
+		this.ui.requestRender?.();
+	}
+
+	/** Display a status message (dim) in chat */
+	private showStatus(message: string): void {
+		const children = this.chatContainer.children;
+		const last = children.length > 0 ? children[children.length - 1] : undefined;
+		const secondLast = children.length > 1 ? children[children.length - 2] : undefined;
+		if (last && secondLast && last === this.lastStatusText && secondLast === this.lastStatusSpacer) {
+			// Update existing status line
+			// @ts-ignore - Text component has setText
+			last.setText?.(theme.fg('dim', message));
+			this.ui.requestRender?.();
+			return;
+		}
+		const spacer = new Spacer(1);
+		const text = new Text(theme.fg('dim', message), 1, 0);
+		this.chatContainer.addChild?.(spacer);
+		this.chatContainer.addChild?.(text);
+		this.lastStatusSpacer = spacer;
+		this.lastStatusText = text;
+		this.ui.requestRender?.();
+	}
+
+	/** Display a warning message in chat */
+	private showWarning(warningMessage: string): void {
+		this.chatContainer.addChild?.(new Spacer(1));
+		this.chatContainer.addChild?.(new Text(theme.fg('warning', `Warning: ${warningMessage}`), 1, 0));
+		this.ui.requestRender?.();
 	}
 
 	private showNewVersionNotification(version: string): void {
@@ -1032,6 +1149,27 @@ export class InteractiveMode {
 		this.chatContainer.addChild?.(new Spacer(1));
 		this.chatContainer.addChild?.(new Text(`${th.bold(th.fg('warning', 'Update Available'))}\n${updateInstruction}`, 1, 0));
 		this.ui.requestRender?.();
+	}
+
+	/** Display loaded extensions/resources summary */
+	private async showLoadedResources(): Promise<void> {
+		try {
+			const skills = this.session.resourceLoader.getSkills?.()?.skills ?? [];
+			const prompts = this.session.resourceLoader.getPrompts?.()?.prompts ?? [];
+			const extensions = this.session.resourceLoader.getExtensions?.()?.extensions ?? [];
+			const themes = this.session.resourceLoader.getThemes?.()?.themes ?? [];
+			const lines: string[] = [];
+			if (skills.length) lines.push(`Skills: ${skills.map((s: any) => s.name).join(', ')}`);
+			if (prompts.length) lines.push(`Prompts: ${prompts.map((p: any) => p.name).join(', ')}`);
+			if (extensions.length) lines.push(`Extensions: ${extensions.map((e: any) => e.name).join(', ')}`);
+			if (themes.length) lines.push(`Themes: ${themes.join(', ')}`);
+			const text = lines.length ? lines.join('\n') : 'No resources loaded';
+			this.chatContainer.addChild?.(new Text(text, 1, 0));
+			this.ui.requestRender?.();
+		} catch (e) {
+			console.error('Error loading resources', e);
+			this.showError?.('Failed to load resources');
+		}
 	}
 
 	private updateTerminalTitle(): void {
@@ -1049,8 +1187,28 @@ export class InteractiveMode {
 		// Stub
 	}
 
+	/** Graceful shutdown */
+	private async shutdown(exitCode = 0): Promise<void> {
+		if (this.shutdownRequested) {
+			process.exit(exitCode);
+			return;
+		}
+		this.shutdownRequested = true;
+		// Unsubscribe from agent events
+		this.unsubscribe?.();
+		// Stop UI
+		await this.ui?.stop?.();
+		// Dispose footer component
+		this.footer?.dispose?.();
+		// Cleanup signal handlers
+		for (const cleanup of this.signalCleanupHandlers) cleanup();
+		this.signalCleanupHandlers = [];
+		// Finally exit
+		process.exit(exitCode);
+	}
+
 	private async checkShutdownRequested(): Promise<void> {
-		if ((this as any).shutdownRequested) {
+		if (this.shutdownRequested) {
 			await this.shutdown?.();
 		}
 	}

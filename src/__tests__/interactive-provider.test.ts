@@ -299,12 +299,12 @@ describe('InteractiveMode', () => {
       expect(mode.ui.requestRender).toHaveBeenCalled();
     });
 
-    it('renders tool on tool_call', async () => {
+    it('renders tool on tool_execution_start', async () => {
       const mode = new (InteractiveMode as any)(runtime);
       mode.ui = { requestRender: jest.fn() };
       await (mode as any).init();
       const cb = session._cb;
-      cb({ type: 'tool_call', tool: {} } as any);
+      cb({ type: 'tool_execution_start', toolCallId: '123', toolName: 'test', args: {} } as any);
       expect(mode.chatContainer.addChild).toHaveBeenCalled();
       expect(mode.ui.requestRender).toHaveBeenCalled();
     });
@@ -498,8 +498,8 @@ describe('InteractiveMode', () => {
 
       await (mode as any).renderInitialMessages();
 
-      // Should call UserMessageComponent with the string directly
-      expect(UserMessageComponent).toHaveBeenCalledWith('plain text message');
+      // Should call UserMessageComponent with the string and theme
+      expect(UserMessageComponent).toHaveBeenCalledWith('plain text message', expect.anything());
     });
 
     it('should concatenate multiple text blocks from array content', async () => {
@@ -525,7 +525,7 @@ describe('InteractiveMode', () => {
       await (mode as any).renderInitialMessages();
 
       // Should concatenate with newlines
-      expect(UserMessageComponent).toHaveBeenCalledWith('first part\nsecond part\nthird part');
+      expect(UserMessageComponent).toHaveBeenCalledWith('first part\nsecond part\nthird part', expect.anything());
     });
 
     it('should filter out non-text blocks from content array', async () => {
@@ -551,7 +551,7 @@ describe('InteractiveMode', () => {
       await (mode as any).renderInitialMessages();
 
       // Should only extract text blocks
-      expect(UserMessageComponent).toHaveBeenCalledWith('only text shown');
+      expect(UserMessageComponent).toHaveBeenCalledWith('only text shown', expect.anything());
     });
 
     it('should handle user message with empty content array', async () => {
@@ -569,7 +569,7 @@ describe('InteractiveMode', () => {
 
       await (mode as any).renderInitialMessages();
 
-      expect(UserMessageComponent).toHaveBeenCalledWith('');
+      expect(UserMessageComponent).toHaveBeenCalledWith('', expect.anything());
     });
 
     it('should handle user message with null or undefined content', async () => {
@@ -615,7 +615,7 @@ describe('InteractiveMode', () => {
 
       await (mode as any).renderInitialMessages();
 
-      expect(UserMessageComponent).toHaveBeenCalledWith('');
+      expect(UserMessageComponent).toHaveBeenCalledWith('', expect.anything());
     });
   });
 
@@ -624,7 +624,7 @@ describe('InteractiveMode', () => {
       const mode = new (InteractiveMode as any)(runtime);
       await (mode as any).init();
 
-      mode.defaultEditor = { setAutocomplete: jest.fn() };
+      mode.defaultEditor = { setAutocompleteProvider: jest.fn() };
       session.resourceLoader = {
         getSkills: () => ({ skills: [{ name: 's1' }] }),
         getPrompts: () => ({ prompts: [{ name: 'p1' }] }),
@@ -634,7 +634,7 @@ describe('InteractiveMode', () => {
 
       await (mode as any).bindCurrentSessionExtensions();
 
-      expect(mode.defaultEditor.setAutocomplete).toHaveBeenCalled();
+      expect(mode.defaultEditor.setAutocompleteProvider).toHaveBeenCalled();
     });
   });
 
@@ -711,10 +711,12 @@ describe('InteractiveMode', () => {
       // First show
       cb({ type: 'turn_start' } as any);
       expect(mode.loadingAnimation).toBeDefined();
+      // Capture loader before it gets cleared
+      const loader = mode.loadingAnimation;
       // Then hide
       cb({ type: 'turn_end' } as any);
-      expect(mode.loadingAnimation.stop).toHaveBeenCalled();
-      expect(mode.statusContainer.removeChild).toHaveBeenCalledWith(mode.loadingAnimation);
+      expect(loader.stop).toHaveBeenCalled();
+      expect(mode.statusContainer.removeChild).toHaveBeenCalledWith(loader);
       expect(mode.ui.requestRender).toHaveBeenCalled();
     });
 
