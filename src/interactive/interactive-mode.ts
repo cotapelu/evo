@@ -17,7 +17,7 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, TreeSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -35,6 +35,7 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'model', description: 'Cycle or select model' },
 	{ name: 'thinking', description: 'Select thinking level' },
 	{ name: 'models', description: 'Open model selector' },
+	{ name: 'tree', description: 'Session tree navigation' },
 	{ name: 'reload', description: 'Reload extensions' },
 ];
 
@@ -242,6 +243,11 @@ export class InteractiveMode {
 			}
 			if (text === '/exit' || text === '/quit') {
 				void this.shutdown?.();
+				return;
+			}
+			if (text === '/tree') {
+				this.editor.setText?.('');
+				this.showTreeSelector?.();
 				return;
 			}
 			if (text === '/models') {
@@ -582,6 +588,54 @@ export class InteractiveMode {
 			initialSearchInput
 		);
 		this.ui.showOverlay?.(component);
+	}
+
+	private showTreeSelector(initialSelectedId?: string): void {
+		// Get session tree
+		const tree = this.sessionManager.getTree?.() ?? [];
+		const realLeafId = this.sessionManager.getLeafId?.();
+		if (tree.length === 0) {
+			this.showStatus?.('No entries in session');
+			return;
+		}
+
+		// Create tree selector
+		const selector = new TreeSelectorComponent(
+			tree,
+			realLeafId,
+			this.ui.terminal.rows,
+			async (entryId) => {
+				this.ui.hideOverlay?.();
+				if (entryId === realLeafId) {
+					this.showStatus?.('Already at this point');
+					return;
+				}
+				try {
+					const result = await this.session.navigateTree?.(entryId, { summarize: false });
+					if (result?.cancelled) {
+						this.showStatus?.('Navigation cancelled');
+						return;
+					}
+					// Rebuild chat display
+					this.chatContainer.clear?.();
+					this.renderInitialMessages?.();
+					if (result?.editorText) {
+						this.editor.setText?.(result.editorText);
+					}
+					this.showStatus?.('Navigated to selected point');
+				} catch (e: any) {
+					this.showError?.(e.message || 'Navigation error');
+				}
+			},
+			() => {
+				this.ui.hideOverlay?.();
+			},
+			undefined, // onLabelChange - optional
+			initialSelectedId,
+			this.settingsManager.getTreeFilterMode?.() ?? 'default'
+		);
+
+		this.ui.showOverlay?.(selector);
 	}
 
 	// ============================================================================
