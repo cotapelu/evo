@@ -17,7 +17,7 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -244,9 +244,19 @@ export class InteractiveMode {
 				void this.shutdown?.();
 				return;
 			}
+			if (text === '/models') {
+				this.editor.setText?.('');
+				await this.handleModelsCommand?.();
+				return;
+			}
 			if (text.startsWith('/model')) {
 				this.editor.setText?.('');
 				await this.handleModelCommand?.(text);
+				return;
+			}
+			if (text === '/settings') {
+				this.editor.setText?.('');
+				await this.showSettingsSelector?.();
 				return;
 			}
 			if (text.startsWith('!')) {
@@ -551,6 +561,39 @@ export class InteractiveMode {
 	}
 
 	// ============================================================================
+	// Model Selector
+	// ============================================================================
+
+	private showModelSelector(initialSearchInput?: string): void {
+		const component = new ModelSelectorComponent(
+			this.ui,
+			this.session.model,
+			this.settingsManager,
+			this.session.modelRegistry,
+			this.session.scopedModels || [],
+			(model) => {
+				this.session.setModel?.(model);
+				this.ui.hideOverlay?.();
+				this.showStatus?.(`Model: ${model.id}`);
+			},
+			() => {
+				this.ui.hideOverlay?.();
+			},
+			initialSearchInput
+		);
+		this.ui.showOverlay?.(component);
+	}
+
+	// ============================================================================
+	// Settings Selector (stub)
+	// ============================================================================
+
+	private async showSettingsSelector(): Promise<void> {
+		// TODO: implement full settings selector
+		this.showStatus?.('Settings selector not yet implemented');
+	}
+
+	// ============================================================================
 	// Session & Startup
 	// ============================================================================
 
@@ -587,31 +630,15 @@ export class InteractiveMode {
 		return Promise.resolve();
 	}
 
-	private async handleModelCommand(text: string): Promise<void> {
-		try {
-			const search = text.replace(/^\/model\s*/, '').trim();
-			if (!search) {
-				// Cycle forward
-				const result = await this.session.cycleModel?.('forward');
-				if (result) {
-				 this.showStatus?.(`Model: ${result.model?.id ?? 'unknown'}`);
-				} else {
-					this.showStatus?.('No model change');
-				}
-			} else {
-				// Find exact match among available models
-				const models = await this.session.modelRegistry.getAvailable?.();
-				const match = models?.find((m: any) => m.id === search || `${m.provider}/${m.id}` === search);
-				if (match) {
-					await this.session.setModel?.(match);
-					this.showStatus?.(`Model: ${match.id}`);
-				} else {
-					this.showError?.(`Model not found: ${search}`);
-				}
-			}
-		} catch (e: any) {
-			this.showError?.(e.message ?? 'Model error');
-		}
+	private handleModelCommand(text: string): Promise<void> {
+		const search = text.replace(/^\/model\s*/, '').trim();
+		this.showModelSelector?.(search || undefined);
+		return Promise.resolve();
+	}
+
+	private async handleModelsCommand(): Promise<void> {
+		// Show model selector
+		await this.showModelSelector?.();
 	}
 
 	private async handleBashCommand(command: string, exclude: boolean): Promise<void> {
