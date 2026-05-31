@@ -256,7 +256,7 @@ export class InteractiveMode {
 				await this.session.prompt?.(text);
 			} catch (error: any) {
 				// Log to console.error for diagnostics
-				console.error('Error:', error);
+				console.error('Prompt error:', error);
 				this.showError?.(error?.message || 'Error');
 			} finally {
 				// Clear editor after submitted
@@ -340,7 +340,11 @@ export class InteractiveMode {
 						}
 					}
 					if (target) {
-						await this.session.setModel?.(target);
+						if (this.session.setModel) {
+							await this.session.setModel(target);
+						}
+						// Ensure session.model is set for consistency
+						this.session.model = target;
 						this.showStatus?.(`Model: ${target.id}`);
 					} else {
 						this.showError?.(`Model not found: ${spec}`);
@@ -557,15 +561,21 @@ export class InteractiveMode {
 					this.ui.requestRender?.();
 				}
 				break;
-			case 'message_end':
-				if (this.streamingComponent && event.message?.role === 'assistant') {
-					this.streamingComponent.updateContent?.(event.message);
-					this.streamingComponent = undefined;
-					this.streamingMessage = undefined;
+			case 'message_end': {
+				const msg = event.message;
+				if (msg?.role === 'assistant') {
+					if (this.streamingComponent) {
+						this.streamingComponent.updateContent?.(msg);
+						this.streamingComponent = undefined;
+						this.streamingMessage = undefined;
+					} else {
+						this.chatContainer.addChild?.(new AssistantMessageComponent(msg, false, this.getMarkdownThemeWithSettings?.()));
+					}
 					this.footer.invalidate?.();
 					this.ui.requestRender?.();
 				}
 				break;
+			}
 
 			case 'tool_execution_start': {
 				let component = this.pendingTools.get?.(event.toolCallId);
@@ -612,14 +622,7 @@ export class InteractiveMode {
 				break;
 			}
 
-			case 'message_end': {
-				const msg = event.message;
-				if (msg?.role === 'assistant') {
-					this.chatContainer.addChild?.(new AssistantMessageComponent(msg, false, this.getMarkdownThemeWithSettings?.()));
-					this.ui.requestRender?.();
-				}
-				break;
-			}
+
 			case 'shutdown_requested':
 				this.shutdownRequested = true;
 				break;
@@ -1070,7 +1073,11 @@ export class InteractiveMode {
 			}
 		}
 		if (target) {
-			await this.session.setModel?.(target);
+			if (this.session.setModel) {
+				await this.session.setModel(target);
+			}
+			// Directly assign to runtimeHost.session.model to ensure visibility
+			(this.runtimeHost as any).session.model = target;
 			this.showStatus?.(`Model: ${target.id}`);
 		} else {
 			this.showError?.(`Model not found: ${spec}`);
@@ -1121,7 +1128,7 @@ export class InteractiveMode {
 	/** Display an error message in chat */
 	private showError(errorMessage: string): void {
 		this.chatContainer.addChild?.(new Spacer(1));
-		this.chatContainer.addChild?.(new Text(theme.fg('error', `Error: ${errorMessage}`), 1, 0));
+		this.chatContainer.addChild?.(new Text(this.theme().fg('error', `Error: ${errorMessage}`), 1, 0));
 		this.ui.requestRender?.();
 	}
 
@@ -1133,12 +1140,12 @@ export class InteractiveMode {
 		if (last && secondLast && last === this.lastStatusText && secondLast === this.lastStatusSpacer) {
 			// Update existing status line
 			// @ts-ignore - Text component has setText
-			last.setText?.(theme.fg('dim', message));
+			last.setText?.(this.theme().fg('dim', message));
 			this.ui.requestRender?.();
 			return;
 		}
 		const spacer = new Spacer(1);
-		const text = new Text(theme.fg('dim', message), 1, 0);
+		const text = new Text(this.theme().fg('dim', message), 1, 0);
 		this.chatContainer.addChild?.(spacer);
 		this.chatContainer.addChild?.(text);
 		this.lastStatusSpacer = spacer;
@@ -1149,7 +1156,7 @@ export class InteractiveMode {
 	/** Display a warning message in chat */
 	private showWarning(warningMessage: string): void {
 		this.chatContainer.addChild?.(new Spacer(1));
-		this.chatContainer.addChild?.(new Text(theme.fg('warning', `Warning: ${warningMessage}`), 1, 0));
+		this.chatContainer.addChild?.(new Text(this.theme().fg('warning', `Warning: ${warningMessage}`), 1, 0));
 		this.ui.requestRender?.();
 	}
 
