@@ -11,12 +11,13 @@ import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import { CombinedAutocompleteProvider, Container, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
+	APP_TITLE,
 	VERSION,
 	getAgentDir,
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, DynamicBorder, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -84,6 +85,17 @@ export class InteractiveMode {
 	private lastStatusSpacer?: Spacer;
 	private lastStatusText?: Text;
 	private builtInHeader?: any;
+
+	// Event & tool tracking
+	private streamingComponent?: any;
+	private streamingMessage?: any;
+	private pendingTools = new Map<string, any>();
+	private autoCompactionLoader?: Loader;
+	private autoCompactionEscapeHandler?: () => void;
+	private compactionQueuedMessages: Array<{ text: string; mode: 'steer' | 'followUp' }> = [];
+	private retryLoader?: Loader;
+	private retryCountdown?: any;
+	private retryEscapeHandler?: () => void;
 
 	// Convenience
 	private get session(): any { return this.runtimeHost.session; }
@@ -361,21 +373,221 @@ export class InteractiveMode {
 	}
 
 	// Placeholder methods to satisfy references (will implement later)
-	private rebindCurrentSession(): Promise<void> { return Promise.resolve(); }
-	private subscribeToAgent(): void {}
-	private handleEvent(event: any): void {}
-	private renderCurrentSessionState(): void {}
-	private createWorkingLoader(): Loader | undefined { return undefined; }
-	private stopWorkingLoader(): void {}
-	private showStartupNotices(): void {}
-	private handleClearCommand(): Promise<void> { return Promise.resolve(); }
-	private handleModelCommand(text: string): Promise<void> { return Promise.resolve(); }
-	private handleBashCommand(command: string, exclude: boolean): Promise<void> { return Promise.resolve(); }
-	private showNewVersionNotification(version: string): void {}
-	private updateTerminalTitle(): void {}
-	private updateAvailableProviderCount(): Promise<void> { return Promise.resolve(); }
-	private maybeWarnAboutAnthropicSubscriptionAuth(): void {}
-	private checkShutdownRequested(): Promise<void> { return Promise.resolve(); }
+	// ============================================================================
+	// Agent Event Handling & Subscriptions
+	// ============================================================================
+
+	// ============================================================================
+	// Agent Subscription & Event Handling
+	// ============================================================================
+
+	private subscribeToAgent(): void {
+		this.unsubscribe = this.session.subscribe((event: any) => {
+			void this.handleEvent(event);
+		});
+	}
+
+	private async handleEvent(event: any): Promise<void> {
+		if (!this.isInitialized) await this.init?.();
+		this.footer.invalidate?.();
+
+		switch (event.type) {
+			case 'agent_start':
+				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(true);
+				this.showWorkingIndicator?.();
+				break;
+			case 'agent_end':
+				this.stopWorkingLoader?.();
+				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(false);
+				await this.checkShutdownRequested?.();
+				this.ui.requestRender?.();
+				break;
+			case 'message_start':
+				if (event.message?.role === 'user') {
+					this.addMessageToChat?.(event.message);
+					this.updatePendingMessagesDisplay?.();
+				} else if (event.message?.role === 'assistant') {
+					this.streamingComponent = new AssistantMessageComponent(
+						event.message,
+						this.hideThinkingBlock,
+						this.getMarkdownThemeWithSettings?.()
+					);
+					this.streamingMessage = event.message;
+					this.chatContainer.addChild?.(this.streamingComponent);
+					this.ui.requestRender?.();
+				}
+				break;
+			case 'message_update':
+				if (this.streamingComponent && event.message?.role === 'assistant') {
+					this.streamingMessage = event.message;
+					this.streamingComponent.updateContent?.(this.streamingMessage);
+					this.ui.requestRender?.();
+				}
+				break;
+			case 'message_end':
+				if (this.streamingComponent && event.message?.role === 'assistant') {
+					this.streamingComponent.updateContent?.(event.message);
+					this.streamingComponent = undefined;
+					this.streamingMessage = undefined;
+					this.footer.invalidate?.();
+					this.ui.requestRender?.();
+				}
+				break;
+			default:
+				break;
+		}
+	}
+
+	// ============================================================================
+	// Working Indicator
+	// ============================================================================
+
+	private createWorkingLoader(): Loader {
+		const th = this.theme();
+		return new Loader(
+			this.ui,
+			(spinner) => th.fg('accent', spinner),
+			(text) => th.fg('muted', text),
+			this.defaultWorkingMessage
+		);
+	}
+
+	private showWorkingIndicator(): void {
+		if (!this.workingVisible) return;
+		if (!this.loadingAnimation) {
+			this.loadingAnimation = this.createWorkingLoader?.();
+		}
+		if (this.loadingAnimation && this.statusContainer.children.indexOf(this.loadingAnimation) === -1) {
+			this.statusContainer.addChild?.(this.loadingAnimation);
+			this.loadingAnimation.start?.();
+		}
+		this.ui.requestRender?.();
+	}
+
+	private stopWorkingLoader(): void {
+		if (this.loadingAnimation) {
+			this.loadingAnimation.stop?.();
+			this.statusContainer.removeChild?.(this.loadingAnimation);
+			this.loadingAnimation = undefined;
+		}
+		this.ui.requestRender?.();
+	}
+
+	// ============================================================================
+	// Message Rendering Helpers
+	// ============================================================================
+
+	private addMessageToChat(message: any): void {
+		if (message.role === 'user') {
+			const textContent = this.getUserMessageText?.(message);
+			if (textContent) {
+				if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
+				this.chatContainer.addChild?.(new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings?.()));
+			}
+		} else if (message.role === 'assistant') {
+			const comp = new AssistantMessageComponent(message, this.hideThinkingBlock, this.getMarkdownThemeWithSettings?.());
+			this.chatContainer.addChild?.(comp);
+		}
+	}
+
+	private getUserMessageText(message: any): string {
+		if (message.role !== 'user') return '';
+		if (typeof message.content === 'string') return message.content;
+		const textParts = (message.content || []).filter((c: any) => c.type === 'text').map((c: any) => c.text);
+		return textParts.join('\n');
+	}
+
+	private updatePendingMessagesDisplay(): void {
+		// Minimal: no queue support yet
+		this.pendingMessagesContainer.clear?.();
+	}
+
+	// ============================================================================
+	// Session & Startup
+	// ============================================================================
+
+	private rebindCurrentSession(): Promise<void> {
+		// Stub: will implement full extension binding later
+		return Promise.resolve();
+	}
+
+	private renderCurrentSessionState(): void {
+		this.chatContainer.clear?.();
+		this.renderInitialMessages?.();
+	}
+
+	private showStartupNotices(): void {
+		if (!this.changelogMarkdown) return;
+		const th = this.theme();
+		if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
+		this.chatContainer.addChild?.(new DynamicBorder());
+		this.chatContainer.addChild?.(new Text(th.bold(th.fg('accent', "What's New")), 1, 0));
+		this.chatContainer.addChild?.(new Spacer(1));
+		const mdTheme = getMarkdownTheme?.();
+		this.chatContainer.addChild?.(new Markdown(this.changelogMarkdown, 1, 0, mdTheme));
+		this.chatContainer.addChild?.(new DynamicBorder());
+		this.ui.requestRender?.();
+	}
+
+	// ============================================================================
+	// Command Handlers (Basic)
+	// ============================================================================
+
+	private handleClearCommand(): Promise<void> {
+		// TODO: implement new session
+		this.showStatus?.('Cleared (TODO: new session)');
+		return Promise.resolve();
+	}
+
+	private async handleModelCommand(text: string): Promise<void> {
+		// TODO: model selection
+		this.showError?.('Model selection not implemented yet');
+	}
+
+	private async handleBashCommand(command: string, exclude: boolean): Promise<void> {
+		try {
+			const result = spawnSync(command, { shell: true, encoding: 'utf8' });
+			const output = result.stdout || result.stderr || '';
+			const BashComp = BashExecutionComponent as any;
+			const bashComponent = new BashComp(command, this.ui, exclude);
+			bashComponent.appendOutput?.(output);
+			bashComponent.setComplete?.(result.status ?? 0, false, undefined, undefined);
+			this.chatContainer.addChild?.(bashComponent);
+			this.ui.requestRender?.();
+		} catch (e: any) {
+			this.showError?.(`Bash error: ${e.message}`);
+		}
+	}
+
+	private showNewVersionNotification(version: string): void {
+		const th = this.theme();
+		const action = th.fg('accent', `${APP_NAME} update`);
+		const updateInstruction = th.fg('muted', `New version ${version} is available. Run `) + action;
+		this.chatContainer.addChild?.(new Spacer(1));
+		this.chatContainer.addChild?.(new Text(`${th.bold(th.fg('warning', 'Update Available'))}\n${updateInstruction}`, 1, 0));
+		this.ui.requestRender?.();
+	}
+
+	private updateTerminalTitle(): void {
+		const cwdBasename = path.basename(this.sessionManager.getCwd?.());
+		const sessionName = this.sessionManager.getSessionName?.();
+		if (sessionName) this.ui.terminal.setTitle?.(`${APP_TITLE} - ${sessionName} - ${cwdBasename}`);
+		else this.ui.terminal.setTitle?.(`${APP_TITLE} - ${cwdBasename}`);
+	}
+
+	private async updateAvailableProviderCount(): Promise<void> {
+		// Stub
+	}
+
+	private maybeWarnAboutAnthropicSubscriptionAuth(): void {
+		// Stub
+	}
+
+	private async checkShutdownRequested(): Promise<void> {
+		if ((this as any).shutdownRequested) {
+			await this.shutdown?.();
+		}
+	}
 }
 
 export async function runInteractiveMode(runtime: AgentSessionRuntime): Promise<void> {
