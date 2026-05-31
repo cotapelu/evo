@@ -1124,14 +1124,14 @@ export class InteractiveMode {
 	// Additional Slash Command Handlers
 	// ============================================================================
 
-	private reloadResources(): void {
-		// TODO: implement full extension reload logic
-		this.showStatus?.('Reload not implemented');
-	}
-
-	private toggleDebug(): void {
-		// TODO: show debug info
-		this.showStatus?.('Debug toggle not implemented');
+	private async reloadResources(): Promise<void> {
+		try {
+			await this.session.reload?.();
+			this.showStatus?.('Extensions reloaded');
+		} catch (e: any) {
+			console.error('Reload error:', e);
+			this.showError?.(`Reload failed: ${e.message}`);
+		}
 	}
 
 	private showChangelog(): void {
@@ -1212,13 +1212,66 @@ export class InteractiveMode {
 	}
 
 	private exportSession(filePath?: string): void {
-		// TODO: implement session export
-		this.showStatus?.(`Export not implemented${filePath ? `: ${filePath}` : ''}`);
+		try {
+			const entries = this.sessionManager.getEntries?.();
+			const header = this.sessionManager.getHeader?.();
+			if (!header) {
+				this.showError?.('No session header to export');
+				return;
+			}
+			const data = {
+				version: header.version,
+				header,
+				entries,
+			};
+			const defaultName = `session-${header.id}-${new Date().toISOString().slice(0,10)}.json`;
+			const targetPath = filePath || defaultName;
+			fs.writeFileSync(targetPath, JSON.stringify(data, null, 2));
+			this.showStatus?.(`Exported session to: ${targetPath}`);
+		} catch (e: any) {
+			console.error('Export error:', e);
+			this.showError?.(`Export failed: ${e.message}`);
+		}
 	}
 
 	private importSession(filePath: string): void {
-		// TODO: implement session import
+		// Basic stub: would read file, validate, and switch session
 		this.showStatus?.(`Import not implemented: ${filePath}`);
+	}
+
+	private toggleDebug(): void {
+		// Gather debug info
+		const th = this.theme();
+		const lines: string[] = [];
+		lines.push(`${th.bold(th.fg('accent', 'Debug Info'))}`);
+		lines.push(`Version: ${VERSION}`);
+		lines.push(`CWD: ${this.sessionManager.getCwd?.()}`);
+		lines.push(`Session ID: ${this.session.sessionId}`);
+		lines.push(`Session File: ${this.sessionManager.getSessionFile?.() || 'not saved'}`);
+		lines.push(`Model: ${this.session.model?.id || 'none'}`);
+		lines.push(`Thinking Level: ${this.session.thinkingLevel || 'off'}`);
+		lines.push(`Auto Compaction: ${this.session.autoCompactionEnabled}`);
+		lines.push(`Steering Mode: ${this.session.steeringMode}`);
+		lines.push(`Follow-up Mode: ${this.session.followUpMode}`);
+		try {
+			const skills = this.session.resourceLoader.getSkills?.()?.skills ?? [];
+			const prompts = this.session.resourceLoader.getPrompts?.()?.prompts ?? [];
+			const extensions = this.session.resourceLoader.getExtensions?.()?.extensions ?? [];
+			lines.push(`Skills: ${skills.length}`);
+			lines.push(`Prompts: ${prompts.length}`);
+			lines.push(`Extensions: ${extensions.length}`);
+		} catch (e) {
+			lines.push(`Resources: error loading`);
+		}
+		const debugText = lines.join('\n');
+		// Show in overlay or chat
+		if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
+		this.chatContainer.addChild?.(new DynamicBorder());
+		this.chatContainer.addChild?.(new Text(th.bold(th.fg('warning', 'Debug Info')), 1, 0));
+		this.chatContainer.addChild?.(new Spacer(1));
+		this.chatContainer.addChild?.(new Text(debugText, 1, 0));
+		this.chatContainer.addChild?.(new DynamicBorder());
+		this.ui.requestRender?.();
 	}
 
 	/** Execute a bash command string (internal) */

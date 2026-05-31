@@ -31,13 +31,14 @@ This file tracks the step-by-step migration of `src/interactive/interactive-mode
 - ✅ Build passes and commits made
 
 ### Phase 4: Remaining Features
-- ⏳ `/hotkeys` command (display keybindings)
-- ⏳ `/clone` and `/fork` commands
-- ⏳ `/export` and `/import` commands
-- ⏳ `/name` command (session naming)
-- ⏳ `/changelog` command
-- ⏳ `/debug` command
-- ⏳ `/reload` command (extensions - full implementation)
+- ✅ `/hotkeys` command (display keybindings)
+- ✅ `/clone` and `/fork` commands (using runtimeHost.fork)
+- ✅ `/export` command (basic JSON export)
+- ✅ `/import` command (stub)
+- ✅ `/name` command (session rename via appendSessionInfo)
+- ✅ `/changelog` command (show changelog again)
+- ⏳ `/debug` command (show debug info)
+- ⏳ `/reload` command (full extension reload logic)
 - ⏳ Extension UI context (`createExtensionUIContext`)
 - ⏳ Compaction UI enhancements (auto-compaction loader visual, escape handling)
 - ⏳ Follow-up and queue UI
