@@ -17,7 +17,8 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, TreeSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, SessionSelectorComponent, TreeSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { SessionManager } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -36,6 +37,7 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'thinking', description: 'Select thinking level' },
 	{ name: 'models', description: 'Open model selector' },
 	{ name: 'tree', description: 'Session tree navigation' },
+	{ name: 'session', description: 'Resume or manage sessions' },
 	{ name: 'reload', description: 'Reload extensions' },
 ];
 
@@ -248,6 +250,11 @@ export class InteractiveMode {
 			if (text === '/tree') {
 				this.editor.setText?.('');
 				this.showTreeSelector?.();
+				return;
+			}
+			if (text === '/session' || text === '/resume') {
+				this.editor.setText?.('');
+				this.showSessionSelector?.();
 				return;
 			}
 			if (text === '/models') {
@@ -633,6 +640,64 @@ export class InteractiveMode {
 			undefined, // onLabelChange - optional
 			initialSelectedId,
 			this.settingsManager.getTreeFilterMode?.() ?? 'default'
+		);
+
+		this.ui.showOverlay?.(selector);
+	}
+
+	private showSessionSelector(): void {
+		// Loaders for SessionSelectorComponent
+		const currentSessionsLoader: any = async (onProgress?: any) => {
+			const cwd = this.sessionManager.getCwd?.();
+			const sessionDir = this.sessionManager.getSessionDir?.();
+			return await SessionManager.list(cwd ?? process.cwd(), sessionDir, onProgress);
+		};
+		const allSessionsLoader: any = async (onProgress?: any) => {
+			return await SessionManager.listAll(onProgress);
+		};
+
+		const selector = new SessionSelectorComponent(
+			currentSessionsLoader,
+			allSessionsLoader,
+			async (sessionPath: string) => {
+				this.ui.hideOverlay?.();
+				try {
+					const result = await this.runtimeHost.switchSession?.(sessionPath);
+					if (result?.cancelled) {
+						this.showStatus?.('Session switch cancelled');
+						return;
+					}
+					// Re-render chat with new session
+					this.chatContainer.clear?.();
+					this.renderInitialMessages?.();
+					this.editor.setText?.('');
+					this.showStatus?.(`Resumed session: ${sessionPath}`);
+				} catch (e: any) {
+					this.showError?.(e.message || 'Session switch error');
+				}
+			},
+			() => {
+				this.ui.hideOverlay?.();
+			},
+			() => {
+				void this.shutdown?.();
+			},
+			() => this.ui.requestRender?.(),
+			{
+				renameSession: async (sessionFilePath: string, newName: string | undefined) => {
+					const next = (newName ?? '').trim();
+					if (!next) return;
+					try {
+						const mgr = SessionManager.open(sessionFilePath);
+						mgr.appendSessionInfo(next);
+					} catch (e) {
+						console.error('Rename failed', e);
+					}
+				},
+				showRenameHint: true,
+				keybindings: this.keybindings as any,
+			},
+			this.sessionManager.getSessionFile?.()
 		);
 
 		this.ui.showOverlay?.(selector);
