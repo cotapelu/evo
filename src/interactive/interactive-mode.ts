@@ -17,7 +17,7 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
@@ -585,12 +585,166 @@ export class InteractiveMode {
 	}
 
 	// ============================================================================
-	// Settings Selector (stub)
+	// Settings Selector (simplified)
 	// ============================================================================
 
-	private async showSettingsSelector(): Promise<void> {
-		// TODO: implement full settings selector
-		this.showStatus?.('Settings selector not yet implemented');
+	private showSettingsSelector(): void {
+		// Gather current settings (minimal)
+		const transport: any = this.settingsManager.getTransport?.() ?? 'stdio';
+		const httpIdleTimeoutMs = this.settingsManager.getHttpIdleTimeoutMs?.() ?? 30000;
+		const settings = {
+			autoCompact: this.session.autoCompactionEnabled,
+			showImages: this.settingsManager.getShowImages?.(),
+			imageWidthCells: this.settingsManager.getImageWidthCells?.(),
+			autoResizeImages: this.settingsManager.getImageAutoResize?.(),
+			blockImages: this.settingsManager.getBlockImages?.(),
+			enableSkillCommands: this.settingsManager.getEnableSkillCommands?.(),
+			steeringMode: this.session.steeringMode || 'all',
+			followUpMode: this.session.followUpMode || 'all',
+			transport,
+			httpIdleTimeoutMs,
+			thinkingLevel: this.session.thinkingLevel || 'off',
+			availableThinkingLevels: this.session.getAvailableThinkingLevels?.(),
+			currentTheme: this.settingsManager.getTheme?.() ?? 'dark',
+			availableThemes: ['dark', 'light'],
+			hideThinkingBlock: this.hideThinkingBlock,
+			collapseChangelog: this.settingsManager.getCollapseChangelog?.(),
+			enableInstallTelemetry: this.settingsManager.getEnableInstallTelemetry?.(),
+			doubleEscapeAction: this.settingsManager.getDoubleEscapeAction?.() ?? 'none',
+			treeFilterMode: this.settingsManager.getTreeFilterMode?.() ?? 'default',
+			showHardwareCursor: this.settingsManager.getShowHardwareCursor?.(),
+			editorPaddingX: this.settingsManager.getEditorPaddingX?.(),
+			autocompleteMaxVisible: this.settingsManager.getAutocompleteMaxVisible?.(),
+			quietStartup: this.settingsManager.getQuietStartup?.(),
+			clearOnShrink: this.settingsManager.getClearOnShrink?.(),
+			showTerminalProgress: this.settingsManager.getShowTerminalProgress?.(),
+			warnings: this.settingsManager.getWarnings?.() ?? {},
+		};
+
+		// Create selector with callbacks
+		const selector = new SettingsSelectorComponent(settings, {
+			onAutoCompactChange: (enabled) => {
+				this.session.setAutoCompactionEnabled?.(enabled);
+				this.footer.setAutoCompactEnabled?.(enabled);
+			},
+			onShowImagesChange: (enabled) => {
+				this.settingsManager.setShowImages?.(enabled);
+				for (const child of this.chatContainer.children) {
+					// @ts-ignore
+					if (child instanceof ToolExecutionComponent) {
+						// @ts-ignore
+						child.setShowImages?.(enabled);
+					}
+				}
+			},
+			onImageWidthCellsChange: (width) => {
+				this.settingsManager.setImageWidthCells?.(width);
+				for (const child of this.chatContainer.children) {
+					// @ts-ignore
+					if (child instanceof ToolExecutionComponent) {
+						// @ts-ignore
+						child.setImageWidthCells?.(width);
+					}
+				}
+			},
+			onAutoResizeImagesChange: (enabled) => {
+				this.settingsManager.setImageAutoResize?.(enabled);
+			},
+			onBlockImagesChange: (blocked) => {
+				this.settingsManager.setBlockImages?.(blocked);
+			},
+			onEnableSkillCommandsChange: (enabled) => {
+				this.settingsManager.setEnableSkillCommands?.(enabled);
+			},
+			onSteeringModeChange: (mode) => {
+				this.session.setSteeringMode?.(mode);
+			},
+			onFollowUpModeChange: (mode) => {
+				this.session.setFollowUpMode?.(mode);
+			},
+			onTransportChange: (newTransport: any) => {
+				this.settingsManager.setTransport?.(newTransport);
+				// @ts-ignore
+				this.session.agent.transport = newTransport;
+			},
+			onHttpIdleTimeoutMsChange: (timeoutMs) => {
+				this.settingsManager.setHttpIdleTimeoutMs?.(timeoutMs);
+			},
+			onThinkingLevelChange: async (level) => {
+				await this.session.setThinkingLevel?.(level);
+				this.footer.invalidate?.();
+				this.updateEditorBorderColor?.();
+			},
+			onThemeChange: async (themeName) => {
+				this.settingsManager.setTheme?.(themeName);
+				await piInitTheme?.();
+				this.ui.invalidate?.();
+			},
+			onHideThinkingBlockChange: (hidden) => {
+				this.hideThinkingBlock = hidden;
+				this.settingsManager.setHideThinkingBlock?.(hidden);
+				// Rebuild chat to apply visibility
+				this.chatContainer.clear?.();
+				this.renderInitialMessages?.();
+				if (this.streamingComponent) {
+					// @ts-ignore
+					this.streamingComponent.setHideThinkingBlock?.(hidden);
+					this.streamingComponent.updateContent?.(this.streamingMessage);
+				}
+			},
+			onCollapseChangelogChange: (collapsed) => {
+				this.settingsManager.setCollapseChangelog?.(collapsed);
+			},
+			onEnableInstallTelemetryChange: (enabled) => {
+				this.settingsManager.setEnableInstallTelemetry?.(enabled);
+			},
+			onQuietStartupChange: (enabled) => {
+				this.settingsManager.setQuietStartup?.(enabled);
+			},
+			onDoubleEscapeActionChange: (action: any) => {
+				this.settingsManager.setDoubleEscapeAction?.(action);
+			},
+			onTreeFilterModeChange: (mode: any) => {
+				this.settingsManager.setTreeFilterMode?.(mode);
+			},
+			onShowHardwareCursorChange: (enabled) => {
+				this.settingsManager.setShowHardwareCursor?.(enabled);
+				this.ui.setShowHardwareCursor?.(enabled);
+			},
+			onEditorPaddingXChange: (padding) => {
+				this.settingsManager.setEditorPaddingX?.(padding);
+				this.defaultEditor.setPaddingX?.(padding);
+				if (this.editor !== this.defaultEditor) {
+					this.editor.setPaddingX?.(padding);
+				}
+			},
+			onAutocompleteMaxVisibleChange: (max) => {
+				this.settingsManager.setAutocompleteMaxVisible?.(max);
+				this.defaultEditor.setAutocompleteMaxVisible?.(max);
+				if (this.editor !== this.defaultEditor) {
+					this.editor.setAutocompleteMaxVisible?.(max);
+				}
+			},
+			onClearOnShrinkChange: (enabled) => {
+				this.settingsManager.setClearOnShrink?.(enabled);
+				this.ui.setClearOnShrink?.(enabled);
+			},
+			onShowTerminalProgressChange: (enabled) => {
+				this.settingsManager.setShowTerminalProgress?.(enabled);
+			},
+			onWarningsChange: (warnings) => {
+				this.settingsManager.setWarnings?.(warnings);
+			},
+			onCancel: () => {
+				this.ui.requestRender?.();
+			},
+		});
+
+		// Show selector in editor container
+		this.editorContainer.clear?.();
+		this.editorContainer.addChild?.(selector);
+		this.ui.setFocus?.(selector);
+		this.ui.requestRender?.();
 	}
 
 	// ============================================================================

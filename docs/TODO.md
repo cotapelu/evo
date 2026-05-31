@@ -1083,3 +1083,41 @@ Nâng cấp hệ thống interactive mode từ implementation đơn giản hiệ
 
 **Build Status**: ✅ PASSING
 
+
+## ✅ Phase 4 Progress (Core Features)
+
+### Completed Sub-Phase
+- ✅ Agent event handling (start, end, message, tool_execution)
+- ✅ Working indicator (loader on status)
+- ✅ Tool execution rendering (start/update/end)
+- ✅ Basic slash commands: /clear, /exit, /quit, /model (with search), /models
+- ✅ Model selector overlay using ModelSelectorComponent
+- ✅ Bash command handling (sync, output display)
+- ✅ Version check & startup notices
+- ✅ Build and type safety maintained
+
+### In Progress
+- ⏳ `/settings` selector (stub in place, need full implementation with SettingsSelectorComponent)
+- ⏳ `/tree` selector (session navigation with summarization)
+- ⏳ `/session` commands (info, resume, selector)
+- ⏳ Extension UI context & widget system
+- ⏳ Compaction UI (auto-compaction loader, escape handling)
+- ⏳ Resource loading display with diagnostics
+
+### Next Immediate Tasks
+1. Implement `showSettingsSelector` using SettingsSelectorComponent (gather all settings, provide callbacks)
+2. Implement `showTreeSelector` for session navigation
+3. Implement `showSessionSelector` for session management
+4. Implement `createExtensionUIContext` to support extensions
+5. Add tool output expansion toggle
+6. Add thinking block visibility toggle
+
+### Later
+- Easter egg components
+- Hotkeys command
+- Share/export/import commands
+- Image paste support
+- Follow-up & dequeue UI
+- Full error handling (retry UI, compaction queue)
+- Tests
+
