@@ -22,7 +22,6 @@ import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
 import { killTrackedDetachedChildren } from '../utils/shell.js';
-import { ensureTool } from '../utils/tools-manager.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
 import { theme } from './theme/theme.js';
@@ -140,12 +139,6 @@ export class InteractiveMode {
 			console.error('[Changelog]', e);
 		}
 
-		// Ensure tools
-		try {
-			this.fdPath = await ensureTool('fd');
-		} catch (e) {
-			console.warn('fd not available for autocomplete');
-		}
 
 		// TUI
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
@@ -444,14 +437,9 @@ export class InteractiveMode {
 		return { ...base, codeBlockIndent: this.settingsManager.getCodeBlockIndent?.() ?? 2 };
 	}
 
-	/** Get the current theme singleton */
+	/** Get the current theme object */
 	private theme(): any {
-		return theme;
-	}
-
-	/** Get the current theme */
-	private theme(): any {
-		return theme;
+		return theme();
 	}
 
 	private updateEditorBorderColor(): void {
@@ -1060,10 +1048,33 @@ export class InteractiveMode {
 		this.chatContainer.clear?.();
 	}
 
-	private handleModelCommand(text: string): Promise<void> {
-		const search = text.replace(/^\/model\s*/, '').trim();
-		this.showModelSelector?.(search || undefined);
-		return Promise.resolve();
+	private async handleModelCommand(command: string): Promise<void> {
+		const parts = command.trim().split(/\s+/);
+		if (parts.length === 1) {
+			const result = await this.session.cycleModel?.();
+			if (result?.model) {
+				this.showStatus?.(`Model: ${result.model.id}`);
+			} else {
+				this.showStatus?.('No models available');
+			}
+			return;
+		}
+		const spec = parts.slice(1).join(' ');
+		const models = await this.session.modelRegistry.getAvailable?.() ?? [];
+		let target: any = null;
+		target = models.find((m: any) => m.id === spec);
+		if (!target && spec.includes('/')) {
+			const [provider, id] = spec.split('/');
+			if (provider && id) {
+				target = models.find((m: any) => m.provider === provider && m.id === id);
+			}
+		}
+		if (target) {
+			await this.session.setModel?.(target);
+			this.showStatus?.(`Model: ${target.id}`);
+		} else {
+			this.showError?.(`Model not found: ${spec}`);
+		}
 	}
 
 	private async handleModelsCommand(): Promise<void> {
@@ -1212,6 +1223,32 @@ export class InteractiveMode {
 			await this.shutdown?.();
 		}
 	}
+
+  /** Register signal handlers for graceful shutdown */
+  private registerSignalHandlers(): void {
+    const sigintHandler = () => {
+      killTrackedDetachedChildren();
+      void this.shutdown(0);
+    };
+    process.on('SIGINT', sigintHandler);
+    this.signalCleanupHandlers.push(() => process.off('SIGINT', sigintHandler));
+
+    const sigtermHandler = () => {
+      killTrackedDetachedChildren();
+      void this.shutdown(143);
+    };
+    process.on('SIGTERM', sigtermHandler);
+    this.signalCleanupHandlers.push(() => process.off('SIGTERM', sigtermHandler));
+
+    if (process.platform !== 'win32') {
+      const sighupHandler = () => {
+        killTrackedDetachedChildren();
+        void this.shutdown(143);
+      };
+      process.on('SIGHUP', sighupHandler);
+      this.signalCleanupHandlers.push(() => process.off('SIGHUP', sighupHandler));
+    }
+  }
 }
 
 export async function runInteractiveMode(runtime: AgentSessionRuntime): Promise<void> {
