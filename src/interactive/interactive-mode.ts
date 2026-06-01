@@ -92,6 +92,18 @@ export class InteractiveMode {
 	private lastStatusText?: Text;
 	private builtInHeader?: any;
 
+	// Extension UI state
+	private extensionHeaderFactory?: ((tui: any, theme: any) => any) | undefined;
+	private extensionFooterFactory?: ((tui: any, theme: any, footerData: any) => any) | undefined;
+	private editorComponentFactory?: any;
+	private extensionWidgets = new Map<string, { lines?: string[]; options?: any; componentFactory?: any }>();
+	private extensionWidgetComponent?: any;
+	private extensionWidgetPlacements = new Map<string, 'aboveEditor' | 'belowEditor'>();
+	private widgetContainers = new Map<'aboveEditor' | 'belowEditor', Container>([
+		['aboveEditor', this.widgetContainerAbove],
+		['belowEditor', this.widgetContainerBelow],
+	]);
+
 	// Event & tool tracking
 	private streamingComponent?: any;
 	private streamingMessage?: any;
@@ -204,21 +216,152 @@ export class InteractiveMode {
 	}
 
 	private buildHeader(): void {
-		if (this.options.verbose || !this.settingsManager.getQuietStartup?.()) {
-			const logo = this.theme()?.bold?.(this.theme()?.fg?.('accent', APP_NAME)) + this.theme()?.fg?.('dim', ` v${VERSION}`);
-			const compact = [
-				keyHint('app.interrupt', 'int'),
-				rawKeyHint(`${keyText('app.clear')}/${keyText('app.exit')}`, 'clr/exit'),
-				rawKeyHint('/', 'cmds'),
-				rawKeyHint('!', 'bash'),
-			].join(this.theme()?.fg?.('muted', ' · '));
-			const onboarding = this.theme()?.fg?.('dim', `Press / for commands, ! for bash.`);
-			const headerText = `${logo}\n${compact}\n\n${onboarding}`;
-			this.builtInHeader = new Text(headerText, 1, 0);
-			this.headerContainer.addChild?.(new Spacer(1));
-			this.headerContainer.addChild?.(this.builtInHeader);
-			this.headerContainer.addChild?.(new Spacer(1));
+		this.updateHeader?.();
+	}
+
+	/** Update the header based on extension factory or built-in */
+	private updateHeader(): void {
+		this.headerContainer.clear?.();
+		if (this.extensionHeaderFactory) {
+			try {
+				const component = this.extensionHeaderFactory(this.ui, this.theme());
+				this.headerContainer.addChild?.(component);
+			} catch (e) {
+				console.error('[Header] Extension header error:', e);
+				this.buildBuiltinHeader?.();
+			}
+		} else {
+			this.buildBuiltinHeader?.();
 		}
+		this.ui.requestRender?.();
+	}
+
+	/** Build the default built-in header */
+	private buildBuiltinHeader(): void {
+		if (!(this.options.verbose || !this.settingsManager.getQuietStartup?.())) return;
+		const logo = this.theme()?.bold?.(this.theme()?.fg?.('accent', APP_NAME)) + this.theme()?.fg?.('dim', ` v${VERSION}`);
+		const compact = [
+			keyHint('app.interrupt', 'int'),
+			rawKeyHint(`${keyText('app.clear')}/${keyText('app.exit')}`, 'clr/exit'),
+			rawKeyHint('/', 'cmds'),
+			rawKeyHint('!', 'bash'),
+		].join(this.theme()?.fg?.('muted', ' · '));
+		const onboarding = this.theme()?.fg?.('dim', `Press / for commands, ! for bash.`);
+		const headerText = `${logo}\n${compact}\n\n${onboarding}`;
+		const header = new Text(headerText, 1, 0);
+		this.headerContainer.addChild?.(new Spacer(1));
+		this.headerContainer.addChild?.(header);
+		this.headerContainer.addChild?.(new Spacer(1));
+	}
+
+	/** Set the extension header factory */
+	private setExtensionHeader(factory: any): void {
+		this.extensionHeaderFactory = factory;
+		this.updateHeader();
+	}
+
+	/** Update the footer based on extension factory or built-in (placeholder) */
+	private updateFooter(): void {
+		// Minimal: no custom footer support yet
+		// Future: replace footer component
+	}
+
+	/** Set the extension footer factory */
+	private setExtensionFooter(factory: any): void {
+		this.extensionFooterFactory = factory;
+		this.updateFooter();
+	}
+
+	/** Show a custom component as an overlay */
+	private async showExtensionCustom(factory: any, options?: any): Promise<any> {
+		return new Promise((resolve) => {
+			let component: any;
+			try {
+				component = factory(this.ui, this.theme(), this.keybindings, (result: any) => {
+					this.ui.hideOverlay?.();
+					resolve(result);
+				});
+			} catch (e) {
+				console.error('[Custom] Factory error:', e);
+				this.ui.hideOverlay?.();
+				resolve(undefined);
+				return;
+			}
+			this.ui.showOverlay?.(component, { ...options });
+			this.ui.setFocus?.(component);
+		});
+	}
+
+	/** Set a custom editor component */
+	private setCustomEditorComponent(factory: any): void {
+		this.editorComponentFactory = factory;
+		if (factory) {
+			// Create custom editor with theme and keybindings
+			const newEditor = factory(this.ui, this.getEditorTheme(), this.keybindings);
+			// Wire up callbacks from default editor
+			newEditor.onSubmit = this.defaultEditor.onSubmit;
+			newEditor.onChange = this.defaultEditor.onChange;
+			// Preserve text
+			const currentText = this.editor?.getText?.() ?? '';
+			newEditor.setText?.(currentText);
+			// Replace editor
+			this.editorContainer.clear?.();
+			this.editorContainer.addChild?.(newEditor);
+			this.editor = newEditor;
+			this.ui.setFocus?.(newEditor);
+		} else {
+			// Restore default editor
+			this.editorContainer.clear?.();
+			this.editorContainer.addChild?.(this.defaultEditor);
+			this.editor = this.defaultEditor;
+			this.ui.setFocus?.(this.defaultEditor);
+		}
+		this.ui.requestRender?.();
+	}
+
+	/** Get editor theme for custom editors */
+	private getEditorTheme(): any {
+		return {
+			borderColor: (s: string) => this.theme().fg('border', s),
+			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
+		};
+	}
+
+	/** Set tool output expansion state */
+	private setToolsExpanded(expanded: boolean): void {
+		this.toolOutputExpanded = expanded;
+		this.toolComponents.forEach((comp) => {
+			comp.setExpanded?.(expanded);
+		});
+		this.ui.requestRender?.();
+	}
+
+	/** Update widget display from extensionWidgets map */
+	private updateWidgetDisplay(): void {
+		// Clear both widget containers
+		this.widgetContainerAbove.clear?.();
+		this.widgetContainerBelow.clear?.();
+		// Render each widget
+		for (const [key, widget] of this.extensionWidgets) {
+			const placement = this.extensionWidgetPlacements.get(key) ?? 'aboveEditor';
+			const container = this.widgetContainers.get(placement);
+			if (!container) continue;
+			container.addChild?.(new Spacer(1));
+			container.addChild?.(new Text(this.theme().dim(`[widget: ${key}]`), 1, 0));
+			if (widget.componentFactory) {
+				try {
+					const comp = widget.componentFactory(this.ui, this.theme());
+					container.addChild?.(comp);
+				} catch (e) {
+					console.error(`[Widget ${key}] factory error:`, e);
+				}
+			} else if (widget.lines) {
+				widget.lines.forEach((line: string) => {
+					container.addChild?.(new Text(this.theme().dim(`  ${line}`), 1, 0));
+				});
+			}
+		}
+		this.ui.requestRender?.();
 	}
 
 
@@ -607,19 +750,82 @@ export class InteractiveMode {
 			},
 
 			setWidget: (key: string, content: unknown, options?: any) => {
-				if (Array.isArray(content)) {
-					this.chatContainer.addChild?.(new Spacer(1));
-					this.chatContainer.addChild?.(
-						new Text(this.theme().dim(`[widget: ${key}]`), 1, 0)
-					);
-					content.forEach((line: string) => {
-						this.chatContainer.addChild?.(
-							new Text(this.theme().dim(`  ${line}`), 1, 0)
-						);
-					});
-					this.ui.requestRender?.();
+				if (content === undefined) {
+					this.extensionWidgets.delete(key);
+					this.extensionWidgetPlacements.delete(key);
+					this.updateWidgetDisplay?.();
+					return;
 				}
+				if (Array.isArray(content)) {
+					this.extensionWidgets.set(key, { lines: content, options });
+				} else if (typeof content === 'function') {
+					this.extensionWidgets.set(key, { componentFactory: content, options });
+				}
+				if (options?.placement) {
+					this.extensionWidgetPlacements.set(key, options.placement);
+				}
+				this.updateWidgetDisplay?.();
 			},
+
+			setHeader: (factory: any) => {
+				this.extensionHeaderFactory = factory;
+				this.updateHeader?.();
+			},
+
+			setFooter: (factory: any) => {
+				this.extensionFooterFactory = factory;
+				this.updateFooter?.();
+			},
+
+			setTitle: (title: string) => {
+				this.ui.terminal?.setTitle?.(title);
+			},
+
+			custom: <T>(factory: any, options?: any) => this.showExtensionCustom?.(factory, options) as Promise<T>,
+
+			pasteToEditor: (text: string) => {
+				this.editor.handleInput?.(`\x1b[200~${text}\x1b[201~`);
+			},
+
+			onTerminalInput: () => () => { },
+
+			addAutocompleteProvider: () => { },
+
+			setEditorComponent: (factory: any) => {
+				this.setCustomEditorComponent?.(factory);
+			},
+
+			getEditorComponent(): any {
+				return this.editorComponentFactory;
+			},
+
+			get theme() {
+				return this.theme();
+			},
+
+			getAllThemes(): any[] {
+				return [];
+			},
+
+			getTheme(_name: string): any {
+				return undefined;
+			},
+
+			setTheme(_theme: string | any): { success: boolean; error?: string } {
+				return { success: false, error: 'Theme switching not supported in minimal mode' };
+			},
+
+			getToolsExpanded(): boolean {
+				return this.toolOutputExpanded;
+			},
+
+			setToolsExpanded: (expanded: boolean) => {
+				this.setToolsExpanded?.(expanded);
+			},
+
+			setWorkingIndicator: () => { },
+
+			setHiddenThinkingLabel: () => { },
 
 			setEditorText: (text: string) => {
 				this.editor.setText?.(text);
@@ -629,15 +835,13 @@ export class InteractiveMode {
 				return this.editor.getText?.() ?? '';
 			},
 
-			setWorkingVisible: (visible: boolean) => {
+			setWorkingVisible: (_visible: boolean) => {
 				// No-op
 			},
 
-			setWorkingMessage: (msg?: string) => {
+			setWorkingMessage: (_msg?: string) => {
 				// No-op
 			},
-
-			setTheme: (_theme: string) => { return { success: false, error: 'Not supported' }; },
 		};
 	}
 
