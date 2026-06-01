@@ -6,7 +6,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { spawn, spawnSync, ChildProcess } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
@@ -16,12 +15,35 @@ import {
 	getAgentDir,
 	getDebugLogPath,
 } from '../config.js';
-import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
-import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageComponent, BashExecutionComponent, ToolExecutionComponent, DynamicBorder, ModelSelectorComponent, SettingsSelectorComponent, ThinkingSelectorComponent, SessionSelectorComponent, TreeSelectorComponent, keyHint, keyText, rawKeyHint, getMarkdownTheme, initTheme as piInitTheme } from '@earendil-works/pi-coding-agent';
+import type {
+	AgentSessionRuntime,
+	TruncationResult,
+} from '@earendil-works/pi-coding-agent';
+import {
+	DEFAULT_MAX_LINES,
+	DEFAULT_MAX_BYTES,
+	discoverAndLoadExtensions,
+	FooterComponent,
+	CustomEditor,
+	UserMessageComponent,
+	AssistantMessageComponent,
+	BashExecutionComponent,
+	ToolExecutionComponent,
+	DynamicBorder,
+	ModelSelectorComponent,
+	SettingsSelectorComponent,
+	ThinkingSelectorComponent,
+	SessionSelectorComponent,
+	TreeSelectorComponent,
+	keyHint,
+	keyText,
+	rawKeyHint,
+	getMarkdownTheme,
+	initTheme as piInitTheme,
+} from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
-import { ensureTool } from '../utils/tools-manager.js';
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
@@ -93,18 +115,6 @@ export class InteractiveMode {
 	private lastStatusText?: Text;
 	private builtInHeader?: any;
 
-	// Extension UI state
-	private extensionHeaderFactory?: ((tui: any, theme: any) => any) | undefined;
-	private extensionFooterFactory?: ((tui: any, theme: any, footerData: any) => any) | undefined;
-	private editorComponentFactory?: any;
-	private extensionWidgets = new Map<string, { lines?: string[]; options?: any; componentFactory?: any }>();
-	private extensionWidgetComponent?: any;
-	private extensionWidgetPlacements = new Map<string, 'aboveEditor' | 'belowEditor'>();
-	private widgetContainers = new Map<'aboveEditor' | 'belowEditor', Container>([
-		['aboveEditor', this.widgetContainerAbove],
-		['belowEditor', this.widgetContainerBelow],
-	]);
-
 	// Event & tool tracking
 	private streamingComponent?: any;
 	private streamingMessage?: any;
@@ -116,8 +126,6 @@ export class InteractiveMode {
 	private retryLoader?: Loader;
 	private retryCountdown?: any;
 	private retryEscapeHandler?: () => void;
-	private activeBashProcesses = new Set<ChildProcess>();
-	private readonly MAX_BASH_OUTPUT = 100 * 1024; // 100KB
 
 	// Convenience
 	private get session(): any { return this.runtimeHost.session; }
@@ -159,10 +167,6 @@ export class InteractiveMode {
 		}
 
 
-		// Ensure fd and rg are available
-		const [fdPath] = await Promise.all([ensureTool('fd'), ensureTool('rg')]);
-		this.fdPath = fdPath;
-
 		// Initialize theme
 		piInitTheme?.();
 
@@ -172,7 +176,7 @@ export class InteractiveMode {
 
 		// Editor
 		const editorTheme: any = {
-			borderColor: (s: string) => theme().fg('border', s),
+			borderColor: (s: string) => this.theme().fg('border', s),
 			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
 		};
 		this.defaultEditor = new CustomEditor(this.ui, editorTheme, this.keybindings as any, {
@@ -184,7 +188,7 @@ export class InteractiveMode {
 
 		// Layout
 		this.ui.addChild?.(this.headerContainer);
-		this.updateHeader?.();
+		this.buildHeader();
 		this.ui.addChild?.(this.chatContainer);
 		this.ui.addChild?.(this.pendingMessagesContainer);
 		this.ui.addChild?.(this.statusContainer);
@@ -202,7 +206,8 @@ export class InteractiveMode {
 		// Setup
 		this.setupKeyHandlers?.();
 		this.setupEditorSubmitHandler?.();
-		await this.bindCurrentSessionExtensions?.();
+		// Bind extensions (extensions already loaded via services)
+		this.bindCurrentSessionExtensions?.();
 
 		// Start
 		this.ui.start?.();
@@ -223,153 +228,21 @@ export class InteractiveMode {
 	}
 
 	private buildHeader(): void {
-		this.updateHeader?.();
-	}
-
-	/** Update the header based on extension factory or built-in */
-	private updateHeader(): void {
-		this.headerContainer.clear?.();
-		if (this.extensionHeaderFactory) {
-			try {
-				const component = this.extensionHeaderFactory(this.ui, theme());
-				this.headerContainer.addChild?.(component);
-			} catch (e) {
-				console.error('[Header] Extension header error:', e);
-				this.buildBuiltinHeader?.();
-			}
-		} else {
-			this.buildBuiltinHeader?.();
+		if (this.options.verbose || !this.settingsManager.getQuietStartup?.()) {
+			const logo = this.theme()?.bold?.(this.theme()?.fg?.('accent', APP_NAME)) + this.theme()?.fg?.('dim', ` v${VERSION}`);
+			const compact = [
+				keyHint('app.interrupt', 'int'),
+				rawKeyHint(`${keyText('app.clear')}/${keyText('app.exit')}`, 'clr/exit'),
+				rawKeyHint('/', 'cmds'),
+				rawKeyHint('!', 'bash'),
+			].join(this.theme()?.fg?.('muted', ' · '));
+			const onboarding = this.theme()?.fg?.('dim', `Press / for commands, ! for bash.`);
+			const headerText = `${logo}\n${compact}\n\n${onboarding}`;
+			this.builtInHeader = new Text(headerText, 1, 0);
+			this.headerContainer.addChild?.(new Spacer(1));
+			this.headerContainer.addChild?.(this.builtInHeader);
+			this.headerContainer.addChild?.(new Spacer(1));
 		}
-		this.ui.requestRender?.();
-	}
-
-	/** Build the default built-in header */
-	private buildBuiltinHeader(): void {
-		if (!(this.options.verbose || !this.settingsManager.getQuietStartup?.())) return;
-		const th = theme();
-		const logo = th?.bold?.(th?.fg?.('accent', APP_NAME)) + th?.fg?.('dim', ` v${VERSION}`);
-		const compact = [
-			keyHint('app.interrupt', 'int'),
-			rawKeyHint(`${keyText('app.clear')}/${keyText('app.exit')}`, 'clr/exit'),
-			rawKeyHint('/', 'cmds'),
-			rawKeyHint('!', 'bash'),
-		].join(th?.fg?.('muted', ' · '));
-		const onboarding = th?.fg?.('dim', `Press / for commands, ! for bash.`);
-		const headerText = `${logo}\n${compact}\n\n${onboarding}`;
-		const header = new Text(headerText, 1, 0);
-		this.headerContainer.addChild?.(new Spacer(1));
-		this.headerContainer.addChild?.(header);
-		this.headerContainer.addChild?.(new Spacer(1));
-	}
-
-	/** Set the extension header factory */
-	private setExtensionHeader(factory: any): void {
-		this.extensionHeaderFactory = factory;
-		this.updateHeader();
-	}
-
-	/** Update the footer based on extension factory or built-in (placeholder) */
-	private updateFooter(): void {
-		// Minimal: no custom footer support yet
-		// Future: replace footer component
-	}
-
-	/** Set the extension footer factory */
-	private setExtensionFooter(factory: any): void {
-		this.extensionFooterFactory = factory;
-		this.updateFooter();
-	}
-
-	/** Show a custom component as an overlay */
-	private async showExtensionCustom(factory: any, options?: any): Promise<any> {
-		return new Promise((resolve) => {
-			let component: any;
-			try {
-				component = factory(this.ui, this.theme(), this.keybindings, (result: any) => {
-					this.ui.hideOverlay?.();
-					resolve(result);
-				});
-			} catch (e) {
-				console.error('[Custom] Factory error:', e);
-				this.ui.hideOverlay?.();
-				resolve(undefined);
-				return;
-			}
-			this.ui.showOverlay?.(component, { ...options });
-			this.ui.setFocus?.(component);
-		});
-	}
-
-	/** Set a custom editor component */
-	private setCustomEditorComponent(factory: any): void {
-		this.editorComponentFactory = factory;
-		if (factory) {
-			// Create custom editor with theme and keybindings
-			const newEditor = factory(this.ui, this.getEditorTheme(), this.keybindings);
-			// Wire up callbacks from default editor
-			newEditor.onSubmit = this.defaultEditor.onSubmit;
-			newEditor.onChange = this.defaultEditor.onChange;
-			// Preserve text
-			const currentText = this.editor?.getText?.() ?? '';
-			newEditor.setText?.(currentText);
-			// Replace editor
-			this.editorContainer.clear?.();
-			this.editorContainer.addChild?.(newEditor);
-			this.editor = newEditor;
-			this.ui.setFocus?.(newEditor);
-		} else {
-			// Restore default editor
-			this.editorContainer.clear?.();
-			this.editorContainer.addChild?.(this.defaultEditor);
-			this.editor = this.defaultEditor;
-			this.ui.setFocus?.(this.defaultEditor);
-		}
-		this.ui.requestRender?.();
-	}
-
-	/** Get editor theme for custom editors */
-	private getEditorTheme(): any {
-		return {
-			borderColor: (s: string) => this.theme().fg('border', s),
-			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
-		};
-	}
-
-	/** Set tool output expansion state */
-	private setToolsExpanded(expanded: boolean): void {
-		this.toolOutputExpanded = expanded;
-		this.toolComponents.forEach((comp) => {
-			comp.setExpanded?.(expanded);
-		});
-		this.ui.requestRender?.();
-	}
-
-	/** Update widget display from extensionWidgets map */
-	private updateWidgetDisplay(): void {
-		// Clear both widget containers
-		this.widgetContainerAbove.clear?.();
-		this.widgetContainerBelow.clear?.();
-		// Render each widget
-		for (const [key, widget] of this.extensionWidgets) {
-			const placement = this.extensionWidgetPlacements.get(key) ?? 'aboveEditor';
-			const container = this.widgetContainers.get(placement);
-			if (!container) continue;
-			container.addChild?.(new Spacer(1));
-			container.addChild?.(new Text(this.theme().dim(`[widget: ${key}]`), 1, 0));
-			if (widget.componentFactory) {
-				try {
-					const comp = widget.componentFactory(this.ui, this.theme());
-					container.addChild?.(comp);
-				} catch (e) {
-					console.error(`[Widget ${key}] factory error:`, e);
-				}
-			} else if (widget.lines) {
-				widget.lines.forEach((line: string) => {
-					container.addChild?.(new Text(this.theme().dim(`  ${line}`), 1, 0));
-				});
-			}
-		}
-		this.ui.requestRender?.();
 	}
 
 
@@ -509,24 +382,6 @@ export class InteractiveMode {
 					this.showWarning?.('Usage: /import <file path>');
 				}
 				break;
-			case '/bash': {
-				const args = command.slice(5).trim();
-				if (!args) {
-					this.showWarning?.('Usage: /bash <shell command>');
-				} else {
-					this.handleBashCommand(args, false);
-				}
-				break;
-			}
-			case '/!': {
-				const args = command.slice(2).trim();
-				if (!args) {
-					this.showWarning?.('Usage: /! <shell command>');
-				} else {
-					this.handleBashCommand(args, false);
-				}
-				break;
-			}
 			default:
 				if (command === '/model') {
 					// Cycle to next model
@@ -680,6 +535,8 @@ export class InteractiveMode {
 			this.autoCompactionLoader = undefined;
 			this.ui.requestRender?.();
 		}
+		// Flush queued compaction messages
+		void this.flushCompactionQueue?.();
 	}
 
 	/** Create Extension UIContext for extension UI requests */
@@ -776,82 +633,19 @@ export class InteractiveMode {
 			},
 
 			setWidget: (key: string, content: unknown, options?: any) => {
-				if (content === undefined) {
-					this.extensionWidgets.delete(key);
-					this.extensionWidgetPlacements.delete(key);
-					this.updateWidgetDisplay?.();
-					return;
-				}
 				if (Array.isArray(content)) {
-					this.extensionWidgets.set(key, { lines: content, options });
-				} else if (typeof content === 'function') {
-					this.extensionWidgets.set(key, { componentFactory: content, options });
+					this.chatContainer.addChild?.(new Spacer(1));
+					this.chatContainer.addChild?.(
+						new Text(this.theme().dim(`[widget: ${key}]`), 1, 0)
+					);
+					content.forEach((line: string) => {
+						this.chatContainer.addChild?.(
+							new Text(this.theme().dim(`  ${line}`), 1, 0)
+						);
+					});
+					this.ui.requestRender?.();
 				}
-				if (options?.placement) {
-					this.extensionWidgetPlacements.set(key, options.placement);
-				}
-				this.updateWidgetDisplay?.();
 			},
-
-			setHeader: (factory: any) => {
-				this.extensionHeaderFactory = factory;
-				this.updateHeader?.();
-			},
-
-			setFooter: (factory: any) => {
-				this.extensionFooterFactory = factory;
-				this.updateFooter?.();
-			},
-
-			setTitle: (title: string) => {
-				this.ui.terminal?.setTitle?.(title);
-			},
-
-			custom: <T>(factory: any, options?: any) => this.showExtensionCustom?.(factory, options) as Promise<T>,
-
-			pasteToEditor: (text: string) => {
-				this.editor.handleInput?.(`\x1b[200~${text}\x1b[201~`);
-			},
-
-			onTerminalInput: () => () => { },
-
-			addAutocompleteProvider: () => { },
-
-			setEditorComponent: (factory: any) => {
-				this.setCustomEditorComponent?.(factory);
-			},
-
-			getEditorComponent(): any {
-				return this.editorComponentFactory;
-			},
-
-			get theme() {
-				return this.theme();
-			},
-
-			getAllThemes(): any[] {
-				return [];
-			},
-
-			getTheme(_name: string): any {
-				return undefined;
-			},
-
-			setTheme(_theme: string | any): { success: boolean; error?: string } {
-				return { success: false, error: 'Theme switching not supported in minimal mode' };
-			},
-
-			getToolsExpanded(): boolean {
-				return this.toolOutputExpanded;
-			},
-
-			setToolsExpanded: (expanded: boolean) => {
-				this.setToolsExpanded?.(expanded);
-			},
-
-			setWorkingIndicator: () => { },
-
-			setHiddenThinkingLabel: () => { },
 
 			setEditorText: (text: string) => {
 				this.editor.setText?.(text);
@@ -861,13 +655,15 @@ export class InteractiveMode {
 				return this.editor.getText?.() ?? '';
 			},
 
-			setWorkingVisible: (_visible: boolean) => {
+			setWorkingVisible: (visible: boolean) => {
 				// No-op
 			},
 
-			setWorkingMessage: (_msg?: string) => {
+			setWorkingMessage: (msg?: string) => {
 				// No-op
 			},
+
+			setTheme: (_theme: string) => { return { success: false, error: 'Not supported' }; },
 		};
 	}
 
@@ -879,7 +675,7 @@ export class InteractiveMode {
 	private updateEditorBorderColor(): void {
 		const level = this.session.thinkingLevel || 'off';
 		const colors: Record<string, string> = { off: 'border', minimal: 'dim', low: 'accent', medium: 'warning', high: 'error', xhigh: 'error' };
-		this.editor.borderColor = theme().fg(colors[level] ?? 'border', '#');
+		this.editor.borderColor = this.theme().fg(colors[level] ?? 'border', '#');
 		this.ui.requestRender?.();
 	}
 
@@ -1005,6 +801,7 @@ export class InteractiveMode {
 					component.setExpanded?.(this.toolOutputExpanded);
 					this.chatContainer.addChild?.(component);
 					this.pendingTools.set?.(event.toolCallId, component);
+					// Track for global expansion toggle
 					this.toolComponents.push(component);
 				}
 				component.markExecutionStarted?.();
@@ -1031,111 +828,7 @@ export class InteractiveMode {
 				break;
 			}
 
-			// Additional event types for full parity
-			case 'queue_update':
-				this.updatePendingMessagesDisplay?.();
-				break;
-			case 'session_info_changed':
-				this.updateTerminalTitle?.();
-				this.footer.invalidate?.();
-				break;
-			case 'thinking_level_changed':
-				this.footer.invalidate?.();
-				this.updateEditorBorderColor?.();
-				break;
-			case 'compaction_start': {
-				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(true);
-				// Set escape to abort compaction
-				this.autoCompactionEscapeHandler = this.defaultEditor.onEscape;
-				this.defaultEditor.onEscape = () => { this.session.abortCompaction?.(); };
-				this.statusContainer.clear?.();
-				const cancelHint = `(${keyText('app.interrupt')} to cancel)`;
-				const label = event.reason === 'manual'
-					? `Compacting context... ${cancelHint}`
-					: `${event.reason === 'overflow' ? 'Context overflow detected, ' : ''}Auto-compacting... ${cancelHint}`;
-				this.autoCompactionLoader = new Loader(
-					this.ui,
-					(spinner) => theme().fg('warning', spinner),
-					(text) => theme().dim(text),
-					label
-				);
-				this.statusContainer.addChild?.(this.autoCompactionLoader);
-				break;
-			}
-			case 'compaction_end': {
-				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(false);
-				if (this.autoCompactionEscapeHandler) {
-					this.defaultEditor.onEscape = this.autoCompactionEscapeHandler;
-					this.autoCompactionEscapeHandler = undefined;
-				}
-				if (this.autoCompactionLoader) {
-					this.autoCompactionLoader.stop?.();
-					this.autoCompactionLoader = undefined;
-					this.statusContainer.clear?.();
-				}
-				if (event.aborted) {
-					if (event.reason === 'manual') {
-						this.showError?.('Compaction cancelled');
-					} else {
-						this.showStatus?.('Auto-compaction cancelled');
-					}
-				} else if (event.result) {
-					this.chatContainer.clear?.();
-					this.rebuildChatFromMessages?.();
-					this.addMessageToChat?.({
-						role: 'compactionSummary',
-						summary: event.result.summary,
-						tokensBefore: event.result.tokensBefore,
-						timestamp: new Date().toISOString(),
-					} as any);
-					this.footer.invalidate?.();
-				} else if (event.errorMessage) {
-					if (event.reason === 'manual') {
-						this.showError?.(event.errorMessage);
-					} else {
-						this.chatContainer.addChild?.(new Spacer(1));
-						this.chatContainer.addChild?.(new Text(theme().fg('error', event.errorMessage), 1, 0));
-					}
-				}
-				void this.flushCompactionQueue?.({ willRetry: event.willRetry });
-				this.ui.requestRender?.();
-				break;
-			}
-			case 'auto_retry_start': {
-				this.retryEscapeHandler = this.defaultEditor.onEscape;
-				this.defaultEditor.onEscape = () => { this.session.abortRetry?.(); };
-				this.statusContainer.clear?.();
-				if (this.retryCountdown) {
-					this.retryCountdown.dispose?.();
-					this.retryCountdown = undefined;
-				}
-				const retryMessage = (seconds: number) =>
-					`Retrying (${event.attempt}/${event.maxAttempts}) in ${seconds}s... (${keyText('app.interrupt')} to cancel)`;
-				this.retryLoader = new Loader(
-					this.ui,
-					(spinner) => theme().fg('warning', spinner),
-					(text) => theme().dim(text),
-					retryMessage(Math.ceil(event.delayMs / 1000))
-				);
-				this.statusContainer.addChild?.(this.retryLoader);
-				break;
-			}
-			case 'auto_retry_end': {
-				if (this.retryEscapeHandler) {
-					this.defaultEditor.onEscape = this.retryEscapeHandler;
-					this.retryEscapeHandler = undefined;
-				}
-				if (this.retryLoader) {
-					this.retryLoader.stop?.();
-					this.retryLoader = undefined;
-					this.statusContainer.clear?.();
-				}
-				if (!event.success) {
-					this.showError?.(`Retry failed after ${event.attempt} attempts: ${event.finalError || 'Unknown error'}`);
-				}
-				this.ui.requestRender?.();
-				break;
-			}
+
 			case 'shutdown_requested':
 				this.shutdownRequested = true;
 				break;
@@ -1829,44 +1522,41 @@ export class InteractiveMode {
 			console.warn('Security warning: potentially dangerous command', command);
 		}
 
-		// Streaming implementation
-		const component = new BashExecutionComponent(command, this.ui, exclude);
-		this.chatContainer.addChild?.(component);
+		const bashComponent = new BashExecutionComponent(command, this.ui, exclude);
+		this.chatContainer.addChild?.(bashComponent);
 		this.ui.requestRender?.();
 
-		let truncated = false;
-		let accumulated = '';
-
-		const onChunk = (chunk: string) => {
-			if (truncated) return;
-			component.appendOutput?.(chunk);
-			accumulated += chunk;
-			if (accumulated.length > this.MAX_BASH_OUTPUT) {
-				truncated = true;
-			}
-		};
-
 		try {
-			const cwd = this.sessionManager.getCwd?.() ?? process.cwd();
-			const child = spawn(command, { cwd, env: process.env, stdio: ['ignore', 'pipe', 'pipe'], shell: true });
-
-			child.stdout?.on('data', (chunk: Buffer) => onChunk(chunk.toString('utf-8')));
-			child.stderr?.on('data', (chunk: Buffer) => onChunk(chunk.toString('utf-8')));
-
-			const exitCode = await new Promise<number>((resolve, reject) => {
-				child.on('exit', (code, sig) => {
-					resolve(code ?? 0);
-				});
-				child.on('error', reject);
+			// Use AgentSession's executeBash with streaming callback
+			const result = await this.runtimeHost.session.executeBash(command, (chunk: string) => {
+				bashComponent.appendOutput(chunk);
+				this.ui.requestRender?.();
 			});
 
-			component.setComplete?.(exitCode, truncated, undefined, undefined);
-			this.defaultEditor.setText?.('');
-		} catch (err: any) {
-			component.setComplete?.(1, false, err.message, undefined);
-			this.showError?.(`Bash error: ${err.message}`);
-		} finally {
+			// Build TruncationResult from result
+			const outputLines = result.output.split('\n');
+			const outputBytes = Buffer.byteLength(result.output, 'utf8');
+			const truncationResult: TruncationResult = {
+				content: result.output,
+				truncated: result.truncated,
+				truncatedBy: result.truncated ? 'bytes' : null,
+				totalLines: outputLines.length,
+				totalBytes: outputBytes,
+				outputLines,
+				outputBytes,
+				lastLinePartial: false,
+				firstLineExceedsLimit: false,
+				maxLines: DEFAULT_MAX_LINES,
+				maxBytes: DEFAULT_MAX_BYTES,
+			};
+
+			bashComponent.setComplete(result.exitCode, result.cancelled, truncationResult, result.fullOutputPath);
 			this.ui.requestRender?.();
+			// Clear editor after successful execution
+			this.defaultEditor.setText?.('');
+		} catch (e: any) {
+			console.error('BashCommandError:', command, e);
+			this.showError?.(`Bash error: ${e.message}`);
 		}
 	}
 
@@ -1880,7 +1570,7 @@ export class InteractiveMode {
 	/** Display an error message in chat */
 	private showError(errorMessage: string): void {
 		this.chatContainer.addChild?.(new Spacer(1));
-		this.chatContainer.addChild?.(new Text(theme().fg('error', `Error: ${errorMessage}`), 1, 0));
+		this.chatContainer.addChild?.(new Text(this.theme().fg('error', `Error: ${errorMessage}`), 1, 0));
 		this.ui.requestRender?.();
 	}
 
@@ -1892,12 +1582,12 @@ export class InteractiveMode {
 		if (last && secondLast && last === this.lastStatusText && secondLast === this.lastStatusSpacer) {
 			// Update existing status line
 			// @ts-ignore - Text component has setText
-			last.setText?.(theme().fg('dim', message));
+			last.setText?.(this.theme().fg('dim', message));
 			this.ui.requestRender?.();
 			return;
 		}
 		const spacer = new Spacer(1);
-		const text = new Text(theme().fg('dim', message), 1, 0);
+		const text = new Text(this.theme().fg('dim', message), 1, 0);
 		this.chatContainer.addChild?.(spacer);
 		this.chatContainer.addChild?.(text);
 		this.lastStatusSpacer = spacer;
@@ -1923,8 +1613,7 @@ export class InteractiveMode {
 
 	/** Display loaded extensions/resources summary */
 	private updateTerminalTitle(): void {
-		const cwd = this.sessionManager.getCwd?.() ?? process.cwd();
-		const cwdBasename = path.basename(cwd);
+		const cwdBasename = path.basename(this.sessionManager.getCwd?.());
 		const sessionName = this.sessionManager.getSessionName?.();
 		if (sessionName) this.ui.terminal.setTitle?.(`${APP_TITLE} - ${sessionName} - ${cwdBasename}`);
 		else this.ui.terminal.setTitle?.(`${APP_TITLE} - ${cwdBasename}`);
@@ -1964,19 +1653,6 @@ export class InteractiveMode {
 		}
 	}
 
-	/** Rebuild chat from session messages */
-	private rebuildChatFromMessages(): void {
-		this.chatContainer.clear?.();
-		this.renderInitialMessages?.();
-	}
-
-	/** Flush compaction queue (stub) */
-	private async flushCompactionQueue(options?: { willRetry?: boolean }): Promise<void> {
-		// Clear queued messages; proper implementation will send them
-		this.compactionQueuedMessages = [];
-		this.updatePendingMessagesDisplay?.();
-	}
-
   /** Register signal handlers for graceful shutdown */
   private registerSignalHandlers(): void {
     const sigintHandler = () => {
@@ -2002,97 +1678,6 @@ export class InteractiveMode {
       this.signalCleanupHandlers.push(() => process.off('SIGHUP', sighupHandler));
     }
   }
-
-	): Promise<{ exitCode: number; signal?: string }> {
-		const cwd = options?.cwd ?? this.sessionManager.getCwd?.() ?? process.cwd();
-		const env = options?.env ?? process.env;
-
-		const child = spawn(command, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], shell: true });
-
-		this.activeBashProcesses.add(child);
-
-		let accumulated = '';
-		let truncated = false;
-
-		const handleStream = (stream: NodeJS.ReadableStream) => {
-			stream.on('data', (chunk: Buffer) => {
-				if (truncated) return;
-				const text = chunk.toString('utf-8');
-				onChunk(text);
-				accumulated += text;
-				if (accumulated.length > this.MAX_BASH_OUTPUT) {
-					truncated = true;
-				}
-			});
-			stream.on('error', (err: Error) => {
-				console.error('Bash stream error:', err);
-			});
-		};
-
-		if (child.stdout) handleStream(child.stdout);
-		if (child.stderr) handleStream(child.stderr);
-
-		const exitPromise = new Promise<{ exitCode: number; signal?: string }>((resolve, reject) => {
-			child.on('exit', (code, sig) => {
-				this.activeBashProcesses.delete(child);
-				resolve({ exitCode: code ?? 0, signal: sig });
-			});
-			child.on('error', (err: Error) => {
-				this.activeBashProcesses.delete(child);
-				reject(err);
-			});
-		});
-
-		if (options?.timeoutMs) {
-			const timeout = setTimeout(() => {
-				if (!child.killed) child.kill('SIGKILL');
-			}, options.timeoutMs);
-			exitPromise.finally(() => clearTimeout(timeout));
-		}
-
-		return exitPromise;
-	}
-
-	/** Handle a bash command from user input */
-	private handleBashCommand(command: string, excludeFromContext: boolean = false): void {
-		if (!command.trim()) {
-			this.showStatus?.('Empty command');
-			return;
-		}
-
-		const component = new BashExecutionComponent(command, this.ui, excludeFromContext);
-		this.chatContainer.addChild?.(component);
-		this.ui.requestRender?.();
-
-		let accumulated = '';
-		let truncated = false;
-
-		const onChunk = (chunk: string) => {
-			if (truncated) return;
-			component.appendOutput(chunk);
-			accumulated += chunk;
-			if (accumulated.length > this.MAX_BASH_OUTPUT) {
-				truncated = true;
-				component.setTruncated?.(true);
-			}
-		};
-
-		const run = async () => {
-			try {
-				const result = await this.executeBash(command, onChunk);
-				component.setExitCode?.(result.exitCode);
-				if (result.signal) {
-					component.appendOutput(`\n[Process terminated by signal: ${result.signal}]`);
-				}
-			} catch (err: any) {
-				component.appendOutput(`\n[Failed to start process: ${err.message}]`);
-				component.setExitCode?.(1);
-			}
-			this.ui.requestRender?.();
-		};
-
-		run();
-	}
 }
 
 export async function runInteractiveMode(runtime: AgentSessionRuntime): Promise<void> {
