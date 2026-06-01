@@ -6,7 +6,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { spawnSync } from 'child_process';
+import { spawn, spawnSync, ChildProcess } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
@@ -21,6 +21,7 @@ import { FooterComponent, CustomEditor, UserMessageComponent, AssistantMessageCo
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
+import { ensureTool } from '../utils/tools-manager.js';
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
@@ -115,6 +116,8 @@ export class InteractiveMode {
 	private retryLoader?: Loader;
 	private retryCountdown?: any;
 	private retryEscapeHandler?: () => void;
+	private activeBashProcesses = new Set<ChildProcess>();
+	private readonly MAX_BASH_OUTPUT = 100 * 1024; // 100KB
 
 	// Convenience
 	private get session(): any { return this.runtimeHost.session; }
@@ -156,6 +159,10 @@ export class InteractiveMode {
 		}
 
 
+		// Ensure fd and rg are available
+		const [fdPath] = await Promise.all([ensureTool('fd'), ensureTool('rg')]);
+		this.fdPath = fdPath;
+
 		// Initialize theme
 		piInitTheme?.();
 
@@ -165,7 +172,7 @@ export class InteractiveMode {
 
 		// Editor
 		const editorTheme: any = {
-			borderColor: (s: string) => this.theme().fg('border', s),
+			borderColor: (s: string) => theme().fg('border', s),
 			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
 		};
 		this.defaultEditor = new CustomEditor(this.ui, editorTheme, this.keybindings as any, {
@@ -177,7 +184,7 @@ export class InteractiveMode {
 
 		// Layout
 		this.ui.addChild?.(this.headerContainer);
-		this.buildHeader();
+		this.updateHeader?.();
 		this.ui.addChild?.(this.chatContainer);
 		this.ui.addChild?.(this.pendingMessagesContainer);
 		this.ui.addChild?.(this.statusContainer);
@@ -195,7 +202,7 @@ export class InteractiveMode {
 		// Setup
 		this.setupKeyHandlers?.();
 		this.setupEditorSubmitHandler?.();
-		this.bindCurrentSessionExtensions?.();
+		await this.bindCurrentSessionExtensions?.();
 
 		// Start
 		this.ui.start?.();
@@ -224,7 +231,7 @@ export class InteractiveMode {
 		this.headerContainer.clear?.();
 		if (this.extensionHeaderFactory) {
 			try {
-				const component = this.extensionHeaderFactory(this.ui, this.theme());
+				const component = this.extensionHeaderFactory(this.ui, theme());
 				this.headerContainer.addChild?.(component);
 			} catch (e) {
 				console.error('[Header] Extension header error:', e);
@@ -239,14 +246,15 @@ export class InteractiveMode {
 	/** Build the default built-in header */
 	private buildBuiltinHeader(): void {
 		if (!(this.options.verbose || !this.settingsManager.getQuietStartup?.())) return;
-		const logo = this.theme()?.bold?.(this.theme()?.fg?.('accent', APP_NAME)) + this.theme()?.fg?.('dim', ` v${VERSION}`);
+		const th = theme();
+		const logo = th?.bold?.(th?.fg?.('accent', APP_NAME)) + th?.fg?.('dim', ` v${VERSION}`);
 		const compact = [
 			keyHint('app.interrupt', 'int'),
 			rawKeyHint(`${keyText('app.clear')}/${keyText('app.exit')}`, 'clr/exit'),
 			rawKeyHint('/', 'cmds'),
 			rawKeyHint('!', 'bash'),
-		].join(this.theme()?.fg?.('muted', ' · '));
-		const onboarding = this.theme()?.fg?.('dim', `Press / for commands, ! for bash.`);
+		].join(th?.fg?.('muted', ' · '));
+		const onboarding = th?.fg?.('dim', `Press / for commands, ! for bash.`);
 		const headerText = `${logo}\n${compact}\n\n${onboarding}`;
 		const header = new Text(headerText, 1, 0);
 		this.headerContainer.addChild?.(new Spacer(1));
@@ -501,6 +509,24 @@ export class InteractiveMode {
 					this.showWarning?.('Usage: /import <file path>');
 				}
 				break;
+			case '/bash': {
+				const args = command.slice(5).trim();
+				if (!args) {
+					this.showWarning?.('Usage: /bash <shell command>');
+				} else {
+					this.handleBashCommand(args, false);
+				}
+				break;
+			}
+			case '/!': {
+				const args = command.slice(2).trim();
+				if (!args) {
+					this.showWarning?.('Usage: /! <shell command>');
+				} else {
+					this.handleBashCommand(args, false);
+				}
+				break;
+			}
 			default:
 				if (command === '/model') {
 					// Cycle to next model
@@ -853,7 +879,7 @@ export class InteractiveMode {
 	private updateEditorBorderColor(): void {
 		const level = this.session.thinkingLevel || 'off';
 		const colors: Record<string, string> = { off: 'border', minimal: 'dim', low: 'accent', medium: 'warning', high: 'error', xhigh: 'error' };
-		this.editor.borderColor = this.theme().fg(colors[level] ?? 'border', '#');
+		this.editor.borderColor = theme().fg(colors[level] ?? 'border', '#');
 		this.ui.requestRender?.();
 	}
 
@@ -979,7 +1005,6 @@ export class InteractiveMode {
 					component.setExpanded?.(this.toolOutputExpanded);
 					this.chatContainer.addChild?.(component);
 					this.pendingTools.set?.(event.toolCallId, component);
-					// Track for global expansion toggle
 					this.toolComponents.push(component);
 				}
 				component.markExecutionStarted?.();
@@ -1006,7 +1031,111 @@ export class InteractiveMode {
 				break;
 			}
 
-
+			// Additional event types for full parity
+			case 'queue_update':
+				this.updatePendingMessagesDisplay?.();
+				break;
+			case 'session_info_changed':
+				this.updateTerminalTitle?.();
+				this.footer.invalidate?.();
+				break;
+			case 'thinking_level_changed':
+				this.footer.invalidate?.();
+				this.updateEditorBorderColor?.();
+				break;
+			case 'compaction_start': {
+				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(true);
+				// Set escape to abort compaction
+				this.autoCompactionEscapeHandler = this.defaultEditor.onEscape;
+				this.defaultEditor.onEscape = () => { this.session.abortCompaction?.(); };
+				this.statusContainer.clear?.();
+				const cancelHint = `(${keyText('app.interrupt')} to cancel)`;
+				const label = event.reason === 'manual'
+					? `Compacting context... ${cancelHint}`
+					: `${event.reason === 'overflow' ? 'Context overflow detected, ' : ''}Auto-compacting... ${cancelHint}`;
+				this.autoCompactionLoader = new Loader(
+					this.ui,
+					(spinner) => theme().fg('warning', spinner),
+					(text) => theme().dim(text),
+					label
+				);
+				this.statusContainer.addChild?.(this.autoCompactionLoader);
+				break;
+			}
+			case 'compaction_end': {
+				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(false);
+				if (this.autoCompactionEscapeHandler) {
+					this.defaultEditor.onEscape = this.autoCompactionEscapeHandler;
+					this.autoCompactionEscapeHandler = undefined;
+				}
+				if (this.autoCompactionLoader) {
+					this.autoCompactionLoader.stop?.();
+					this.autoCompactionLoader = undefined;
+					this.statusContainer.clear?.();
+				}
+				if (event.aborted) {
+					if (event.reason === 'manual') {
+						this.showError?.('Compaction cancelled');
+					} else {
+						this.showStatus?.('Auto-compaction cancelled');
+					}
+				} else if (event.result) {
+					this.chatContainer.clear?.();
+					this.rebuildChatFromMessages?.();
+					this.addMessageToChat?.({
+						role: 'compactionSummary',
+						summary: event.result.summary,
+						tokensBefore: event.result.tokensBefore,
+						timestamp: new Date().toISOString(),
+					} as any);
+					this.footer.invalidate?.();
+				} else if (event.errorMessage) {
+					if (event.reason === 'manual') {
+						this.showError?.(event.errorMessage);
+					} else {
+						this.chatContainer.addChild?.(new Spacer(1));
+						this.chatContainer.addChild?.(new Text(theme().fg('error', event.errorMessage), 1, 0));
+					}
+				}
+				void this.flushCompactionQueue?.({ willRetry: event.willRetry });
+				this.ui.requestRender?.();
+				break;
+			}
+			case 'auto_retry_start': {
+				this.retryEscapeHandler = this.defaultEditor.onEscape;
+				this.defaultEditor.onEscape = () => { this.session.abortRetry?.(); };
+				this.statusContainer.clear?.();
+				if (this.retryCountdown) {
+					this.retryCountdown.dispose?.();
+					this.retryCountdown = undefined;
+				}
+				const retryMessage = (seconds: number) =>
+					`Retrying (${event.attempt}/${event.maxAttempts}) in ${seconds}s... (${keyText('app.interrupt')} to cancel)`;
+				this.retryLoader = new Loader(
+					this.ui,
+					(spinner) => theme().fg('warning', spinner),
+					(text) => theme().dim(text),
+					retryMessage(Math.ceil(event.delayMs / 1000))
+				);
+				this.statusContainer.addChild?.(this.retryLoader);
+				break;
+			}
+			case 'auto_retry_end': {
+				if (this.retryEscapeHandler) {
+					this.defaultEditor.onEscape = this.retryEscapeHandler;
+					this.retryEscapeHandler = undefined;
+				}
+				if (this.retryLoader) {
+					this.retryLoader.stop?.();
+					this.retryLoader = undefined;
+					this.statusContainer.clear?.();
+				}
+				if (!event.success) {
+					this.showError?.(`Retry failed after ${event.attempt} attempts: ${event.finalError || 'Unknown error'}`);
+				}
+				this.ui.requestRender?.();
+				break;
+			}
 			case 'shutdown_requested':
 				this.shutdownRequested = true;
 				break;
@@ -1700,20 +1829,44 @@ export class InteractiveMode {
 			console.warn('Security warning: potentially dangerous command', command);
 		}
 
+		// Streaming implementation
+		const component = new BashExecutionComponent(command, this.ui, exclude);
+		this.chatContainer.addChild?.(component);
+		this.ui.requestRender?.();
+
+		let truncated = false;
+		let accumulated = '';
+
+		const onChunk = (chunk: string) => {
+			if (truncated) return;
+			component.appendOutput?.(chunk);
+			accumulated += chunk;
+			if (accumulated.length > this.MAX_BASH_OUTPUT) {
+				truncated = true;
+			}
+		};
+
 		try {
-			const result = spawnSync(command, { shell: true, encoding: 'utf8' });
-			const output = result.stdout || result.stderr || '';
-			const BashComp = BashExecutionComponent as any;
-			const bashComponent = new BashComp(command, this.ui, exclude);
-			bashComponent.appendOutput?.(output);
-			bashComponent.setComplete?.(result.status ?? 0, false, undefined, undefined);
-			this.chatContainer.addChild?.(bashComponent);
-			this.ui.requestRender?.();
-			// Clear editor after successful execution
+			const cwd = this.sessionManager.getCwd?.() ?? process.cwd();
+			const child = spawn(command, { cwd, env: process.env, stdio: ['ignore', 'pipe', 'pipe'], shell: true });
+
+			child.stdout?.on('data', (chunk: Buffer) => onChunk(chunk.toString('utf-8')));
+			child.stderr?.on('data', (chunk: Buffer) => onChunk(chunk.toString('utf-8')));
+
+			const exitCode = await new Promise<number>((resolve, reject) => {
+				child.on('exit', (code, sig) => {
+					resolve(code ?? 0);
+				});
+				child.on('error', reject);
+			});
+
+			component.setComplete?.(exitCode, truncated, undefined, undefined);
 			this.defaultEditor.setText?.('');
-		} catch (e: any) {
-			console.error('BashCommandError:', command, e);
-			this.showError?.(`Bash error: ${e.message}`);
+		} catch (err: any) {
+			component.setComplete?.(1, false, err.message, undefined);
+			this.showError?.(`Bash error: ${err.message}`);
+		} finally {
+			this.ui.requestRender?.();
 		}
 	}
 
@@ -1727,7 +1880,7 @@ export class InteractiveMode {
 	/** Display an error message in chat */
 	private showError(errorMessage: string): void {
 		this.chatContainer.addChild?.(new Spacer(1));
-		this.chatContainer.addChild?.(new Text(this.theme().fg('error', `Error: ${errorMessage}`), 1, 0));
+		this.chatContainer.addChild?.(new Text(theme().fg('error', `Error: ${errorMessage}`), 1, 0));
 		this.ui.requestRender?.();
 	}
 
@@ -1739,12 +1892,12 @@ export class InteractiveMode {
 		if (last && secondLast && last === this.lastStatusText && secondLast === this.lastStatusSpacer) {
 			// Update existing status line
 			// @ts-ignore - Text component has setText
-			last.setText?.(this.theme().fg('dim', message));
+			last.setText?.(theme().fg('dim', message));
 			this.ui.requestRender?.();
 			return;
 		}
 		const spacer = new Spacer(1);
-		const text = new Text(this.theme().fg('dim', message), 1, 0);
+		const text = new Text(theme().fg('dim', message), 1, 0);
 		this.chatContainer.addChild?.(spacer);
 		this.chatContainer.addChild?.(text);
 		this.lastStatusSpacer = spacer;
@@ -1770,7 +1923,8 @@ export class InteractiveMode {
 
 	/** Display loaded extensions/resources summary */
 	private updateTerminalTitle(): void {
-		const cwdBasename = path.basename(this.sessionManager.getCwd?.());
+		const cwd = this.sessionManager.getCwd?.() ?? process.cwd();
+		const cwdBasename = path.basename(cwd);
 		const sessionName = this.sessionManager.getSessionName?.();
 		if (sessionName) this.ui.terminal.setTitle?.(`${APP_TITLE} - ${sessionName} - ${cwdBasename}`);
 		else this.ui.terminal.setTitle?.(`${APP_TITLE} - ${cwdBasename}`);
@@ -1810,6 +1964,19 @@ export class InteractiveMode {
 		}
 	}
 
+	/** Rebuild chat from session messages */
+	private rebuildChatFromMessages(): void {
+		this.chatContainer.clear?.();
+		this.renderInitialMessages?.();
+	}
+
+	/** Flush compaction queue (stub) */
+	private async flushCompactionQueue(options?: { willRetry?: boolean }): Promise<void> {
+		// Clear queued messages; proper implementation will send them
+		this.compactionQueuedMessages = [];
+		this.updatePendingMessagesDisplay?.();
+	}
+
   /** Register signal handlers for graceful shutdown */
   private registerSignalHandlers(): void {
     const sigintHandler = () => {
@@ -1835,6 +2002,97 @@ export class InteractiveMode {
       this.signalCleanupHandlers.push(() => process.off('SIGHUP', sighupHandler));
     }
   }
+
+	): Promise<{ exitCode: number; signal?: string }> {
+		const cwd = options?.cwd ?? this.sessionManager.getCwd?.() ?? process.cwd();
+		const env = options?.env ?? process.env;
+
+		const child = spawn(command, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], shell: true });
+
+		this.activeBashProcesses.add(child);
+
+		let accumulated = '';
+		let truncated = false;
+
+		const handleStream = (stream: NodeJS.ReadableStream) => {
+			stream.on('data', (chunk: Buffer) => {
+				if (truncated) return;
+				const text = chunk.toString('utf-8');
+				onChunk(text);
+				accumulated += text;
+				if (accumulated.length > this.MAX_BASH_OUTPUT) {
+					truncated = true;
+				}
+			});
+			stream.on('error', (err: Error) => {
+				console.error('Bash stream error:', err);
+			});
+		};
+
+		if (child.stdout) handleStream(child.stdout);
+		if (child.stderr) handleStream(child.stderr);
+
+		const exitPromise = new Promise<{ exitCode: number; signal?: string }>((resolve, reject) => {
+			child.on('exit', (code, sig) => {
+				this.activeBashProcesses.delete(child);
+				resolve({ exitCode: code ?? 0, signal: sig });
+			});
+			child.on('error', (err: Error) => {
+				this.activeBashProcesses.delete(child);
+				reject(err);
+			});
+		});
+
+		if (options?.timeoutMs) {
+			const timeout = setTimeout(() => {
+				if (!child.killed) child.kill('SIGKILL');
+			}, options.timeoutMs);
+			exitPromise.finally(() => clearTimeout(timeout));
+		}
+
+		return exitPromise;
+	}
+
+	/** Handle a bash command from user input */
+	private handleBashCommand(command: string, excludeFromContext: boolean = false): void {
+		if (!command.trim()) {
+			this.showStatus?.('Empty command');
+			return;
+		}
+
+		const component = new BashExecutionComponent(command, this.ui, excludeFromContext);
+		this.chatContainer.addChild?.(component);
+		this.ui.requestRender?.();
+
+		let accumulated = '';
+		let truncated = false;
+
+		const onChunk = (chunk: string) => {
+			if (truncated) return;
+			component.appendOutput(chunk);
+			accumulated += chunk;
+			if (accumulated.length > this.MAX_BASH_OUTPUT) {
+				truncated = true;
+				component.setTruncated?.(true);
+			}
+		};
+
+		const run = async () => {
+			try {
+				const result = await this.executeBash(command, onChunk);
+				component.setExitCode?.(result.exitCode);
+				if (result.signal) {
+					component.appendOutput(`\n[Process terminated by signal: ${result.signal}]`);
+				}
+			} catch (err: any) {
+				component.appendOutput(`\n[Failed to start process: ${err.message}]`);
+				component.setExitCode?.(1);
+			}
+			this.ui.requestRender?.();
+		};
+
+		run();
+	}
 }
 
 export async function runInteractiveMode(runtime: AgentSessionRuntime): Promise<void> {
