@@ -181,7 +181,7 @@ export class InteractiveMode {
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
 		this.ui.setClearOnShrink?.(this.settingsManager.getClearOnShrink?.() ?? true);
 
-		// Editor
+		// Editor - create theme with borderColor using current theme
 		const editorTheme: any = {
 			borderColor: (s: string) => this.theme().fg('border', s),
 			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
@@ -814,15 +814,36 @@ export class InteractiveMode {
 
 	/** Create Extension UIContext for extension UI requests */
 	private createExtensionUIContext(): any {
-		// Simplified: dialogs use overlays; notifications use chat status
+		// Provides UI primitives for extensions: dialogs, notifications, header/footer control
 		return {
+			// Header/Footer manipulation
+			setHeader: (content: any) => {
+				this.headerContainer.clear?.();
+				if (content) {
+					if (typeof content === 'string') {
+						this.headerContainer.addChild?.(new Text(content, 1, 0));
+					} else if (content && typeof content === 'object' && 'addChild' in content) {
+						this.headerContainer.addChild?.(content);
+					}
+				}
+				this.ui.requestRender?.();
+			},
+			setFooter: (content: any) => {
+				// footer is a FooterComponent; we can replace it temporarily
+				if (content && typeof content === 'object' && 'addChild' in content) {
+					this.footer = content as any;
+					this.ui.requestRender?.();
+				}
+			},
+
+			// Dialogs (overlays)
 			select: (title: string, options: string[], opts?: any) =>
 				new Promise((resolve) => {
 					const items = options.map((o) => ({ value: o, label: o }));
 					const th = this.theme();
 					const selector = new SelectList(
 						items,
-						Math.min(items.length, 8),
+						Math.min(options.length, 8),
 						{
 							selectedPrefix: (t) => th.fg('accent', '►'),
 							selectedText: (t) => th.fg('accent', t),
