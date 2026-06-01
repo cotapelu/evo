@@ -8,7 +8,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -41,6 +41,7 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'clone', description: 'Clone current session to a new file' },
 	{ name: 'fork', description: 'Fork session at a point' },
 	{ name: 'reload', description: 'Reload extensions' },
+	{ name: 'resources', description: 'Show loaded resources' },
 ];
 
 export interface InteractiveModeOptions {
@@ -327,6 +328,9 @@ export class InteractiveMode {
 			case '/debug':
 				this.toggleDebug?.();
 				break;
+			case '/resources':
+				this.showLoadedResources?.();
+				break;
 			case '/changelog':
 				this.showChangelog?.();
 				break;
@@ -415,7 +419,34 @@ export class InteractiveMode {
 			this.fdPath || null
 		);
 		this.defaultEditor.setAutocompleteProvider?.(autocompleteProvider);
+
+		// Bind extension UI context and command actions
+		(this.session as any).bindExtensions?.({
+			uiContext: this.createExtensionUIContext?.(),
+			commandContextActions: {
+				waitForIdle: () => this.session.agent?.waitForIdle?.(),
+				newSession: async (options: any) => this.runtimeHost.newSession?.(options),
+				fork: async (entryId: any, forkOptions?: any) => {
+					const result = await this.runtimeHost.fork?.(entryId, forkOptions);
+					return { cancelled: result?.cancelled };
+				},
+				navigateTree: async (targetId: any, options?: any) => {
+					const result = await this.session.navigateTree?.(targetId, {
+						summarize: options?.summarize,
+						customInstructions: options?.customInstructions,
+						replaceInstructions: options?.replaceInstructions,
+						label: options?.label,
+					});
+					return { cancelled: result?.cancelled };
+				},
+				switchSession: async (sessionPath: any, options?: any) => this.runtimeHost.switchSession?.(sessionPath, options),
+				reload: async () => { await this.session.reload?.(); },
+			},
+			shutdownHandler: () => { this.shutdownRequested = true; },
+			onError: (err: any) => { console.error('Extension error:', err); },
+		});
 	}
+
 
 	/** Handle global keypresses (e.g., from keybindings manager) */
 	private handleGlobalKey(keyData: string): { consume: boolean } | undefined {
@@ -455,6 +486,135 @@ export class InteractiveMode {
 	private getMarkdownThemeWithSettings(): any {
 		const base = getMarkdownTheme?.() ?? {};
 		return { ...base, codeBlockIndent: this.settingsManager.getCodeBlockIndent?.() ?? 2 };
+	}
+
+
+	/** Create Extension UIContext for extension UI requests */
+	private createExtensionUIContext(): any {
+		// Simplified: dialogs use overlays; notifications use chat status
+		return {
+			select: (title: string, options: string[], opts?: any) =>
+				new Promise((resolve) => {
+					const items = options.map((o) => ({ value: o, label: o }));
+					const th = this.theme();
+					const selector = new SelectList(
+						items,
+						Math.min(items.length, 8),
+						{
+							selectedPrefix: (t) => th.fg('accent', '►'),
+							selectedText: (t) => th.fg('accent', t),
+							description: (t) => th.fg('dim', t),
+							scrollInfo: (t) => th.fg('muted', t),
+							noMatch: (t) => th.fg('warning', t),
+						}
+					);
+					selector.onSelect = (val) => { this.ui.hideOverlay?.(); resolve(val); };
+					selector.onCancel = () => { this.ui.hideOverlay?.(); resolve(undefined); };
+					this.ui.showOverlay?.(selector);
+					this.ui.setFocus?.(selector);
+				}),
+
+			confirm: (title: string, message?: string, opts?: any) =>
+				new Promise((resolve) => {
+					const th = this.theme();
+					const text = message ? `${title}: ${message}` : title;
+					const items = [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }];
+					const selector = new SelectList(
+						items,
+						2,
+						{
+							selectedPrefix: (t) => th.fg('accent', '►'),
+							selectedText: (t) => th.fg('accent', t),
+							description: (t) => th.fg('dim', t),
+							scrollInfo: (t) => th.fg('muted', t),
+							noMatch: (t) => th.fg('warning', t),
+						}
+					);
+					selector.onSelect = (val: any) => { this.ui.hideOverlay?.(); resolve(val === 'yes'); };
+					selector.onCancel = () => { this.ui.hideOverlay?.(); resolve(false); };
+					this.ui.showOverlay?.(selector);
+					this.ui.setFocus?.(selector);
+				}),
+
+			input: (title: string, placeholder?: string, opts?: any) =>
+				new Promise((resolve) => {
+					const input = new Input();
+					input.onSubmit = (value) => { resolve(value.trim() || undefined); };
+					input.onEscape = () => { resolve(undefined); };
+					const container = new Container();
+					const th = this.theme();
+					container.addChild?.(new Text(th.bold(title), 1, 0));
+					container.addChild?.(input);
+					this.ui.showOverlay?.(container);
+					this.ui.setFocus?.(input);
+				}),
+
+			editor: (title: string, prefill?: string, opts?: any) =>
+				new Promise((resolve) => {
+					const input = new Input();
+					if (prefill) input.setValue?.(prefill);
+					input.onSubmit = (value) => { resolve(value.trim() || undefined); };
+					input.onEscape = () => { resolve(undefined); };
+					const container = new Container();
+					const th = this.theme();
+					container.addChild?.(new Text(th.bold(title), 1, 0));
+					container.addChild?.(input);
+					this.ui.showOverlay?.(container);
+					this.ui.setFocus?.(input);
+				}),
+
+			notify: (message: string, type?: 'info' | 'warning' | 'error') => {
+				const color = type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+				this.chatContainer.addChild?.(new Spacer(1));
+				this.chatContainer.addChild?.(
+					new Text(this.theme().fg(color, `Notification: ${message}`), 1, 0)
+				);
+				this.ui.requestRender?.();
+			},
+
+			setStatus: (key: string, text: string | undefined) => {
+				if (text) {
+					this.chatContainer.addChild?.(new Spacer(1));
+					this.chatContainer.addChild?.(
+						new Text(this.theme().dim(`[status: ${key}] ${text}`), 1, 0)
+					);
+					this.ui.requestRender?.();
+				}
+			},
+
+			setWidget: (key: string, content: unknown, options?: any) => {
+				if (Array.isArray(content)) {
+					this.chatContainer.addChild?.(new Spacer(1));
+					this.chatContainer.addChild?.(
+						new Text(this.theme().dim(`[widget: ${key}]`), 1, 0)
+					);
+					content.forEach((line: string) => {
+						this.chatContainer.addChild?.(
+							new Text(this.theme().dim(`  ${line}`), 1, 0)
+						);
+					});
+					this.ui.requestRender?.();
+				}
+			},
+
+			setEditorText: (text: string) => {
+				this.editor.setText?.(text);
+			},
+
+			getEditorText(): string {
+				return this.editor.getText?.() ?? '';
+			},
+
+			setWorkingVisible: (visible: boolean) => {
+				// No-op
+			},
+
+			setWorkingMessage: (msg?: string) => {
+				// No-op
+			},
+
+			setTheme: (_theme: string) => { return { success: false, error: 'Not supported' }; },
+		};
 	}
 
 	/** Get the current theme object */
@@ -1150,6 +1310,27 @@ export class InteractiveMode {
 		}
 	}
 
+	private showLoadedResources(): void {
+		try {
+			const skills = this.session.resourceLoader.getSkills?.()?.skills ?? [];
+			const prompts = this.session.resourceLoader.getPrompts?.()?.prompts ?? [];
+			const extensions = this.session.resourceLoader.getExtensions?.()?.extensions ?? [];
+			const themes = this.session.resourceLoader.getThemes?.()?.themes ?? [];
+			const lines: string[] = [];
+			if (skills.length) lines.push(`Skills: ${skills.length}`);
+			if (prompts.length) lines.push(`Prompts: ${prompts.length}`);
+			if (extensions.length) lines.push(`Extensions: ${extensions.length}`);
+			if (themes.length) lines.push(`Themes: ${themes.length}`);
+			const text = lines.length ? lines.join('\n') : 'No resources loaded';
+			if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
+			this.chatContainer.addChild?.(new Text(text, 1, 0));
+			this.ui.requestRender?.();
+		} catch (e) {
+			console.error('Error loading resources', e);
+			this.showError?.('Failed to load resources');
+		}
+	}
+
 	private renameSession(name: string): void {
 		try {
 			this.sessionManager.appendSessionInfo?.(name);
@@ -1355,26 +1536,6 @@ export class InteractiveMode {
 	}
 
 	/** Display loaded extensions/resources summary */
-	private async showLoadedResources(): Promise<void> {
-		try {
-			const skills = this.session.resourceLoader.getSkills?.()?.skills ?? [];
-			const prompts = this.session.resourceLoader.getPrompts?.()?.prompts ?? [];
-			const extensions = this.session.resourceLoader.getExtensions?.()?.extensions ?? [];
-			const themes = this.session.resourceLoader.getThemes?.()?.themes ?? [];
-			const lines: string[] = [];
-			if (skills.length) lines.push(`Skills: ${skills.map((s: any) => s.name).join(', ')}`);
-			if (prompts.length) lines.push(`Prompts: ${prompts.map((p: any) => p.name).join(', ')}`);
-			if (extensions.length) lines.push(`Extensions: ${extensions.map((e: any) => e.name).join(', ')}`);
-			if (themes.length) lines.push(`Themes: ${themes.join(', ')}`);
-			const text = lines.length ? lines.join('\n') : 'No resources loaded';
-			this.chatContainer.addChild?.(new Text(text, 1, 0));
-			this.ui.requestRender?.();
-		} catch (e) {
-			console.error('Error loading resources', e);
-			this.showError?.('Failed to load resources');
-		}
-	}
-
 	private updateTerminalTitle(): void {
 		const cwdBasename = path.basename(this.sessionManager.getCwd?.());
 		const sessionName = this.sessionManager.getSessionName?.();

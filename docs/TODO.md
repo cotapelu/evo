@@ -37,12 +37,12 @@ This file tracks the step-by-step migration of `src/interactive/interactive-mode
 - ✅ `/import` command (stub)
 - ✅ `/name` command (session rename via appendSessionInfo)
 - ✅ `/changelog` command (show changelog again)
-- ⏳ `/debug` command (show debug info)
-- ⏳ `/reload` command (full extension reload logic)
-- ⏳ Extension UI context (`createExtensionUIContext`)
+- ✅ `/debug` command (show debug info)
+- ✅ `/reload` command (full extension reload logic via session.reload)
+- ✅ Extension UI context (`createExtensionUIContext`)
 - ⏳ Compaction UI enhancements (auto-compaction loader visual, escape handling)
 - ⏳ Follow-up and queue UI
-- ⏳ Resource loading display with diagnostics
+- ✅ Resource loading display with diagnostics (`/resources`)
 - ⏳ Full tests (unit + integration)
 - ⏳ Error handling improvements and edge cases
 - ⏳ Performance benchmarks
