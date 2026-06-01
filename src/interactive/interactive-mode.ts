@@ -438,6 +438,29 @@ export class InteractiveMode {
 		}
 	}
 
+	/** Resume a specific session file (used by extensions) */
+	private async handleResumeSession(sessionPath: string, options?: any): Promise<{ cancelled: boolean }> {
+		try {
+			if (this.loadingAnimation) {
+				this.loadingAnimation.stop?.();
+				this.loadingAnimation = undefined;
+			}
+			this.statusContainer.clear?.();
+			const result = await this.runtimeHost.switchSession?.(sessionPath, options);
+			if (result?.cancelled) {
+				return { cancelled: true };
+			}
+			this.chatContainer.clear?.();
+			this.renderInitialMessages?.();
+			// No editorText returned; clear editor
+			this.editor.setText?.('');
+			this.showStatus?.(`Resumed session: ${sessionPath}`);
+			return { cancelled: false };
+		} catch (error: unknown) {
+			return this.handleFatalRuntimeError?.('Failed to resume session', error);
+		}
+	}
+
 	/** Bind session extensions including autocomplete provider */
 	private async bindCurrentSessionExtensions(): Promise<void> {
 		const uiContext = this.createExtensionUIContext?.();
@@ -499,8 +522,7 @@ export class InteractiveMode {
 					return { cancelled: false };
 				},
 				switchSession: async (sessionPath: any, options?: any) => {
-					await this.showSessionSelector?.();
-					return { cancelled: false };
+					return await this.handleResumeSession?.(sessionPath, options);
 				},
 				reload: async () => {
 					await this.reloadResources?.();
@@ -1323,19 +1345,9 @@ export class InteractiveMode {
 			allSessionsLoader,
 			async (sessionPath: string) => {
 				this.ui.hideOverlay?.();
-				try {
-					const result = await this.runtimeHost.switchSession?.(sessionPath);
-					if (result?.cancelled) {
-						this.showStatus?.('Session switch cancelled');
-						return;
-					}
-					// Re-render chat with new session
-					this.chatContainer.clear?.();
-					this.renderInitialMessages?.();
-					this.editor.setText?.('');
-					this.showStatus?.(`Resumed session: ${sessionPath}`);
-				} catch (e: any) {
-					this.showError?.(e.message || 'Session switch error');
+				const result = await this.handleResumeSession?.(sessionPath);
+				if (result?.cancelled) {
+					this.showStatus?.('Session switch cancelled');
 				}
 			},
 			() => {
