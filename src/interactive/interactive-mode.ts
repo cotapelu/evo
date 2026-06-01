@@ -48,6 +48,10 @@ import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
 import { theme, initTheme as localInitTheme } from './theme/theme.js';
+import { copyToClipboard, readClipboardImage } from '../utils/clipboard.js';
+import { CountdownTimer } from './components/countdown-timer.js';
+
+// Dummy for optional exports not available in current package version
 
 // Minimal slash commands (since package may not export directly)
 const BUILTIN_SLASH_COMMANDS = [
@@ -65,6 +69,8 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'fork', description: 'Fork session at a point' },
 	{ name: 'reload', description: 'Reload extensions' },
 	{ name: 'resources', description: 'Show loaded resources' },
+	{ name: 'copy', description: 'Copy last assistant message to clipboard' },
+	{ name: 'paste', description: 'Paste image from clipboard (macOS)' },
 ];
 
 export interface InteractiveModeOptions {
@@ -126,6 +132,7 @@ export class InteractiveMode {
 	private retryLoader?: Loader;
 	private retryCountdown?: any;
 	private retryEscapeHandler?: () => void;
+	private autocompleteProvider?: any;
 
 	// Convenience
 	private get session(): any { return this.runtimeHost.session; }
@@ -382,6 +389,12 @@ export class InteractiveMode {
 					this.showWarning?.('Usage: /import <file path>');
 				}
 				break;
+			case '/copy':
+				await this.handleCopyCommand?.();
+				break;
+			case '/paste':
+				await this.handlePasteCommand?.();
+				break;
 			default:
 				if (command === '/model') {
 					// Cycle to next model
@@ -429,30 +442,44 @@ export class InteractiveMode {
 	}
 
 	/** Bind session extensions including autocomplete provider */
-	private bindCurrentSessionExtensions(): void {
-		// Build slash command list for autocomplete
-		const slashCommands = BUILTIN_SLASH_COMMANDS.map((cmd: any) => ({
-			value: cmd.name,
-			label: cmd.name,
-			description: cmd.description,
-		}));
-		// @ts-ignore: CombinedAutocompleteProvider expects provider implementations
-		const autocompleteProvider = new CombinedAutocompleteProvider(
-			slashCommands,
-			this.sessionManager.getCwd?.() ?? process.cwd(),
-			this.fdPath || null
-		);
-		this.defaultEditor.setAutocompleteProvider?.(autocompleteProvider);
-
-		// Bind extension UI context and command actions
-		(this.session as any).bindExtensions?.({
-			uiContext: this.createExtensionUIContext?.(),
+	private async bindCurrentSessionExtensions(): Promise<void> {
+		const uiContext = this.createExtensionUIContext?.();
+		await this.session.bindExtensions?.({
+			uiContext,
+			abortHandler: () => {
+				this.restoreQueuedMessagesToEditor?.({ abort: true });
+			},
 			commandContextActions: {
 				waitForIdle: () => this.session.agent?.waitForIdle?.(),
-				newSession: async (options: any) => this.runtimeHost.newSession?.(options),
-				fork: async (entryId: any, forkOptions?: any) => {
-					const result = await this.runtimeHost.fork?.(entryId, forkOptions);
-					return { cancelled: result?.cancelled };
+				newSession: async (options: any) => {
+					if (this.loadingAnimation) {
+						this.loadingAnimation.stop?.();
+						this.loadingAnimation = undefined;
+					}
+					this.statusContainer.clear?.();
+					try {
+						const result = await this.runtimeHost.newSession?.(options);
+						if (!result?.cancelled) {
+							this.renderCurrentSessionState?.();
+							this.ui.requestRender?.();
+						}
+						return result;
+					} catch (error: unknown) {
+						return this.handleFatalRuntimeError?.('Failed to create session', error);
+					}
+				},
+				fork: async (entryId: any, options?: any) => {
+					try {
+						const result = await this.runtimeHost.fork?.(entryId, options);
+						if (!result?.cancelled) {
+							this.renderCurrentSessionState?.();
+							this.editor.setText?.(result?.selectedText ?? '');
+							this.showStatus?.('Forked to new session');
+						}
+						return { cancelled: result?.cancelled };
+					} catch (error: unknown) {
+						return this.handleFatalRuntimeError?.('Failed to fork session', error);
+					}
 				},
 				navigateTree: async (targetId: any, options?: any) => {
 					const result = await this.session.navigateTree?.(targetId, {
@@ -461,14 +488,44 @@ export class InteractiveMode {
 						replaceInstructions: options?.replaceInstructions,
 						label: options?.label,
 					});
-					return { cancelled: result?.cancelled };
+					if (result?.cancelled) {
+						return { cancelled: true };
+					}
+
+					this.chatContainer.clear?.();
+					this.renderInitialMessages?.();
+					if (result?.editorText && !this.editor.getText?.()?.trim()) {
+						this.editor.setText?.(result.editorText);
+					}
+					this.showStatus?.('Navigated to selected point');
+					void this.flushCompactionQueue?.({ willRetry: false });
+					return { cancelled: false };
 				},
-				switchSession: async (sessionPath: any, options?: any) => this.runtimeHost.switchSession?.(sessionPath, options),
-				reload: async () => { await this.session.reload?.(); },
+				switchSession: async (sessionPath: any, options?: any) => {
+					await this.showSessionSelector?.();
+					return { cancelled: false };
+				},
+				reload: async () => {
+					await this.reloadResources?.();
+				},
 			},
-			shutdownHandler: () => { this.shutdownRequested = true; },
-			onError: (err: any) => { console.error('Extension error:', err); },
+			shutdownHandler: () => {
+				this.shutdownRequested = true;
+				if (!this.session.isStreaming) {
+					void this.shutdown?.();
+				}
+			},
+			onError: (error: any) => {
+				this.showExtensionError?.(error.extensionPath, error.error, error.stack);
+			},
 		});
+
+		this.setupAutocompleteProvider?.();
+
+		const extensionRunner = this.session.extensionRunner;
+		this.setupExtensionShortcuts?.(extensionRunner);
+		this.showLoadedResources?.({ force: false, showDiagnosticsWhenQuiet: true });
+		this.showStartupNotices?.();
 	}
 
 
@@ -537,6 +594,202 @@ export class InteractiveMode {
 		}
 		// Flush queued compaction messages
 		void this.flushCompactionQueue?.();
+	}
+
+	private hideRetryLoader(): void {
+		if (this.retryLoader) {
+			this.retryLoader.stop?.();
+			this.statusContainer.removeChild?.(this.retryLoader);
+			this.retryLoader = undefined;
+			this.ui.requestRender?.();
+		}
+		// Retry escape handler will be cleared when countdown expires or abort
+		if (this.retryCountdown) {
+			this.retryCountdown.dispose?.();
+			this.retryCountdown = undefined;
+		}
+	}
+
+	private async flushCompactionQueue(options?: { willRetry?: boolean }): Promise<void> {
+		if (this.compactionQueuedMessages.length === 0) {
+			return;
+		}
+
+		const queuedMessages = [...this.compactionQueuedMessages];
+		this.compactionQueuedMessages = [];
+		this.updatePendingMessagesDisplay();
+
+		const restoreQueue = (error: unknown) => {
+			this.session.clearQueue?.();
+			this.compactionQueuedMessages = queuedMessages;
+			this.updatePendingMessagesDisplay();
+			this.showError?.(`Failed to send queued message${queuedMessages.length > 1 ? 's' : ''}: ${error instanceof Error ? error.message : String(error)}`);
+		};
+
+		try {
+			if (options?.willRetry) {
+				// When retry is pending, queue messages for the retry turn
+				for (const message of queuedMessages) {
+					if (this.isExtensionCommand(message.text)) {
+						await this.session.prompt?.(message.text);
+					} else if (message.mode === 'followUp') {
+						await this.session.followUp?.(message.text);
+					} else {
+						await this.session.steer?.(message.text);
+					}
+				}
+				this.updatePendingMessagesDisplay();
+				return;
+			}
+
+			// Find first non-extension-command message to use as prompt
+			const firstPromptIndex = queuedMessages.findIndex((message) => !this.isExtensionCommand(message.text));
+			if (firstPromptIndex === -1) {
+				// All extension commands - execute them all
+				for (const message of queuedMessages) {
+					await this.session.prompt?.(message.text);
+				}
+				return;
+			}
+
+			// Execute any extension commands before the first prompt
+			const preCommands = queuedMessages.slice(0, firstPromptIndex);
+			const firstPrompt = queuedMessages[firstPromptIndex];
+			const rest = queuedMessages.slice(firstPromptIndex + 1);
+
+			for (const message of preCommands) {
+				await this.session.prompt?.(message.text);
+			}
+
+			// Send first prompt (starts streaming)
+			const promptPromise = this.session.prompt?.(firstPrompt.text).catch((error: unknown) => {
+				restoreQueue(error);
+			});
+
+			// Queue remaining messages
+			for (const message of rest) {
+				if (this.isExtensionCommand(message.text)) {
+					await this.session.prompt?.(message.text);
+				} else if (message.mode === 'followUp') {
+					await this.session.followUp?.(message.text);
+				} else {
+					await this.session.steer?.(message.text);
+				}
+			}
+
+			await promptPromise;
+		} catch (error: unknown) {
+			restoreQueue(error);
+		}
+	}
+
+	private isExtensionCommand(text: string): boolean {
+		if (!text.startsWith('/')) return false;
+
+		const extensionRunner = this.session.extensionRunner;
+
+		const spaceIndex = text.indexOf(' ');
+		const commandName = spaceIndex === -1 ? text.slice(1) : text.slice(1, spaceIndex);
+		return !!extensionRunner.getCommand?.(commandName);
+	}
+
+	private restoreQueuedMessagesToEditor({ abort }: { abort: boolean }): void {
+		if (abort) {
+			this.editor.setText?.('');
+			this.compactionQueuedMessages = [];
+			this.updatePendingMessagesDisplay?.();
+			return;
+		}
+		const text = this.compactionQueuedMessages.map(m => m.text).join('\n');
+			this.editor.setText?.(text);
+			this.compactionQueuedMessages = [];
+			this.updatePendingMessagesDisplay?.();
+		}
+
+	private showExtensionError(extensionPath: string, error: unknown, stack?: string): void {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		this.showError?.(`Extension error in ${extensionPath}: ${errorMessage}`);
+		if (stack) console.error(`Extension error stack:\n${stack}`);
+	}
+
+	private handleFatalRuntimeError(prefix: string, error: unknown): never {
+		const message = error instanceof Error ? error.message : String(error);
+		this.showError(`${prefix}: ${message}`);
+		void this.shutdown?.(1);
+		// eslint-disable-next-line @typescript-eslint/no-unreachable
+		throw error;
+	}
+
+	private setupAutocompleteProvider(): void {
+		const slashCommands = BUILTIN_SLASH_COMMANDS.map((cmd: any) => ({
+			value: cmd.name,
+			label: cmd.name,
+			description: cmd.description,
+		}));
+
+		const extensionCommands = (this.session.extensionRunner?.getCommands?.() ?? []).map((cmd: any) => ({
+			value: cmd.invocationName,
+			label: cmd.invocationName,
+			description: cmd.description,
+		}));
+
+		const allCommands = [...slashCommands, ...extensionCommands];
+
+		const provider = new CombinedAutocompleteProvider(
+			allCommands,
+			this.sessionManager.getCwd?.() ?? process.cwd(),
+			this.fdPath || undefined
+		);
+		this.defaultEditor.setAutocompleteProvider?.(provider);
+		this.autocompleteProvider = provider;
+	}
+
+	private setupExtensionShortcuts(extensionRunner: any): void {
+		const shortcuts = extensionRunner.getShortcuts?.(this.keybindings.getEffectiveConfig?.() ?? {}) ?? new Map();
+		if (shortcuts.size === 0) return;
+
+		const createContext = (): any => ({
+			ui: this.createExtensionUIContext?.(),
+			hasUI: true,
+			cwd: this.sessionManager.getCwd?.(),
+			sessionManager: this.sessionManager,
+			modelRegistry: this.session.modelRegistry,
+			model: this.session.model,
+			isIdle: () => !this.session.isStreaming,
+			signal: this.session.agent?.signal,
+			abort: () => {
+				this.restoreQueuedMessagesToEditor?.({ abort: true });
+			},
+			hasPendingMessages: () => this.session.pendingMessageCount > 0,
+			shutdown: () => {
+				this.shutdownRequested = true;
+			},
+			getContextUsage: () => this.session.getContextUsage?.(),
+			compact: (options: any) => {
+				void (async () => {
+					try {
+						const result = await this.session.compact?.(options?.customInstructions);
+						options?.onComplete?.(result);
+					} catch (error: unknown) {
+						const err = error instanceof Error ? error : new Error(String(error));
+						options?.onError?.(err);
+					}
+				})();
+			},
+			getSystemPrompt: () => this.session.systemPrompt,
+		});
+
+		this.defaultEditor.onExtensionShortcut = (data: string) => {
+			for (const [shortcutStr, shortcut] of shortcuts) {
+				if (matchesKey?.(data, shortcutStr as any)) {
+					Promise.resolve(shortcut.handler(createContext())).catch((err: any) => {
+						this.showError?.(`Shortcut handler error: ${err instanceof Error ? err.message : String(err)}`);
+					});
+					return true;
+				}
+			}
+			return false;
+		};
 	}
 
 	/** Create Extension UIContext for extension UI requests */
@@ -838,6 +1091,49 @@ export class InteractiveMode {
 			case 'session_compact':
 				this.hideAutoCompactionLoader?.();
 				break;
+			case 'auto_retry_start': {
+				const retryAfter = (event as any).retryAfter ?? 5;
+				if (!this.retryLoader) {
+					this.retryLoader = new Loader(
+						this.ui,
+						(spinner) => this.theme().fg('warning', spinner),
+						(text) => this.theme().dim(text),
+						`Retrying in ${retryAfter}s...`
+					);
+					this.statusContainer.addChild?.(this.retryLoader);
+					this.retryLoader.start?.();
+				}
+				if (retryAfter && !this.retryCountdown) {
+					this.retryCountdown = new CountdownTimer(
+						retryAfter * 1000,
+						this.ui,
+						(remainingMs) => {
+							const seconds = Math.ceil(remainingMs / 1000);
+							this.retryLoader?.setMessage?.(`Retrying in ${seconds}s...`);
+						},
+						() => {
+							// On expire: loader will be hidden by event, but ensure cleanup
+							if (this.retryCountdown) {
+								this.retryCountdown.dispose?.();
+								this.retryCountdown = undefined;
+							}
+						}
+					);
+					this.retryCountdown.start?.();
+					this.retryEscapeHandler = () => {
+						this.retryCountdown?.dispose?.();
+						this.retryCountdown = undefined;
+						this.hideRetryLoader?.();
+						this.session.agent?.abort?.();
+					};
+					// this.keybindings.setTempKeybinding?.('escape', this.retryEscapeHandler); // Not supported
+				}
+				break;
+			}
+			case 'auto_retry_end': {
+				this.hideRetryLoader?.();
+				break;
+			}
 			default:
 				break;
 		}
@@ -897,6 +1193,13 @@ export class InteractiveMode {
 
 	private getUserMessageText(message: any): string {
 		if (message.role !== 'user') return '';
+		if (typeof message.content === 'string') return message.content;
+		const textParts = (message.content || []).filter((c: any) => c.type === 'text').map((c: any) => c.text);
+		return textParts.join('\n');
+	}
+
+	private getAssistantMessageText(message: any): string {
+		if (message.role !== 'assistant') return '';
 		if (typeof message.content === 'string') return message.content;
 		const textParts = (message.content || []).filter((c: any) => c.type === 'text').map((c: any) => c.text);
 		return textParts.join('\n');
@@ -1266,9 +1569,14 @@ export class InteractiveMode {
 	// Session & Startup
 	// ============================================================================
 
-	private rebindCurrentSession(): Promise<void> {
-		// Stub: will implement full extension binding later
-		return Promise.resolve();
+	private async rebindCurrentSession(): Promise<void> {
+		// Unsubscribe previous and re-subscribe to new session events
+		this.unsubscribe?.();
+		this.subscribeToAgent?.();
+		// Rebind extensions for the new session
+		await this.bindCurrentSessionExtensions?.();
+		this.updateEditorBorderColor?.();
+		this.updateTerminalTitle?.();
 	}
 
 	private renderCurrentSessionState(): void {
@@ -1365,20 +1673,46 @@ export class InteractiveMode {
 		}
 	}
 
-	private showLoadedResources(): void {
+	private showLoadedResources(options?: { force?: boolean; showDiagnosticsWhenQuiet?: boolean }): void {
 		try {
+			const quietStartup = this.settingsManager.getQuietStartup?.() ?? false;
+			const persisted = this.sessionManager.isPersisted?.() ?? false;
+			const show = (options?.force ?? false) || !quietStartup || persisted || options?.showDiagnosticsWhenQuiet;
+			if (!show) return;
+
 			const skills = this.session.resourceLoader.getSkills?.()?.skills ?? [];
 			const prompts = this.session.resourceLoader.getPrompts?.()?.prompts ?? [];
 			const extensions = this.session.resourceLoader.getExtensions?.()?.extensions ?? [];
 			const themes = this.session.resourceLoader.getThemes?.()?.themes ?? [];
+			const diagnostics = this.session.resourceLoader.getDiagnostics?.() ?? [];
+
 			const lines: string[] = [];
 			if (skills.length) lines.push(`Skills: ${skills.length}`);
 			if (prompts.length) lines.push(`Prompts: ${prompts.length}`);
 			if (extensions.length) lines.push(`Extensions: ${extensions.length}`);
 			if (themes.length) lines.push(`Themes: ${themes.length}`);
 			const text = lines.length ? lines.join('\n') : 'No resources loaded';
+
 			if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
-			this.chatContainer.addChild?.(new Text(text, 1, 0));
+
+			// Show title if diagnostics or extensions
+			if (diagnostics.length > 0 || extensions.length > 0) {
+				const th = this.theme();
+				this.chatContainer.addChild?.(new DynamicBorder());
+				this.chatContainer.addChild?.(new Text(th.bold(th.fg('warning', 'Loaded Resources')), 1, 0));
+				this.chatContainer.addChild?.(new Spacer(1));
+				if (diagnostics.length > 0) {
+					diagnostics.forEach((diag: any) => {
+						const msg = `[${diag.type}] ${diag.message}`;
+						this.chatContainer.addChild?.(new Text(msg, 1, 0));
+					});
+					this.chatContainer.addChild?.(new Spacer(1));
+				}
+				this.chatContainer.addChild?.(new Text(text, 1, 0));
+				this.chatContainer.addChild?.(new DynamicBorder());
+			} else {
+				this.chatContainer.addChild?.(new Text(text, 1, 0));
+			}
 			this.ui.requestRender?.();
 		} catch (e) {
 			console.error('Error loading resources', e);
@@ -1392,6 +1726,47 @@ export class InteractiveMode {
 			this.showStatus?.(`Session renamed to: ${name}`);
 		} catch (e: any) {
 			this.showError?.(`Rename failed: ${e.message}`);
+		}
+	}
+
+	private async handleCopyCommand(): Promise<void> {
+		const state = this.session.state as { messages?: any[] };
+		const messages = state.messages || [];
+		// Find last assistant message
+		for (let i = messages.length - 1; i >= 0; i--) {
+			const msg = messages[i];
+			if (msg.role === 'assistant') {
+				const text = this.getAssistantMessageText?.(msg);
+				if (text) {
+					try {
+						await copyToClipboard(text);
+						this.showStatus?.('Copied to clipboard');
+					} catch (e: any) {
+						this.showError?.(`Copy failed: ${e.message}`);
+					}
+					return;
+				}
+			}
+		}
+		this.showWarning?.('No assistant message to copy');
+	}
+
+	private async handlePasteCommand(): Promise<void> {
+		try {
+			const result = await readClipboardImage();
+			if (!result) {
+				this.showWarning?.('No image in clipboard');
+				return;
+			}
+			// Convert to data URL
+			const base64 = Buffer.from(result.bytes).toString('base64');
+			const dataUrl = `data:${result.mimeType};base64,${base64}`;
+			const markdown = `\n![clipboard](${dataUrl})\n`;
+			const currentText = this.editor.getText?.() ?? '';
+			this.editor.setText?.(currentText + markdown);
+			this.showStatus?.('Image pasted from clipboard');
+		} catch (e: any) {
+			this.showError?.(`Paste failed: ${e.message}`);
 		}
 	}
 
@@ -1528,10 +1903,14 @@ export class InteractiveMode {
 
 		try {
 			// Use AgentSession's executeBash with streaming callback
-			const result = await this.runtimeHost.session.executeBash(command, (chunk: string) => {
-				bashComponent.appendOutput(chunk);
-				this.ui.requestRender?.();
-			});
+			const result = await this.session.executeBash(
+				command,
+				(chunk: string) => {
+					bashComponent.appendOutput(chunk);
+					this.ui.requestRender?.();
+				},
+				{ excludeFromContext: exclude }
+			);
 
 			// Build TruncationResult from result
 			const outputLines = result.output.split('\n');

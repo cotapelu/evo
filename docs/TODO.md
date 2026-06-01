@@ -44,90 +44,80 @@ Package `@earendil-works/pi-coding-agent` export nhiều component/utility. Nên
 
 ---
 
-## ✅ Completed Work (Batch 1-3)
-
-### Cleanup
-- ✅ Deleted 5 unused files: `slash-command-handler.ts`, `keyboard-manager.ts`, `message-renderer.ts`, `autocomplete-provider.ts`, `components/index.ts`
-
-### Critical Bug Fixes
-- ✅ Fixed `this.theme()` → `theme()` in all locations
-- ✅ Imported and called `ensureTool(['fd', 'rg'])` in `init()`
-- ✅ Removed duplicate stub implementations
-- ✅ Fixed import error: removed `createCompactionSummaryMessage` and used direct object
-
-### Event Handling
-- ✅ Extended `handleEvent()` with:
-  - `queue_update`, `session_info_changed`, `thinking_level_changed`
-  - `compaction_start` / `compaction_end` with UI loader, escape handler, rebuild + summary message
-  - `auto_retry_start` / `auto_retry_end` with retry loader
-- ✅ Implemented `showAutoCompactionLoader()` / `hideAutoCompactionLoader()`
-- ✅ Added `rebuildChatFromMessages()` and `flushCompactionQueue()` stubs
-
-### Utilities
-- ✅ Implemented `showStatus()` and `showError()` with proper theme()
-- ✅ Implemented `updateTerminalTitle()` with fallback
-- ✅ Implemented `checkShutdownRequested()`
-
----
-
 ## 📊 Current Implementation Status
 
 | Category | Component | Status | Notes |
 |----------|-----------|--------|-------|
 | **Core** | TUI layout | ✅ | Done |
-| | Agent subscription & event handling | ⚠️ | Most events now handled, but full tool integration pending |
+| | Agent subscription & event handling | ✅ | Most events handled |
 | | Working indicator | ✅ | Working |
 | **Rendering** | User/Assistant messages | ✅ | Basic rendering OK |
-| | Tool output | ⚠️ | ToolExecutionComponent placed, but result integration incomplete |
-| | Chat rebuild | ✅ | `rebuildChatFromMessages` implemented |
+| | Tool output | ✅ | Integrated with ToolExecutionComponent |
+| | Chat rebuild | ✅ | Implemented |
 | **Selectors** | All selectors (Model, Settings, Tree, Session, Thinking) | ✅ | Fully working |
-| **Slash Commands** | Most slash commands | ✅ | /clear, /exit, /quit, /model, /models, /thinking, /tree, /session, /hotkeys, /clone, /fork, /export, /import, /name, /changelog, /debug, /reload, /resources (stub) |
-| **Extensions** | UI context | ⚠️ | Stub, not integrated |
-| | Binding | ❌ | Not implemented |
-| **Bash** | Execution | ❌ | Stub only |
+| **Slash Commands** | Most slash commands | ✅ | /clear, /exit, /quit, /model, /models, /thinking, /tree, /session, /hotkeys, /clone, /fork, /export, /import, /name, /changelog, /debug, /reload, /resources, /copy, /paste |
+| **Extensions** | UI context | ✅ | Implemented |
+| | Binding | ✅ | Full binding with autocomplete, shortcuts, diagnostics |
+| **Bash** | Execution | ✅ | Streaming, truncation, excludeFromContext |
 | **Compaction** | Auto UI | ✅ | Loader visible, events wired |
-| | Queue handling | ⚠️ | stub, needs flush logic |
-| **Retry** | Auto-retry UI | ⚠️ | Loader on start/end, but countdown timer not implemented |
-| **Shutdown** | Signal handlers | ⚠️ | Partial implementation (stub) |
-| **Utilities** | Clipboard, version notification | ❌ | Not implemented |
+| | Queue handling | ✅ | flushCompactionQueue implemented |
+| **Retry** | Auto-retry UI | ✅ | Loader with countdown timer |
+| **Shutdown** | Signal handlers | ✅ | Graceful exit |
+| **Utilities** | Clipboard, version notification | ✅ | Copy/paste, version check |
 
 ---
 
-## 🎯 Remaining Gaps (High Priority)
+## 🎯 Remaining Gaps (Low Priority / Polish)
 
-1. **Bash Execution** – Implement `executeBash` với spawn, streaming output, exit code, truncation, excludeFromContext
-2. **Extension Binding** – `bindCurrentSessionExtensions()` cần load extensions, bind UI context, setup autocomplete, shortcuts, diagnostics
-3. **Compaction Queue** – `flushCompactionQueue()` cần actually send queued messages in order (respect extension commands vs normal)
-4. **Tool Result Rendering** – Integrate `toolResult` messages với `ToolExecutionComponent` (update with final result)
-5. **Retry Countdown** – Implement actual countdown using `CountdownTimer` (nếu cần)
-6. **Shutdown Signals** – Full signal handlers (SIGINT, SIGTERM, SIGHUP, uncaughtException, terminal restore)
-7. **Clipboard** – `copyToClipboard()` and `readClipboardImage()`
-8. **Loaded Resources** – Full `showLoadedResources()` implementation
-9. **Version Notification** – `showNewVersionNotification()`
-10. **Polish** – Error handling, try/catch everywhere
+1. **Cosmetics** – Maybe hide console.error logs, improve error UX
+2. **Diagnostics** – Better resource diagnostics reporting
+3. **Tests** – Add more unit/integration tests for interactive mode
+4. **Performance** – Large session handling, render optimizations
+5. **Extensibility** – Plugin API stability
 
 ---
 
 ## 📝 Notes
 
 - Build status: ✅ `npm run build` passes
-- Many stub methods are in place but need real logic.
-- Event handling now covers most core events needed for UX.
-- Progress estimate: ~60% complete relative to reference.
+- Many stub methods are now fully implemented.
+- Event handling covers most core events.
+- Progress estimate: ~95% complete relative to reference.
 
 ---
 
-## Next Steps (Updated)
+## ✅ Completed Work Highlights
 
-1. **Implement Bash execution** – real spawn with streaming
-2. **Implement Extension binding** – load extensions, register commands, diagnostics, shortcuts
-3. **Implement flushCompactionQueue** – send queued messages in correct order
-4. **Integrate toolResult** – render tool results into ToolExecutionComponent
-5. **Add retry countdown** – optional polish
-6. **Implement shutdown/signal handling** – graceful exit
-7. **Add clipboard utilities** – /copy and image paste
-8. **Implement showLoadedResources** – show skills, prompts, extensions, themes, collisions
-9. **Version check notification** – UI when new version available
-10. **Error handling polish** – cover all async ops with try/catch, user-friendly messages
+### Bash Execution
+- ✅ Integrated `session.executeBash` with streaming output, exit code, truncation, and `excludeFromContext`.
 
-Keep iterating. Target: full parity with reference.
+### Extension Binding
+- ✅ `bindCurrentSessionExtensions` now fully loads extensions, binds UI context, sets up autocomplete provider, extension shortcuts, diagnostics, and resource reporting.
+
+### Compaction Queue
+- ✅ `flushCompactionQueue` implemented with proper ordering (extension commands vs normal prompts) and retry support.
+
+### Retry Countdown
+- ✅ Added `CountdownTimer` component; auto-retry shows loader with countdown.
+
+### Clipboard Utilities
+- ✅ Added `/copy` (copy last assistant message) and `/paste` (paste image from clipboard) commands.
+
+### Resources & Diagnostics
+- ✅ `showLoadedResources` displays skills, prompts, extensions, themes, and any resource diagnostics.
+
+### Shutdown & Signals
+- ✅ Graceful shutdown with signal handlers and cleanup.
+
+### Error Handling
+- ✅ Added `try/catch` with proper `unknown` typing across async operations.
+
+---
+
+## Next Steps (Tune-up)
+
+1. Cosmetic polish (hidden errors, nicer UI)
+2. Expand test coverage for interactive features
+3. Performance profiling for large sessions
+4. Consider exposing plugin API for external extensions
+
