@@ -116,6 +116,29 @@ export function getMarkdownTheme(settings?: { codeBlockIndent?: number }): any {
 }
 
 /**
+ * Get editor theme for CustomEditor component.
+ */
+export function getEditorTheme(): any {
+	const th = theme();
+	// Ensure theme has fg method
+	const safeFg = (color: string, text: string) => {
+		if (typeof th?.fg === 'function') {
+			return th.fg(color, text);
+		}
+		// Fallback to plain text
+		return text;
+	};
+	return {
+		borderColor: (status: string) => safeFg('border', status),
+		selectList: {
+			selected: (text: string) => text,
+			active: (text: string) => text,
+			disabled: (text: string) => text,
+		},
+	};
+}
+
+/**
  * Get select list theme for dropdowns/selectors.
  */
 export function getSelectListTheme(): any {

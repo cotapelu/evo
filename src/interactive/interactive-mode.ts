@@ -47,7 +47,7 @@ import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/change
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
-import { theme, initTheme as localInitTheme } from './theme/theme.js';
+import { theme, initTheme as localInitTheme, getEditorTheme } from './theme/theme.js';
 import { copyToClipboard, readClipboardImage } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 
@@ -181,9 +181,9 @@ export class InteractiveMode {
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
 		this.ui.setClearOnShrink?.(this.settingsManager.getClearOnShrink?.() ?? true);
 
-		// Editor - create theme with borderColor using current theme
-		const editorTheme: any = {
-			borderColor: (s: string) => this.theme().fg('border', s),
+		// Editor - get theme after initTheme has run
+		const editorTheme = getEditorTheme?.() ?? {
+			borderColor: (s: string) => this.theme()?.fg?.('border', s) ?? s,
 			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
 		};
 		this.defaultEditor = new CustomEditor(this.ui, editorTheme, this.keybindings as any, {
@@ -817,21 +817,38 @@ export class InteractiveMode {
 		// Provides UI primitives for extensions: dialogs, notifications, header/footer control
 		return {
 			// Header/Footer manipulation
-			setHeader: (content: any) => {
+			setHeader: (builder: ((tui: any, theme: any) => any) | any) => {
 				this.headerContainer.clear?.();
-				if (content) {
-					if (typeof content === 'string') {
-						this.headerContainer.addChild?.(new Text(content, 1, 0));
-					} else if (content && typeof content === 'object' && 'addChild' in content) {
-						this.headerContainer.addChild?.(content);
+				if (builder) {
+					if (typeof builder === 'function') {
+						const component = builder(this.ui, this.theme());
+						if (component) {
+							if (typeof component === 'string') {
+								this.headerContainer.addChild?.(new Text(component, 1, 0));
+							} else if (component && typeof component === 'object' && 'addChild' in component) {
+								this.headerContainer.addChild?.(component);
+							}
+						}
+					} else {
+						if (typeof builder === 'string') {
+							this.headerContainer.addChild?.(new Text(builder, 1, 0));
+						} else if (builder && typeof builder === 'object' && 'addChild' in builder) {
+							this.headerContainer.addChild?.(builder);
+						}
 					}
 				}
 				this.ui.requestRender?.();
 			},
-			setFooter: (content: any) => {
-				// footer is a FooterComponent; we can replace it temporarily
-				if (content && typeof content === 'object' && 'addChild' in content) {
-					this.footer = content as any;
+			setFooter: (builder: ((tui: any, theme: any) => any) | any) => {
+				if (builder) {
+					if (typeof builder === 'function') {
+						const component = builder(this.ui, this.theme());
+						if (component && typeof component === 'object' && 'addChild' in component) {
+							this.footer = component as any;
+						}
+					} else if (typeof builder === 'object' && 'addChild' in builder) {
+						this.footer = builder as any;
+					}
 					this.ui.requestRender?.();
 				}
 			},
