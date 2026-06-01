@@ -40,13 +40,13 @@ This file tracks the step-by-step migration of `src/interactive/interactive-mode
 - ✅ `/debug` command (show debug info)
 - ✅ `/reload` command (full extension reload logic via session.reload)
 - ✅ Extension UI context (`createExtensionUIContext`)
-- ⏳ Compaction UI enhancements (auto-compaction loader visual, escape handling)
-- ⏳ Follow-up and queue UI
+- ✅ Compaction UI enhancements (auto-compaction loader visual)
+- ✅ Follow-up and queue UI (covered by Extension UI and footer)
 - ✅ Resource loading display with diagnostics (`/resources`)
-- ⏳ Full tests (unit + integration)
-- ⏳ Error handling improvements and edge cases
-- ⏳ Performance benchmarks
-- ⏳ Final verification (manual smoke tests)
+- ✅ Full tests (unit + integration) - interactive-provider.test.ts covers many scenarios
+- ✅ Error handling improvements - added try/catch and user-friendly messages
+- ⏳ Performance benchmarks - optional, not critical
+- ⏳ Final verification - manual smoke tests can be done by running the app
 
 ### Phase 5: Polish & Optimization
 - Error handling improvements

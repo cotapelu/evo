@@ -489,6 +489,30 @@ export class InteractiveMode {
 	}
 
 
+	/** Auto-compaction loader control */
+	private showAutoCompactionLoader(): void {
+		if (!this.autoCompactionLoader) {
+			this.autoCompactionLoader = new Loader(
+				this.ui,
+				(spinner) => this.theme().fg('warning', spinner),
+				(text) => this.theme().dim(text),
+				'Compacting...'
+			);
+			this.statusContainer.addChild?.(this.autoCompactionLoader);
+			this.autoCompactionLoader.start?.();
+			this.ui.requestRender?.();
+		}
+	}
+
+	private hideAutoCompactionLoader(): void {
+		if (this.autoCompactionLoader) {
+			this.autoCompactionLoader.stop?.();
+			this.statusContainer.removeChild?.(this.autoCompactionLoader);
+			this.autoCompactionLoader = undefined;
+			this.ui.requestRender?.();
+		}
+	}
+
 	/** Create Extension UIContext for extension UI requests */
 	private createExtensionUIContext(): any {
 		// Simplified: dialogs use overlays; notifications use chat status
@@ -782,7 +806,12 @@ export class InteractiveMode {
 			case 'shutdown_requested':
 				this.shutdownRequested = true;
 				break;
-
+			case 'session_before_compact':
+				this.showAutoCompactionLoader?.();
+				break;
+			case 'session_compact':
+				this.hideAutoCompactionLoader?.();
+				break;
 			default:
 				break;
 		}
