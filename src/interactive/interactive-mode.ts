@@ -213,17 +213,14 @@ export class InteractiveMode {
 		// Setup
 		this.setupKeyHandlers?.();
 		this.setupEditorSubmitHandler?.();
-		// Bind extensions (extensions already loaded via services)
-		this.bindCurrentSessionExtensions?.();
 
-		// Start
+		// Start UI
 		this.ui.start?.();
-		// Subscribe to agent events
-		this.subscribeToAgent?.();
-		this.isInitialized = true;
 
-		// Bind extensions
+		// Bind extensions and subscribe to agent events
 		void this.rebindCurrentSession?.();
+
+		this.isInitialized = true;
 
 		// Render initial
 		this.renderInitialMessages?.();
@@ -738,13 +735,14 @@ export class InteractiveMode {
 		const provider = new CombinedAutocompleteProvider(
 			allCommands,
 			this.sessionManager.getCwd?.() ?? process.cwd(),
-			this.fdPath || undefined
+			this.fdPath || null
 		);
 		this.defaultEditor.setAutocompleteProvider?.(provider);
 		this.autocompleteProvider = provider;
 	}
 
 	private setupExtensionShortcuts(extensionRunner: any): void {
+		if (!extensionRunner) return;
 		const shortcuts = extensionRunner.getShortcuts?.(this.keybindings.getEffectiveConfig?.() ?? {}) ?? new Map();
 		if (shortcuts.size === 0) return;
 
@@ -1994,8 +1992,7 @@ export class InteractiveMode {
 	private updateTerminalTitle(): void {
 		const cwdBasename = path.basename(this.sessionManager.getCwd?.());
 		const sessionName = this.sessionManager.getSessionName?.();
-		if (sessionName) this.ui.terminal.setTitle?.(`${APP_TITLE} - ${sessionName} - ${cwdBasename}`);
-		else this.ui.terminal.setTitle?.(`${APP_TITLE} - ${cwdBasename}`);
+		this.ui?.terminal?.setTitle?.(sessionName ? `${APP_TITLE} - ${sessionName} - ${cwdBasename}` : `${APP_TITLE} - ${cwdBasename}`);
 	}
 
 	private async updateAvailableProviderCount(): Promise<void> {

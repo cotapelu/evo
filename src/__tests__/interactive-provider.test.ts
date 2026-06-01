@@ -91,6 +91,8 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   SettingsSelectorComponent: jest.fn(),
   SessionSelectorComponent: jest.fn(),
   TreeSelectorComponent: jest.fn(),
+  DEFAULT_MAX_LINES: 1000,
+  DEFAULT_MAX_BYTES: 100000,
 }));
 
 await jest.unstable_mockModule('child_process', () => ({
@@ -149,6 +151,13 @@ function createSession(overrides = {}) {
     autoCompactionEnabled: false,
     compact: jest.fn().mockResolvedValue(undefined),
     cycleModel: jest.fn().mockReturnValue({ model: { id: 'gpt-4' } }),
+    executeBash: jest.fn().mockResolvedValue({
+      exitCode: 0,
+      output: 'test output',
+      truncated: false,
+      fullOutputPath: undefined,
+      cancelled: false,
+    }),
   };
   return Object.assign(sess, overrides);
 }
@@ -262,38 +271,53 @@ describe('InteractiveMode', () => {
       await (mode as any).init();
       mode.defaultEditor.getText = () => 'echo hi';
       mode.defaultEditor.setText = jest.fn();
-      const child = await import('child_process') as any;
-      child.spawnSync.mockReturnValue({ status: 0, stdout: 'hi', stderr: '' });
+      // Mock session.executeBash is already set in createSession
     });
 
-    it('spawns shell command', async () => {
-      const { spawnSync } = await import('child_process') as any;
+    it('calls session.executeBash with command', async () => {
       mode.handleBash(false);
-      expect(spawnSync).toHaveBeenCalledWith('echo hi', expect.objectContaining({ shell: true }));
+      expect(session.executeBash).toHaveBeenCalledWith('echo hi', expect.any(Function), { excludeFromContext: false });
     });
 
-    it('adds output to chat', async () => {
+    it('adds BashExecutionComponent to chat', async () => {
+      // Clear any prior addChild calls (e.g., from init/showLoadedResources)
+      mode.chatContainer.addChild.mockClear?.();
       mode.handleBash(false);
       expect(mode.chatContainer.addChild).toHaveBeenCalled();
+      // The first (and only) call should be the BashExecutionComponent
+      const firstCall = mode.chatContainer.addChild.mock.calls[0][0];
+      // The component should have appendOutput and setComplete methods
+      expect(firstCall).toHaveProperty('appendOutput');
+      expect(typeof firstCall.appendOutput).toBe('function');
+      expect(firstCall).toHaveProperty('setComplete');
+      expect(typeof firstCall.setComplete).toBe('function');
     });
 
-    it('clears editor after bash', async () => {
+    it('clears editor after successful bash', async () => {
       mode.handleBash(false);
+      // Wait for the async executeBash to resolve
+      await Promise.resolve();
       expect(mode.defaultEditor.setText).toHaveBeenCalledWith('');
     });
 
-    it('handles error output', async () => {
-      const { spawnSync } = await import('child_process') as any;
-      spawnSync.mockReturnValue({ status: 1, stdout: '', stderr: 'err' });
+    it('handles bash error', async () => {
+      // Make executeBash reject
+      session.executeBash = jest.fn().mockRejectedValue(new Error('bash failed'));
+      const showErrorSpy = jest.spyOn(mode, 'showError');
       mode.handleBash(false);
-      expect(mode.chatContainer.addChild).toHaveBeenCalled();
+      await Promise.resolve();
+      expect(showErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Bash error'));
     });
 
     it('skips empty command', async () => {
       mode.defaultEditor.getText = () => '   ';
       mode.handleBash(false);
-      const { spawnSync } = await import('child_process') as any;
-      expect(spawnSync).not.toHaveBeenCalled();
+      expect(session.executeBash).not.toHaveBeenCalled();
+    });
+
+    it('respects exclude flag', async () => {
+      mode.handleBash(true);
+      expect(session.executeBash).toHaveBeenCalledWith('echo hi', expect.any(Function), { excludeFromContext: true });
     });
   });
 
@@ -416,11 +440,14 @@ describe('InteractiveMode', () => {
       await (mode as any).showLoadedResources();
 
       expect(mode.chatContainer.addChild).toHaveBeenCalled();
-      const calls = mode.chatContainer.addChild.mock.calls;
-      const lastCall = calls[calls.length - 1];
-      const textArg = lastCall[0];
-      expect(textArg.text).toContain('Skills');
-      expect(textArg.text).toContain('Prompts');
+      // Find a Text component that contains resource counts
+      const textCalls = mode.chatContainer.addChild.mock.calls
+        .map((call: any[]) => call[0])
+        .filter((comp: any) => comp && typeof comp === 'object' && 'text' in comp && typeof comp.text === 'string');
+      const resourceCall = textCalls.find((comp: any) => comp.text.includes('Skills') && comp.text.includes('Prompts'));
+      expect(resourceCall).toBeDefined();
+      expect(resourceCall.text).toContain('Skills');
+      expect(resourceCall.text).toContain('Prompts');
     });
 
     it('should handle empty resources', async () => {
@@ -751,38 +778,55 @@ describe('InteractiveMode', () => {
   describe('bash handling', () => {
     it('uses BashExecutionComponent for ! commands', async () => {
       const { BashExecutionComponent } = await import('@earendil-works/pi-coding-agent');
-      const { spawnSync } = await import('child_process');
       const BashComp = BashExecutionComponent as jest.Mock;
-      (spawnSync as any).mockReturnValue({ stdout: 'output', stderr: '', exitCode: 0 });
+      // Mock executeBash to return success
+      session.executeBash = jest.fn().mockResolvedValue({
+        exitCode: 0,
+        output: 'output',
+        truncated: false,
+        fullOutputPath: undefined,
+        cancelled: false,
+      });
 
       const mode = new (InteractiveMode as any)(runtime);
       await (mode as any).init();
       mode.defaultEditor.getText = () => '!cmd';
-      mode.chatContainer.addChild = jest.fn();
+      // Clear addChild mocks from init (e.g., showLoadedResources)
+      mode.chatContainer.addChild.mockClear?.();
 
       const submit = (mode.defaultEditor as any).onSubmit;
       await submit('!cmd');
 
+      expect(session.executeBash).toHaveBeenCalledWith('cmd', expect.any(Function), { excludeFromContext: false });
       expect(BashComp).toHaveBeenCalledTimes(1);
-      expect(BashComp).toHaveBeenCalledWith('cmd', mode.ui, false);
       const instance = BashComp.mock.results[0]?.value;
-      expect(instance?.appendOutput).toHaveBeenCalledWith('output');
-      expect(instance?.setComplete).toHaveBeenCalledWith(0, false, undefined, undefined);
+      expect(instance).toBeDefined();
+      // simulate streaming
+      const streamCallback = session.executeBash.mock.calls[0][1];
+      streamCallback('output');
+      expect(instance.appendOutput).toHaveBeenCalledWith('output');
+      // After resolve, setComplete called
+      await Promise.resolve(); // wait for executeBash resolve
+      expect(instance.setComplete).toHaveBeenCalledWith(0, false, expect.any(Object), undefined);
+      // verify addChild called with the component
       expect(mode.chatContainer.addChild).toHaveBeenCalledWith(instance);
+      expect(mode.defaultEditor.setText).toHaveBeenCalledWith('');
     });
 
     it('shows error Text on bash exception', async () => {
-      const { spawnSync } = await import('child_process');
-      (spawnSync as any).mockImplementation(() => { throw new Error('fail'); });
-
+      session.executeBash = jest.fn().mockRejectedValue(new Error('fail'));
       const mode = new (InteractiveMode as any)(runtime);
       await (mode as any).init();
       mode.defaultEditor.getText = () => '!bad';
       mode.chatContainer.addChild = jest.fn();
+      const showErrorSpy = jest.spyOn(mode, 'showError');
 
       const submit = (mode.defaultEditor as any).onSubmit;
       await submit('!bad');
 
+      // showError is called, which adds a Text component
+      expect(showErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Bash error'));
+      // The showError adds Text to chat
       expect(mode.chatContainer.addChild).toHaveBeenCalledWith(
         expect.objectContaining({ text: expect.stringContaining('Error') })
       );
@@ -793,12 +837,11 @@ describe('InteractiveMode', () => {
       await (mode as any).init();
       mode.defaultEditor.getText = () => '!echo\0bad';
       mode.chatContainer.addChild = jest.fn();
-      const { spawnSync } = await import('child_process');
 
       const submit = (mode.defaultEditor as any).onSubmit;
       await submit('!echo\0bad');
 
-      expect(spawnSync).not.toHaveBeenCalled();
+      expect(session.executeBash).not.toHaveBeenCalled();
       expect(mode.chatContainer.addChild).toHaveBeenCalledWith(
         expect.objectContaining({ text: expect.stringContaining('null bytes') })
       );
@@ -806,8 +849,13 @@ describe('InteractiveMode', () => {
 
     it('logs warning for dangerous command pattern', async () => {
       const warnSpy = jest.spyOn(console, 'warn');
-      const { spawnSync } = await import('child_process');
-      (spawnSync as any).mockReturnValue({ status: 0, stdout: '', stderr: '' });
+      session.executeBash = jest.fn().mockResolvedValue({
+        exitCode: 0,
+        output: '',
+        truncated: false,
+        fullOutputPath: undefined,
+        cancelled: false,
+      });
 
       const mode = new (InteractiveMode as any)(runtime);
       await (mode as any).init();
@@ -818,7 +866,7 @@ describe('InteractiveMode', () => {
       await submit('!rm -rf /');
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Security'),
+        expect.stringContaining('Security warning'),
         expect.stringContaining('rm -rf /')
       );
       warnSpy.mockRestore();
@@ -826,8 +874,7 @@ describe('InteractiveMode', () => {
 
     it('logs error with command context on spawn failure', async () => {
       const errorSpy = jest.spyOn(console, 'error');
-      const { spawnSync } = await import('child_process');
-      (spawnSync as any).mockImplementation(() => { throw new Error('spawn failed'); });
+      session.executeBash = jest.fn().mockRejectedValue(new Error('spawn failed'));
 
       const mode = new (InteractiveMode as any)(runtime);
       await (mode as any).init();
