@@ -515,6 +515,30 @@ export class InteractiveMode {
 			case '/paste':
 				await this.handlePasteCommand?.();
 				break;
+			case '/ext':
+				this.showWarning?.('External editor not implemented');
+				break;
+			case '/sessionstats':
+				this.showWarning?.('Session stats not implemented');
+				break;
+			case '/share':
+				this.showWarning?.('Share not implemented');
+				break;
+			case '/login':
+				this.showWarning?.('Login not implemented');
+				break;
+			case '/logout':
+				this.showWarning?.('Logout not implemented');
+				break;
+			case '/arminsayshi':
+				this.showWarning?.('Easter egg not implemented');
+				break;
+			case '/dementedelves':
+				this.showWarning?.('Easter egg not implemented');
+				break;
+			case '/daxnuts':
+				this.showWarning?.('Easter egg not implemented');
+				break;
 			default:
 				if (command === '/model') {
 					// Cycle to next model
