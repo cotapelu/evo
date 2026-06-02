@@ -726,6 +726,14 @@ describe('InteractiveMode', () => {
       expect((mode as any).ui.showOverlay).toHaveBeenCalled();
     });
 
+    it('invokes showUserMessageSelector on /fork', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showUserMessageSelector');
+      await (mode as any).handleSlashCommand('/fork');
+      expect(spy).toHaveBeenCalled();
+    });
+
   it('sets up CombinedAutocompleteProvider with slash commands, cwd and fdPath', async () => {
     const { CombinedAutocompleteProvider } = await import('@earendil-works/pi-tui');
     const mode = new (InteractiveMode as any)(runtime);
