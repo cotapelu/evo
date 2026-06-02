@@ -49,6 +49,7 @@ import {
 	SkillInvocationMessageComponent,
 	CustomMessageComponent,
 	BorderedLoader,
+	getSelectListTheme,
 } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
@@ -286,7 +287,7 @@ export class InteractiveMode {
 		this.defaultEditor.onEscape = () => {
 			if (this.session.isStreaming) {
 				this.restoreQueuedMessagesToEditor({ abort: true });
-			} else if (this.isBashRunning) {
+			} else if (this.session.isBashRunning) {
 				this.session.abortBash?.();
 			} else if (this.isBashMode) {
 				this.editor.setText?.('');
@@ -805,7 +806,16 @@ export class InteractiveMode {
 	}
 
 
-
+	private getEditorThemeWithSelect(): any {
+		const editorTh = getEditorTheme();
+		return {
+			...editorTh,
+			selectedText: (text: string) => editorTh.fg('accent', text),
+			description: (text: string) => editorTh.fg('dim', text),
+			scrollInfo: (text: string) => editorTh.fg('muted', text),
+			noMatch: (text: string) => editorTh.fg('warning', text),
+		};
+	}
 
 	private getMarkdownThemeWithSettings(): any {
 		const base = getMarkdownTheme?.() ?? {};
