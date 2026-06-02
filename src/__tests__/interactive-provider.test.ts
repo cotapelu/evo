@@ -106,6 +106,7 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
 }));
 
 await jest.unstable_mockModule('child_process', () => ({
+  spawn: jest.fn(),
   spawnSync: jest.fn(),
 }));
 

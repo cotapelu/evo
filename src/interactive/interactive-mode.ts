@@ -7,6 +7,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { spawn, spawnSync } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
@@ -14,6 +15,7 @@ import {
 	APP_TITLE,
 	VERSION,
 	getAgentDir,
+	getAuthPath,
 	getDebugLogPath,
 } from '../config.js';
 import type {
@@ -21,6 +23,7 @@ import type {
 	AgentSessionEvent,
 	AgentSessionRuntime,
 	ResourceDiagnostic,
+	SessionStats,
 	SourceInfo,
 	TruncationResult,
 } from '@earendil-works/pi-coding-agent';
@@ -493,22 +496,7 @@ export class InteractiveMode {
 					this.renameSession?.(nameArg);
 				}
 				break;
-			case '/export':
-				const exportArg = command.slice(7).trim();
-				if (exportArg) {
-					this.exportSession?.(exportArg);
-				} else {
-					this.exportSession?.();
-				}
-				break;
-			case '/import':
-				const importArg = command.slice(7).trim();
-				if (importArg) {
-					this.importSession?.(importArg);
-				} else {
-					this.showWarning?.('Usage: /import <file path>');
-				}
-				break;
+
 			case '/copy':
 				await this.handleCopyCommand?.();
 				break;
@@ -516,19 +504,22 @@ export class InteractiveMode {
 				await this.handlePasteCommand?.();
 				break;
 			case '/ext':
-				this.showWarning?.('External editor not implemented');
+				await this.openExternalEditor?.();
 				break;
 			case '/sessionstats':
-				this.showWarning?.('Session stats not implemented');
+				await this.showSessionStats?.();
+				break;
+			case '/debug':
+				await this.showDebugInfo?.();
 				break;
 			case '/share':
-				this.showWarning?.('Share not implemented');
+				await this.handleShare?.();
 				break;
 			case '/login':
-				this.showWarning?.('Login not implemented');
+				await this.handleLogin?.();
 				break;
 			case '/logout':
-				this.showWarning?.('Logout not implemented');
+				await this.handleLogout?.();
 				break;
 			case '/arminsayshi':
 				this.showWarning?.('Easter egg not implemented');
@@ -536,8 +527,17 @@ export class InteractiveMode {
 			case '/dementedelves':
 				this.showWarning?.('Easter egg not implemented');
 				break;
+			case '/arminsayshi':
+				await this.showEasterEgg?.('arminsayshi');
+				break;
+			case '/dementedelves':
+				await this.showEasterEgg?.('dementedelves');
+				break;
 			case '/daxnuts':
-				this.showWarning?.('Easter egg not implemented');
+				await this.showEasterEgg?.('daxnuts');
+				break;
+			case '/scoped-models':
+				this.showModelSelector?.();
 				break;
 			default:
 				if (command === '/model') {
@@ -798,10 +798,6 @@ export class InteractiveMode {
 			}
 		}
 		this.ui.requestRender?.();
-	}
-
-	private openExternalEditor(): void {
-		this.showWarning?.('External editor integration not implemented');
 	}
 
 	private handleFollowUp(): void {
@@ -1996,6 +1992,310 @@ export class InteractiveMode {
 		this.ui.showOverlay?.(selector);
 	}
 
+	private async showSessionStats(): Promise<void> {
+		try {
+			const stats = this.session.getSessionStats();
+			const markdown = this.formatSessionStats(stats);
+			const mdTheme = this.getMarkdownThemeWithSettings();
+			const component = new Markdown(markdown, 0, 0, mdTheme);
+			this.ui.showOverlay?.(component);
+		} catch (error) {
+			console.error('Failed to get session stats:', error);
+			this.showWarning?.('Failed to get session stats. See console for details.');
+		}
+	}
+
+	private formatSessionStats(stats: SessionStats): string {
+		const {
+			sessionId,
+			userMessages,
+			assistantMessages,
+			toolCalls,
+			toolResults,
+			totalMessages,
+			tokens,
+			cost,
+			contextUsage,
+		} = stats;
+
+		const fmtNum = (n: number) => n.toLocaleString();
+
+		let md = '# Session Statistics\n\n';
+		md += `**Session ID:** ${sessionId}\n\n`;
+
+		md += '## Message Counts\n';
+		md += `- User messages: ${fmtNum(userMessages)}\n`;
+		md += `- Assistant messages: ${fmtNum(assistantMessages)}\n`;
+		md += `- Tool calls: ${fmtNum(toolCalls)}\n`;
+		md += `- Tool results: ${fmtNum(toolResults)}\n`;
+		md += `- **Total messages:** ${fmtNum(totalMessages)}\n\n`;
+
+		md += '## Tokens\n';
+		md += `- Input: ${fmtNum(tokens.input)}\n`;
+		md += `- Output: ${fmtNum(tokens.output)}\n`;
+		md += `- Cache read: ${fmtNum(tokens.cacheRead)}\n`;
+		md += `- Cache write: ${fmtNum(tokens.cacheWrite)}\n`;
+		md += `- **Total:** ${fmtNum(tokens.total)}\n\n`;
+
+		md += '## Cost\n';
+		md += `$${cost.toFixed(4)}\n\n`;
+
+		if (contextUsage) {
+			const used = contextUsage.tokens ?? 0;
+			const max = contextUsage.contextWindow;
+			const percent = contextUsage.percent ?? ((used / max) * 100).toFixed(1);
+			md += '## Context Usage\n';
+			md += `- Used: ${fmtNum(used)} / ${fmtNum(max)} (${percent}%)\n`;
+		}
+
+		return md;
+	}
+
+	private async showDebugInfo(): Promise<void> {
+		try {
+			const debugMarkdown = this.formatDebugInfo();
+			const mdTheme = this.getMarkdownThemeWithSettings();
+			const component = new Markdown(debugMarkdown, 0, 0, mdTheme);
+			this.ui.showOverlay?.(component);
+		} catch (error) {
+			console.error('Failed to generate debug info:', error);
+			this.showWarning?.('Failed to generate debug info. See console.');
+		}
+	}
+
+	private formatDebugInfo(): string {
+		const cwd = this.sessionManager.getCwd?.() ?? process.cwd();
+		const sessionFile = this.sessionManager.getSessionFile?.();
+		const header = sessionFile ? this.sessionManager.getSessionHeader?.(sessionFile) : undefined;
+
+		let md = '# Debug Information\n\n';
+
+		md += '## Session\n';
+		md += `- File: ${sessionFile ?? 'N/A'}\n`;
+		md += `- CWD: ${cwd}\n`;
+		if (header) {
+			md += `- Created: ${new Date(header.createdAt).toISOString()}\n`;
+			md += `- Version: ${header.version}\n`;
+		}
+
+		md += '\n## Active Tools\n';
+		const activeTools = this.session.activeToolNames ?? [];
+		if (activeTools.length === 0) {
+			md += '- (none)\n';
+		} else {
+			for (const tool of activeTools) {
+				md += `- ${tool}\n`;
+			}
+		}
+
+		md += '\n## Settings\n';
+		md += `- Auto compaction: ${this.session.autoCompactionEnabled ?? false}\n`;
+		md += `- Thinking level: ${this.session.thinkingLevel ?? 'off'}\n`;
+		md += `- Steering mode: ${this.session.steeringMode ?? 'all'}\n`;
+		md += `- Follow-up mode: ${this.session.followUpMode ?? 'all'}\n`;
+
+		md += '\n## Environment\n';
+		md += `- NODE_ENV: ${process.env.NODE_ENV ?? 'development'}\n`;
+		md += `- USER: ${process.env.USER ?? process.env.USERNAME ?? 'unknown'}\n`;
+
+		return md;
+	}
+
+	private async handleShare(): Promise<void> {
+		// Try using GitHub CLI if available
+		const gistCreated = await this.createGistViaGh();
+		if (!gistCreated) {
+			this.showWarning?.('Share requires GitHub CLI (gh). Install it to share sessions.');
+		}
+	}
+
+	private async openExternalEditor(): Promise<void> {
+		const editorCmd = this.settingsManager.getEditorExternal?.();
+		if (!editorCmd) {
+			this.showWarning?.('No external editor configured. Set editor.external in settings.');
+			return;
+		}
+
+		// Get current editor text
+		const currentText = this.defaultEditor.getText?.();
+		if (typeof currentText !== 'string') {
+			this.showWarning?.('Current editor has no text.');
+			return;
+		}
+
+		// Create temp file
+		const tempDir = os.tmpdir();
+		const tempFile = path.join(tempDir, `evo-${Date.now()}.txt`);
+		try {
+			fs.writeFileSync(tempFile, currentText, 'utf-8');
+		} catch (e) {
+			console.error('Failed to write temp file:', e);
+			this.showWarning?.('Failed to prepare temp file.');
+			return;
+		}
+
+		// Spawn editor and wait
+		this.showStatus?.('Opening external editor...');
+		const child = spawn(editorCmd, [tempFile], {
+			stdio: 'ignore',
+			detached: true,
+		});
+
+		child.on('error', (err) => {
+			console.error('Failed to launch editor:', err);
+			this.showWarning?.(`Failed to launch editor: ${err.message}`);
+		});
+
+		// Wait for editor process to exit (simple polling)
+		const checkInterval = setInterval(() => {
+			// Check if process still exists - platform specific
+			try {
+				process.kill(child.pid!, 0);
+			} catch {
+				clearInterval(checkInterval);
+				// Editor closed, read file
+				try {
+					const newText = fs.readFileSync(tempFile, 'utf-8');
+					this.defaultEditor.setText?.(newText);
+					this.showStatus?.('External editor changes applied.');
+					// Cleanup
+					fs.unlink(tempFile, () => {});
+				} catch (readErr) {
+					console.error('Failed to read updated file:', readErr);
+				}
+			}
+		}, 500);
+	}
+
+	private async handleLogin(): Promise<void> {
+		// Open OAuth login page in browser
+		try {
+			const authUrl = this.settingsManager.getAuthUrl?.();
+			if (!authUrl) {
+				this.showWarning?.('OAuth not configured.');
+				return;
+			}
+			const openCmd = process.platform === 'darwin' ? 'open' :
+				process.platform === 'win32' ? 'start' : 'xdg-open';
+			spawn(openCmd, [authUrl], { stdio: 'ignore', detached: true }).on('error', (err) => {
+				console.error('Failed to open browser:', err);
+				this.showWarning?.(`Failed to open browser: ${err.message}`);
+			});
+			this.showStatus?.('Opened browser for login. Complete in browser.');
+		} catch (e) {
+			console.error('Login failed:', e);
+			this.showWarning?.('Login failed. See console.');
+		}
+	}
+
+	private async handleLogout(): Promise<void> {
+		try {
+			const authPath = getAuthPath?.();
+			if (!authPath) {
+				this.showWarning?.('Auth file path not configured.');
+				return;
+			}
+			if (fs.existsSync(authPath)) {
+				fs.unlinkSync(authPath);
+				this.showStatus?.('Logged out. Auth credentials removed.');
+			} else {
+				this.showStatus?.('Not logged in.');
+			}
+		} catch (e) {
+			console.error('Logout failed:', e);
+			this.showWarning?.('Logout failed. See console.');
+		}
+	}
+
+	private async showEasterEgg(egg: string): Promise<void> {
+		let content = '';
+		switch (egg) {
+			case 'arminsayshi':
+				content = '# Armin says hi! 👋\n\n> "Hello! Welcome to the coding agent."\n> - Armin'; // maybe more
+				break;
+			case 'dementedelves':
+				content = '# 🧛 Demented Elves\n\nThe elves have gone crazy! They are dancing on the keyboards...\n\n`git commit -m "elf abuse"`';
+				break;
+			case 'daxnuts':
+				content = '# 🌰 Dax\'s Nuts\n\n> "They\'re a little bit nutty."\n> - Dax';
+				break;
+			default:
+				content = 'Unknown easter egg.';
+		}
+		const mdTheme = this.getMarkdownThemeWithSettings();
+		const component = new Markdown(content, 0, 0, mdTheme);
+		this.ui.showOverlay?.(component);
+	}
+
+	// ============================================================================
+	// Settings Selector (simplified)
+	// ============================================================================
+
+	private async createGistViaGh(): Promise<boolean> {
+		return new Promise((resolve) => {
+			// Check if gh exists
+			try {
+				const result = spawnSync('gh', ['--version'], { stdio: 'ignore' });
+				if (result.status !== 0) {
+					resolve(false);
+					return;
+				}
+			} catch {
+				resolve(false);
+				return;
+			}
+
+			// Get session content (could export as JSON or text)
+			const sessionFile = this.sessionManager.getSessionFile?.();
+			if (!sessionFile) {
+				this.showWarning?.('No session to share.');
+				resolve(false);
+				return;
+			}
+
+			// Read session file content
+			let content: string;
+			try {
+				content = fs.readFileSync(sessionFile, 'utf-8');
+			} catch (e) {
+				console.error('Failed to read session file:', e);
+				resolve(false);
+				return;
+			}
+
+			// Create gist with filename
+			const filename = path.basename(sessionFile);
+			const child = spawn('gh', ['gist', 'create', '-d', 'Session export', '-f', filename, '-'], {
+				stdio: ['pipe', 'pipe', 'pipe'],
+				
+			});
+
+			let output = '';
+			child.stdout?.on('data', (data) => (output += data.toString()));
+			child.stderr?.on('data', (data) => console.error('gh gist:', data.toString()));
+
+			child.on('close', (code) => {
+				if (code === 0) {
+					// gh gist create outputs URL
+					const url = output.trim().split('\n')[0];
+					this.showStatus?.(`Gist created: ${url}`);
+					void copyToClipboard(url).then(() => {
+						navigator.clipboard?.writeText(url);
+						this.showStatus?.('URL copied to clipboard!');
+					});
+					resolve(true);
+				} else {
+					console.error('gh gist failed with code', code);
+					resolve(false);
+				}
+			});
+
+			// Write content to stdin
+			child.stdin?.write(content);
+			child.stdin?.end();
+		});
+	}
+
 	// ============================================================================
 	// Settings Selector (simplified)
 	// ============================================================================
@@ -2566,33 +2866,7 @@ export class InteractiveMode {
 		}
 	}
 
-	private exportSession(filePath?: string): void {
-		try {
-			const entries = this.sessionManager.getEntries?.();
-			const header = this.sessionManager.getHeader?.();
-			if (!header) {
-				this.showError?.('No session header to export');
-				return;
-			}
-			const data = {
-				version: header.version,
-				header,
-				entries,
-			};
-			const defaultName = `session-${header.id}-${new Date().toISOString().slice(0,10)}.json`;
-			const targetPath = filePath || defaultName;
-			fs.writeFileSync(targetPath, JSON.stringify(data, null, 2));
-			this.showStatus?.(`Exported session to: ${targetPath}`);
-		} catch (e: any) {
-			console.error('Export error:', e);
-			this.showError?.(`Export failed: ${e.message}`);
-		}
-	}
 
-	private importSession(filePath: string): void {
-		// Basic stub: would read file, validate, and switch session
-		this.showStatus?.(`Import not implemented: ${filePath}`);
-	}
 
 	private toggleDebug(): void {
 		// Gather debug info
