@@ -262,6 +262,9 @@ export class InteractiveMode {
 		// Notices
 		if (this.changelogMarkdown) this.showStartupNotices();
 
+		// Check for package updates
+		void this.checkForUpdates?.();
+
 		console.log('✅ InteractiveMode initialized');
 	}
 
@@ -2236,6 +2239,17 @@ export class InteractiveMode {
 		} catch (e: any) {
 			console.error('Export JSON failed:', e);
 			this.showWarning?.(`Export failed: ${e.message}`);
+		}
+	}
+
+	private async checkForUpdates(): Promise<void> {
+		try {
+			const latest = await checkForNewPiVersion();
+			if (latest) {
+				this.showStatus?.(`New Evo version available: ${latest} (current: ${VERSION})`);
+			}
+		} catch (error) {
+			console.debug('Update check failed:', error);
 		}
 	}
 
