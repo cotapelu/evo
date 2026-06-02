@@ -541,6 +541,15 @@ export class InteractiveMode {
 			case '/export':
 				await this.handleExportJson?.();
 				break;
+			case '/import': {
+				const importArg = command.slice(7).trim();
+				if (!importArg) {
+					this.showWarning?.('Usage: /import <file path>');
+				} else {
+					await this.handleImport?.(importArg);
+				}
+				break;
+			}
 			default:
 				if (command === '/model') {
 					// Cycle to next model
@@ -2239,6 +2248,47 @@ export class InteractiveMode {
 		} catch (e: any) {
 			console.error('Export JSON failed:', e);
 			this.showWarning?.(`Export failed: ${e.message}`);
+		}
+	}
+
+	private async handleImport(filePath: string): Promise<void> {
+		try {
+			if (!filePath.endsWith('.json')) {
+				this.showWarning?.('Import file must be .json');
+				return;
+			}
+			const src = path.resolve(filePath);
+			if (!fs.existsSync(src)) {
+				this.showWarning?.('File not found');
+				return;
+			}
+			// Validate JSON structure
+			let content: string;
+			try {
+				content = fs.readFileSync(src, 'utf-8');
+				JSON.parse(content);
+			} catch {
+				this.showWarning?.('Invalid JSON file');
+				return;
+			}
+
+			const sessionDir = this.sessionManager.getSessionDir?.() ?? this.sessionManager.getCwd?.();
+			if (!sessionDir) {
+				this.showWarning?.('Cannot determine session directory');
+				return;
+			}
+
+			const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+			const destFileName = `imported-${timestamp}.json`;
+			const dest = path.join(sessionDir, destFileName);
+			fs.writeFileSync(dest, content, 'utf-8');
+
+			// Switch to new session
+			await this.runtimeHost.switchSession?.(dest);
+			this.showStatus?.(`Imported session from ${path.basename(src)}`);
+		} catch (e: any) {
+			console.error('Import failed:', e);
+			this.showWarning?.(`Import failed: ${e.message}`);
 		}
 	}
 
