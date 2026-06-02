@@ -311,7 +311,7 @@ export class InteractiveMode {
 		this.defaultEditor.onAction?.('app.session.new', () => this.handleClearCommand());
 		this.defaultEditor.onAction?.('app.session.tree', () => this.showTreeSelector());
 		this.defaultEditor.onAction?.('app.session.fork', () => {
-			// TODO: implement showUserMessageSelector when needed
+			this.showUserMessageSelector();
 		});
 		this.defaultEditor.onAction?.('app.session.resume', () => this.showSessionSelector());
 
@@ -333,7 +333,7 @@ export class InteractiveMode {
 						if (action === 'tree') {
 							this.showTreeSelector();
 						} else if (action === 'fork') {
-							// TODO: implement showUserMessageSelector when needed
+							this.showUserMessageSelector();
 						}
 						this.lastEscapeTime = 0;
 					} else {
