@@ -34,6 +34,7 @@ import {
 	FooterComponent,
 	CustomEditor,
 	UserMessageComponent,
+	UserMessageSelectorComponent,
 	AssistantMessageComponent,
 	BashExecutionComponent,
 	ToolExecutionComponent,
@@ -472,12 +473,7 @@ export class InteractiveMode {
 				}
 				break;
 			case '/fork':
-				const forkArg = command.slice(5).trim();
-				if (!forkArg) {
-					this.showWarning?.('Usage: /fork <new session name>');
-				} else {
-					await this.forkSession?.(forkArg);
-				}
+				await this.showUserMessageSelector?.();
 				break;
 			case '/debug':
 				this.toggleDebug?.();
@@ -2225,6 +2221,42 @@ export class InteractiveMode {
 		const mdTheme = this.getMarkdownThemeWithSettings();
 		const component = new Markdown(content, 0, 0, mdTheme);
 		this.ui.showOverlay?.(component);
+	}
+
+	private showUserMessageSelector(): void {
+		const userMessages = (this.session.getUserMessagesForForking?.() ?? []) as Array<{ entryId: string; text: string }>;
+		if (userMessages.length === 0) {
+			this.showStatus?.('No messages to fork from');
+			return;
+		}
+
+		const messages = userMessages.map((m) => ({ id: m.entryId, text: m.text }));
+		const initialSelectedId = userMessages[userMessages.length - 1]?.entryId;
+
+		const selector = new UserMessageSelectorComponent(
+			messages,
+			async (entryId) => {
+				this.ui.hideOverlay?.();
+				try {
+					const result = await this.runtimeHost.fork(entryId);
+					if (result.cancelled) {
+						this.ui.requestRender?.();
+						return;
+					}
+					this.renderCurrentSessionState?.();
+					this.editor.setText?.(result.selectedText ?? '');
+					this.showStatus?.('Forked to new session');
+				} catch (error: any) {
+					this.showError?.(error.message || 'Fork failed');
+				}
+			},
+			() => {
+				this.ui.hideOverlay?.();
+				this.ui.requestRender?.();
+			},
+			initialSelectedId
+		);
+		this.ui.showOverlay?.(selector);
 	}
 
 	// ============================================================================

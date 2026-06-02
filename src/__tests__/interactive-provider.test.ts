@@ -101,6 +101,7 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   SettingsSelectorComponent: jest.fn(),
   SessionSelectorComponent: jest.fn(),
   TreeSelectorComponent: jest.fn(),
+  UserMessageSelectorComponent: jest.fn(),
   DEFAULT_MAX_LINES: 1000,
   DEFAULT_MAX_BYTES: 100000,
 }));
@@ -169,6 +170,7 @@ function createSession(overrides = {}) {
       fullOutputPath: undefined,
       cancelled: false,
     }),
+    getUserMessagesForForking: jest.fn().mockReturnValue([]),
   };
   return Object.assign(sess, overrides);
 }
