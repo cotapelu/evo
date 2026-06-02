@@ -241,22 +241,22 @@ export class InteractiveMode {
 		this.ui.setFocus?.(this.editor);
 
 		// Setup
-		this.setupKeyHandlers?.();
-		this.setupEditorSubmitHandler?.();
+		this.setupKeyHandlers();
+		this.setupEditorSubmitHandler();
 
 		// Start UI
 		this.ui.start?.();
 
 		// Bind extensions and subscribe to agent events
-		await this.rebindCurrentSession?.();
+		await this.rebindCurrentSession();
 
 		this.isInitialized = true;
 
 		// Render initial
-		this.renderInitialMessages?.();
+		this.renderInitialMessages();
 
 		// Notices
-		if (this.changelogMarkdown) this.showStartupNotices?.();
+		if (this.changelogMarkdown) this.showStartupNotices();
 
 		console.log('✅ InteractiveMode initialized');
 	}
@@ -314,27 +314,27 @@ export class InteractiveMode {
 		};
 
 		// Register app action handlers
-		this.defaultEditor.onAction?.('app.clear', () => this.handleCtrlC?.());
-		this.defaultEditor.onCtrlD = () => this.handleCtrlD?.();
-		this.defaultEditor.onAction?.('app.suspend', () => this.handleCtrlZ?.());
-		this.defaultEditor.onAction?.('app.thinking.cycle', () => this.cycleThinkingLevel?.());
-		this.defaultEditor.onAction?.('app.model.cycleForward', () => this.cycleModel?.('forward'));
-		this.defaultEditor.onAction?.('app.model.cycleBackward', () => this.cycleModel?.('backward'));
+		this.defaultEditor.onAction?.('app.clear', () => this.handleCtrlC());
+		this.defaultEditor.onCtrlD = () => this.handleCtrlD();
+		this.defaultEditor.onAction?.('app.suspend', () => this.handleCtrlZ());
+		this.defaultEditor.onAction?.('app.thinking.cycle', () => this.cycleThinkingLevel());
+		this.defaultEditor.onAction?.('app.model.cycleForward', () => this.cycleModel('forward'));
+		this.defaultEditor.onAction?.('app.model.cycleBackward', () => this.cycleModel('backward'));
 
 		// Global debug handler on TUI (works regardless of focus)
-		this.ui.onDebug = () => this.handleDebugCommand?.();
-		this.defaultEditor.onAction?.('app.model.select', () => this.showModelSelector?.());
-		this.defaultEditor.onAction?.('app.tools.expand', () => this.toggleToolOutputExpansion?.());
-		this.defaultEditor.onAction?.('app.thinking.toggle', () => this.toggleThinkingBlockVisibility?.());
-		this.defaultEditor.onAction?.('app.editor.external', () => this.openExternalEditor?.());
-		this.defaultEditor.onAction?.('app.message.followUp', () => this.handleFollowUp?.());
-		this.defaultEditor.onAction?.('app.message.dequeue', () => this.handleDequeue?.());
-		this.defaultEditor.onAction?.('app.session.new', () => this.handleClearCommand?.());
-		this.defaultEditor.onAction?.('app.session.tree', () => this.showTreeSelector?.());
+		this.ui.onDebug = () => this.handleDebugCommand();
+		this.defaultEditor.onAction?.('app.model.select', () => this.showModelSelector());
+		this.defaultEditor.onAction?.('app.tools.expand', () => this.toggleToolOutputExpansion());
+		this.defaultEditor.onAction?.('app.thinking.toggle', () => this.toggleThinkingBlockVisibility());
+		this.defaultEditor.onAction?.('app.editor.external', () => this.openExternalEditor());
+		this.defaultEditor.onAction?.('app.message.followUp', () => this.handleFollowUp());
+		this.defaultEditor.onAction?.('app.message.dequeue', () => this.handleDequeue());
+		this.defaultEditor.onAction?.('app.session.new', () => this.handleClearCommand());
+		this.defaultEditor.onAction?.('app.session.tree', () => this.showTreeSelector());
 		this.defaultEditor.onAction?.('app.session.fork', () => {
 			// TODO: implement showUserMessageSelector when needed
 		});
-		this.defaultEditor.onAction?.('app.session.resume', () => this.showSessionSelector?.());
+		this.defaultEditor.onAction?.('app.session.resume', () => this.showSessionSelector());
 
 		this.defaultEditor.onChange = (text: string) => {
 			const wasBashMode = this.isBashMode;
