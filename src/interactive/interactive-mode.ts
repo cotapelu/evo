@@ -1605,7 +1605,6 @@ export class InteractiveMode {
 		if (this.loadingAnimation && this.statusContainer.children.indexOf(this.loadingAnimation) === -1) {
 			this.statusContainer.addChild?.(this.loadingAnimation);
 				this.loadingAnimation.start?.();
-			this.loadingAnimation.start?.();
 		}
 		this.ui.requestRender?.();
 	}
