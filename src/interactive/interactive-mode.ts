@@ -56,7 +56,7 @@ import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/change
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
-import { theme, initTheme as localInitTheme, getEditorTheme, getThinkingBorderColor } from './theme/theme.js';
+import { theme, initTheme as localInitTheme, getEditorTheme, getThinkingBorderColor, getBashModeBorderColor } from './theme/theme.js';
 import { copyToClipboard, readClipboardImage, extensionForImageMimeType } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 
@@ -163,6 +163,8 @@ export class InteractiveMode {
 	private retryCountdown?: any;
 	private retryEscapeHandler?: () => void;
 	private autocompleteProvider?: any;
+	private bashComponent?: BashExecutionComponent;
+	private isBashRunning = false;
 
 	// Convenience
 	private get session(): any { return this.runtimeHost.session; }
@@ -284,7 +286,7 @@ export class InteractiveMode {
 		this.defaultEditor.onEscape = () => {
 			if (this.session.isStreaming) {
 				this.restoreQueuedMessagesToEditor({ abort: true });
-			} else if (this.session.isBashRunning) {
+			} else if (this.isBashRunning) {
 				this.session.abortBash?.();
 			} else if (this.isBashMode) {
 				this.editor.setText?.('');
@@ -1193,8 +1195,12 @@ export class InteractiveMode {
 	}
 
 	private updateEditorBorderColor(): void {
-		const level = this.session.thinkingLevel || 'off';
-		this.editor.borderColor = getThinkingBorderColor(level);
+		if (this.isBashMode) {
+			this.editor.borderColor = getBashModeBorderColor();
+		} else {
+			const level = this.session.thinkingLevel || 'off';
+			this.editor.borderColor = getThinkingBorderColor(level);
+		}
 		this.ui.requestRender?.();
 	}
 
@@ -2575,6 +2581,8 @@ export class InteractiveMode {
 		}
 
 		const bashComponent = new BashExecutionComponent(command, this.ui, exclude);
+		this.bashComponent = bashComponent;
+		this.isBashRunning = true;
 		this.chatContainer.addChild?.(bashComponent);
 		this.ui.requestRender?.();
 
@@ -2613,6 +2621,9 @@ export class InteractiveMode {
 		} catch (e: any) {
 			console.error('BashCommandError:', command, e);
 			this.showError?.(`Bash error: ${e.message}`);
+		} finally {
+			this.bashComponent = undefined;
+			this.isBashRunning = false;
 		}
 	}
 
