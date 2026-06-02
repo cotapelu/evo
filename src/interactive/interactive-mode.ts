@@ -336,6 +336,34 @@ export class InteractiveMode {
 		});
 		this.defaultEditor.onAction?.('app.session.resume', () => this.showSessionSelector());
 
+		// Comprehensive escape handler
+		this.defaultEditor.onEscape = () => {
+			if (this.session.isStreaming) {
+				this.restoreQueuedMessagesToEditor({ abort: true });
+			} else if (this.session.isBashRunning) {
+				this.session.abortBash?.();
+			} else if (this.isBashMode) {
+				this.editor.setText?.('');
+				this.isBashMode = false;
+				this.updateEditorBorderColor();
+			} else if (!this.editor.getText?.()?.trim()) {
+				const action = this.settingsManager.getDoubleEscapeAction?.();
+				if (action !== 'none') {
+					const now = Date.now();
+					if (now - this.lastEscapeTime < 500) {
+						if (action === 'tree') {
+							this.showTreeSelector();
+						} else if (action === 'fork') {
+							// TODO: implement showUserMessageSelector when needed
+						}
+						this.lastEscapeTime = 0;
+					} else {
+						this.lastEscapeTime = now;
+					}
+				}
+			}
+		};
+
 		this.defaultEditor.onChange = (text: string) => {
 			const wasBashMode = this.isBashMode;
 			this.isBashMode = text.trimStart().startsWith('!');
