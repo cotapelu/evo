@@ -3,7 +3,7 @@ import { createMockRuntime, createTestTeam } from './test-utils.js';
 
 describe('AgentTeam Zombie Recovery', () => {
   let team: AgentTeam;
-  const AGENT_TIMEOUT_MS = 2 * 60 * 1000; // phải khớp với constant trong code
+  const AGENT_TIMEOUT_MS = 2 * 60 * 1000; // must match the constant in the code
 
   beforeEach(async () => {
     team = createTestTeam('test-zombie-team');
@@ -31,17 +31,17 @@ describe('AgentTeam Zombie Recovery', () => {
     expect(status.tasks[0].status).toBe('in_progress');
     expect(status.tasks[0].assignee).toBe('agent-1');
 
-    // Simulate agent-1 zombie bằng cách set lastSeen cũ
+    // Simulate agent-1 zombie by setting old lastSeen
     (team as any).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
 
     // Trigger monitor manually (since it runs every 1s)
     // Directly call the monitor logic or setInterval will run later. For test, we'll call directly.
-    // We'll access private method? Better: we can set team.monitorInterval và đợi, nhưng chậm.
+    // We'll access private method? Better: we can set team.monitorInterval and wait, but slow.
     // Instead, we'll manually invoke the reclaim logic (extract to method later) or set interval and wait.
-    // For simplicity, we can set team.monitorInterval as setInterval and advance time? Không có fake timer.
+    // For simplicity, we can set team.monitorInterval as setInterval and advance time? No fake timer available.
     // We'll directly call the reclaim function we'll create: `reclaimZombieAgents()` maybe.
-    // Actually, trong implementation, monitorInterval gọi getTeamStatus và check isComplete, nhưng không reclaim.
-    // Tôi sẽ modify monitorInterval để include zombie check.
+    // Actually, in the implementation, monitorInterval calls getTeamStatus and checks isComplete, but does not reclaim.
+    // We will modify monitorInterval to include zombie check.
 
     // For now, this test will be updated after implementation.
   });
@@ -58,7 +58,7 @@ describe('AgentTeam Zombie Recovery', () => {
     (team as any).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
 
     // Trigger zombie reclaim
-    // Sau implementation, có thể gọi team.checkZombieAgents() hoặc monitorInterval tự làm
+    // After implementation, we might call team.checkZombieAgents() or monitorInterval does it automatically
   });
 
   test('should clear agent status when reclaimed', async () => {
@@ -80,8 +80,8 @@ describe('AgentTeam Zombie Recovery', () => {
     await team.initialize(team.tasks);
 
     await team.claimTask('agent-1');
-    // agent-1 lastSeen là now (set trong claimTask)
-    // Wait? Không cần, lastSeen mới.
+    // agent-1 lastSeen is now (set in claimTask)
+    // Wait? No need, lastSeen is fresh.
 
     // Trigger zombie check - should not reclaim
   });

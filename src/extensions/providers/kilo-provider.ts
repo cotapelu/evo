@@ -15,7 +15,7 @@ import type { ProviderConfig } from "@earendil-works/pi-coding-agent";
 import { KILO_MODELS_ALL } from "./models/index.js";
 
 export function registerKiloProvider(api: ExtensionAPI): void {
-  // Lấy baseUrl từ generated models nếu có, nếu không dùng fallback
+  // Get baseUrl from generated models if available, otherwise use fallback
   const baseUrl = KILO_MODELS_ALL[0]?.baseUrl || "https://api.kilo.ai/api/gateway";
 
   const config: ProviderConfig = {

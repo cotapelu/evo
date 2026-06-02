@@ -294,14 +294,14 @@ export class AgentTeam implements AgentTeamRuntime {
     });
   }
 
-  // Heartbeat để theo dõi agent còn sống không
+  // Heartbeat to track if agent is still alive
   public updateHeartbeat(role: string): void {
     this.agentLastSeen.set(role, Date.now());
   }
 
   // Helper: insert index into pendingIndices while maintaining sorted order
   private insertPendingIndexSorted(idx: number): void {
-    // Binary search để tìm vị trí insert
+    // Binary search to find insert position
     let low = 0;
     let high = this.pendingIndices.length;
     while (low < high) {

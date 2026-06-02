@@ -2,7 +2,7 @@
 import { jest } from '@jest/globals';
 import { createTeamOpsTool } from '../team-ops-tool.js';
 
-// Mock AgentTeam đơn giản
+// Simple mock AgentTeam
 function createMockTeam() {
   return {
     tasks: [] as string[],
