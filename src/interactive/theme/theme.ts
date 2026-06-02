@@ -131,9 +131,11 @@ export function getEditorTheme(): any {
 	return {
 		borderColor: (status: string) => safeFg('border', status),
 		selectList: {
-			selected: (text: string) => text,
-			active: (text: string) => text,
-			disabled: (text: string) => text,
+			selectedPrefix: (text: string) => safeFg('accent', text),
+			selectedText: (text: string) => safeFg('accent', text),
+			description: (text: string) => safeFg('muted', text),
+			scrollInfo: (text: string) => safeFg('muted', text),
+			noMatch: (text: string) => safeFg('muted', text),
 		},
 	};
 }
