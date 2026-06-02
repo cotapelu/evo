@@ -47,7 +47,7 @@ import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/change
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
-import { theme, initTheme as localInitTheme, getEditorTheme } from './theme/theme.js';
+import { theme, initTheme as localInitTheme, getEditorTheme, getThinkingBorderColor } from './theme/theme.js';
 import { copyToClipboard, readClipboardImage } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 
@@ -181,11 +181,8 @@ export class InteractiveMode {
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
 		this.ui.setClearOnShrink?.(this.settingsManager.getClearOnShrink?.() ?? true);
 
-		// Editor - get theme after initTheme has run
-		const editorTheme = getEditorTheme?.() ?? {
-			borderColor: (s: string) => this.theme()?.fg?.('border', s) ?? s,
-			selectList: { selected: (t: string) => t, active: (t: string) => t, disabled: (t: string) => t },
-		};
+		// Editor - use editor theme with proper borderColor function
+		const editorTheme = getEditorTheme();
 		this.defaultEditor = new CustomEditor(this.ui, editorTheme, this.keybindings as any, {
 			paddingX: this.settingsManager.getEditorPaddingX?.() ?? 2,
 			autocompleteMaxVisible: this.settingsManager.getAutocompleteMaxVisible?.() ?? 8,
@@ -985,8 +982,7 @@ export class InteractiveMode {
 
 	private updateEditorBorderColor(): void {
 		const level = this.session.thinkingLevel || 'off';
-		const colors: Record<string, string> = { off: 'border', minimal: 'dim', low: 'accent', medium: 'warning', high: 'error', xhigh: 'error' };
-		this.editor.borderColor = this.theme().fg(colors[level] ?? 'border', '#');
+		this.editor.borderColor = getThinkingBorderColor(level);
 		this.ui.requestRender?.();
 	}
 

@@ -144,33 +144,36 @@ export function getEditorTheme(): any {
 export function getSelectListTheme(): any {
 	const th = theme();
 	return {
-		selected: (t: string) => th.bg('selected', t),
-		active: (t: string) => th.bg('active', t),
-		disabled: (t: string) => th.fg('dim', t),
+		selectedPrefix: (text: string) => th.fg('accent', text),
+		selectedText: (text: string) => th.fg('accent', text),
+		description: (text: string) => th.fg('muted', text),
+		scrollInfo: (text: string) => th.fg('muted', text),
+		noMatch: (text: string) => th.fg('muted', text),
 	};
 }
 
 /**
  * Get border color for bash mode (green accent).
  */
-export function getBashModeBorderColor(): string {
-	return theme().fg('accent', '#');
+export function getBashModeBorderColor(): (str: string) => string {
+	const th = theme();
+	return (str: string) => th.fg('bashMode', str);
 }
 
 /**
  * Get border color based on thinking level.
  */
-export function getThinkingBorderColor(level: string): string {
+export function getThinkingBorderColor(level: string): (str: string) => string {
 	const th = theme();
-	const levelColors: Record<string, string> = {
-		off: th.fg('border', '#'),
-		minimal: th.fg('dim', '#'),
-		low: th.fg('accent', '#'),
-		medium: th.fg('warning', '#'),
-		high: th.fg('error', '#'),
-		xhigh: th.fg('error', '#'),
+	const levelColors: Record<string, (str: string) => string> = {
+		off: (str) => th.fg('thinkingOff', str),
+		minimal: (str) => th.fg('thinkingMinimal', str),
+		low: (str) => th.fg('thinkingLow', str),
+		medium: (str) => th.fg('thinkingMedium', str),
+		high: (str) => th.fg('thinkingHigh', str),
+		xhigh: (str) => th.fg('thinkingXhigh', str),
 	};
-	return levelColors[level] ?? th.fg('border', '#');
+	return levelColors[level] ?? ((str) => th.fg('thinkingOff', str));
 }
 
 /**
