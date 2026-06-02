@@ -7,7 +7,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList, BorderedLoader } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -614,11 +614,11 @@ export class InteractiveMode {
 	/** Auto-compaction loader control */
 	private showAutoCompactionLoader(): void {
 		if (!this.autoCompactionLoader) {
-			this.autoCompactionLoader = new Loader(
+			this.autoCompactionLoader = new BorderedLoader(
 				this.ui,
-				(spinner) => this.theme().fg('warning', spinner),
-				(text) => this.theme().dim(text),
-				'Compacting...'
+				this.theme(),
+				'Compacting...',
+				{ cancellable: true }
 			);
 			this.statusContainer.addChild?.(this.autoCompactionLoader);
 			this.autoCompactionLoader.start?.();
