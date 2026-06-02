@@ -418,6 +418,8 @@ describe('InteractiveMode', () => {
       const { UserMessageComponent } = await import('@earendil-works/pi-coding-agent');
       const submitHandler = (mode.defaultEditor as any).onSubmit;
       await submitHandler('test');
+      // Simulate message_start event to render user message (behavior: event-driven)
+      await (mode as any).handleEvent({ type: 'message_start', message: { role: 'user', content: 'test' } });
       expect(mode.chatContainer.addChild).toHaveBeenCalledWith(expect.any(UserMessageComponent));
     });
 

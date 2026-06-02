@@ -3,6 +3,7 @@
  * Orchestrates TUI UI, input, and agent interaction.
  */
 
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -56,7 +57,7 @@ import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
 import { theme, initTheme as localInitTheme, getEditorTheme, getThinkingBorderColor } from './theme/theme.js';
-import { copyToClipboard, readClipboardImage } from '../utils/clipboard.js';
+import { copyToClipboard, readClipboardImage, extensionForImageMimeType } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 
 // Helper functions (stubs for package exports not available)
@@ -139,6 +140,9 @@ export class InteractiveMode {
 	private toolOutputExpanded = false;
 	private hideThinkingBlock = false;
 	private shutdownRequested = false;
+	private lastSigintTime = 0;
+	private lastEscapeTime = 0;
+	private isBashMode = false;
 	private fdPath = '';
 	private loadingAnimation?: Loader;
 	private defaultWorkingMessage = 'Working...';
@@ -275,7 +279,72 @@ export class InteractiveMode {
 
 
 	private setupKeyHandlers(): void {
-		// Basic key handlers can be added later
+		// Set up handlers on defaultEditor - they use this.editor for text access
+		// so they work correctly regardless of which editor is active
+		this.defaultEditor.onEscape = () => {
+			if (this.session.isStreaming) {
+				this.restoreQueuedMessagesToEditor({ abort: true });
+			} else if (this.session.isBashRunning) {
+				this.session.abortBash?.();
+			} else if (this.isBashMode) {
+				this.editor.setText?.('');
+				this.isBashMode = false;
+				this.updateEditorBorderColor?.();
+			} else if (!this.editor.getText?.()?.trim()) {
+				// Double-escape with empty editor triggers /tree, /fork, or nothing based on setting
+				const action = this.settingsManager.getDoubleEscapeAction?.();
+				if (action !== 'none') {
+					const now = Date.now();
+					if (now - this.lastEscapeTime < 500) {
+						if (action === 'tree') {
+							this.showTreeSelector?.();
+						} else {
+							// /fork - show user message selector
+							// TODO: implement showUserMessageSelector when needed
+						}
+						this.lastEscapeTime = 0;
+					} else {
+						this.lastEscapeTime = now;
+					}
+				}
+			}
+		};
+
+		// Register app action handlers
+		this.defaultEditor.onAction?.('app.clear', () => this.handleCtrlC?.());
+		this.defaultEditor.onCtrlD = () => this.handleCtrlD?.();
+		this.defaultEditor.onAction?.('app.suspend', () => this.handleCtrlZ?.());
+		this.defaultEditor.onAction?.('app.thinking.cycle', () => this.cycleThinkingLevel?.());
+		this.defaultEditor.onAction?.('app.model.cycleForward', () => this.cycleModel?.('forward'));
+		this.defaultEditor.onAction?.('app.model.cycleBackward', () => this.cycleModel?.('backward'));
+
+		// Global debug handler on TUI (works regardless of focus)
+		this.ui.onDebug = () => this.handleDebugCommand?.();
+		this.defaultEditor.onAction?.('app.model.select', () => this.showModelSelector?.());
+		this.defaultEditor.onAction?.('app.tools.expand', () => this.toggleToolOutputExpansion?.());
+		this.defaultEditor.onAction?.('app.thinking.toggle', () => this.toggleThinkingBlockVisibility?.());
+		this.defaultEditor.onAction?.('app.editor.external', () => this.openExternalEditor?.());
+		this.defaultEditor.onAction?.('app.message.followUp', () => this.handleFollowUp?.());
+		this.defaultEditor.onAction?.('app.message.dequeue', () => this.handleDequeue?.());
+		this.defaultEditor.onAction?.('app.session.new', () => this.handleClearCommand?.());
+		this.defaultEditor.onAction?.('app.session.tree', () => this.showTreeSelector?.());
+		this.defaultEditor.onAction?.('app.session.fork', () => {
+			// TODO: implement showUserMessageSelector when needed
+		});
+		this.defaultEditor.onAction?.('app.session.resume', () => this.showSessionSelector?.());
+
+		this.defaultEditor.onChange = (text: string) => {
+			const wasBashMode = this.isBashMode;
+			this.isBashMode = text.trimStart().startsWith('!');
+			if (wasBashMode !== this.isBashMode) {
+				this.updateEditorBorderColor?.();
+			}
+		};
+
+		// Handle clipboard image paste (triggered on Ctrl+V)
+		this.defaultEditor.onPasteImage = () => {
+			this.handleClipboardImagePaste?.();
+		};
 	}
 
 	private setupEditorSubmitHandler(): void {
@@ -302,7 +371,7 @@ export class InteractiveMode {
 			}
 
 			// Normal prompt
-			this.chatContainer.addChild?.(new UserMessageComponent(text, this.getMarkdownThemeWithSettings?.()));
+			// (user message will be added by event system via message_start)
 			try {
 				await this.session.prompt?.(text);
 			} catch (error: any) {
@@ -592,6 +661,136 @@ export class InteractiveMode {
 		}
 		// Add more global keys here if needed
 		return undefined;
+	}
+
+	private handleCtrlC(): void {
+		const now = Date.now();
+		if (now - this.lastSigintTime < 500) {
+			void this.shutdown?.();
+		} else {
+			this.clearEditor?.();
+			this.lastSigintTime = now;
+		}
+	}
+
+	private handleCtrlD(): void {
+		// Only called when editor is empty (enforced by CustomEditor)
+		void this.shutdown?.();
+	}
+
+	private handleCtrlZ(): void {
+		// Suspend (not supported on Windows)
+		if (process.platform !== 'win32') {
+			process.kill(process.pid, 'SIGSTOP');
+		}
+	}
+
+	private clearEditor(): void {
+		this.editor.setText?.('');
+		this.ui.requestRender?.();
+	}
+
+	private cycleThinkingLevel(): void {
+		const availableLevels = this.session.getAvailableThinkingLevels?.() ?? ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'];
+		const currentLevel = this.session.thinkingLevel || 'off';
+		const currentIndex = availableLevels.indexOf(currentLevel);
+		const nextIndex = (currentIndex + 1) % availableLevels.length;
+		const nextLevel = availableLevels[nextIndex];
+		void this.session.setThinkingLevel?.(nextLevel);
+	}
+
+	private cycleModel(direction: 'forward' | 'backward'): void {
+		const models = this.session.modelRegistry?.getAvailable?.() ?? [];
+		if (models.length === 0) return;
+		const currentModel = this.session.model;
+		let currentIndex = models.findIndex((m: any) => m.id === currentModel?.id && m.provider === currentModel?.provider);
+		if (currentIndex === -1) currentIndex = 0;
+		let nextIndex;
+		if (direction === 'forward') {
+			nextIndex = (currentIndex + 1) % models.length;
+		} else {
+			nextIndex = (currentIndex - 1 + models.length) % models.length;
+		}
+		const nextModel = models[nextIndex];
+		if (this.session.setModel) {
+			void this.session.setModel(nextModel);
+		}
+	}
+
+	private toggleToolOutputExpansion(): void {
+		this.toolOutputExpanded = !this.toolOutputExpanded;
+		for (const child of this.chatContainer.children) {
+			// @ts-ignore
+			if (child instanceof ToolExecutionComponent) {
+				// @ts-ignore
+				child.setExpanded?.(this.toolOutputExpanded);
+			}
+		}
+		this.ui.requestRender?.();
+	}
+
+	private toggleThinkingBlockVisibility(): void {
+		this.hideThinkingBlock = !this.hideThinkingBlock;
+		this.settingsManager.setHideThinkingBlock?.(this.hideThinkingBlock);
+		// Rebuild chat to apply visibility
+		this.chatContainer.clear?.();
+		this.renderInitialMessages?.();
+		if (this.streamingComponent) {
+			// @ts-ignore
+			this.streamingComponent.setHideThinkingBlock?.(this.hideThinkingBlock);
+			if (this.streamingMessage) {
+				this.streamingComponent.updateContent?.(this.streamingMessage);
+			}
+		}
+		this.ui.requestRender?.();
+	}
+
+	private openExternalEditor(): void {
+		this.showWarning?.('External editor integration not implemented');
+	}
+
+	private handleFollowUp(): void {
+		const text = this.editor.getText?.()?.trim();
+		if (!text) return;
+		this.editor.addToHistory?.(text);
+		this.editor.setText?.('');
+		void this.session.followUp?.(text);
+	}
+
+	private handleDequeue(): void {
+		const count = this.restoreQueuedMessagesToEditor?.();
+		if (count && count > 0) {
+			this.showStatus?.(`Restored ${count} queued messages to editor`);
+		}
+	}
+
+	private async handleClipboardImagePaste(): Promise<void> {
+		try {
+			const result = await readClipboardImage();
+			if (!result) {
+				return;
+			}
+			// Convert to data URL using mimeType
+			const base64 = Buffer.from(result.bytes).toString('base64');
+			const dataUrl = `data:${result.mimeType};base64,${base64}`;
+			const markdown = `\n![clipboard](${dataUrl})\n`;
+			const currentText = this.editor.getText?.() ?? '';
+			this.editor.setText?.(currentText + markdown);
+			this.ui.requestRender?.();
+		} catch {
+			// Silently ignore clipboard errors
+		}
+	}
+
+	private handleDebugCommand(): void {
+		// Dump basic terminal and session info to console
+		console.log('=== DEBUG INFO ===');
+		console.log('Session ID:', this.session.sessionId);
+		console.log('CWD:', this.sessionManager.getCwd?.());
+		console.log('Model:', this.session.model?.id);
+		console.log('Thinking level:', this.session.thinkingLevel);
+		console.log('Is streaming:', this.session.isStreaming);
+		console.log('==================');
 	}
 
 	private getUserInput(): Promise<string> {
