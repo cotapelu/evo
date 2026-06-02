@@ -535,6 +535,9 @@ export class InteractiveMode {
 			case '/scoped-models':
 				this.showModelSelector?.();
 				break;
+			case '/export':
+				await this.handleExportJson?.();
+				break;
 			default:
 				if (command === '/model') {
 					// Cycle to next model
@@ -2203,11 +2206,44 @@ export class InteractiveMode {
 		}
 	}
 
+	private async handleExportJson(): Promise<void> {
+		try {
+			const sessionFile = this.sessionManager.getSessionFile?.();
+			if (!sessionFile) {
+				this.showWarning?.('No active session to export.');
+				return;
+			}
+			const header = this.sessionManager.getHeader?.();
+			const entries = this.sessionManager.getEntries?.();
+			if (!header || !entries) {
+				this.showWarning?.('Session data incomplete.');
+				return;
+			}
+
+			const exportData = {
+				version: header.version,
+				header,
+				entries,
+			};
+
+			const outDir = path.dirname(sessionFile);
+			const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+			const defaultName = `session-${timestamp}.json`;
+			const outputPath = path.join(outDir, defaultName);
+
+			fs.writeFileSync(outputPath, JSON.stringify(exportData, null, 2), 'utf-8');
+			this.showStatus?.(`Session exported to ${outputPath}`);
+		} catch (e: any) {
+			console.error('Export JSON failed:', e);
+			this.showWarning?.(`Export failed: ${e.message}`);
+		}
+	}
+
 	private async showEasterEgg(egg: string): Promise<void> {
 		let content = '';
 		switch (egg) {
 			case 'arminsayshi':
-				content = '# Armin says hi! 👋\n\n> "Hello! Welcome to the coding agent."\n> - Armin'; // maybe more
+				content = '# Armin says hi! 👋\n\n> "Hello! Welcome to the coding agent."\n> - Armin';
 				break;
 			case 'dementedelves':
 				content = '# 🧛 Demented Elves\n\nThe elves have gone crazy! They are dancing on the keyboards...\n\n`git commit -m "elf abuse"`';
