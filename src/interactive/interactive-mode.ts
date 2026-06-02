@@ -291,34 +291,6 @@ export class InteractiveMode {
 	private setupKeyHandlers(): void {
 		// Set up handlers on defaultEditor - they use this.editor for text access
 		// so they work correctly regardless of which editor is active
-		this.defaultEditor.onEscape = () => {
-			if (this.session.isStreaming) {
-				this.restoreQueuedMessagesToEditor({ abort: true });
-			} else if (this.session.isBashRunning) {
-				this.session.abortBash?.();
-			} else if (this.isBashMode) {
-				this.editor.setText?.('');
-				this.isBashMode = false;
-				this.updateEditorBorderColor?.();
-			} else if (!this.editor.getText?.()?.trim()) {
-				// Double-escape with empty editor triggers /tree, /fork, or nothing based on setting
-				const action = this.settingsManager.getDoubleEscapeAction?.();
-				if (action !== 'none') {
-					const now = Date.now();
-					if (now - this.lastEscapeTime < 500) {
-						if (action === 'tree') {
-							this.showTreeSelector?.();
-						} else {
-							// /fork - show user message selector
-							// TODO: implement showUserMessageSelector when needed
-						}
-						this.lastEscapeTime = 0;
-					} else {
-						this.lastEscapeTime = now;
-					}
-				}
-			}
-		};
 
 		// Register app action handlers
 		this.defaultEditor.onAction?.('app.clear', () => this.handleCtrlC());
