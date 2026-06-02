@@ -25,6 +25,7 @@ await jest.unstable_mockModule('@earendil-works/pi-tui', () => ({
     return instance;
   }),
   Text: (jest.fn() as any).mockImplementation((text?: string, px?: number, py?: number) => ({ text, px, py })),
+	TruncatedText: jest.fn(),
   Spacer: jest.fn(),
   ExpandableText: jest.fn(),
   setKeybindings: jest.fn(),
@@ -72,6 +73,8 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   parseSkillBlock: jest.fn(),
   AssistantMessageComponent: jest.fn(),
   UserMessageComponent: jest.fn(),
+	SkillInvocationMessageComponent: jest.fn(),
+	CustomMessageComponent: jest.fn(),
   ToolExecutionComponent: jest.fn().mockImplementation(() => ({
     setExpanded: jest.fn(),
   })),

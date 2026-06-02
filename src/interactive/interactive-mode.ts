@@ -7,7 +7,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -16,7 +16,11 @@ import {
 	getDebugLogPath,
 } from '../config.js';
 import type {
+	AgentSession,
+	AgentSessionEvent,
 	AgentSessionRuntime,
+	ResourceDiagnostic,
+	SourceInfo,
 	TruncationResult,
 } from '@earendil-works/pi-coding-agent';
 import {
@@ -40,6 +44,9 @@ import {
 	rawKeyHint,
 	getMarkdownTheme,
 	initTheme as piInitTheme,
+	parseSkillBlock,
+	SkillInvocationMessageComponent,
+	CustomMessageComponent,
 } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
@@ -51,7 +58,16 @@ import { theme, initTheme as localInitTheme, getEditorTheme, getThinkingBorderCo
 import { copyToClipboard, readClipboardImage } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 
-// Dummy for optional exports not available in current package version
+// Helper functions (stubs for package exports not available)
+function formatKeyText(key: string, options?: any): string {
+	return options?.capitalize ? key.toUpperCase() : key;
+}
+
+function keyDisplayText(action: any): string {
+	// Fallback: just return action name; keybindings manager will provide actual keys
+	// In a full implementation, this would query keybindings.getKeys(action)
+	return String(action);
+}
 
 // Minimal slash commands (since package may not export directly)
 const BUILTIN_SLASH_COMMANDS = [
@@ -72,6 +88,15 @@ const BUILTIN_SLASH_COMMANDS = [
 	{ name: 'copy', description: 'Copy last assistant message to clipboard' },
 	{ name: 'paste', description: 'Paste image from clipboard (macOS)' },
 ];
+
+function createCompactionSummaryMessage(summary: string, tokensBefore: number, timestamp: string): any {
+	return {
+		role: 'compactionSummary',
+		summary,
+		tokensBefore,
+		timestamp: new Date(timestamp).getTime(),
+	} as any;
+}
 
 export interface InteractiveModeOptions {
 	initialMessage?: string;
@@ -215,7 +240,7 @@ export class InteractiveMode {
 		this.ui.start?.();
 
 		// Bind extensions and subscribe to agent events
-		void this.rebindCurrentSession?.();
+		await this.rebindCurrentSession?.();
 
 		this.isInitialized = true;
 
@@ -709,19 +734,6 @@ export class InteractiveMode {
 		return !!extensionRunner.getCommand?.(commandName);
 	}
 
-	private restoreQueuedMessagesToEditor({ abort }: { abort: boolean }): void {
-		if (abort) {
-			this.editor.setText?.('');
-			this.compactionQueuedMessages = [];
-			this.updatePendingMessagesDisplay?.();
-			return;
-		}
-		const text = this.compactionQueuedMessages.map(m => m.text).join('\n');
-			this.editor.setText?.(text);
-			this.compactionQueuedMessages = [];
-			this.updatePendingMessagesDisplay?.();
-		}
-
 	private showExtensionError(extensionPath: string, error: unknown, stack?: string): void {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		this.showError?.(`Extension error in ${extensionPath}: ${errorMessage}`);
@@ -986,17 +998,35 @@ export class InteractiveMode {
 		this.ui.requestRender?.();
 	}
 
+	/** Get capitalized display string for an app keybinding action. */
+	private getAppKeyDisplay(action: any): string {
+		return keyDisplayText(action);
+	}
+
+	/** Get capitalized display string for an editor keybinding action. */
+	private getEditorKeyDisplay(action: any): string {
+		return keyDisplayText(action);
+	}
+
 	private renderInitialMessages(): void {
-		const state = this.session.state as { messages?: any[] };
-		const messages = state.messages || [];
-		for (const msg of messages) {
-			if (msg.role === 'user') {
-				const textContent = this.getUserMessageText?.(msg);
-				this.chatContainer.addChild?.(new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings?.()));
-			} else if (msg.role === 'assistant') {
-				this.chatContainer.addChild?.(new AssistantMessageComponent(msg, false, this.getMarkdownThemeWithSettings?.()));
-			}
+		// Clear chat to ensure clean slate
+		this.chatContainer.clear?.();
+		// Use buildSessionContext if available; otherwise fall back to session.state.messages
+		const context = this.sessionManager.buildSessionContext?.() ?? { messages: this.session.state?.messages ?? [] };
+		if (context.messages?.length > 0) {
+			this.renderSessionContext(context, {
+				updateFooter: true,
+				populateHistory: true,
+			});
 		}
+		// Show compaction info if session was compacted
+		const allEntries = this.sessionManager.getEntries?.() ?? [];
+		const compactionCount = (allEntries ?? []).filter((e: any) => e.type === 'compaction').length;
+		if (compactionCount > 0) {
+			const times = compactionCount === 1 ? '1 time' : `${compactionCount} times`;
+			this.showStatus?.(`Session compacted ${times}`);
+		}
+		this.ui.requestRender?.();
 	}
 
 	async run(): Promise<void> {
@@ -1043,15 +1073,49 @@ export class InteractiveMode {
 			case 'agent_start':
 			case 'turn_start':
 				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(true);
-				this.showWorkingIndicator?.();
-				break;
-			case 'agent_end':
-			case 'turn_end':
+				// Restore main escape handler if retry handler is still active
+				if (this.retryEscapeHandler) {
+					this.defaultEditor.onEscape = this.retryEscapeHandler;
+					this.retryEscapeHandler = undefined;
+				}
+				if (this.retryCountdown) {
+					this.retryCountdown.dispose?.();
+					this.retryCountdown = undefined;
+				}
+				if (this.retryLoader) {
+					this.retryLoader.stop?.();
+					this.retryLoader = undefined;
+				}
 				this.stopWorkingLoader?.();
-				if (this.settingsManager.getShowTerminalProgress?.()) this.ui.terminal.setProgress?.(false);
-				await this.checkShutdownRequested?.();
+				if (this.workingVisible) {
+					this.loadingAnimation = this.createWorkingLoader?.();
+					this.statusContainer.addChild?.(this.loadingAnimation);
+				this.loadingAnimation.start?.();
+				}
 				this.ui.requestRender?.();
 				break;
+
+			case 'queue_update':
+				this.updatePendingMessagesDisplay?.();
+				this.ui.requestRender?.();
+				break;
+
+			case 'session_info_changed':
+				this.updateTerminalTitle?.();
+				this.footer.invalidate?.();
+				this.ui.requestRender?.();
+				break;
+
+			case 'thinking_level_changed':
+				this.footer.invalidate?.();
+				this.updateEditorBorderColor?.();
+				break;
+
+			case 'turn_end':
+				this.stopWorkingLoader?.();
+				this.ui.requestRender?.();
+				break;
+
 			case 'message_start':
 				if (event.message?.role === 'user') {
 					this.addMessageToChat?.(event.message);
@@ -1064,16 +1128,46 @@ export class InteractiveMode {
 					);
 					this.streamingMessage = event.message;
 					this.chatContainer.addChild?.(this.streamingComponent);
-					this.ui.requestRender?.();
-				}
-				break;
-			case 'message_update':
-				if (this.streamingComponent && event.message?.role === 'assistant') {
-					this.streamingMessage = event.message;
 					this.streamingComponent.updateContent?.(this.streamingMessage);
 					this.ui.requestRender?.();
 				}
 				break;
+
+			case 'message_update':
+				if (this.streamingComponent && event.message?.role === 'assistant') {
+					this.streamingMessage = event.message;
+					this.streamingComponent.updateContent?.(this.streamingMessage);
+					// Handle tool calls in streaming
+					for (const content of this.streamingMessage.content ?? []) {
+						if (content.type === 'toolCall') {
+							if (!this.pendingTools.has?.(content.id)) {
+								const component = new ToolExecutionComponent(
+									content.name,
+									content.id,
+									content.arguments,
+									{
+										showImages: this.settingsManager.getShowImages?.(),
+										imageWidthCells: this.settingsManager.getImageWidthCells?.(),
+									},
+									this.getRegisteredToolDefinition?.(content.name),
+									this.ui,
+									this.sessionManager.getCwd?.(),
+								);
+								component.setExpanded?.(this.toolOutputExpanded);
+								this.chatContainer.addChild?.(component);
+								this.pendingTools.set?.(content.id, component);
+							}
+						} else {
+							const component = this.pendingTools.get?.(content.id);
+							if (component) {
+								component.updateArgs?.(content.arguments);
+							}
+						}
+					}
+				}
+				this.ui.requestRender?.();
+				break;
+
 			case 'message_end': {
 				const msg = event.message;
 				if (msg?.role === 'assistant') {
@@ -1082,11 +1176,11 @@ export class InteractiveMode {
 						this.streamingComponent = undefined;
 						this.streamingMessage = undefined;
 					} else {
-						this.chatContainer.addChild?.(new AssistantMessageComponent(msg, false, this.getMarkdownThemeWithSettings?.()));
+						this.addMessageToChat?.(msg);
 					}
 					this.footer.invalidate?.();
-					this.ui.requestRender?.();
 				}
+				this.ui.requestRender?.();
 				break;
 			}
 
@@ -1135,59 +1229,139 @@ export class InteractiveMode {
 				break;
 			}
 
-
 			case 'shutdown_requested':
 				this.shutdownRequested = true;
 				break;
-			case 'session_before_compact':
-				this.showAutoCompactionLoader?.();
+
+			case 'compaction_start': {
+				if (this.settingsManager.getShowTerminalProgress?.()) {
+					this.ui.terminal.setProgress?.(true);
+				}
+				// Keep editor active; submissions are queued during compaction.
+				this.autoCompactionEscapeHandler = this.defaultEditor.onEscape;
+				this.defaultEditor.onEscape = () => {
+					this.session.abortCompaction?.();
+				};
+				this.statusContainer.clear?.();
+				const cancelHint = `(${keyText('app.interrupt')} to cancel)`;
+				const label =
+					event.reason === 'manual'
+						? `Compacting context... ${cancelHint}`
+						: `${event.reason === 'overflow' ? 'Context overflow detected, ' : ''}Auto-compacting... ${cancelHint}`;
+				this.autoCompactionLoader = new Loader(
+					this.ui,
+					(spinner) => this.theme().fg('accent', spinner),
+					(text) => this.theme().dim(text),
+					label,
+				);
+				this.statusContainer.addChild?.(this.autoCompactionLoader);
+				this.ui.requestRender?.();
 				break;
-			case 'session_compact':
-				this.hideAutoCompactionLoader?.();
+			}
+
+			case 'compaction_end': {
+				if (this.settingsManager.getShowTerminalProgress?.()) {
+					this.ui.terminal.setProgress?.(false);
+				}
+				if (this.autoCompactionEscapeHandler) {
+					this.defaultEditor.onEscape = this.autoCompactionEscapeHandler;
+					this.autoCompactionEscapeHandler = undefined;
+				}
+				if (this.autoCompactionLoader) {
+					this.autoCompactionLoader.stop?.();
+					this.autoCompactionLoader = undefined;
+					this.statusContainer.clear?.();
+				}
+				if (event.aborted) {
+					if (event.reason === 'manual') {
+						this.showError?.('Compaction cancelled');
+					} else {
+						this.showStatus?.('Auto-compaction cancelled');
+					}
+				} else if (event.result) {
+					this.chatContainer.clear?.();
+					this.rebuildChatFromMessages?.();
+					this.addMessageToChat?.(
+						createCompactionSummaryMessage(
+							event.result.summary,
+							event.result.tokensBefore,
+							new Date().toISOString(),
+						),
+					);
+					this.footer.invalidate?.();
+				} else if (event.errorMessage) {
+					if (event.reason === 'manual') {
+						this.showError?.(event.errorMessage);
+					} else {
+						this.chatContainer.addChild?.(new Spacer(1));
+						this.chatContainer.addChild?.(
+							new Text(this.theme().fg('error', event.errorMessage), 1, 0)
+						);
+					}
+				}
+				void this.flushCompactionQueue?.({ willRetry: event.willRetry });
+				this.ui.requestRender?.();
 				break;
+			}
+
 			case 'auto_retry_start': {
-				const retryAfter = (event as any).retryAfter ?? 5;
-				if (!this.retryLoader) {
-					this.retryLoader = new Loader(
-						this.ui,
-						(spinner) => this.theme().fg('warning', spinner),
-						(text) => this.theme().dim(text),
-						`Retrying in ${retryAfter}s...`
-					);
-					this.statusContainer.addChild?.(this.retryLoader);
-					this.retryLoader.start?.();
-				}
-				if (retryAfter && !this.retryCountdown) {
-					this.retryCountdown = new CountdownTimer(
-						retryAfter * 1000,
-						this.ui,
-						(remainingMs) => {
-							const seconds = Math.ceil(remainingMs / 1000);
-							this.retryLoader?.setMessage?.(`Retrying in ${seconds}s...`);
-						},
-						() => {
-							// On expire: loader will be hidden by event, but ensure cleanup
-							if (this.retryCountdown) {
-								this.retryCountdown.dispose?.();
-								this.retryCountdown = undefined;
-							}
-						}
-					);
-					this.retryCountdown.start?.();
-					this.retryEscapeHandler = () => {
-						this.retryCountdown?.dispose?.();
+				const retryAfter = (event as any).delayMs ?? (event as any).retryAfter ?? 5000;
+				// Set up escape to abort retry
+				this.retryEscapeHandler = this.defaultEditor.onEscape;
+				this.defaultEditor.onEscape = () => {
+					this.session.abortRetry?.();
+				};
+				// Show retry indicator
+				this.statusContainer.clear?.();
+				this.retryCountdown?.dispose?.();
+				const retryMessage = (seconds: number) =>
+					`Retrying (${event.attempt}/${event.maxAttempts}) in ${seconds}s... (${keyText('app.interrupt')} to cancel)`;
+				this.retryLoader = new Loader(
+					this.ui,
+					(spinner) => this.theme().fg('warning', spinner),
+					(text) => this.theme().dim(text),
+					retryMessage(Math.ceil(retryAfter / 1000)),
+				);
+				this.retryCountdown = new CountdownTimer(
+					retryAfter,
+					this.ui,
+					(remainingMs) => {
+						const seconds = Math.ceil(remainingMs / 1000);
+						this.retryLoader?.setMessage?.(retryMessage(seconds));
+					},
+					() => {
 						this.retryCountdown = undefined;
-						this.hideRetryLoader?.();
-						this.session.agent?.abort?.();
-					};
-					// this.keybindings.setTempKeybinding?.('escape', this.retryEscapeHandler); // Not supported
-				}
+					}
+				);
+				this.statusContainer.addChild?.(this.retryLoader);
+				this.retryCountdown.start?.();
+				this.ui.requestRender?.();
 				break;
 			}
+
 			case 'auto_retry_end': {
-				this.hideRetryLoader?.();
+				// Restore escape handler
+				if (this.retryEscapeHandler) {
+					this.defaultEditor.onEscape = this.retryEscapeHandler;
+					this.retryEscapeHandler = undefined;
+				}
+				if (this.retryCountdown) {
+					this.retryCountdown.dispose?.();
+					this.retryCountdown = undefined;
+				}
+				if (this.retryLoader) {
+					this.retryLoader.stop?.();
+					this.retryLoader = undefined;
+					this.statusContainer.clear?.();
+				}
+				// Show error only on final failure (success shows normal response)
+				if (!event.success) {
+					this.showError?.(`Retry failed after ${event.attempt} attempts: ${event.finalError || 'Unknown error'}`);
+				}
+				this.ui.requestRender?.();
 				break;
 			}
+
 			default:
 				break;
 		}
@@ -1214,6 +1388,7 @@ export class InteractiveMode {
 		}
 		if (this.loadingAnimation && this.statusContainer.children.indexOf(this.loadingAnimation) === -1) {
 			this.statusContainer.addChild?.(this.loadingAnimation);
+				this.loadingAnimation.start?.();
 			this.loadingAnimation.start?.();
 		}
 		this.ui.requestRender?.();
@@ -1232,16 +1407,78 @@ export class InteractiveMode {
 	// Message Rendering Helpers
 	// ============================================================================
 
-	private addMessageToChat(message: any): void {
-		if (message.role === 'user') {
-			const textContent = this.getUserMessageText?.(message);
-			if (textContent) {
-				if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
-				this.chatContainer.addChild?.(new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings?.()));
+	private addMessageToChat(message: any, options?: { populateHistory?: boolean }): void {
+		switch (message.role) {
+			case 'bashExecution': {
+				const bashComponent = new BashExecutionComponent(message.command, this.ui, message.excludeFromContext);
+				if (message.output) {
+					bashComponent.appendOutput(message.output);
+				}
+				bashComponent.setComplete(
+					message.exitCode,
+					message.cancelled,
+					message.truncated ? ({ truncated: true, content: message.output } as any) : undefined,
+					message.fullOutputPath,
+				);
+				this.chatContainer.addChild?.(bashComponent);
+				break;
 			}
-		} else if (message.role === 'assistant') {
-			const comp = new AssistantMessageComponent(message, this.hideThinkingBlock, this.getMarkdownThemeWithSettings?.());
-			this.chatContainer.addChild?.(comp);
+			case 'custom': {
+				if (message.display) {
+					const renderer = this.session.extensionRunner?.getMessageRenderer?.(message.customType);
+					const component = new CustomMessageComponent(message, renderer, this.getMarkdownThemeWithSettings?.());
+					component.setExpanded?.(this.toolOutputExpanded);
+					this.chatContainer.addChild?.(component);
+				}
+				break;
+			}
+			case 'compactionSummary':
+			case 'branchSummary': {
+				this.chatContainer.addChild?.(new Spacer(1));
+				// Render as custom message since specific components may not be exported
+				const comp = new CustomMessageComponent(message, undefined, this.getMarkdownThemeWithSettings?.());
+				comp.setExpanded?.(this.toolOutputExpanded);
+				this.chatContainer.addChild?.(comp);
+				break;
+			}
+			case 'user': {
+				const textContent = this.getUserMessageText?.(message);
+				if (textContent != null) { // include empty string
+					if (this.chatContainer.children.length > 0) this.chatContainer.addChild?.(new Spacer(1));
+					const skillBlock = parseSkillBlock?.(textContent);
+					if (skillBlock) {
+						const component = new SkillInvocationMessageComponent(skillBlock, this.getMarkdownThemeWithSettings?.());
+						component.setExpanded?.(this.toolOutputExpanded);
+						this.chatContainer.addChild?.(component);
+						if (skillBlock.userMessage) {
+							const userComponent = new UserMessageComponent(skillBlock.userMessage, this.getMarkdownThemeWithSettings?.());
+							this.chatContainer.addChild?.(userComponent);
+						}
+					} else {
+						const userComponent = new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings?.());
+						this.chatContainer.addChild?.(userComponent);
+					}
+					if (options?.populateHistory) {
+						this.editor.addToHistory?.(textContent);
+					}
+				}
+				break;
+			}
+			case 'assistant': {
+				const assistantComponent = new AssistantMessageComponent(
+					message,
+					this.hideThinkingBlock,
+					this.getMarkdownThemeWithSettings?.(),
+				);
+				this.chatContainer.addChild?.(assistantComponent);
+				break;
+			}
+			case 'toolResult':
+				// Tool results are rendered inline with tool calls, skip
+				break;
+			default:
+				// Ignore unknown message types
+				break;
 		}
 	}
 
@@ -1263,9 +1500,90 @@ export class InteractiveMode {
 		return this.session.getToolDefinition?.(toolName);
 	}
 
+	/**
+	 * Get all queued messages (steering + followUp) from session and compaction queue.
+	 */
+	private getAllQueuedMessages(): { steering: string[]; followUp: string[] } {
+		return {
+			steering: [
+				...(this.session.getSteeringMessages?.() ?? []),
+				...this.compactionQueuedMessages
+					.filter((msg) => msg.mode === "steer")
+					.map((msg) => msg.text),
+			],
+			followUp: [
+				...(this.session.getFollowUpMessages?.() ?? []),
+				...this.compactionQueuedMessages
+					.filter((msg) => msg.mode === "followUp")
+					.map((msg) => msg.text),
+			],
+		};
+	}
+
+	/**
+	 * Clear all queues and return their contents.
+	 */
+	private clearAllQueues(): { steering: string[]; followUp: string[] } {
+		const sessionQueues = this.session.clearQueue?.() ?? { steering: [], followUp: [] };
+		const compactionSteering = this.compactionQueuedMessages
+			.filter((msg) => msg.mode === "steer")
+			.map((msg) => msg.text);
+		const compactionFollowUp = this.compactionQueuedMessages
+			.filter((msg) => msg.mode === "followUp")
+			.map((msg) => msg.text);
+		this.compactionQueuedMessages = [];
+		return {
+			steering: [...sessionQueues.steering, ...compactionSteering],
+			followUp: [...sessionQueues.followUp, ...compactionFollowUp],
+		};
+	}
+
+	private restoreQueuedMessagesToEditor(options?: { abort?: boolean; currentText?: string }): number {
+		const { steering, followUp } = this.clearAllQueues();
+		const allQueued = [...steering, ...followUp];
+		if (allQueued.length === 0) {
+			this.updatePendingMessagesDisplay?.();
+			if (options?.abort) {
+				this.session.agent?.abort?.();
+			}
+			return 0;
+		}
+		const queuedText = allQueued.join("\n\n");
+		const currentText = options?.currentText ?? this.editor.getText?.();
+		const combinedText = [queuedText, currentText].filter((t) => t?.trim()).join("\n\n");
+		this.editor.setText?.(combinedText);
+		this.updatePendingMessagesDisplay?.();
+		if (options?.abort) {
+			this.session.agent?.abort?.();
+		}
+		return allQueued.length;
+	}
+
+	private queueCompactionMessage(text: string, mode: "steer" | "followUp"): void {
+		this.compactionQueuedMessages.push({ text, mode });
+		this.editor.addToHistory?.(text);
+		this.editor.setText?.("");
+		this.updatePendingMessagesDisplay?.();
+		this.showStatus?.("Queued message for after compaction");
+	}
+
 	private updatePendingMessagesDisplay(): void {
-		// Minimal: no queue support yet
 		this.pendingMessagesContainer.clear?.();
+		const { steering, followUp } = this.getAllQueuedMessages?.();
+		if (steering.length > 0 || followUp.length > 0) {
+			this.pendingMessagesContainer.addChild?.(new Spacer(1));
+			for (const message of steering) {
+				const text = this.theme().fg("dim", `Steering: ${message}`);
+				this.pendingMessagesContainer.addChild?.(new TruncatedText(text, 1, 0));
+			}
+			for (const message of followUp) {
+				const text = this.theme().fg("dim", `Follow-up: ${message}`);
+				this.pendingMessagesContainer.addChild?.(new TruncatedText(text, 1, 0));
+			}
+			const dequeueHint = this.getAppKeyDisplay?.("app.message.dequeue");
+			const hintText = this.theme().fg("dim", `↳ ${dequeueHint} to edit all queued messages`);
+			this.pendingMessagesContainer.addChild?.(new TruncatedText(hintText, 1, 0));
+		}
 	}
 
 	// ============================================================================
@@ -1613,19 +1931,134 @@ export class InteractiveMode {
 	// Session & Startup
 	// ============================================================================
 
+	private applyRuntimeSettings(): void {
+		// Http dispatcher configuration is handled by the session/agent automatically.
+		// configureHttpDispatcher(this.settingsManager.getHttpIdleTimeoutMs?.());
+		this.footer.setSession?.(this.session);
+		this.footer.setAutoCompactEnabled?.(this.session.autoCompactionEnabled);
+		this.footerDataProvider.setCwd?.(this.sessionManager.getCwd?.());
+		this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock?.();
+		this.ui.setShowHardwareCursor?.(this.settingsManager.getShowHardwareCursor?.());
+		this.ui.setClearOnShrink?.(this.settingsManager.getClearOnShrink?.());
+		const editorPaddingX = this.settingsManager.getEditorPaddingX?.();
+		const autocompleteMaxVisible = this.settingsManager.getAutocompleteMaxVisible?.();
+		this.defaultEditor.setPaddingX?.(editorPaddingX);
+		this.defaultEditor.setAutocompleteMaxVisible?.(autocompleteMaxVisible);
+		if (this.editor !== this.defaultEditor) {
+			this.editor.setPaddingX?.(editorPaddingX);
+			this.editor.setAutocompleteMaxVisible?.(autocompleteMaxVisible);
+		}
+	}
+
 	private async rebindCurrentSession(): Promise<void> {
 		// Unsubscribe previous and re-subscribe to new session events
 		this.unsubscribe?.();
-		this.subscribeToAgent?.();
+		this.applyRuntimeSettings?.();
 		// Rebind extensions for the new session
 		await this.bindCurrentSessionExtensions?.();
+		this.subscribeToAgent?.();
+		await this.updateAvailableProviderCount?.();
 		this.updateEditorBorderColor?.();
 		this.updateTerminalTitle?.();
 	}
 
 	private renderCurrentSessionState(): void {
 		this.chatContainer.clear?.();
+		this.pendingMessagesContainer.clear?.();
+		this.compactionQueuedMessages = [];
+		this.streamingComponent = undefined;
+		this.streamingMessage = undefined;
+		this.pendingTools.clear?.();
 		this.renderInitialMessages?.();
+	}
+
+	/**
+	 * Rebuild chat from current session messages.
+	 * Used after compaction or navigation.
+	 */
+	private rebuildChatFromMessages(): void {
+		this.chatContainer.clear?.();
+		const context = this.sessionManager.buildSessionContext?.() ?? { messages: this.session.state?.messages ?? [] };
+		if (context.messages?.length > 0) {
+			this.renderSessionContext(context);
+		}
+		this.ui.requestRender?.();
+	}
+
+	/**
+	 * Render session context with full tool handling.
+	 */
+	private renderSessionContext(
+		sessionContext: any,
+		options: { updateFooter?: boolean; populateHistory?: boolean } = {},
+	): void {
+		this.pendingTools.clear?.();
+		const renderedPendingTools = new Map<string, any>();
+
+		if (options.updateFooter) {
+			this.footer.invalidate?.();
+			this.updateEditorBorderColor?.();
+		}
+
+		for (const message of sessionContext.messages ?? []) {
+			if (message.role === 'assistant') {
+				this.addMessageToChat(message);
+				// Render tool call components
+				for (const content of message.content ?? []) {
+					if (content.type === 'toolCall') {
+						const component = new ToolExecutionComponent(
+							content.name,
+							content.id,
+							content.arguments,
+							{
+								showImages: this.settingsManager.getShowImages?.(),
+								imageWidthCells: this.settingsManager.getImageWidthCells?.(),
+							},
+							this.getRegisteredToolDefinition?.(content.name),
+							this.ui,
+							this.sessionManager.getCwd?.(),
+						);
+						component.setExpanded?.(this.toolOutputExpanded);
+						this.chatContainer.addChild?.(component);
+
+						if (message.stopReason === 'aborted' || message.stopReason === 'error') {
+							let errorMessage: string;
+							if (message.stopReason === 'aborted') {
+								const retryAttempt = this.session.retryAttempt ?? 0;
+								errorMessage =
+									retryAttempt > 0
+										? `Aborted after ${retryAttempt} retry attempt${retryAttempt > 1 ? 's' : ''}`
+										: 'Operation aborted';
+							} else {
+								errorMessage = message.errorMessage || 'Error';
+							}
+							component.updateResult?.(
+								{ content: [{ type: 'text', text: errorMessage }], isError: true },
+								false,
+							);
+						} else {
+							renderedPendingTools.set(content.id, component);
+						}
+					}
+				}
+			} else if (message.role === 'toolResult') {
+				const component = renderedPendingTools.get(message.toolCallId);
+				if (component) {
+					component.updateResult?.(message);
+					renderedPendingTools.delete(message.toolCallId);
+				}
+			} else {
+				this.addMessageToChat(message, options);
+				if (options.populateHistory && message.role === 'user') {
+					this.editor.addToHistory?.(this.getUserMessageText?.(message));
+				}
+			}
+		}
+
+		for (const [, component] of renderedPendingTools) {
+			this.pendingTools.set?.(component.toolCallId, component);
+		}
+		this.ui.requestRender?.();
 	}
 
 	private showStartupNotices(): void {
@@ -2042,7 +2475,19 @@ export class InteractiveMode {
 	}
 
 	private async updateAvailableProviderCount(): Promise<void> {
-		// Stub
+		let models: any[] = [];
+		if (this.session.scopedModels?.length > 0) {
+			models = this.session.scopedModels.map((sm: any) => sm.model);
+		} else {
+			this.session.modelRegistry?.refresh?.();
+			try {
+				models = await this.session.modelRegistry?.getAvailable?.() ?? [];
+			} catch {
+				models = [];
+			}
+		}
+		const uniqueProviders = new Set(models.map((m: any) => m.provider));
+		this.footerDataProvider.setAvailableProviderCount?.(uniqueProviders.size);
 	}
 
 	private maybeWarnAboutAnthropicSubscriptionAuth(): void {
