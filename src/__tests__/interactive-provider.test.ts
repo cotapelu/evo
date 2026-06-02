@@ -82,6 +82,13 @@ await jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
     appendOutput: jest.fn(),
     setComplete: jest.fn(),
   })),
+  BorderedLoader: jest.fn().mockImplementation(() => ({
+    start: jest.fn(),
+    stop: jest.fn(),
+    setMessage: jest.fn(),
+    addChild: jest.fn(),
+    removeChild: jest.fn(),
+  })),
   DynamicBorder: jest.fn(),
   getMarkdownTheme: jest.fn().mockReturnValue({}),
   getSelectListTheme: jest.fn().mockReturnValue({}),

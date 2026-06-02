@@ -7,7 +7,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList, BorderedLoader } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -47,6 +47,7 @@ import {
 	parseSkillBlock,
 	SkillInvocationMessageComponent,
 	CustomMessageComponent,
+	BorderedLoader,
 } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
@@ -151,10 +152,10 @@ export class InteractiveMode {
 	private streamingMessage?: any;
 	private pendingTools = new Map<string, any>();
 	private toolComponents: any[] = []; // for global toggle expansion
-	private autoCompactionLoader?: Loader;
+	private autoCompactionLoader?: any;
 	private autoCompactionEscapeHandler?: () => void;
 	private compactionQueuedMessages: Array<{ text: string; mode: 'steer' | 'followUp' }> = [];
-	private retryLoader?: Loader;
+	private retryLoader?: any;
 	private retryCountdown?: any;
 	private retryEscapeHandler?: () => void;
 	private autocompleteProvider?: any;
