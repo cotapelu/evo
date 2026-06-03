@@ -507,12 +507,6 @@ export class InteractiveMode {
 				await this.handleLogout?.();
 				break;
 			case '/arminsayshi':
-				this.showWarning?.('Easter egg not implemented');
-				break;
-			case '/dementedelves':
-				this.showWarning?.('Easter egg not implemented');
-				break;
-			case '/arminsayshi':
 				await this.showEasterEgg?.('arminsayshi');
 				break;
 			case '/dementedelves':
