@@ -17,6 +17,7 @@ import {
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
+	getShareViewerUrl,
 } from '../config.js';
 import type {
 	AgentSession,
@@ -210,9 +211,8 @@ export class InteractiveMode {
 			console.error('[Changelog]', e);
 		}
 
-
 		// Initialize theme
-		piInitTheme?.();
+		localInitTheme?.(this.settingsManager.getTheme?.() ?? 'dark', true);
 
 		// TUI
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
