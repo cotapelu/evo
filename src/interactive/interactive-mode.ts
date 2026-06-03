@@ -398,6 +398,18 @@ export class InteractiveMode {
 	/** Handle slash command routing */
 	// Regression: ensure showWarning exists, but default uncertain commands use console.log
 	private async handleSlashCommand(command: string): Promise<void> {
+	// Handle commands with arguments (prefix match)
+	if (command === '/export' || command.startsWith('/export ')) {
+		await this.handleExportCommand?.(command);
+		this.editor.setText?.('');
+		return;
+	}
+	if (command === '/import' || command.startsWith('/import ')) {
+		await this.handleImportCommand?.(command);
+		this.editor.setText?.('');
+		return;
+	}
+
 		switch (command) {
 			case '/clear':
 			case '/new':

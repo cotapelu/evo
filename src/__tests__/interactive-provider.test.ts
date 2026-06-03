@@ -841,6 +841,47 @@ describe('InteractiveMode', () => {
     expect((mode as any).fdPath).toBe('');
   });
 
+    it('invokes handleExportCommand on /export', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'handleExportCommand');
+      await (mode as any).handleSlashCommand('/export');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes handleImportCommand on /import with path', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'handleImportCommand');
+      await (mode as any).handleSlashCommand('/import /path/file.jsonl');
+      expect(spy).toHaveBeenCalledWith('/import /path/file.jsonl');
+    });
+
+    it('invokes handleDebugCommand on /debug', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'handleDebugCommand');
+      await (mode as any).handleSlashCommand('/debug');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes handleShareCommand on /share', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'handleShareCommand');
+      await (mode as any).handleSlashCommand('/share');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes handleScopedModelsCommand on /scoped-models', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'handleScopedModelsCommand');
+      await (mode as any).handleSlashCommand('/scoped-models');
+      expect(spy).toHaveBeenCalled();
+    });
+
+
 
   describe('working indicator', () => {
     it('shows loader on turn_start', async () => {
