@@ -734,6 +734,92 @@ describe('InteractiveMode', () => {
       expect(spy).toHaveBeenCalled();
     });
 
+    // Additional slash command tests for core UI functionality
+    it('invokes showTreeSelector on /tree', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showTreeSelector');
+      await (mode as any).handleSlashCommand('/tree');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes showSessionSelector on /session and /resume', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showSessionSelector');
+      await (mode as any).handleSlashCommand('/session');
+      expect(spy).toHaveBeenCalled();
+      await (mode as any).handleSlashCommand('/resume');
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it('invokes showSettingsSelector on /settings', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showSettingsSelector');
+      await (mode as any).handleSlashCommand('/settings');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    // Public UI selector slash commands - test observable UI interactions
+    it('invokes showTreeSelector on /tree', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showTreeSelector');
+      await (mode as any).handleSlashCommand('/tree');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes showSessionSelector on /session and /resume', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showSessionSelector');
+      await (mode as any).handleSlashCommand('/session');
+      expect(spy).toHaveBeenCalled();
+      await (mode as any).handleSlashCommand('/resume');
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it('invokes showSettingsSelector on /settings', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showSettingsSelector');
+      await (mode as any).handleSlashCommand('/settings');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes reloadResources on /reload', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'reloadResources');
+      await (mode as any).handleSlashCommand('/reload');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes showHotkeys on /hotkeys', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showHotkeys');
+      await (mode as any).handleSlashCommand('/hotkeys');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes showLoadedResources on /resources', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showLoadedResources');
+      await (mode as any).handleSlashCommand('/resources');
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('invokes showChangelog on /changelog', async () => {
+      const mode = new InteractiveMode(runtime);
+      await mode.init();
+      const spy = jest.spyOn(mode as any, 'showChangelog');
+      await (mode as any).handleSlashCommand('/changelog');
+      expect(spy).toHaveBeenCalled();
+    });
+
   it('sets up CombinedAutocompleteProvider with slash commands, cwd and fdPath', async () => {
     const { CombinedAutocompleteProvider } = await import('@earendil-works/pi-tui');
     const mode = new (InteractiveMode as any)(runtime);
