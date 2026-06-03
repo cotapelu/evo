@@ -49,12 +49,12 @@ import {
 	keyText,
 	rawKeyHint,
 	getMarkdownTheme,
-	initTheme as piInitTheme,
 	parseSkillBlock,
 	SkillInvocationMessageComponent,
 	CustomMessageComponent,
 	BorderedLoader,
 	getSelectListTheme,
+	initTheme as pkgInitTheme,
 } from '@earendil-works/pi-coding-agent';
 import { FooterDataProvider } from '../runtime/footer-data-provider.js';
 import { KeybindingsManager } from '../runtime/keybindings-manager.js';
@@ -62,11 +62,10 @@ import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/change
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
 import { ExpandableText } from './components/expandable-text.js';
-import { theme, initTheme as localInitTheme, getEditorTheme, getThinkingBorderColor, getBashModeBorderColor } from './theme/theme.js';
 import { copyToClipboard, readClipboardImage, extensionForImageMimeType } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
+import { setThemeInstance, getEditorTheme, getThinkingBorderColor, getBashModeBorderColor, theme as getCurrentTheme, initTheme as localInitTheme } from './theme/theme.js';
 
-// Helper functions (stubs for package exports not available)
 function formatKeyText(key: string, options?: any): string {
 	return options?.capitalize ? key.toUpperCase() : key;
 }
@@ -211,8 +210,11 @@ export class InteractiveMode {
 			console.error('[Changelog]', e);
 		}
 
-		// Initialize theme
-		localInitTheme?.(this.settingsManager.getTheme?.() ?? 'dark', true);
+		// Initialize theme (must be called before any keyHint/theme usage)
+		const themeName = this.settingsManager.getTheme?.() ?? 'dark';
+		// Initialize both package and local theme systems
+		pkgInitTheme(themeName, true);
+		localInitTheme(themeName, true);
 
 		// TUI
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor?.() ?? true);
@@ -829,17 +831,6 @@ export class InteractiveMode {
 	}
 
 
-	private getEditorThemeWithSelect(): any {
-		const editorTh = getEditorTheme();
-		return {
-			...editorTh,
-			selectedText: (text: string) => editorTh.fg('accent', text),
-			description: (text: string) => editorTh.fg('dim', text),
-			scrollInfo: (text: string) => editorTh.fg('muted', text),
-			noMatch: (text: string) => editorTh.fg('warning', text),
-		};
-	}
-
 	private getMarkdownThemeWithSettings(): any {
 		const base = getMarkdownTheme?.() ?? {};
 		return { ...base, codeBlockIndent: this.settingsManager.getCodeBlockIndent?.() ?? 2 };
@@ -1224,7 +1215,7 @@ export class InteractiveMode {
 
 	/** Get the current theme object */
 	private theme(): any {
-		return theme();
+		return getCurrentTheme();
 	}
 
 	private updateEditorBorderColor(): void {
@@ -2485,7 +2476,8 @@ export class InteractiveMode {
 			},
 			onThemeChange: async (themeName) => {
 				this.settingsManager.setTheme?.(themeName);
-				await piInitTheme?.();
+				pkgInitTheme(themeName ?? 'dark', true);
+				localInitTheme(themeName ?? 'dark', true);
 				this.ui.invalidate?.();
 			},
 
