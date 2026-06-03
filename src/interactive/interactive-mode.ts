@@ -3280,10 +3280,21 @@ export class InteractiveMode {
 	}
 
 	private async handleChangelogCommand(): Promise<void> {
-		// For now, show a notice
-		this.showWarning?.("Full changelog not implemented yet");
-	}
-
+			// Load full changelog
+			try {
+				const changelogPath = getChangelogPath();
+				if (!changelogPath || !fs.existsSync(changelogPath)) {
+					this.showWarning?.('No changelog available');
+					return;
+				}
+				const content = await fs.promises.readFile(changelogPath, 'utf-8');
+				this.changelogMarkdown = content;
+				this.showChangelog?.();
+			} catch (error: any) {
+				console.error('Failed to load changelog:', error);
+				this.showError?.('Failed to load changelog');
+			}
+		}
 
 
 
