@@ -9,7 +9,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawn, spawnSync } from 'child_process';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
-import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList } from '@earendil-works/pi-tui';
+import { CombinedAutocompleteProvider, Container, Input, Loader, Markdown, ProcessTerminal, Spacer, Text, TUI, TruncatedText, setKeybindings, matchesKey, SelectList, visibleWidth } from '@earendil-works/pi-tui';
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -26,6 +26,8 @@ import type {
 	SessionStats,
 	SourceInfo,
 	TruncationResult,
+	MissingSessionCwdError,
+	SessionImportFileNotFoundError,
 } from '@earendil-works/pi-coding-agent';
 import {
 	DEFAULT_MAX_LINES,
@@ -427,6 +429,8 @@ export class InteractiveMode {
 				this.showTreeSelector?.();
 				break;
 			case '/session':
+				await this.handleSessionCommand?.();
+				break;
 			case '/resume':
 				await this.showSessionSelector?.();
 				break;
@@ -437,7 +441,7 @@ export class InteractiveMode {
 				this.reloadResources?.();
 				break;
 			case '/hotkeys':
-				this.showHotkeys?.();
+				await this.handleHotkeysCommand?.();
 				break;
 			case '/clone':
 				const cloneArg = command.slice(6).trim();
@@ -451,13 +455,13 @@ export class InteractiveMode {
 				await this.showUserMessageSelector?.();
 				break;
 			case '/debug':
-				this.toggleDebug?.();
+				await this.handleDebugCommand?.();
 				break;
 			case '/resources':
-				this.showLoadedResources?.();
+				await this.handleResourcesCommand?.();
 				break;
 			case '/changelog':
-				this.showChangelog?.();
+				await this.handleChangelogCommand?.();
 				break;
 			case '/name':
 				const nameArg = command.slice(5).trim();
@@ -484,7 +488,7 @@ export class InteractiveMode {
 				await this.showDebugInfo?.();
 				break;
 			case '/share':
-				await this.handleShare?.();
+				await this.handleShareCommand?.();
 				break;
 			case '/login':
 				await this.handleLogin?.();
@@ -508,18 +512,13 @@ export class InteractiveMode {
 				await this.showEasterEgg?.('daxnuts');
 				break;
 			case '/scoped-models':
-				this.showModelSelector?.();
+				await this.handleScopedModelsCommand?.();
 				break;
 			case '/export':
-				await this.handleExportJson?.();
+				await this.handleExportCommand?.(text);
 				break;
 			case '/import': {
-				const importArg = command.slice(7).trim();
-				if (!importArg) {
-					this.showWarning?.('Usage: /import <file path>');
-				} else {
-					await this.handleImport?.(importArg);
-				}
+				await this.handleImportCommand?.(text);
 				break;
 			}
 			default:
@@ -3142,6 +3141,362 @@ export class InteractiveMode {
 
 	private maybeWarnAboutAnthropicSubscriptionAuth(): void {
 		// Stub
+	}
+
+	// ============================================================================
+	// Import/Export Commands
+	// ============================================================================
+
+	private getPathCommandArgument(text: string, command: '/export' | '/import'): string | undefined {
+		if (text === command) {
+			return undefined;
+		}
+		if (!text.startsWith(command + ' ')) {
+			return undefined;
+		}
+		const argsString = text.slice(command.length + 1).trimStart();
+		if (!argsString) {
+			return undefined;
+		}
+		const firstChar = argsString[0];
+		if (firstChar === '"' || firstChar === "'") {
+			const closingQuoteIndex = argsString.indexOf(firstChar, 1);
+			if (closingQuoteIndex < 0) {
+				return undefined;
+			}
+			return argsString.slice(1, closingQuoteIndex);
+		}
+		const firstWhitespaceIndex = argsString.search(/\s/);
+		if (firstWhitespaceIndex < 0) {
+			return argsString;
+		}
+		return argsString.slice(0, firstWhitespaceIndex);
+	}
+
+	private async handleExportCommand(text: string): Promise<void> {
+		const outputPath = this.getPathCommandArgument(text, '/export');
+		try {
+			if (outputPath?.endsWith('.jsonl')) {
+				const filePath = this.session.exportToJsonl?.(outputPath);
+				if (filePath) {
+					this.showStatus?.(`Session exported to: ${filePath}`);
+				}
+			} else {
+				const filePath = await this.session.exportToHtml?.(outputPath);
+				if (filePath) {
+					this.showStatus?.(`Session exported to: ${filePath}`);
+				}
+			}
+		} catch (error: any) {
+			this.showError?.(`Failed to export session: ${error?.message || 'Unknown error'}`);
+		}
+	}
+
+	private async handleImportCommand(text: string): Promise<void> {
+		const inputPath = this.getPathCommandArgument(text, '/import');
+		if (!inputPath) {
+			this.showError?.('Usage: /import <file.jsonl>');
+			return;
+		}
+
+		const confirmed = await this.showExtensionConfirm?.(
+			'Import session',
+			`Replace current session with ${inputPath}?`
+		);
+		if (!confirmed) {
+			this.showStatus?.('Import cancelled');
+			return;
+		}
+
+		try {
+			if (this.loadingAnimation) {
+				this.loadingAnimation.stop?.();
+				this.loadingAnimation = undefined;
+			}
+			this.statusContainer.clear?.();
+			const result = await this.runtimeHost.importFromJsonl?.(inputPath);
+			if (result?.cancelled) {
+				this.showStatus?.('Import cancelled');
+				return;
+			}
+			this.renderCurrentSessionState?.();
+			this.showStatus?.(`Session imported from: ${inputPath}`);
+		} catch (error: any) {
+			if (error instanceof MissingSessionCwdError) {
+				const selectedCwd = await this.promptForMissingSessionCwd?.(error);
+				if (!selectedCwd) {
+					this.showStatus?.('Import cancelled');
+					return;
+				}
+				const result = await this.runtimeHost.importFromJsonl?.(inputPath, selectedCwd);
+				if (result?.cancelled) {
+					this.showStatus?.('Import cancelled');
+					return;
+				}
+				this.renderCurrentSessionState?.();
+				this.showStatus?.(`Session imported from: ${inputPath} in current cwd`);
+				return;
+			}
+			if (error instanceof SessionImportFileNotFoundError) {
+				this.showError?.(`Failed to import session: ${error.message}`);
+				return;
+			}
+			await this.handleFatalRuntimeError?.('Failed to import session', error);
+		}
+	}
+
+	private async handleHotkeysCommand(): Promise<void> {
+		try {
+			const keybindings = this.getAllKeybindings?.() || [];
+			if (keybindings.length === 0) {
+				this.showWarning?.("No hotkeys configured");
+				return;
+			}
+
+			let md = "# Hotkeys\n\n";
+			md += "| Key | Action | Description |\n";
+			md += "|-----|--------|-------------|\n\n";
+
+			for (const kb of keybindings) {
+				const keyDisplay = kb.keys?.join(" + ") || kb.key || "Unknown";
+				const desc = kb.description || "";
+					md += `| ${keyDisplay} | ${kb.action || ""} | ${desc} |\n`;
+			}
+
+			const mdTheme = this.getMarkdownThemeWithSettings?.();
+			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
+		} catch (error: any) {
+			console.error("Failed to show hotkeys:", error);
+			this.showWarning?.("Failed to show hotkeys. See console for details.");
+		}
+	}
+
+	private async handleResourcesCommand(): Promise<void> {
+		try {
+			const resources = await this.session.getResources?.();
+			if (!resources || resources.length === 0) {
+				this.showWarning?.("No resources loaded");
+				return;
+			}
+
+			let md = "# Loaded Resources\n\n";
+			for (const res of resources) {
+				md += `## ${res.name}\n\n`;
+				md += `- **Status:** ${res.status}\n`;
+				md += `- **Version:** ${res.version || "Unknown"}\n`;
+				if (res.description) {
+					md += `- **Description:** ${res.description}\n`;
+				}
+				if (res.scopes && res.scopes.length > 0) {
+					md += `- **Scopes:** ${res.scopes.join(", ")}\n`;
+				}
+				md += "\n";
+			}
+
+			const mdTheme = this.getMarkdownThemeWithSettings?.();
+			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
+		} catch (error: any) {
+			console.error("Failed to show resources:", error);
+			this.showWarning?.("Failed to show resources. See console for details.");
+		}
+	}
+
+	private async handleChangelogCommand(): Promise<void> {
+		// For now, show a notice
+		this.showWarning?.("Full changelog not implemented yet");
+	}
+
+
+	private async handleHotkeysCommand(): Promise<void> {
+		try {
+			const keybindings = this.getAllKeybindings?.() || [];
+			if (keybindings.length === 0) {
+				this.showWarning?.("No hotkeys configured");
+				return;
+			}
+
+			let md = "# Hotkeys\n\n";
+			md += "| Key | Action | Description |\n";
+			md += "|-----|--------|-------------|\n\n";
+
+			for (const kb of keybindings) {
+				const keyDisplay = kb.keys?.join(" + ") || kb.key || "Unknown";
+				const desc = kb.description || "";
+				md += `| ${keyDisplay} | ${kb.action || ""} | ${desc} |\n`;
+			}
+
+			const mdTheme = this.getMarkdownThemeWithSettings?.();
+			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
+		} catch (error: any) {
+			console.error("Failed to show hotkeys:", error);
+			this.showWarning?.("Failed to show hotkeys. See console for details.");
+		}
+	}
+
+	private async handleResourcesCommand(): Promise<void> {
+		try {
+			const resources = await this.session.getResources?.();
+			if (!resources || resources.length === 0) {
+				this.showWarning?.("No resources loaded");
+				return;
+			}
+
+			let md = "# Loaded Resources\n\n";
+			for (const res of resources) {
+				md += `## ${res.name}\n\n`;
+				md += `- **Status:** ${res.status}\n`;
+				md += `- **Version:** ${res.version || "Unknown"}\n`;
+				if (res.description) {
+					md += `- **Description:** ${res.description}\n`;
+				}
+				if (res.scopes && res.scopes.length > 0) {
+					md += `- **Scopes:** ${res.scopes.join(", ")}\n`;
+				}
+				md += "\n";
+			}
+
+			const mdTheme = this.getMarkdownThemeWithSettings?.();
+			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
+		} catch (error: any) {
+			console.error("Failed to show resources:", error);
+			this.showWarning?.("Failed to show resources. See console for details.");
+		}
+	}
+
+	private async handleChangelogCommand(): Promise<void> {
+		// For now, show a notice
+		this.showWarning?.("Full changelog not implemented yet");
+	}
+
+	/** Graceful shutdown */
+
+
+	/** Graceful shutdown */
+	private formatSessionStats(stats: any): string {
+		const {
+			sessionId,
+			userMessages,
+			assistantMessages,
+			toolCalls,
+			toolResults,
+			totalMessages,
+			tokens,
+			cost,
+			contextUsage,
+		} = stats;
+
+		const fmtNum = (n: number) => n.toLocaleString();
+
+		let md = '# Session Statistics\n\n';
+		md += `'**Session ID:** ${sessionId}\n\n'`;
+
+		md += '## Message Counts\n';
+		md += `'- User messages: ${fmtNum(userMessages)}\n'`;
+		md += `'- Assistant messages: ${fmtNum(assistantMessages)}\n'`;
+		md += `'- Tool calls: ${fmtNum(toolCalls)}\n'`;
+		md += `'- Tool results: ${fmtNum(toolResults)}\n'`;
+		md += `'- **Total:** ${fmtNum(totalMessages)}\n\n'`;
+
+		md += '## Tokens\n';
+		md += `'- Input: ${fmtNum(tokens.input)}\n'`;
+		md += `'- Output: ${fmtNum(tokens.output)}\n'`;
+		if (tokens.cacheRead && tokens.cacheRead > 0) {
+			md += `'- Cache read: ${fmtNum(tokens.cacheRead)}\n'`;
+		}
+		if (tokens.cacheWrite && tokens.cacheWrite > 0) {
+			md += `'- Cache write: ${fmtNum(tokens.cacheWrite)}\n'`;
+		}
+		md += `'- **Total:** ${fmtNum(tokens.total)}\n\n'`;
+
+		md += '## Cost\n';
+		md += `'$${cost.toFixed(4)}\n\n'`;
+
+		if (contextUsage) {
+			const used = contextUsage.tokens ?? 0;
+			const max = contextUsage.contextWindow;
+			const percent = contextUsage.percent ?? ((used / max) * 100).toFixed(1);
+			md += '## Context Usage\n';
+			md += `'- Used: ${fmtNum(used)} / ${fmtNum(max)} (${percent}%)\n'`;
+		}
+
+		return md;
+	}
+
+	private async handleSessionCommand(): Promise<void> {
+		try {
+			const stats = this.session.getSessionStats?.();
+			if (!stats) {
+				this.showWarning?.('Session stats not available');
+				return;
+			}
+			const markdown = this.formatSessionStats(stats);
+			const mdTheme = this.getMarkdownThemeWithSettings?.();
+			// Show in overlay
+			this.ui.showOverlay?.(new Markdown(markdown, 0, 0, mdTheme));
+		} catch (error: any) {
+			console.error('Failed to get session stats:', error);
+			this.showWarning?.('Failed to get session stats. See console for details.');
+		}
+	}
+
+	private async handleDebugCommand(): Promise<void> {
+		try {
+			const diagnostics = await this.session.getResourceDiagnostics?.();
+			if (!diagnostics) {
+				this.showWarning?.('Debug information not available');
+				return;
+			}
+
+			let md = '# Debug Information\n\n';
+			md += '## Resources\n\n';
+
+			for (const diag of diagnostics) {
+				md += `'### ${diag.name}\n'`;
+				md += `'- Status: ${diag.status}\n'`;
+				md += `'- Reason: ${diag.reason}\n'`;
+				if (diag.details) {
+					md += `'- Details: ${diag.details}\n'`;
+				}
+				md += '\n';
+			}
+
+			const mdTheme = this.getMarkdownThemeWithSettings?.();
+			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
+		} catch (error: any) {
+			console.error('Failed to get debug info:', error);
+			this.showWarning?.('Failed to get debug info. See console for details.');
+		}
+	}
+
+	private async handleShareCommand(): Promise<void> {
+		// TODO: Implement GitHub gist sharing
+		this.showWarning?.('Share command not implemented yet');
+	}
+
+	private async handleScopedModelsCommand(): Promise<void> {
+		try {
+			const allModels = this.session.modelRegistry?.getAvailable() || [];
+			if (allModels.length === 0) {
+				this.showWarning?.('No models available');
+				return;
+			}
+
+			// Build multi-select items
+			const items = allModels.map(m => ({
+				id: m.id,
+				label: `${m.id} (${m.provider})'`,
+				description: `Provider: ${m.provider}'`,
+				selected: false,
+			}));
+
+			const selected = await this.ui.showMultiSelect?.('Select Scoped Models', items);
+			if (selected && selected.length > 0) {
+				this.showStatus?.(`Selected ${selected.length} models for scoped use'`);
+			}
+		} catch (error: any) {
+			console.error('Failed to show scoped models:', error);
+			this.showWarning?.('Failed to show scoped models. See console for details.');
+		}
 	}
 
 	/** Graceful shutdown */
