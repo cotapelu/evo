@@ -743,14 +743,15 @@ describe('InteractiveMode', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('invokes showSessionSelector on /session and /resume', async () => {
+    it('invokes handleSessionCommand on /session and showSessionSelector on /resume', async () => {
       const mode = new InteractiveMode(runtime);
       await mode.init();
-      const spy = jest.spyOn(mode as any, 'showSessionSelector');
+      const sessionSpy = jest.spyOn(mode as any, 'handleSessionCommand');
+      const resumeSpy = jest.spyOn(mode as any, 'showSessionSelector');
       await (mode as any).handleSlashCommand('/session');
-      expect(spy).toHaveBeenCalled();
+      expect(sessionSpy).toHaveBeenCalled();
       await (mode as any).handleSlashCommand('/resume');
-      expect(spy).toHaveBeenCalledTimes(2);
+      expect(resumeSpy).toHaveBeenCalled();
     });
 
     it('invokes showSettingsSelector on /settings', async () => {
@@ -770,14 +771,15 @@ describe('InteractiveMode', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('invokes showSessionSelector on /session and /resume', async () => {
+    it('invokes handleSessionCommand on /session and showSessionSelector on /resume', async () => {
       const mode = new InteractiveMode(runtime);
       await mode.init();
-      const spy = jest.spyOn(mode as any, 'showSessionSelector');
+      const sessionSpy = jest.spyOn(mode as any, 'handleSessionCommand');
+      const resumeSpy = jest.spyOn(mode as any, 'showSessionSelector');
       await (mode as any).handleSlashCommand('/session');
-      expect(spy).toHaveBeenCalled();
+      expect(sessionSpy).toHaveBeenCalled();
       await (mode as any).handleSlashCommand('/resume');
-      expect(spy).toHaveBeenCalledTimes(2);
+      expect(resumeSpy).toHaveBeenCalled();
     });
 
     it('invokes showSettingsSelector on /settings', async () => {
@@ -796,26 +798,26 @@ describe('InteractiveMode', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('invokes showHotkeys on /hotkeys', async () => {
+    it('invokes handleHotkeysCommand on /hotkeys', async () => {
       const mode = new InteractiveMode(runtime);
       await mode.init();
-      const spy = jest.spyOn(mode as any, 'showHotkeys');
+      const spy = jest.spyOn(mode as any, 'handleHotkeysCommand');
       await (mode as any).handleSlashCommand('/hotkeys');
       expect(spy).toHaveBeenCalled();
     });
 
-    it('invokes showLoadedResources on /resources', async () => {
+    it('invokes handleResourcesCommand on /resources', async () => {
       const mode = new InteractiveMode(runtime);
       await mode.init();
-      const spy = jest.spyOn(mode as any, 'showLoadedResources');
+      const spy = jest.spyOn(mode as any, 'handleResourcesCommand');
       await (mode as any).handleSlashCommand('/resources');
       expect(spy).toHaveBeenCalled();
     });
 
-    it('invokes showChangelog on /changelog', async () => {
+    it('invokes handleChangelogCommand on /changelog', async () => {
       const mode = new InteractiveMode(runtime);
       await mode.init();
-      const spy = jest.spyOn(mode as any, 'showChangelog');
+      const spy = jest.spyOn(mode as any, 'handleChangelogCommand');
       await (mode as any).handleSlashCommand('/changelog');
       expect(spy).toHaveBeenCalled();
     });

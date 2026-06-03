@@ -26,8 +26,6 @@ import type {
 	SessionStats,
 	SourceInfo,
 	TruncationResult,
-	MissingSessionCwdError,
-	SessionImportFileNotFoundError,
 } from '@earendil-works/pi-coding-agent';
 import {
 	DEFAULT_MAX_LINES,
@@ -515,10 +513,10 @@ export class InteractiveMode {
 				await this.handleScopedModelsCommand?.();
 				break;
 			case '/export':
-				await this.handleExportCommand?.(text);
+				await this.handleExportCommand?.(command);
 				break;
 			case '/import': {
-				await this.handleImportCommand?.(text);
+				await this.handleImportCommand?.(command);
 				break;
 			}
 			default:
@@ -813,19 +811,8 @@ export class InteractiveMode {
 		} catch {
 			// Silently ignore clipboard errors
 		}
-	}
 
-	private handleDebugCommand(): void {
-		// Dump basic terminal and session info to console
-		console.log('=== DEBUG INFO ===');
-		console.log('Session ID:', this.session.sessionId);
-		console.log('CWD:', this.sessionManager.getCwd?.());
-		console.log('Model:', this.session.model?.id);
-		console.log('Thinking level:', this.session.thinkingLevel);
-		console.log('Is streaming:', this.session.isStreaming);
-		console.log('==================');
 	}
-
 	private getUserInput(): Promise<string> {
 		return new Promise((resolve) => {
 			(this as any).onInputCallback = (text: string) => {
@@ -3199,15 +3186,6 @@ export class InteractiveMode {
 			return;
 		}
 
-		const confirmed = await this.showExtensionConfirm?.(
-			'Import session',
-			`Replace current session with ${inputPath}?`
-		);
-		if (!confirmed) {
-			this.showStatus?.('Import cancelled');
-			return;
-		}
-
 		try {
 			if (this.loadingAnimation) {
 				this.loadingAnimation.stop?.();
@@ -3222,54 +3200,42 @@ export class InteractiveMode {
 			this.renderCurrentSessionState?.();
 			this.showStatus?.(`Session imported from: ${inputPath}`);
 		} catch (error: any) {
-			if (error instanceof MissingSessionCwdError) {
-				const selectedCwd = await this.promptForMissingSessionCwd?.(error);
-				if (!selectedCwd) {
-					this.showStatus?.('Import cancelled');
-					return;
-				}
-				const result = await this.runtimeHost.importFromJsonl?.(inputPath, selectedCwd);
-				if (result?.cancelled) {
-					this.showStatus?.('Import cancelled');
-					return;
-				}
-				this.renderCurrentSessionState?.();
-				this.showStatus?.(`Session imported from: ${inputPath} in current cwd`);
-				return;
-			}
-			if (error instanceof SessionImportFileNotFoundError) {
-				this.showError?.(`Failed to import session: ${error.message}`);
-				return;
-			}
-			await this.handleFatalRuntimeError?.('Failed to import session', error);
+			this.showError?.(`Failed to import session: ${error instanceof Error ? error.message : error}`);
 		}
 	}
+
 
 	private async handleHotkeysCommand(): Promise<void> {
 		try {
-			const keybindings = this.getAllKeybindings?.() || [];
-			if (keybindings.length === 0) {
-				this.showWarning?.("No hotkeys configured");
+			const config = this.keybindings?.getEffectiveConfig?.();
+			if (!config) {
+				this.showWarning?.('No hotkeys configured');
 				return;
 			}
-
-			let md = "# Hotkeys\n\n";
-			md += "| Key | Action | Description |\n";
-			md += "|-----|--------|-------------|\n\n";
-
-			for (const kb of keybindings) {
-				const keyDisplay = kb.keys?.join(" + ") || kb.key || "Unknown";
-				const desc = kb.description || "";
-					md += `| ${keyDisplay} | ${kb.action || ""} | ${desc} |\n`;
+			const entries = Object.entries(config) as [string, string | string[]][];
+			const keybindings = entries.map(([action, keys]) => ({
+				action,
+				keys: Array.isArray(keys) ? keys : [keys],
+			}));
+			if (keybindings.length === 0) {
+				this.showWarning?.('No hotkeys configured');
+				return;
 			}
-
+			let md = '# Hotkeys\n\n';
+			md += '| Key | Action | Description |\n';
+			md += '|-----|--------|-------------|\n\n';
+			for (const kb of keybindings) {
+				const keyDisplay = kb.keys.join(' + ');
+				md += `| ${keyDisplay} | ${kb.action} | |\n`;
+			}
 			const mdTheme = this.getMarkdownThemeWithSettings?.();
 			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
 		} catch (error: any) {
-			console.error("Failed to show hotkeys:", error);
-			this.showWarning?.("Failed to show hotkeys. See console for details.");
+			console.error('Failed to show hotkeys:', error);
+			this.showWarning?.('Failed to show hotkeys. See console for details.');
 		}
 	}
+
 
 	private async handleResourcesCommand(): Promise<void> {
 		try {
@@ -3307,120 +3273,13 @@ export class InteractiveMode {
 	}
 
 
-	private async handleHotkeysCommand(): Promise<void> {
-		try {
-			const keybindings = this.getAllKeybindings?.() || [];
-			if (keybindings.length === 0) {
-				this.showWarning?.("No hotkeys configured");
-				return;
-			}
 
-			let md = "# Hotkeys\n\n";
-			md += "| Key | Action | Description |\n";
-			md += "|-----|--------|-------------|\n\n";
 
-			for (const kb of keybindings) {
-				const keyDisplay = kb.keys?.join(" + ") || kb.key || "Unknown";
-				const desc = kb.description || "";
-				md += `| ${keyDisplay} | ${kb.action || ""} | ${desc} |\n`;
-			}
-
-			const mdTheme = this.getMarkdownThemeWithSettings?.();
-			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
-		} catch (error: any) {
-			console.error("Failed to show hotkeys:", error);
-			this.showWarning?.("Failed to show hotkeys. See console for details.");
-		}
-	}
-
-	private async handleResourcesCommand(): Promise<void> {
-		try {
-			const resources = await this.session.getResources?.();
-			if (!resources || resources.length === 0) {
-				this.showWarning?.("No resources loaded");
-				return;
-			}
-
-			let md = "# Loaded Resources\n\n";
-			for (const res of resources) {
-				md += `## ${res.name}\n\n`;
-				md += `- **Status:** ${res.status}\n`;
-				md += `- **Version:** ${res.version || "Unknown"}\n`;
-				if (res.description) {
-					md += `- **Description:** ${res.description}\n`;
-				}
-				if (res.scopes && res.scopes.length > 0) {
-					md += `- **Scopes:** ${res.scopes.join(", ")}\n`;
-				}
-				md += "\n";
-			}
-
-			const mdTheme = this.getMarkdownThemeWithSettings?.();
-			this.ui.showOverlay?.(new Markdown(md, 0, 0, mdTheme));
-		} catch (error: any) {
-			console.error("Failed to show resources:", error);
-			this.showWarning?.("Failed to show resources. See console for details.");
-		}
-	}
-
-	private async handleChangelogCommand(): Promise<void> {
-		// For now, show a notice
-		this.showWarning?.("Full changelog not implemented yet");
-	}
 
 	/** Graceful shutdown */
 
 
 	/** Graceful shutdown */
-	private formatSessionStats(stats: any): string {
-		const {
-			sessionId,
-			userMessages,
-			assistantMessages,
-			toolCalls,
-			toolResults,
-			totalMessages,
-			tokens,
-			cost,
-			contextUsage,
-		} = stats;
-
-		const fmtNum = (n: number) => n.toLocaleString();
-
-		let md = '# Session Statistics\n\n';
-		md += `'**Session ID:** ${sessionId}\n\n'`;
-
-		md += '## Message Counts\n';
-		md += `'- User messages: ${fmtNum(userMessages)}\n'`;
-		md += `'- Assistant messages: ${fmtNum(assistantMessages)}\n'`;
-		md += `'- Tool calls: ${fmtNum(toolCalls)}\n'`;
-		md += `'- Tool results: ${fmtNum(toolResults)}\n'`;
-		md += `'- **Total:** ${fmtNum(totalMessages)}\n\n'`;
-
-		md += '## Tokens\n';
-		md += `'- Input: ${fmtNum(tokens.input)}\n'`;
-		md += `'- Output: ${fmtNum(tokens.output)}\n'`;
-		if (tokens.cacheRead && tokens.cacheRead > 0) {
-			md += `'- Cache read: ${fmtNum(tokens.cacheRead)}\n'`;
-		}
-		if (tokens.cacheWrite && tokens.cacheWrite > 0) {
-			md += `'- Cache write: ${fmtNum(tokens.cacheWrite)}\n'`;
-		}
-		md += `'- **Total:** ${fmtNum(tokens.total)}\n\n'`;
-
-		md += '## Cost\n';
-		md += `'$${cost.toFixed(4)}\n\n'`;
-
-		if (contextUsage) {
-			const used = contextUsage.tokens ?? 0;
-			const max = contextUsage.contextWindow;
-			const percent = contextUsage.percent ?? ((used / max) * 100).toFixed(1);
-			md += '## Context Usage\n';
-			md += `'- Used: ${fmtNum(used)} / ${fmtNum(max)} (${percent}%)\n'`;
-		}
-
-		return md;
-	}
 
 	private async handleSessionCommand(): Promise<void> {
 		try {
@@ -3473,6 +3332,7 @@ export class InteractiveMode {
 		this.showWarning?.('Share command not implemented yet');
 	}
 
+
 	private async handleScopedModelsCommand(): Promise<void> {
 		try {
 			const allModels = this.session.modelRegistry?.getAvailable() || [];
@@ -3480,24 +3340,22 @@ export class InteractiveMode {
 				this.showWarning?.('No models available');
 				return;
 			}
-
-			// Build multi-select items
-			const items = allModels.map(m => ({
+			// Build items using showSelect with multi:true
+			const items = allModels.map((m: any) => ({
 				id: m.id,
-				label: `${m.id} (${m.provider})'`,
-				description: `Provider: ${m.provider}'`,
-				selected: false,
+				label: `${m.id} (${m.provider})`,
+				description: `Provider: ${m.provider}`,
 			}));
-
-			const selected = await this.ui.showMultiSelect?.('Select Scoped Models', items);
+			const selected = await (this.ui as any).showSelect?.('Select Scoped Models', items, { multi: true });
 			if (selected && selected.length > 0) {
-				this.showStatus?.(`Selected ${selected.length} models for scoped use'`);
+				this.showStatus?.(`Selected ${selected.length} models for scoped use`);
 			}
 		} catch (error: any) {
 			console.error('Failed to show scoped models:', error);
 			this.showWarning?.('Failed to show scoped models. See console for details.');
 		}
 	}
+
 
 	/** Graceful shutdown */
 	private async shutdown(exitCode = 0): Promise<void> {
