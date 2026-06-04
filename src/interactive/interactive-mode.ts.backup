@@ -247,7 +247,7 @@ export class InteractiveMode {
 			if (fs.existsSync(cp)) {
 				const content = fs.readFileSync(cp, 'utf8');
 				const entries = parseChangelog(content);
-				const last = this.settingsManager.getLastChangelogVersion();
+				const last = this.settingsManager.getLastChangelogVersion?.();
 				if (!last) this.settingsManager.setLastChangelogVersion?.(VERSION);
 				else {
 					const newE = getNewEntries(entries, last);
@@ -1031,7 +1031,7 @@ export class InteractiveMode {
 			description: cmd.description,
 		}));
 
-		const extensionCommands = (this.session.extensionRunner.getRegisteredCommands() ?? []).map((cmd: any) => ({
+		const extensionCommands = (this.session.extensionRunner.getCommands() ?? []).map((cmd: any) => ({
 			value: cmd.invocationName,
 			label: cmd.invocationName,
 			description: cmd.description,
