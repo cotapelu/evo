@@ -5,7 +5,7 @@ import {
   printBanner,
   printDiagnostics,
   printStartupMetrics,
-} from '../runtime-provider.js';
+} from '../runtime/runtime-provider.js';
 
 describe('runtime-provider.ts (utility functions)', () => {
   describe('formatDuration', () => {

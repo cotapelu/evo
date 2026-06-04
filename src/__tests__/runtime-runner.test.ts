@@ -3,8 +3,8 @@ import {
   setGlobalRuntime,
   getGlobalRuntime,
   clearGlobalRuntime,
-} from '../runtime-runner.js';
-import type { AgentSessionRuntime } from '../runtime-provider.js';
+} from '../runtime/runtime-runner.js';
+import type { AgentSessionRuntime } from '../runtime/runtime-provider.js';
 
 describe('runtime-runner.ts', () => {
   let mockRuntime: AgentSessionRuntime;

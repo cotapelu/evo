@@ -5,7 +5,7 @@
  */
 
 import { createAndRunRuntime, printBanner, printDiagnostics, printStartupMetrics } from './runtime/runtime-provider.js';
-import { runInteractiveMode, setupShutdownHandlers } from './interactive/interactive-mode.js';
+import { InteractiveMode } from '@earendil-works/pi-coding-agent';
 
 export async function main(): Promise<void> {
   printBanner();
@@ -14,15 +14,13 @@ export async function main(): Promise<void> {
   try {
     const { runtime, diagnostics, metrics } = await createAndRunRuntime();
 
-    // Setup shutdown handlers after runtime is ready
-    setupShutdownHandlers();
-
     // Display startup info
     printDiagnostics(diagnostics);
     printStartupMetrics(metrics);
 
     // Start interactive mode
-    await runInteractiveMode(runtime);
+    const mode = new InteractiveMode(runtime);
+    await mode.run();
   } catch (error) {
     console.error('\n❌ Fatal Error:');
     console.error(`   ${error instanceof Error ? error.message : String(error)}`);
