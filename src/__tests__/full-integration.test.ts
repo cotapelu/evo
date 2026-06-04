@@ -66,11 +66,18 @@ describe('Full Integration: runtime-provider → interactive-provider', () => {
     });
 
     it('should reject invalid cwd', async () => {
+      // Mock process.cwd to return non-existent path
       const originalCwd = process.cwd();
+      let originalProcessCwd: () => string;
       try {
-        // Change to nonexistent directory
-        process.chdir('/nonexistent-path-12345');
+        // @ts-ignore - mocking internal
+        originalProcessCwd = process.cwd;
+        // @ts-ignore
+        process.cwd = () => '/nonexistent-path-12345';
         await expect(createAndRunRuntime()).rejects.toThrow();
+        // Restore
+        // @ts-ignore
+        process.cwd = originalProcessCwd;
       } finally {
         process.chdir(originalCwd);
       }
@@ -152,18 +159,25 @@ describe('Full Integration: runtime-provider → interactive-provider', () => {
       expect(provider.getStatus().mode).toBe('uninitialized');
       expect(provider.getStatus().isRunning).toBe(false);
 
-      // 4. Run (will attempt interactive, but we won't wait for actual TUI)
-      // Since InteractiveMode.run() would block, we test the provider's run method
-      // by mocking the internal doRunInteractive. For integration test we verify
-      // the provider can be created and its status transitions
+      // 4. Mock InteractiveMode.run to avoid blocking TUI
+      const mockRun = jest.fn().mockResolvedValue(undefined);
+      const mockStop = jest.fn().mockResolvedValue(undefined);
+      // @ts-ignore - accessing private property to inject mock
+      provider['interactiveModeInstance'] = { run: mockRun, stop: mockStop } as any;
+
+      // 5. Run provider
       await provider.run({ verbose: true });
 
-      // 5. Check final state
+      // Verify mock was called
+      expect(mockRun).toHaveBeenCalled();
+
+      // 6. Check final state (provider should not be running after run completes)
       const status = provider.getStatus();
       expect(status.sessionId).toBe(runtime.session.sessionId);
       expect(status.sessionFile).toBe(runtime.session.sessionFile);
+      expect(status.isRunning).toBe(false);
 
-      // 6. Stop gracefully
+      // 7. Stop gracefully
       await provider.stop();
       expect(provider.getStatus().mode).toBe('shutdown');
       expect(provider.getStatus().isRunning).toBe(false);
