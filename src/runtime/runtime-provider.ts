@@ -10,7 +10,6 @@ import {
   AuthStorage,
   ModelRegistry,
   SettingsManager,
-  DefaultResourceLoader,
   type AgentSessionRuntime,
   type AgentSessionServices,
   type CreateAgentSessionResult,
@@ -22,6 +21,7 @@ import {
 
 import type { ThinkingLevel } from '@earendil-works/pi-agent-core';
 import type { Model } from '@earendil-works/pi-ai';
+// DefaultResourceLoaderOptions not exported from main index, keep deep import
 import type { DefaultResourceLoaderOptions } from '@earendil-works/pi-coding-agent/dist/core/resource-loader.js';
 
 import extensionsAggregator from '../extensions/index.js';

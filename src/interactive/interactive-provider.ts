@@ -8,9 +8,8 @@ import {
   InteractiveMode,
   InteractiveModeOptions,
   runPrintMode,
+  type AgentSessionRuntime,
 } from '@earendil-works/pi-coding-agent';
-
-import type { AgentSessionRuntime } from '@earendil-works/pi-coding-agent';
 
 // Re-export
 export type { InteractiveModeOptions };
