@@ -309,5 +309,24 @@ export function validateRuntimeOptions(options: RuntimeOptions): string[] {
       errors.push(`Invalid thinkingLevel: ${options.thinkingLevel}. Must be one of: ${validLevels.join(', ')}`);
     }
   }
+  if (options.compactionOptions) {
+    if (options.compactionOptions.threshold !== undefined && (options.compactionOptions.threshold < 0 || options.compactionOptions.threshold > 1)) {
+      errors.push('compactionOptions.threshold must be between 0 and 1');
+    }
+    if (
+      options.compactionOptions.maxTokensBeforeCompaction !== undefined &&
+      options.compactionOptions.maxTokensBeforeCompaction < 1000
+    ) {
+      errors.push('compactionOptions.maxTokensBeforeCompaction must be >= 1000');
+    }
+  }
+  if (options.retryOptions) {
+    if (options.retryOptions.maxRetries !== undefined && options.retryOptions.maxRetries < 0) {
+      errors.push('retryOptions.maxRetries must be >= 0');
+    }
+  }
+  if (options.modelSelection && !['first', 'available', 'explicit'].includes(options.modelSelection)) {
+    errors.push('modelSelection must be "first", "available", or "explicit"');
+  }
   return errors;
 }
