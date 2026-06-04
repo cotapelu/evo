@@ -23,7 +23,7 @@ export type { AgentSessionRuntime };
 // Re-export types for other modules
 
 // Import extensions aggregator (registers all extensions)
-import extensionsAggregator from './extensions/index.js';
+import extensionsAggregator from '../extensions/index.js';
 import { setGlobalRuntime } from './runtime-runner.js';
 
 export interface StartupMetrics {

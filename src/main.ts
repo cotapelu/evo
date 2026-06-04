@@ -4,8 +4,8 @@
  * Main entry point. Initializes the runtime and starts interactive mode.
  */
 
-import { createAndRunRuntime, printBanner, printDiagnostics, printStartupMetrics } from './runtime-provider.js';
-import { runInteractiveMode, setupShutdownHandlers } from './interactive-provider.js';
+import { createAndRunRuntime, printBanner, printDiagnostics, printStartupMetrics } from './runtime/runtime-provider.js';
+import { runInteractiveMode, setupShutdownHandlers } from './interactive/interactive-mode.js';
 
 export async function main(): Promise<void> {
   printBanner();

@@ -8,7 +8,7 @@
 
 import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
 import type { ToolDefinition, ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getGlobalRuntime } from "../../runtime-runner.js";
+import { getGlobalRuntime } from "../../runtime/runtime-runner.js";
 
 export function registerTeamTool(api: ExtensionAPI): void {
   api.registerTool(createTeamTool());

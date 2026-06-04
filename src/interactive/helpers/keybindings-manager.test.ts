@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { KeybindingsManager } from '../keybindings-manager.js';
+import { KeybindingsManager } from './keybindings-manager.js';
 
 describe('KeybindingsManager', () => {
   let manager: KeybindingsManager;

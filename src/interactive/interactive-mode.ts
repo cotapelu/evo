@@ -4,6 +4,7 @@
  */
 
 import * as crypto from 'node:crypto';
+import { existsSync } from 'node:fs';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -32,6 +33,7 @@ import {
 	DEFAULT_MAX_LINES,
 	DEFAULT_MAX_BYTES,
 	discoverAndLoadExtensions,
+	ExtensionSelectorComponent,
 	FooterComponent,
 	CustomEditor,
 	UserMessageComponent,
@@ -56,8 +58,8 @@ import {
 	getSelectListTheme,
 	initTheme as pkgInitTheme,
 } from '@earendil-works/pi-coding-agent';
-import { FooterDataProvider } from '../runtime/footer-data-provider.js';
-import { KeybindingsManager } from '../runtime/keybindings-manager.js';
+import { FooterDataProvider } from './helpers/footer-data-provider.js';
+import { KeybindingsManager } from './helpers/keybindings-manager.js';
 import { getChangelogPath, parseChangelog, getNewEntries } from '../utils/changelog.js';
 import { killTrackedDetachedChildren } from '../utils/shell.js';
 import { checkForNewPiVersion } from '../utils/version-check.js';
@@ -65,6 +67,56 @@ import { ExpandableText } from './components/expandable-text.js';
 import { copyToClipboard, readClipboardImage, extensionForImageMimeType } from '../utils/clipboard.js';
 import { CountdownTimer } from './components/countdown-timer.js';
 import { setThemeInstance, getEditorTheme, getThinkingBorderColor, getBashModeBorderColor, theme as getCurrentTheme, initTheme as localInitTheme } from './theme/theme.js';
+
+// Local error definitions (not exported from pi-coding-agent main index)
+
+interface SessionCwdSource {
+	getCwd(): string;
+	getSessionFile?(): string | undefined;
+}
+
+function getMissingSessionCwdIssue(
+	sessionManager: SessionCwdSource,
+	fallbackCwd: string,
+): { sessionFile?: string; sessionCwd: string; fallbackCwd: string; } | undefined {
+	const sessionFile = sessionManager.getSessionFile?.();
+	if (!sessionFile) {
+		return undefined;
+	}
+	const sessionCwd = sessionManager.getCwd();
+	if (!sessionCwd || existsSync(sessionCwd)) {
+		return undefined;
+	}
+	return {
+		sessionFile,
+		sessionCwd,
+		fallbackCwd,
+	};
+}
+
+function formatMissingSessionCwdPrompt(issue: { sessionFile?: string; sessionCwd: string; fallbackCwd: string }): string {
+	return `cwd from session file does not exist\n${issue.sessionCwd}\n\ncontinue in current cwd\n${issue.fallbackCwd}`;
+}
+
+class MissingSessionCwdError extends Error {
+	readonly issue: { sessionFile?: string; sessionCwd: string; fallbackCwd: string };
+	constructor(issue: { sessionFile?: string; sessionCwd: string; fallbackCwd: string }) {
+		super(`Stored session working directory does not exist: ${issue.sessionCwd}\nSession file: ${issue.sessionFile}\nCurrent working directory: ${issue.fallbackCwd}`);
+		this.name = "MissingSessionCwdError";
+		this.issue = issue;
+	}
+}
+
+class SessionImportFileNotFoundError extends Error {
+	readonly filePath: string;
+	constructor(filePath: string) {
+		super(`File not found: ${filePath}`);
+		this.name = "SessionImportFileNotFoundError";
+		this.filePath = filePath;
+	}
+}
+
+// End of local error definitions
 
 function formatKeyText(key: string, options?: any): string {
 	return options?.capitalize ? key.toUpperCase() : key;
@@ -1104,7 +1156,7 @@ export class InteractiveMode {
 							noMatch: (t) => th.fg('warning', t),
 						}
 					);
-					selector.onSelect = (val) => { this.ui.hideOverlay?.(); resolve(val); };
+					selector.onSelect = (val) => { this.ui.hideOverlay?.(); resolve(val.value); };
 					selector.onCancel = () => { this.ui.hideOverlay?.(); resolve(undefined); };
 					this.ui.showOverlay?.(selector);
 					this.ui.setFocus?.(selector);
@@ -1126,7 +1178,7 @@ export class InteractiveMode {
 							noMatch: (t) => th.fg('warning', t),
 						}
 					);
-					selector.onSelect = (val: any) => { this.ui.hideOverlay?.(); resolve(val === 'yes'); };
+					selector.onSelect = (val: any) => { this.ui.hideOverlay?.(); resolve(val.value === 'yes'); };
 					selector.onCancel = () => { this.ui.hideOverlay?.(); resolve(false); };
 					this.ui.showOverlay?.(selector);
 					this.ui.setFocus?.(selector);
@@ -3184,6 +3236,12 @@ export class InteractiveMode {
 			return;
 		}
 
+		const confirmed = await this.showExtensionConfirm('Import session', `Replace current session with ${inputPath}?`);
+		if (!confirmed) {
+			this.showStatus?.('Import cancelled');
+			return;
+		}
+
 		try {
 			if (this.loadingAnimation) {
 				this.loadingAnimation.stop?.();
@@ -3198,7 +3256,26 @@ export class InteractiveMode {
 			this.renderCurrentSessionState?.();
 			this.showStatus?.(`Session imported from: ${inputPath}`);
 		} catch (error: any) {
-			this.showError?.(`Failed to import session: ${error instanceof Error ? error.message : error}`);
+			if (error.name === 'MissingSessionCwdError') {
+				const selectedCwd = await this.promptForMissingSessionCwd(error);
+				if (!selectedCwd) {
+					this.showStatus?.('Import cancelled');
+					return;
+				}
+				const result = await this.runtimeHost.importFromJsonl?.(inputPath, selectedCwd);
+				if (result?.cancelled) {
+					this.showStatus?.('Import cancelled');
+					return;
+				}
+				this.renderCurrentSessionState?.();
+				this.showStatus?.(`Session imported from: ${inputPath}`);
+				return;
+			}
+			if (error.name === 'SessionImportFileNotFoundError') {
+				this.showError?.(`Failed to import session: ${error.message}`);
+				return;
+			}
+			this.showError?.(`Failed to import session: ${error?.message || 'Unknown error'}`);
 		}
 	}
 
@@ -3289,6 +3366,40 @@ export class InteractiveMode {
 
 
 	/** Graceful shutdown */
+
+
+	private async showExtensionConfirm(title: string, message: string): Promise<boolean> {
+		const result = await this.showExtensionSelector(title + '\n\n' + message, ['Yes', 'No']);
+		return result === 'Yes';
+	}
+
+	private async showExtensionSelector(message: string, choices: string[], options?: any): Promise<string | undefined> {
+		return new Promise((resolve) => {
+			const component = new ExtensionSelectorComponent(
+				message,
+				choices,
+				(option) => {
+					this.ui.hideOverlay?.();
+					resolve(option);
+				},
+				() => {
+					this.ui.hideOverlay?.();
+					resolve(undefined);
+				},
+				{ tui: this.ui, timeout: options?.timeout }
+			);
+			this.ui.showOverlay?.(component);
+			this.ui.setFocus?.(component);
+		});
+	}
+
+	private async promptForMissingSessionCwd(error: MissingSessionCwdError): Promise<string | undefined> {
+		const confirmed = await this.showExtensionConfirm(
+			'Session cwd not found',
+			formatMissingSessionCwdPrompt(error.issue),
+		);
+		return confirmed ? error.issue.fallbackCwd : undefined;
+	}
 
 	private async handleSessionCommand(): Promise<void> {
 		try {

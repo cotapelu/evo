@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { FooterDataProvider } from '../footer-data-provider.js';
+import { FooterDataProvider } from './footer-data-provider.js';
 
 describe('FooterDataProvider', () => {
   let provider: FooterDataProvider;
