@@ -308,8 +308,11 @@ export class InteractiveMode {
 		// Bind extensions and subscribe to agent events
 		await this.rebindCurrentSession();
 
-		// Render initial
+		// Render initial messages
 		this.renderInitialMessages();
+
+		// Show loaded resources (after messages to avoid being cleared)
+		this.showLoadedResources({ force: false, showDiagnosticsWhenQuiet: true });
 
 		// Notices
 		if (this.changelogMarkdown) this.showStartupNotices();
@@ -727,9 +730,10 @@ export class InteractiveMode {
 		this.setupAutocompleteProvider();
 
 		const extensionRunner = this.session.extensionRunner;
+		// DEBUG: Log extension count
+		console.log('[DEBUG] ExtensionRunner commands:', extensionRunner.getRegisteredCommands()?.length || 0);
+		console.log('[DEBUG] ResourceLoader extensions:', this.session.resourceLoader.getExtensions()?.extensions?.length || 0);
 		this.setupExtensionShortcuts(extensionRunner);
-		this.showLoadedResources({ force: false, showDiagnosticsWhenQuiet: true });
-		this.showStartupNotices();
 	}
 
 
