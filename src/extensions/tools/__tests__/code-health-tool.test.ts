@@ -149,6 +149,15 @@ describe('Code Health Tool', () => {
 
 
 
+  test('audit: includes audit check', async () => {
+    api.exec.mockImplementation(async () => ({ stdout: 'audit results', stderr: '', code: 0 }));
+    const ctx = createMockContext();
+    const result = await tool.execute('1', { checks: ['audit'] }, undefined, undefined, ctx);
+    expect(api.exec).toHaveBeenCalledWith('npm', ['audit'], expect.objectContaining({ cwd: '/workspace' }));
+    expect(result.details?.checks).toHaveLength(1);
+    expect(result.details?.checks[0].name).toBe('audit');
+  });
+
   test('handles unknown check names gracefully by filtering', async () => {
     api.exec.mockImplementation(async () => ({ stdout: 'OK', stderr: '', code: 0 }));
     const ctx = createMockContext();

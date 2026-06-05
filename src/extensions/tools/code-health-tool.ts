@@ -27,7 +27,8 @@ interface CheckResult {
 }
 
 function createCodeHealthTool(api: ExtensionAPI): ToolDefinition<any, any> {
-  const allowedChecks = ['lint', 'typecheck', 'test', 'build'] as const;
+  const defaultChecks = ['lint', 'typecheck', 'test', 'build'] as const;
+  const allowedChecks = [...defaultChecks, 'audit'] as const;
   type CheckName = typeof allowedChecks[number];
 
   // Mapping from check names to npm commands
@@ -42,6 +43,8 @@ function createCodeHealthTool(api: ExtensionAPI): ToolDefinition<any, any> {
         return { cmd: 'npm', args: ['test'] };
       case 'build':
         return { cmd: 'npm', args: ['run', 'build'] };
+      case 'audit':
+        return { cmd: 'npm', args: ['audit'] };
     }
   }
 
@@ -49,11 +52,11 @@ function createCodeHealthTool(api: ExtensionAPI): ToolDefinition<any, any> {
     name: 'code-health',
     label: 'Code Health',
     description: 'Run code health checks: lint, typecheck, test, build. Returns aggregated summary.',
-    promptSnippet: "code-health({ checks?: ['lint','typecheck','test','build'] }) - audit all or specify subset.",
+    promptSnippet: "code-health({ checks?: ['lint','typecheck','test','build','audit'] }) - audit all or specify subset.",
     parameters: {},
     async execute(toolCallId, params, signal, _onUpdate: (update: any) => void | undefined, ctx) {
       // Determine which checks to run
-      let checksToRun: CheckName[] = [...allowedChecks];
+      let checksToRun: CheckName[] = [...defaultChecks];
       if (params && typeof params === 'object' && !(params instanceof AbortSignal)) {
         const requested = (params as any).checks;
         if (Array.isArray(requested)) {
