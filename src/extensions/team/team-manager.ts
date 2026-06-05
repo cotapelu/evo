@@ -966,7 +966,7 @@ export async function executeTeamTasks(
   team: AgentTeam,
   tasks: string[],
   onUpdate?: (update: any) => void,
-  _options?: { wait?: boolean; maxTurnsPerAgent?: number }
+  _options?: { wait?: boolean }
 ): Promise<AgentTeam> {
   team.setOnUpdate(onUpdate);
   await team.initialize(tasks);
