@@ -15,6 +15,28 @@
 
 import type { ExtensionAPI, ExtensionContext, ExecOptions } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
+
+function renderGitCall(args: any, theme: any): Text {
+  const action = args.action || 'unknown';
+  const text = `${theme.fg("toolTitle", theme.bold("git"))} ${theme.fg("muted", action)}`;
+  return new Text(text, 0, 0);
+}
+
+function renderGitResult(result: any, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
+  if (options.isPartial) return new Text(theme.fg("warning", "Running..."), 0, 0);
+  const details = result.details;
+  if (!details) return new Text("", 0, 0);
+  const { success, exitCode, action, stdout } = details as any;
+  const icon = success ? '✅' : '❌';
+  const color = success ? 'success' : 'error';
+  const lines: string[] = [`${icon} git ${action} (exit ${exitCode})`];
+  if (stdout && options.expanded) {
+    const snippet = stdout.split('\n').slice(0, 5).join('\n');
+    lines.push(theme.fg('dim', snippet));
+  }
+  return new Text(lines.join('\n'), 0, 0);
+}
 
 function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
   return {
@@ -131,6 +153,8 @@ function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
         };
       }
     },
+    renderCall: renderGitCall,
+    renderResult: renderGitResult,
   };
 }
 
