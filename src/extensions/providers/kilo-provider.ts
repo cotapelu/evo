@@ -15,6 +15,8 @@ import type { ProviderConfig } from "@earendil-works/pi-coding-agent";
 import { KILO_MODELS_ALL } from "./models/index.js";
 
 export function registerKiloProvider(api: ExtensionAPI): void {
+  // Skip registration in e2e tests to use mock provider
+  if (process.env.E2E_SKIP_KILO === '1') return;
   // Get baseUrl from generated models if available, otherwise use fallback
   const baseUrl = KILO_MODELS_ALL[0]?.baseUrl || "https://api.kilo.ai/api/gateway";
 
