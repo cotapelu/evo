@@ -231,6 +231,16 @@
 | **Test Count** | 508 | (+2 tests from previous) |
 | **Measured Coverage** | ~66.5% | No significant change; focus shifted to coverage improvement |
 
+## Round 26 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 26 | Added tests for tool-metrics-tool and default extension to boost coverage |
+| **Tasks Completed** | 2 | Created tool-metrics-tool.test.ts (7 tests) and default-extension.test.ts (5 tests) |
+| **Test Failure Rate** | 0% | All 520 tests pass |
+| **Test Count** | 520 | (+12 tests) |
+| **Measured Coverage** | ~69.7% | Statements increased by ~3.2%; tool-metrics-tool now 97.9%, index.ts 100%, metrics-collector partially covered |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)

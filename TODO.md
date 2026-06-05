@@ -49,3 +49,4 @@
 - [x] Add tests for extensionLoader (R23)
 - [x] Fix Jest coverage collection for ESM modules (R24)
 - [x] Fixed notes-tool error result to include `message` property (R25)
+- [x] Added tests for tool-metrics-tool (7 tests) and default extension (5 tests) (R26)

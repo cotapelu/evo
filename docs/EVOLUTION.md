@@ -50,6 +50,7 @@
 - E2E test suite for full agent session (R22)
 - Coverage improvement and test expansion (R23)
 - Fixed notes-tool error result to include `message` property (R25)
+- Added tests for tool-metrics-tool and default extension (R26)
 
 **Initiatives (Pending):**
 - (none)
