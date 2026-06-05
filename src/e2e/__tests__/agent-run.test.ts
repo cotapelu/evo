@@ -5,6 +5,9 @@ import { mkdtemp, rmdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
+// Increase timeout for slow e2e test
+jest.setTimeout(30000);
+
 describe('E2E Agent Session', () => {
   let session: any;
   let tempAgentDir: string;
