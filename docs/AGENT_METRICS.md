@@ -251,6 +251,16 @@
 | **Test Count** | 526 | (+6 tests) |
 | **Measured Coverage** | ~72.0% | Overall statements increased by ~2.3% |
 
+## Round 28 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 28 | Added tests for session-info tool: render functions and fallback scenarios |
+| **Tasks Completed** | 1 | Added 4 new tests to session-info.test.ts (renderCall, renderResult variations, fallback) |
+| **Test Failure Rate** | 0% | All 530 tests pass |
+| **Test Count** | 530 | (+4 tests) |
+| **Measured Coverage** | ~71.2% | Slight dip due to measurement variance; session-info coverage now 97% |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)

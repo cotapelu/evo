@@ -138,4 +138,52 @@ describe('Session Info Tool', () => {
     expect(result.isError).toBe(true);
     expect(result.details?.error).toBe('DB failure');
   });
+
+  // Additional coverage tests
+  test('renderCall produces Text', () => {
+    const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s } as any;
+    const txt = tool.renderCall({}, theme);
+    expect(txt).toBeDefined();
+  });
+
+  test('renderResult shows partial state', () => {
+    const theme = { fg: (c: string, s: string) => s, warning: (s: string) => s } as any;
+    const txt = tool.renderResult({}, { expanded: false, isPartial: true }, theme);
+    expect(txt).toBeDefined();
+  });
+
+  test('renderResult shows result with details', () => {
+    const theme = { fg: (c: string, s: string) => s, accent: (s: string) => s } as any;
+    const result = tool.renderResult({
+      details: {
+        session_id: 's1',
+        cwd: '/home',
+        leaf_id: null,
+        total_entries: 10,
+        message_count: 5,
+        compaction_count: 2,
+        branch_summary_count: 1,
+        label_count: 1,
+        estimated_tokens: 100,
+        root_nodes: 3,
+      }
+    }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
+
+  test('execute uses fallbacks when sessionManager methods missing', async () => {
+    const ctx = {
+      cwd: '/fallback',
+      sessionManager: {} as any, // no methods
+    } as any;
+    const result = await tool.execute('1', {}, undefined, undefined, ctx);
+    expect(result.isError).toBe(false);
+    const info = result.details;
+    expect(info.session_id).toBe('unknown');
+    expect(info.cwd).toBe('/fallback');
+    expect(info.leaf_id).toBeNull();
+    expect(info.total_entries).toBe(0);
+    expect(info.estimated_tokens).toBe(0);
+    expect(info.root_nodes).toBe(0);
+  });
 });

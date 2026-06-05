@@ -52,6 +52,7 @@
 - Fixed notes-tool error result to include `message` property (R25)
 - Added tests for tool-metrics-tool and default extension (R26)
 - Added render and onUpdate tests for code-health tool (R27)
+- Added render and fallback tests for session-info tool (R28)
 
 **Initiatives (Pending):**
 - (none)
