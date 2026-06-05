@@ -40,16 +40,17 @@
 **Goal:** Fill critical gaps for security, testing, and productivity.
 
 **Completed:**
-- Extension template generator tool (Round 12)
-- Integration tests for extension registration (Round 13)
-- Watch tool for continuous feedback (Round 14)
+- Extension template generator tool (R12)
+- Integration tests for extension registration (R13)
+- Watch tool for continuous feedback (R14)
+- Coverage tool & history (R15-17)
+- Notes tool & /cancel command (R18-19)
+- Refactored common tool patterns into base-tool utility (R20)
 
 **Initiatives (Pending):**
 - E2E test suite for full agent session
 
-**Remaining Rendering Work:**
-- Render function for `memory` tool (already present? check)
-- Automatic coverage measurement visualization
+**Remaining Work:**
 - Performance telemetry
 
 ## Refactoring Schedule

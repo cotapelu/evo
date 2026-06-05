@@ -7,7 +7,6 @@
 ## Medium Priority
 
 - [ ] Implement metrics collection (tool execution times, error rates)
-- [ ] Refactor common tool patterns into base classes
 
 ## Completed
 
@@ -31,3 +30,4 @@
 - [x] Measure and display coverage trends over time via `coverage-history` tool (R17)
 - [x] Add `notes` tool for session-scoped scratchpad (R18)
 - [x] Add `/cancel` command to abort running operations (R19)
+- [x] Refactor common tool patterns into base classes (R20)
