@@ -32,3 +32,4 @@
 - [x] Add `coverage` tool to display code coverage summary (R15)
 - [x] Add global `/about` command to show system info (R16)
 - [x] Measure and display coverage trends over time via `coverage-history` tool (R17)
+- [x] Add `notes` tool for session-scoped scratchpad (R18)

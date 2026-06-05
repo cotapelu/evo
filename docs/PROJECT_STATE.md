@@ -23,6 +23,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `watch` – Watch files and auto-run commands on change (default: code-health, test --coverage)
 - `coverage` – Display code coverage statistics from coverage/coverage-summary.json
 - `coverage-history` – Show trends of coverage over time (read from .pi/coverage-history.json)
+- `notes` – Session-scoped scratchpad for quick temporary notes
 - `kicad-sch` / `kicad-pcb` – KiCad schematic/PCB manipulation
 - `team` – Collaborative multi-agent operations (claim tasks, workspace sharing, messaging)
 
@@ -36,7 +37,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 485 passing, 0 failing
+- **Tests:** 496 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
 - **Code Coverage:** Measured via jest --coverage; summary available through test tool
 
@@ -52,7 +53,8 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Extension template generator for rapid scaffolding
 - Watch tool for continuous feedback during development
 - Global `/about` command for quick system info
-- Strong test suite with 485 passing tests
+- Session-scoped `notes` tool for temporary scratchpad
+- Strong test suite with 496 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 
 ## Roadmap
