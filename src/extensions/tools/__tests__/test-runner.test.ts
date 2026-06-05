@@ -122,4 +122,13 @@ describe('Test Runner Tool', () => {
     expect(result.isError).toBe(false);
     expect(api.exec).toHaveBeenCalledWith('npm', ['test'], expect.objectContaining({ cwd: '/workspace' }));
   });
+
+  test('run: with coverage flag includes coverage field in details', async () => {
+    api.exec.mockResolvedValue({ stdout: '', stderr: '', code: 0 } as any);
+    const ctx = createMockContext();
+    const result = await tool.execute('1', { coverage: true }, undefined, undefined, ctx);
+    expect(result.details).toHaveProperty('coverage');
+    // coverage should be undefined since no coverage file exists
+    expect(result.details.coverage).toBeUndefined();
+  });
 });

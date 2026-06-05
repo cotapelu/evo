@@ -9,6 +9,8 @@
 
 import type { ExtensionAPI, ExtensionContext, ExecOptions } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 function createTestRunnerTool(api: ExtensionAPI): ToolDefinition<any, any> {
   return {
@@ -36,7 +38,8 @@ function createTestRunnerTool(api: ExtensionAPI): ToolDefinition<any, any> {
       }
       // Support coverage flag
       const paramsObj = typeof params === 'object' && params && !(params instanceof AbortSignal) ? params : (typeof params === 'string' ? JSON.parse(params) : {});
-      if (paramsObj.coverage) {
+      const wantCoverage = !!paramsObj.coverage;
+      if (wantCoverage) {
         afterArgs.push('--coverage');
       }
       if (afterArgs.length > 0) {
@@ -58,9 +61,22 @@ function createTestRunnerTool(api: ExtensionAPI): ToolDefinition<any, any> {
 
         const output = stdout + (stderr ? '\n' + stderr : '');
 
+        // Parse coverage if requested and available
+        let coverage: any = undefined;
+        if (wantCoverage && code === 0) {
+          const coveragePath = join(ctx.cwd, 'coverage', 'coverage-summary.json');
+          if (existsSync(coveragePath)) {
+            try {
+              coverage = JSON.parse(readFileSync(coveragePath, 'utf-8'));
+            } catch (e) {
+              // ignore coverage parse errors
+            }
+          }
+        }
+
         return {
           content: [{ type: 'text', text: message }],
-          details: { exitCode: code, stdout, stderr, output, pattern },
+          details: { exitCode: code, stdout, stderr, output, pattern, coverage },
           isError: !success,
         };
       } catch (e: any) {
