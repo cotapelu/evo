@@ -49,7 +49,8 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Metrics introspection via `metrics` tool
 - Extension template generator for rapid scaffolding
 - Watch tool for continuous feedback during development
-- Strong test suite with 477 passing tests
+- Global `/about` command for quick system info
+- Strong test suite with 480 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 
 ## Roadmap
