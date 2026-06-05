@@ -4,8 +4,7 @@
 
 - [ ] Write E2E tests for full agent session
 - [ ] Add `watch` tool to auto-run checks on file changes
-- [ ] Create extension template generator
-- [ ] Add render functions for `memory` and `branch` tools
+- [ ] Add render functions for `memory` tool
 - [ ] Measure and display coverage trends over time
 
 ## Medium Priority
@@ -29,3 +28,5 @@
 - [x] Add TUI rendering for `git` tool (R8)
 - [x] Add `security-audit` tool with comprehensive checks (R9)
 - [x] Test tool now parses coverage summary (R10)
+- [x] Add TUI rendering for `branch` tool (R11)
+- [x] Add `extension-template-generator` tool with scaffolding (R12)

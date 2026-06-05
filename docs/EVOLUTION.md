@@ -35,17 +35,19 @@
 
 **Metrics:** 449 tests pass; build stable.
 
-## Phase 4: High-Value Additions (Planned)
+## Phase 4: High-Value Additions (In Progress)
 
 **Goal:** Fill critical gaps for security, testing, and productivity.
 
-**Initiatives:**
+**Completed:**
+- Extension template generator tool (Round 12)
+
+**Initiatives (Pending):**
 - E2E test suite for full agent session
 - `watch` tool for auto-running checks on file changes
-- Extension template generator
 
-**Anticipated Debt:**
-- Render functions for remaining tools (memory, branch)
+**Remaining Rendering Work:**
+- Render function for `memory` tool
 - Automatic coverage measurement visualization
 - Performance telemetry
 

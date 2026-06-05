@@ -93,14 +93,33 @@
 | **Test Failure Rate** | 0% | |
 | **Test Count** | 449 | (+1 test) |
 
+## Round 11 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 11 | TUI rendering for branch tool |
+| **Tasks Completed** | 1 | |
+| **Test Failure Rate** | 0% | |
+| **Test Count** | 449 | (no new tests) |
+
+## Round 12 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 12 | Extension template generator tool added |
+| **Tasks Completed** | 1 | |
+| **Test Failure Rate** | 0% | |
+| **Test Count** | 458 | (+9 tests) |
+
 ## Trends
 
-- Test count increased from 425 to 449 overall (+24 tests)
+- Test count increased from 425 to 458 overall (+33 tests)
 - Build time stable ~2s
 - All tests pass consistently
-- Added custom TUI components for code-health, git, session-info, format, metrics
+- Added custom TUI components for code-health, git, session-info, format, metrics, branch
 - Coverage reporting available via test tool with parsed summary
 - Security scanning with low false positive rate (excluding docs and test files)
+- Extension template generator reduces boilerplate and ensures consistent tool/provider/hook patterns
 
 ## Planned Improvements
 
