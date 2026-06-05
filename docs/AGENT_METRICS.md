@@ -111,6 +111,15 @@
 | **Test Failure Rate** | 0% | |
 | **Test Count** | 458 | (+9 tests) |
 
+## Round 13 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 13 | Integration tests for extension registration |
+| **Tasks Completed** | 1 | |
+| **Test Failure Rate** | 0% | |
+| **Test Count** | 465 | (+7 tests) |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)

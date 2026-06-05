@@ -30,3 +30,4 @@
 - [x] Test tool now parses coverage summary (R10)
 - [x] Add TUI rendering for `branch` tool (R11)
 - [x] Add `extension-template-generator` tool with scaffolding (R12)
+- [x] Add integration tests for extension registration (R13)

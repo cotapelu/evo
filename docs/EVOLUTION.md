@@ -41,6 +41,7 @@
 
 **Completed:**
 - Extension template generator tool (Round 12)
+- Integration tests for extension registration (Round 13)
 
 **Initiatives (Pending):**
 - E2E test suite for full agent session

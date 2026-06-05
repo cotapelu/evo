@@ -13,6 +13,7 @@
 - **Signature Sensitivity**: initial implementation of `code-health` tool forgot to type `_onUpdate` parameter, causing type errors. Requires careful attention to callback types.
 - **Test Quality**: early test for `git-tool` had an extra argument error that was only caught by failing test. Could benefit from writing tests alongside implementation (TDD).
 - **Documentation**: Tool snippets in promptSnippets require careful string quoting to avoid syntax errors.
+- **Integration Gaps**: lacked tests to verify all extensions load and register correctly. Now addressed with registration integration tests (Round 13).
 
 ## Common Failure Modes
 
