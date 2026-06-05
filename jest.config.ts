@@ -10,7 +10,10 @@ const config: Config = {
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@earendil-works/pi-coding-agent$': '<rootDir>/node_modules/@earendil-works/pi-coding-agent/dist/index.js',
+    '^@earendil-works/pi-coding-agent/(.*)$': '<rootDir>/node_modules/@earendil-works/pi-coding-agent/dist/$1',
   },
+
   testMatch: ['**/src/**/__tests__/**/*.test.ts'],
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { useESM: true }],

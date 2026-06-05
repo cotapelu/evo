@@ -6,7 +6,7 @@
 
 ## Medium Priority
 
-- [ ] Write E2E tests for full agent session
+- (none)
 
 ## Completed
 
