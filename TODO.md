@@ -8,7 +8,17 @@
 
 ## Medium Priority
 
-- (none)
+- [ ] Increase test coverage for low-covered tools (target overall ≥80%):
+  - todos-tool (~28% → 60%)
+  - memory-tool (~18% → 50%)
+  - notes-tool (~8% → 40%)
+  - tool-metrics-tool (0% → 40%)
+  - watch-tool (~40% → 70%)
+  - coverage-history-tool (0% → 40%)
+  - git-tool (~13% → 50%)
+  - branch (~2% → 40%)
+  - code-health (~2% → 40%)
+  - session-info (~5% → 40%)
 
 ## Completed
 

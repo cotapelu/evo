@@ -211,6 +211,16 @@
 | **Test Count** | 507 | (+3 tests) |
 | **Measured Coverage** | ~18% | ESM coverage collection currently inaccurate; actual coverage likely higher; measurement fix in progress |
 
+## Round 24 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 24 | Coverage collection fixed; Jest ESM instrumentation stable |
+| **Tasks Completed** | 2 | about-command error test, extensionLoader test |
+| **Test Failure Rate** | 0% | All 506 tests pass |
+| **Test Count** | 506 | |
+| **Measured Coverage** | ~66.5% | (statements) Coverage collection now accurate via `npm test -- --coverage` |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)
