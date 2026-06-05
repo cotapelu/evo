@@ -3,7 +3,6 @@
 ## High Priority
 
 - [ ] Write E2E tests for full agent session
-- [ ] Add render functions for `memory` tool
 - [ ] Measure and display coverage trends over time
 
 ## Medium Priority
@@ -31,3 +30,4 @@
 - [x] Add `extension-template-generator` tool with scaffolding (R12)
 - [x] Add integration tests for extension registration (R13)
 - [x] Add `watch` tool to auto-run commands on file changes (R14)
+- [x] Add `coverage` tool to display code coverage summary (R15)
