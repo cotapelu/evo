@@ -2,7 +2,9 @@
 
 ## High Priority
 
-- (none)
+- [ ] Fix Jest coverage collection for ESM modules (blocking accurate coverage measurement)
+- [ ] Increase test coverage for low-covered tools: todos-tool, memory-tool, notes-tool, tool-metrics-tool, watch-tool, coverage-tool, coverage-history-tool, git-tool, branch, code-health, session-info
+- [ ] Exclude non-relevant files from coverage (entry points, team subprocess code) to reflect realistic targets
 
 ## Medium Priority
 
@@ -31,5 +33,7 @@
 - [x] Add `notes` tool for session-scoped scratchpad (R18)
 - [x] Add `/cancel` command to abort running operations (R19)
 - [x] Refactor common tool patterns into base classes (R20)
-- [x] Implement metrics collection (tool execution times, error rates) (R21)
+- [x] Implement metrics collection for tool execution times and error rates (R21)
 - [x] Write E2E tests for full agent session (R22)
+- [x] Add tests for about-command error path (R23)
+- [x] Add tests for extensionLoader (R23)

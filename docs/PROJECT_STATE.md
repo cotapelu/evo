@@ -38,7 +38,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 504 passing, 0 failing
+- **Tests:** 507 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
 - **Code Coverage:** Measured via jest --coverage; summary available through test tool
 

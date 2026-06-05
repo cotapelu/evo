@@ -205,10 +205,11 @@
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| **Iteration** | 23 | Coverage improvement planned; current statements 66.45%, target ≥80% |
-| **Tasks Completed** | 0 | |
+| **Iteration** | 23 | Coverage improvement in progress; ESM instrumentation issues identified; added about-command error test and extensionLoader test |
+| **Tasks Completed** | 2 | Analysis complete, about-command branch coverage added |
 | **Test Failure Rate** | 0% | |
-| **Test Count** | 504 | |
+| **Test Count** | 507 | (+3 tests) |
+| **Measured Coverage** | ~18% | ESM coverage collection currently inaccurate; actual coverage likely higher; measurement fix in progress |
 
 ## Trends
 
