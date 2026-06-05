@@ -7,6 +7,7 @@
 export { registerTodosTool } from "./todos-tool.js";
 export { registerMemoryTool } from "./memory-tool.js";
 
+export { registerBranchTool } from "./branch.js";
 
 
 export { registerKicadSchTool } from "./kicad-sch.js";
