@@ -3,7 +3,6 @@
 ## High Priority
 
 - [ ] Write E2E tests for full agent session
-- [ ] Measure and display coverage trends over time
 
 ## Medium Priority
 
@@ -32,3 +31,4 @@
 - [x] Add `watch` tool to auto-run commands on file changes (R14)
 - [x] Add `coverage` tool to display code coverage summary (R15)
 - [x] Add global `/about` command to show system info (R16)
+- [x] Measure and display coverage trends over time via `coverage-history` tool (R17)

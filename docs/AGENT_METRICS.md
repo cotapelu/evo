@@ -147,6 +147,15 @@
 | **Test Failure Rate** | 0% | |
 | **Test Count** | 480 | (+3 tests) |
 
+## Round 17 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 17 | Coverage history tool + auto-persist |
+| **Tasks Completed** | 1 | |
+| **Test Failure Rate** | 0% | |
+| **Test Count** | 485 | (+5 tests) |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)
