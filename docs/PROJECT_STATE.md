@@ -38,7 +38,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 503 passing, 0 failing
+- **Tests:** 504 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
 - **Code Coverage:** Measured via jest --coverage; summary available through test tool
 
@@ -57,7 +57,8 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Session-scoped `notes` tool for temporary scratchpad
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
-- Strong test suite with 503 passing tests
+- E2E test for full agent session
+- Strong test suite with 504 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 
 ## Roadmap

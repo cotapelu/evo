@@ -2,7 +2,7 @@
 
 ## High Priority
 
-- [ ] Write E2E tests for full agent session
+- (none)
 
 ## Medium Priority
 
@@ -32,3 +32,4 @@
 - [x] Add `/cancel` command to abort running operations (R19)
 - [x] Refactor common tool patterns into base classes (R20)
 - [x] Implement metrics collection (tool execution times, error rates) (R21)
+- [x] Write E2E tests for full agent session (R22)

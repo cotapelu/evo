@@ -47,9 +47,10 @@
 - Notes tool & /cancel command (R18-19)
 - Refactored common tool patterns into base-tool utility (R20)
 - Metrics collection for tool execution times and error rates (R21)
+- E2E test suite for full agent session (R22)
 
 **Initiatives (Pending):**
-- E2E test suite for full agent session
+- (none)
 
 **Remaining Work:**
 - (none)
