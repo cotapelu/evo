@@ -53,6 +53,7 @@
 - Added tests for tool-metrics-tool and default extension (R26)
 - Added render and onUpdate tests for code-health tool (R27)
 - Added render and fallback tests for session-info tool (R28)
+- Added render tests for branch tool (R29)
 
 **Initiatives (Pending):**
 - (none)

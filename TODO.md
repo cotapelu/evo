@@ -52,3 +52,4 @@
 - [x] Added tests for tool-metrics-tool (7 tests) and default extension (5 tests) (R26)
 - [x] Added render and onUpdate tests for code-health tool (R27)
 - [x] Added render and fallback tests for session-info tool (R28)
+- [x] Added render tests for branch tool (R29)

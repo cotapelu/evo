@@ -248,4 +248,48 @@ describe('Branch Tool', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Missing action');
   });
+
+  // Additional coverage: render functions
+  test('renderCall produces Text', () => {
+    const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s } as any;
+    const txt = tool.renderCall({ action: 'list_leaves' }, theme);
+    expect(txt).toBeDefined();
+  });
+
+  test('renderResult for list_leaves success', () => {
+    const theme = { fg: (c: string, s: string) => s, success: (s: string) => s, dim: (s: string) => s } as any;
+    const result = tool.renderResult({
+      details: {
+        leaves: [
+          { id: '1', label: undefined, is_leaf: true },
+          { id: '2', label: 'v1', is_leaf: true }
+        ]
+      }
+    }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
+
+  test('renderResult for list_labels success', () => {
+    const theme = { fg: (c: string, s: string) => s, accent: (s: string) => s } as any;
+    const result = tool.renderResult({
+      details: {
+        labels: [
+          { id: 'l1', target_id: '2', label: 'v1', timestamp: 't' }
+        ]
+      }
+    }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
+
+  test('renderResult for error', () => {
+    const theme = { fg: (c: string, s: string) => s, error: (s: string) => s } as any;
+    const result = tool.renderResult({ isError: true }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
+
+  test('renderResult for partial', () => {
+    const theme = { fg: (c: string, s: string) => s, warning: (s: string) => s } as any;
+    const result = tool.renderResult({}, { expanded: false, isPartial: true }, theme);
+    expect(result).toBeDefined();
+  });
 });

@@ -261,6 +261,16 @@
 | **Test Count** | 530 | (+4 tests) |
 | **Measured Coverage** | ~71.2% | Slight dip due to measurement variance; session-info coverage now 97% |
 
+## Round 29 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 29 | Added missing render tests for branch tool |
+| **Tasks Completed** | 1 | Added 4 render tests to branch.test.ts (call, result states) |
+| **Test Failure Rate** | 0% | All 535 tests pass |
+| **Test Count** | 535 | (+5 tests) |
+| **Measured Coverage** | ~72.0% | Branch tool statements increased from 64% to 85.3% |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)
