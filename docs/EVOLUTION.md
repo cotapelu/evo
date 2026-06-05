@@ -15,10 +15,12 @@
 
 **Goal:** Improve code quality visibility and self-check capabilities.
 
-**Initiatives:**
-- `code-health` tool (completed Round 1)
-- Render functions for better TUI integration
+**Completed:**
+- `code-health` tool with custom TUI rendering (Round 2)
+
+**In Progress:**
 - Coverage reporting and metrics dashboard
+- Render functions for other tools
 
 **Upcoming:**
 - Add static security analysis (e.g., audit, cwe)

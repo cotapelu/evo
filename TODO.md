@@ -2,8 +2,9 @@
 
 ## High Priority
 
-- [ ] Implement TUI render functions for `code-health` tool (summary visualization)
+- [x] Implement TUI render functions for `code-health` tool (summary visualization)
 - [ ] Add coverage reporting to `test` tool (--coverage flag)
+- [ ] Add render functions for `todos` tool (improve visuals)
 - [ ] Write integration tests for tool registration (ensure all tools register)
 - [ ] Add `security-audit` tool (runs npm audit, inspect dependencies)
 - [ ] Add `complexity` tool (cyclomatic complexity analysis)

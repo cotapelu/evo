@@ -148,7 +148,62 @@ function createCodeHealthTool(api: ExtensionAPI): ToolDefinition<any, any> {
         isError: hasFailure, // Tool call is considered error if any check fails
       };
     },
+    renderCall: renderCodeHealthCall,
+    renderResult: renderCodeHealthResult,
   };
+}
+
+function renderCodeHealthCall(args: any, theme: any): Text {
+  const checksArg = (args && typeof args === 'object' && args.checks);
+  let checksList: string;
+  if (Array.isArray(checksArg)) {
+    checksList = checksArg.join(', ');
+  } else {
+    checksList = 'lint, typecheck, test, build';
+  }
+  const text = `${theme.fg("toolTitle", theme.bold("code-health"))} ${theme.fg("muted", `audit [${checksList}]`)}`;
+  return new Text(text, 0, 0);
+}
+
+function renderCodeHealthResult(result: any, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
+  if (options.isPartial) {
+    return new Text(theme.fg("warning", "Running checks..."), 0, 0);
+  }
+
+  const details = result.details;
+  if (!details) {
+    return new Text("", 0, 0);
+  }
+
+  const checks = details.checks || [];
+  const lines: string[] = [];
+  lines.push(theme.fg("toolTitle", `Code Health`));
+  lines.push('');
+
+  for (const ch of checks) {
+    const icon = ch.success ? '✅' : '❌';
+    const color = ch.success ? 'success' : 'error';
+    const name = theme.fg('accent', ch.name.padEnd(12));
+    const status = ch.success ? theme.fg('success', `exit ${ch.exitCode}`) : theme.fg('error', `exit ${ch.exitCode}`);
+    lines.push(`  ${icon} ${name}  ${status}`);
+    if (!ch.success && ch.stderr) {
+      const errLines = ch.stderr.split('\n').slice(0, 2);
+      for (const el of errLines) {
+        lines.push(`      ${theme.fg("dim", el)}`);
+      }
+    }
+  }
+
+  lines.push('');
+  const failedCount = checks.filter((c: any) => !c.success).length;
+  const overallMsg = checks.length === 0
+    ? theme.fg("dim", "No checks")
+    : (details.overallSuccess
+        ? theme.fg("success", `✅ All ${checks.length} checks passed`)
+        : theme.fg("error", `⚠️ ${failedCount}/${checks.length} failed`));
+  lines.push(overallMsg);
+
+  return new Text(lines.join('\n'), 0, 0);
 }
 
 export function registerCodeHealthTool(api: ExtensionAPI): void {

@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-05 (Evolution Round 1)
+**Last Updated:** 2026-06-05 (Evolution Round 2)
 
 ## Overview
 
@@ -15,7 +15,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `session-info` – Statistics about the current session
 - `test` – Runs project tests (npm test) with optional pattern
 - `git` – Git operations: status, diff, commit, add, push, pull, log
-- `code-health` – Aggregated code quality checks: lint, type-check, test, build *(NEW)*
+- `code-health` – Aggregated code quality checks: lint, type-check, test, build with custom TUI rendering *(NEW)*
 - `kicad-sch` / `kicad-pcb` – KiCad schematic/PCB manipulation
 - `team` – Collaborative multi-agent operations (claim tasks, workspace sharing, messaging)
 
