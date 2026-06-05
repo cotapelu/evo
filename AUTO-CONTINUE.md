@@ -1,194 +1,221 @@
-# AUTO-CONTINUE.md
+# AUTO-CONTINUE.md - Optimized Agent Workflow
+*Version: v2.1 Compact (AGENTS.md compliant)*
 
-LLM Agent = autonomous Senior Software Engineer, not autocomplete.
+---
 
-Think independently, make decisions, compare tradeoffs, and improve continuously.
+## WORKFLOW (MANDATORY)
 
-## Workflow
+```
+Analyze → Clarify → Plan → Test(fail) → Implement → Refactor → Optimize → Verify
 
-Analyze → Design → Define contracts → Verify plan → Write failing tests → Implement → Pass tests → Refactor → Re-test → Profile → Optimize → Final verification
+LOOP: while failed || improvable || not_minimal:
+  detect → improve → test → verify
+```
 
-Contracts define:
+---
 
-* goals
-* inputs/outputs
-* constraints
-* invariants
-* edge cases
-* failure modes
-* success criteria
+## SESSION START (BẮT BUỘC)
 
-## Uncertainty
+Mỗi session mới hoặc sau khi đọc codebase mới:
 
-If missing information affects correctness, security, or architecture: ask.
+1. Đọc toàn bộ repository
+2. Đọc `docs/PROJECT_STATE.md` (nếu có)
+3. Hiểu capabilities và failures hiện tại
+4. Xác định next highest-impact task
+5. Implement improvements
+6. Run tests/builds với tools
+7. Update `PROJECT_STATE.md`
+8. Update `TODO.md` với completed và follow-ups
 
-Otherwise continue with labeled assumptions:
-[Assumption] [Inference] [Risk] [Tradeoff] [Unverified]
+---
 
-Do not invent:
+## CONTINUOUS LOOP MODE
 
-* APIs
-* framework behavior
-* library capabilities
-* benchmark results
-* environment behavior
+Default: continuous evolution. Sau khi complete iteration, phải identify next highest-impact TODO và tiếp tục work, ngay cả khi không có user prompt mới, UNLESS:
+- User explicitly tells you to stop/pause
+- Tests/builds fail và cần clarification
+- Không còn actionable TODO items
 
-## Priorities
+---
 
-Correctness → Security → Reliability → Maintainability → Simplicity → Performance → Extensibility
+## EVOLUTION & SELF-IMPROVEMENT (CORE)
 
-## Engineering Rules
+**Mỗi vòng loop phải update evolution files:**
 
-Prefer the simplest correct, readable, testable, maintainable solution.
+- `docs/AGENT_METRICS.md`: Iterations/task, test failure rate, rollback count, regressions, MTTR
+- `docs/AGENT_PROFILE.md`: Tasks thường fail, weak languages/stacks, fragile modules, weaknesses
+- `docs/EVOLUTION.md`: Trajectory changes, planned refactors, anticipated debt updates
 
-Reject:
+**Meta-Goal:** System breaks less, fixes faster, plans further ahead, ít repeated mistakes.
 
-* overengineering
-* premature abstraction
-* unnecessary frameworks/dependencies
-* speculative optimization
-* duplication
-* hidden side-effects
-* code bloat
+---
 
-Prefer:
+## GIT COMMIT (MANDATORY)
 
-* readability over cleverness
-* explicitness over hidden behavior
-* determinism over nondeterminism
-* simple architecture over abstraction layers
+**SAU KHI HOÀN THÀNH MỘT VÒNG LOOP:**
 
-Avoid:
+```bash
+git add -A
+git commit -m "chore: evolution round - <brief description>"
+```
 
-* magic behavior
-* hidden mutation
-* implicit coupling
-* unnecessary indirection
+Chỉ sau git commit xong thì mới bắt đầu vòng mới.
 
-## Continuous Improvement
+---
 
-Loop:
-detect → improve → verify → benchmark → re-test
+## MENTAL TESTING (KHÔNG VIẾT CODE)
 
-Continue while:
+- Tưởng tượng valid/invalid/null/edge cases
+- Từng nhánh logic được cover?
+- Error paths được handle?
+- Data flow cả 2 chiều (UI→DB và DB→UI)
+- Nếu thiếu → VIẾT THÊM code (không skip)
 
-* tests fail
-* correctness is uncertain
-* measurable quality can improve
-* unnecessary complexity exists
+---
 
-Stop when:
+## CODE PRESERVATION (KHÔNG XÓA)
 
-* requirements pass
-* risks are documented
-* verification succeeds
-* further changes provide low measurable value
+**Debug bắt buộc:**
+1. Đọc toàn bộ file (không chỉ đoạn suspected)
+2. Hiểu context: dependencies, structure, related logic
+3. Tìm root cause: check braces, imports, async/sync, lifetimes
+4. Incremental: add debug prints, isolate sections, test hypotheses từng bước
+5. Systematic: Read → Understand → Isolate → Test → Verify
 
-## TDD
+**Nếu vẫn fail:** Consult team, review git history, pair programming, disable feature tạm thời thay vì xóa code, luôn có plan restore.
 
-Default workflow:
-test → fail → implement → pass → refactor → re-test
+**Cấm tuyệt đối:** Xóa code để pass test, "vá áo" fix tạm thời, chấp nhận degradation.
 
-Include when relevant:
+---
 
-* happy path
-* edge cases
-* invalid input
-* regression tests
-* stress tests
-* integration/security/concurrency tests
+## CHANGE COST & RISK
 
-Tests must be deterministic, isolated, and repeatable.
+**Mỗi Feature/Refactor/Migration phải assess:**
+- Engineering cost (hours/days)
+- Risk: **Low** / **Medium** / **High**
+- Estimated rollback time
 
-## Implementation Rules
+**Prefer:** Low-risk, high-impact > high-risk, aesthetic/speculative.
 
-* Output complete working code for affected scope
-* No placeholders, fake logic, or fake success
-* Make precise isolated changes
-* Do not break unrelated behavior/config/style/comments
-* Remove redundancy and useless abstraction
-* Remove dead code when safe and verified
-* Prefer standard library before adding dependencies
-* New dependencies require justification
+---
 
-## Optimization
+## MISSING CODE = WRITE MORE
 
-Correctness first:
-implement → verify → profile → optimize → re-test
+- Nếu thiếu feature, API, logic, edge case → **VIẾT THÊM**
+- KHÔNG skip vì "không yêu cầu"
+- KHÔNG remove code để simplify
+- KHÔNG pass nhanh bằng cách giảm scope
+- **App phải ngày càng hoàn thiện**, không less complete
 
-Do not optimize without evidence.
+---
 
-State time/space complexity for nontrivial algorithms.
+## SKILL INTEGRATION (6+ REQUIRED)
 
-## Reliability & Observability
+Đọc skill file trước khi modify:
 
-Systems should:
+| Skill | Use Case |
+|-------|----------|
+| `angular-modular-architect` | Angular SPA |
+| `backend-db-pattern` | Database (4 steps) |
+| `code-review` | Cleanup |
+| `dotnet-modular-architect` | .NET monolith |
+| `erp-architect` | Fullstack ERP |
+| `iam-platform-layer` | Auth/Security |
+| `go-architect` | Go services |
+| `python-architect` | Python apps |
+| `react-architect` | React apps |
+| `rust-architect` | Rust systems |
 
-* produce actionable errors
-* expose meaningful logs/metrics
-* have traceable failures
-* avoid flaky behavior
-* avoid hidden global state
-* avoid uncontrolled randomness
+---
 
-Concurrency-sensitive systems must define synchronization and recovery behavior.
+## DEBUGGING CHECKLIST
 
-## Security
+**Systematic Process:**
+1. Read entire file (mọi dòng, imports)
+2. Understand context (structure, related logic)
+3. Isolate problem (reproduction case)
+4. Test hypotheses (debug prints, unit tests)
+5. Verify fix (no regression)
 
-Validate and sanitize all external input.
+**Per-file:**
+- [ ] Đọc toàn bộ file trước khi modify
+- [ ] Identify root cause (không skip)
+- [ ] Check braces, parentheses, indentation
+- [ ] Verify async/await, promises
+- [ ] Check lifetimes (memory, connections)
+- [ ] Review error logs full context
+- [ ] Add debug output nếu cần
+- [ ] Isolate section bằng comments
+- [ ] Test hypotheses từng bước
+- [ ] Verify happy & error paths
 
-Avoid:
+**Nếu vẫn fail:** Consult team, review git history, disable feature tạm thời (không xóa), plan restore.
 
-* insecure defaults
-* injection vulnerabilities
-* race conditions
-* unsafe state transitions
-* secret leakage
+**Cấm:** Xóa code để pass, vá áo, chấp nhận degradation.
 
-## If Stuck
+---
 
-Log:
+## QUICK REFERENCE
 
-* issue
-* attempts
-* risks
-* unknowns
-* rejected approaches
+**Mental Test Prompt:**
+`Inputs/Outputs/Branches/Errors/DataFlow(UI↔DB)/Security/Performance/Concurrency/State/Observability`
 
-Then try alternative approaches systematically.
+**Quality Gate Checklist:**
+```
+[✔] Funcs≤20 | Comp≤10 | No dup5 | 100% ErrHnd | 100% Val | No secrets | Testable
+[✔] Cov≥80% | Tests pass | No 12 anti-patterns | Devil's advocate | Mental test done
+[✔] Flow coverage (UI→DB & DB→UI) | Missing code written | Code preserved
+[✔] Risk assessed (Low/Med/High) | Git committed
+```
 
-## Forbidden
+**Risk Levels:**
+- **Low**: Docs, refactor same module, add tests, fix typos
+- **Medium**: Add feature, modify API, change DB schema
+- **High**: Rewrite core, change architecture, security fix
 
-* fabricated correctness
-* fake verification
-* skipped tests
-* hidden uncertainty
-* unverifiable claims
-* misleading benchmarks
-* silent breaking changes
+**Git Commit Format:**
+```
+feat: <description>
+fix: <description>
+refactor: <description>
+chore: evolution round - <description>
+```
 
-## Final Verification
+---
 
-Verify with:
+## PRINCIPLES & SCOPE & TARGETS
 
-* tests
-* static analysis
-* runtime validation
-* regression checks
-* security checks
-* performance checks
+**Principles:**
+- Simplicity-first (200→50 lines)
+- No over-engineering
+- Declarative > Imperative
+- Readable > Clever
 
-## Definition of Done
+**Scope:**
+- **Out:** DevOps, Infra, CI/CD, Deployment, Cloud, Ops, Meetings
+- **In:** Security, Testing, Bug Fix, Code Quality, Performance, Scalability
 
-Done means:
+**Targets:**
+- Coverage ≥80%
+- Functions ≤20 lines
+- Complexity ≤10
+- Security 100%
+- Self-Score ≥90
 
-* requirements satisfied
-* tests passing
-* no known regressions
-* behavior verified
-* assumptions documented
-* code minimal, clear, maintainable
-* no significant unresolved improvements remain
+---
 
-Completion requires evidence, not assumption.
+## DONE & ANTI-SLOP
 
+**DONE:**
+- Requirements met
+- Tests 100% pass
+- Minimal & clear code
+- No hidden assumptions
+- No regression
+
+**ANTI-SLOP (STRICT):**
+Bloat, abstraction, side effects, duplication, premature optimization = FORBIDDEN
+
+---
+
+*v2.1 Compact: ~135 lines. Evolution-focused workflow with all critical features.*
