@@ -165,4 +165,66 @@ describe('Code Health Tool', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('No valid checks');
   });
+
+  // Additional coverage tests
+  test('renderCall produces Text for default checks', () => {
+    const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s } as any;
+    const txt = tool.renderCall({}, theme);
+    expect(txt).toBeDefined();
+  });
+
+  test('renderCall produces Text for custom checks', () => {
+    const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s } as any;
+    const txt = tool.renderCall({ checks: ['lint', 'test'] }, theme);
+    expect(txt).toBeDefined();
+  });
+
+  test('renderResult shows partial state', () => {
+    const theme = { fg: (c: string, s: string) => s, warning: (s: string) => s } as any;
+    const txt = tool.renderResult({}, { expanded: false, isPartial: true }, theme);
+    expect(txt).toBeDefined();
+  });
+
+  test('renderResult shows final result with successful checks', () => {
+    const theme = { fg: (c: string, s: string) => s, success: (s: string) => s, error: (s: string) => s, accent: (s: string) => s, dim: (s: string) => s } as any;
+    const result = tool.renderResult({
+      details: {
+        checks: [
+          { name: 'lint', success: true, exitCode: 0, stderr: '' },
+          { name: 'test', success: true, exitCode: 0, stderr: '' }
+        ],
+        overallSuccess: true
+      }
+    }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
+
+  test('renderResult shows final result with failures', () => {
+    const theme = { fg: (c: string, s: string) => s, success: (s: string) => s, error: (s: string) => s, accent: (s: string) => s, dim: (s: string) => s } as any;
+    const result = tool.renderResult({
+      details: {
+        checks: [
+          { name: 'lint', success: false, exitCode: 1, stderr: 'error' }
+        ],
+        overallSuccess: false
+      }
+    }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
+
+  test('execute calls onUpdate for each check start', async () => {
+    api.exec.mockImplementation(async () => ({ stdout: '', stderr: '', code: 0 }));
+    const onUpdate = jest.fn();
+    const ctx = createMockContext();
+    await tool.execute('1', {}, undefined, onUpdate, ctx);
+    // onUpdate should have been called 4 times (for each default check)
+    expect(onUpdate).toHaveBeenCalledTimes(4);
+    // Each call should have { type: 'progress', check: <name>, status: 'running' }
+    const calls = onUpdate.mock.calls as any[][];
+    expect(calls[0][0]).toEqual(expect.objectContaining({ type: 'progress', status: 'running' }));
+    expect(calls[0][0].check).toBe('lint');
+    expect(calls[1][0].check).toBe('typecheck');
+    expect(calls[2][0].check).toBe('test');
+    expect(calls[3][0].check).toBe('build');
+  });
 });
