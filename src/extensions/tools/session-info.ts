@@ -8,6 +8,38 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
+
+function renderSessionInfoCall(args: any, theme: any): Text {
+  const text = `${theme.fg("toolTitle", theme.bold("session_info"))} ${theme.fg("muted", "info")}`;
+  return new Text(text, 0, 0);
+}
+
+function renderSessionInfoResult(result: any, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
+  if (options.isPartial) {
+    return new Text(theme.fg("warning", "Loading..."), 0, 0);
+  }
+  const info = result.details;
+  if (!info) {
+    return new Text("", 0, 0);
+  }
+
+  const lines: string[] = [
+    theme.fg("toolTitle", `Session Info`),
+    `  ${theme.fg("accent", "Session ID")}: ${info.session_id}`,
+    `  ${theme.fg("accent", "CWD")}: ${info.cwd}`,
+    `  ${theme.fg("accent", "Leaf")}: ${info.leaf_id ?? 'none'}`,
+    `  ${theme.fg("accent", "Entries")}: ${info.total_entries}`,
+    `  ${theme.fg("accent", "Messages")}: ${info.message_count}`,
+    `  ${theme.fg("accent", "Compactions")}: ${info.compaction_count}`,
+    `  ${theme.fg("accent", "Branches")}: ${info.branch_summary_count}`,
+    `  ${theme.fg("accent", "Labels")}: ${info.label_count}`,
+    `  ${theme.fg("accent", "Est. Tokens")}: ${info.estimated_tokens}`,
+    `  ${theme.fg("accent", "Root Nodes")}: ${info.root_nodes}`,
+  ];
+
+  return new Text(lines.join('\n'), 0, 0);
+}
 
 function createSessionInfoTool(): ToolDefinition<any, any> {
   return {
@@ -64,6 +96,8 @@ function createSessionInfoTool(): ToolDefinition<any, any> {
         };
       }
     },
+    renderCall: renderSessionInfoCall,
+    renderResult: renderSessionInfoResult,
   };
 }
 
