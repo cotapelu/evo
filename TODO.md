@@ -6,11 +6,8 @@
 
 ## Medium Priority
 
-- [ ] Add global `about` command to show system info
-- [ ] Add `notes` tool for quick scratchpad
 - [ ] Implement metrics collection (tool execution times, error rates)
 - [ ] Refactor common tool patterns into base classes
-- [ ] Add ability to cancel running tools via UI
 
 ## Completed
 
@@ -33,3 +30,4 @@
 - [x] Add global `/about` command to show system info (R16)
 - [x] Measure and display coverage trends over time via `coverage-history` tool (R17)
 - [x] Add `notes` tool for session-scoped scratchpad (R18)
+- [x] Add `/cancel` command to abort running operations (R19)
