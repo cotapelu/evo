@@ -7,7 +7,8 @@
  */
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
-import { registerTodosTool, registerMemoryTool, registerBranchTool, registerSessionInfoTool, registerTestRunnerTool, registerGitTool, registerKicadSchTool, registerKicadPcbTool, registerCodeHealthTool, registerFormatTool, registerMetricsTool, registerSecurityAuditTool, registerExtensionTemplateGeneratorTool, registerWatchTool, registerCoverageTool, registerCoverageHistoryTool, registerNotesTool } from "./tools/index.js";
+import { registerTodosTool, registerMemoryTool, registerBranchTool, registerSessionInfoTool, registerTestRunnerTool, registerGitTool, registerKicadSchTool, registerKicadPcbTool, registerCodeHealthTool, registerFormatTool, registerMetricsTool, registerSecurityAuditTool, registerExtensionTemplateGeneratorTool, registerWatchTool, registerCoverageTool, registerCoverageHistoryTool, registerNotesTool, registerToolMetricsTool } from "./tools/index.js";
+import metricsCollector from "./metrics-collector.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
 import aboutCommand from "./about-command.js";
 import cancelCommand from "./cancel-command.js";
@@ -20,6 +21,7 @@ export default function (api: import("@earendil-works/pi-coding-agent").Extensio
   // PROVIDERS
   // ============================================
   registerKiloProvider(api);
+  metricsCollector(api);
 
   // ============================================
   // CUSTOM TOOLS
@@ -41,6 +43,7 @@ export default function (api: import("@earendil-works/pi-coding-agent").Extensio
   registerCoverageTool(api);
   registerCoverageHistoryTool(api);
   registerNotesTool(api);
+  registerToolMetricsTool(api);
 
   // ============================================
   // EXTENSIONS (Event Handlers, UI, etc.)
