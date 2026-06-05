@@ -16,6 +16,31 @@
 
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { Text } from '@earendil-works/pi-tui';
+
+function renderBranchCall(args: any, theme: any): Text {
+  const action = args.action || 'unknown';
+  const text = `${theme.fg("toolTitle", theme.bold("branch"))} ${theme.fg("muted", action)}`;
+  return new Text(text, 0, 0);
+}
+
+function renderBranchResult(result: any, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
+  if (options.isPartial) {
+    return new Text(theme.fg("warning", "Loading..."), 0, 0);
+  }
+  const details = result.details;
+  if (!details) return new Text("", 0, 0);
+  if (details.error) return new Text(theme.fg("error", `Error: ${details.error}`), 0, 0);
+  const lines: string[] = [];
+  if (details.leaves) lines.push(`${theme.fg("accent", "Leaves")}: ${details.leaves.length}`);
+  if (details.labels) lines.push(`${theme.fg("accent", "Labels")}: ${details.labels.length}`);
+  if (details.entry) lines.push(`${theme.fg("accent", "Entry")}: ${details.entry.id} (${details.entry.type})`);
+  if (details.leaf) lines.push(`${theme.fg("accent", "Leaf")}: ${details.leaf.id}`);
+  if (details.branch) lines.push(`${theme.fg("accent", "Branch path")}: ${details.branch.length} entries`);
+  if (details.tree) lines.push(`${theme.fg("accent", "Tree")}: ${details.tree.length} root nodes`);
+  if (lines.length === 0) lines.push(theme.fg("dim", "No data"));
+  return new Text(lines.join('\n'), 0, 0);
+}
 
 function createBranchTool(): ToolDefinition<any, any> {
   return {
@@ -174,6 +199,8 @@ function createBranchTool(): ToolDefinition<any, any> {
         };
       }
     },
+    renderCall: renderBranchCall,
+    renderResult: renderBranchResult,
   };
 }
 
