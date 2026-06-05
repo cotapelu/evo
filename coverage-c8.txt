@@ -1,0 +1,818 @@
+  console.log
+    [TeamRegistry] Registered team test-failure-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-failure-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-failure-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-ws-concurrency
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-failure-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-failure-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-failure-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-failure-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-ws-concurrency
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-ws-concurrency
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-ws-concurrency
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-ws-concurrency
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-ws-concurrency
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-ws-concurrency
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-ws-concurrency
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-ws-concurrency
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-zombie-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-zombie-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-zombie-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-zombie-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-zombie-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    Average claim time: 0.01ms
+
+      at Object.log (src/extensions/team/__tests__/team-claim-performance.test.ts:137:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team test-perf-team
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-perf-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team team-1
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-1
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team team-2
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-2
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team team-3
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-3
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-3
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Auto-disposed team team-3 after inactivity
+
+      at TeamRegistry.log [as autoDisposeTeam] (src/extensions/team/team-manager.ts:891:17)
+
+  console.log
+    [TeamRegistry] Registered team team-4
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-4
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team team-5
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-5
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Registered team team-6
+
+      at TeamRegistry.log [as register] (src/extensions/team/team-manager.ts:842:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-6
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team team-6
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Auto-disposed team team-6 after inactivity
+
+      at TeamRegistry.log [as autoDisposeTeam] (src/extensions/team/team-manager.ts:891:17)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.log
+    [TeamRegistry] Unregistered team test-team
+
+      at TeamRegistry.log [as unregister] (src/extensions/team/team-manager.ts:848:13)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:60:20)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:71:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:77:23)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:88:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:92:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:100:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:104:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:112:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:116:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:124:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:137:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:145:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:157:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:159:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:172:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:204:5)
+
+  console.error
+    [TodosTool] Failed to send system notification: api.sendMessage is not a function
+
+      871 |           } catch (e) {
+      872 |             // Non-critical: system message failure shouldn't break the tool
+    > 873 |             console.error('[TodosTool] Failed to send system notification:', e instanceof Error ? e.message : e);
+          |                     ^
+      874 |           }
+      875 |         }
+      876 |
+
+      at Object.error [as execute] (src/extensions/tools/todos-tool.ts:873:21)
+      at Object.<anonymous> (src/extensions/tools/__tests__/todos-tool.test.ts:225:23)
+
+  console.log
+    DEBUG result: {
+      "content": [
+        {
+          "type": "text",
+          "text": "🔍 Code Health Check Results:\n\n✅ lint: exit 0\n✅ typecheck: exit 0\n✅ test: exit 0\n✅ build: exit 0\n\n✅ All 4 checks passed.\n\nDetails:\n- lint: npm run lint (exit 0)\n- typecheck: npx tsc --noEmit (exit 0)\n- test: npm test (exit 0)\n- build: npm run build (exit 0)"
+        }
+      ],
+      "details": {
+        "checks": [
+          {
+            "name": "lint",
+            "command": "npm run lint",
+            "args": [
+              "run",
+              "lint"
+            ],
+            "exitCode": 0,
+            "stdout": "OK",
+            "stderr": "",
+            "success": true
+          },
+          {
+            "name": "typecheck",
+            "command": "npx tsc --noEmit",
+            "args": [
+              "tsc",
+              "--noEmit"
+            ],
+            "exitCode": 0,
+            "stdout": "OK",
+            "stderr": "",
+            "success": true
+          },
+          {
+            "name": "test",
+            "command": "npm test",
+            "args": [
+              "test"
+            ],
+            "exitCode": 0,
+            "stdout": "OK",
+            "stderr": "",
+            "success": true
+          },
+          {
+            "name": "build",
+            "command": "npm run build",
+            "args": [
+              "run",
+              "build"
+            ],
+            "exitCode": 0,
+            "stdout": "OK",
+            "stderr": "",
+            "success": true
+          }
+        ],
+        "overallSuccess": true
+      },
+      "isError": false
+    }
+
+      at Object.log (src/extensions/tools/__tests__/code-health-tool.test.ts:72:13)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |       0 |        0 |       0 |       0 |                   
+----------|---------|----------|---------|---------|-------------------

@@ -3,7 +3,7 @@ import type { Config } from 'jest';
 const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
- globals: {
+  globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.test.json',
     },
@@ -13,7 +13,9 @@ const config: Config = {
     '^@earendil-works/pi-coding-agent$': '<rootDir>/node_modules/@earendil-works/pi-coding-agent/dist/index.js',
     '^@earendil-works/pi-coding-agent/(.*)$': '<rootDir>/node_modules/@earendil-works/pi-coding-agent/dist/$1',
   },
-
+  transformIgnorePatterns: [
+    '/node_modules/(?!@earendil-works/pi-tui/)',
+  ],
   testMatch: ['**/src/**/__tests__/**/*.test.ts'],
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { useESM: true }],
@@ -24,7 +26,8 @@ const config: Config = {
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/__tests__/**',
-    '!src/**/*.test.ts'
+    '!src/**/*.test.ts',
+    '!src/extensions/providers/models/index.ts',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html']
