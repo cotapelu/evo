@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-05 (Evolution Round 6)
+**Last Updated:** 2026-06-05 (Evolution Round 10)
 
 ## Overview
 
@@ -12,11 +12,12 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `todos` – Full-featured todo management with persistence to `.pi/agent/todos.json`
 - `memory` – Long-term memory storage and retrieval across sessions
 - `branch` – Session tree navigation and branch management
-- `session-info` – Statistics about the current session
-- `test` – Runs project tests (npm test) with optional pattern and coverage flag
-- `git` – Git operations: status, diff, commit, add, push, pull, log
+- `session-info` – Statistics about the current session with TUI rendering
+- `test` – Runs project tests (npm test) with optional pattern, coverage flag, and coverage summary parsing
+- `git` – Git operations: status, diff, commit, add, push, pull, log with custom TUI rendering
 - `code-health` – Aggregated code quality checks: lint, type-check, test, build, audit with custom TUI rendering
 - `format` – Code formatter using Prettier to format the entire codebase
+- `security-audit` – Comprehensive security checks: npm audit, secret scanning, package-lock validation, insecure pattern detection
 - `metrics` – Displays agent evolution metrics from docs/AGENT_METRICS.md
 - `kicad-sch` / `kicad-pcb` – KiCad schematic/PCB manipulation
 - `team` – Collaborative multi-agent operations (claim tasks, workspace sharing, messaging)
@@ -31,20 +32,24 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 442 passing, 0 failing
+- **Tests:** 449 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Not yet measured (jest --coverage available via `test` tool)
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool
 
 ## Highlights
 
 - Comprehensive code quality checks via `code-health`
-- Optional test coverage via `test` tool (`{ coverage: true }`)
+- Security audit tool with minimal false positives (excludes docs, test files, and tool's own source)
+- Optional test coverage with JSON summary parsing
 - Built-in formatting with `format` tool
 - Metrics introspection via `metrics` tool
-- Strong test suite with 442 passing tests
+- Strong test suite with 449 passing tests
+- Custom TUI rendering for many tools
 
 ## Roadmap
 
 - Implement E2E tests for full agent session
-- Add security-audit tool (standalone)
-- Generate evolution reports automatically
+- Add `watch` tool to auto-run checks on file changes
+- Create extension template generator
+- Add render functions for remaining tools (memory, branch)
+- Explore displaying coverage trends over time

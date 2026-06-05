@@ -19,8 +19,9 @@
 - `code-health` tool with custom TUI rendering (Round 2)
 - Coverage flag added to `test` tool (Round 3)
 - `audit` check integrated into code-health (Round 4)
+- Coverage summary parsing in `test` tool (Round 10)
 
-**Metrics:** Test count grew to 436; quality checks expanded.
+**Metrics:** Test count grew to 449; quality checks expanded.
 
 ## Phase 3: Formatting & Observability (Completed)
 
@@ -29,8 +30,10 @@
 **Completed:**
 - `format` tool using Prettier (Round 5)
 - `metrics` tool to display evolution data (Round 6)
+- `security-audit` tool (Round 9)
+- TUI rendering for session_info (R7), git (R8)
 
-**Metrics:** 442 tests pass; build stable.
+**Metrics:** 449 tests pass; build stable.
 
 ## Phase 4: High-Value Additions (Planned)
 
@@ -38,12 +41,12 @@
 
 **Initiatives:**
 - E2E test suite for full agent session
-- Security audit tool (complements existing audit check)
+- `watch` tool for auto-running checks on file changes
 - Extension template generator
 
 **Anticipated Debt:**
-- Need to measure actual code coverage
-- Render functions for remaining tools
+- Render functions for remaining tools (memory, branch)
+- Automatic coverage measurement visualization
 - Performance telemetry
 
 ## Refactoring Schedule
