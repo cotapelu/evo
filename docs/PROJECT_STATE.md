@@ -63,7 +63,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 
 ## Roadmap
 
-- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~73.4%)
+- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~74.0%)
 - Add render functions for remaining tools (none missing now)
-- Continue improving coverage: focus on watch-tool (40%), todos-tool (61%), test-runner (60%)
+- Continue improving coverage: focus on watch-tool (40%), todos-tool (61%), and others
 - Cover metrics-collector execution path during tool execution

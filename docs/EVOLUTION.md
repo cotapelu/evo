@@ -56,6 +56,7 @@
 - Added render tests for branch tool (R29)
 - Added render tests for git-tool and fixed e2e timeout (R30)
 - Added render tests for memory-tool (R31)
+- Added coverage parsing test for test-runner tool (R32)
 
 **Initiatives (Pending):**
 - (none)

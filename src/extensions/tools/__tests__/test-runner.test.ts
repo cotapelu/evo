@@ -1,5 +1,8 @@
 import { jest } from '@jest/globals';
 import { registerTestRunnerTool } from '../test-runner.js';
+import { mkdtemp, rmdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 function createMockApi() {
   const execMock = jest.fn().mockImplementation(async () => ({ stdout: '', stderr: '', code: 0 }));
@@ -130,5 +133,39 @@ describe('Test Runner Tool', () => {
     expect(result.details).toHaveProperty('coverage');
     // coverage should be undefined since no coverage file exists
     expect(result.details.coverage).toBeUndefined();
+  });
+
+  // Additional coverage: test parsing of coverage-summary.json
+  describe('Coverage parsing', () => {
+    let api: any;
+    let tool: any;
+
+    beforeEach(async () => {
+      jest.resetModules();
+      api = createMockApi();
+      const mod = await import('../test-runner.js');
+      mod.registerTestRunnerTool(api);
+      tool = api.registeredTool;
+    });
+
+    test('parses coverage-summary.json when present', async () => {
+      const tempCwd = await mkdtemp(join(tmpdir(), 'evo-test-runner-'));
+      const coverageDir = join(tempCwd, 'coverage');
+      const { mkdir } = await import('node:fs/promises');
+      await mkdir(coverageDir, { recursive: true });
+      const summary = { total: { statements: 80, branches: 70, functions: 90, lines: 85 } };
+      await writeFile(join(coverageDir, 'coverage-summary.json'), JSON.stringify(summary));
+
+      const ctx = createMockContext();
+      ctx.cwd = tempCwd;
+      api.exec.mockResolvedValue({ stdout: 'Tests passed', stderr: '', code: 0 } as any);
+
+      const result = await tool.execute('1', { coverage: true }, undefined, undefined, ctx);
+
+      expect(result.isError).toBe(false);
+      expect(result.details.coverage).toEqual(summary);
+
+      await rmdir(tempCwd, { recursive: true });
+    });
   });
 });
