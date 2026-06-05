@@ -21,3 +21,4 @@ export { registerFormatTool } from "./format-tool.js";
 export { registerMetricsTool } from "./metrics-tool.js";
 
 export { registerSecurityAuditTool } from "./security-audit-tool.js";
+export { registerExtensionTemplateGeneratorTool } from "./extension-template-generator.js";
