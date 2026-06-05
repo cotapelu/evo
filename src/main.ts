@@ -20,7 +20,7 @@ export async function main() {
     try {
       // Update pi-coding-agent and all dependencies to latest
       console.log('Updating dependencies...');
-      execSync('npm install', { stdio: 'inherit' });
+      execSync('npm update', { stdio: 'inherit' });
 
       // Rebuild evo
       console.log('\nRebuilding evo...');
