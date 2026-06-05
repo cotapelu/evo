@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * Notes Tool
+ * Notes Tool (refactored)
  *
  * Session-scoped scratchpad for quick notes.
  * Actions: add, list, clear.
- * Notes are not persisted to branch history.
+ * Uses base stateful tool pattern.
  */
 
 import type { ExtensionAPI, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Text } from '@earendil-works/pi-tui';
-import { Mutex } from '../utils/mutex.js';
+import { createStatefulTool } from './base-tool.js';
 
 interface Note {
   id: number;
@@ -17,100 +17,79 @@ interface Note {
   created: number;
 }
 
-// Per-session state (auto GC when context disposed)
-const sessionStates = new WeakMap<any, { notes: Note[]; nextId: number; mutex: Mutex }>();
-
-function getState(ctx: any) {
-  let state = sessionStates.get(ctx);
-  if (!state) {
-    const mutex = new Mutex();
-    state = { notes: [], nextId: 1, mutex };
-    sessionStates.set(ctx, state);
-  }
-  return state;
-}
-
 function createNotesTool(): ToolDefinition<any, any> {
-  return {
+  return createStatefulTool<{ notes: Note[]; nextId: number }>({
     name: 'notes',
     label: 'Notes',
-    description: 'Session-scoped scratchpad. Actions: add (text), list, clear.',
-    parameters: {},
-    async execute(toolCallId, params, _signal, _onUpdate, ctx) {
-      const state = getState(ctx);
-      const release = await state.mutex.lock();
-      try {
-        let p: any;
-        if (typeof params === 'string') {
-          try {
-            p = JSON.parse(params);
-          } catch (e) {
-            return {
-              content: [{ type: 'text', text: `Invalid JSON: ${e}` }],
-              details: { error: 'invalid json' },
-              isError: true,
-            };
-          }
-        } else {
-          p = params;
+    description: 'Session-scoped scratchpad. Actions: add, list, clear.',
+    createState: () => ({ notes: [], nextId: 1 }),
+    async execute(toolCallId, params, _signal, _onUpdate, ctx, state) {
+      let p: any;
+      if (typeof params === 'string') {
+        try {
+          p = JSON.parse(params);
+        } catch (e: any) {
+          return {
+            content: [{ type: 'text', text: `Invalid JSON: ${e.message}` }],
+            details: { error: 'invalid json' },
+            isError: true,
+          };
         }
+      } else {
+        p = params;
+      }
 
-        const action = p?.action;
-        if (!action) {
-          return { content: [{ type: 'text', text: 'Missing action' }], details: { error: 'action required' }, isError: true };
-        }
+      const action = p?.action;
+      if (!action) {
+        return { content: [{ type: 'text', text: 'Missing action' }], details: { error: 'action required' }, isError: true };
+      }
 
-        switch (action) {
-          case 'add': {
-            const text = p.text;
-            if (typeof text !== 'string' || !text.trim()) {
-              return { content: [{ type: 'text', text: 'Missing text' }], details: { error: 'text required' }, isError: true };
-            }
-            const note: Note = { id: state.nextId++, text: text.trim(), created: Date.now() };
-            state.notes.push(note);
-            return {
-              content: [{ type: 'text', text: `Added note #${note.id}` }],
-              details: { action: 'add', notes: [...state.notes], nextId: state.nextId },
-              isError: false,
-            };
+      switch (action) {
+        case 'add': {
+          const text = p.text;
+          if (typeof text !== 'string' || !text.trim()) {
+            return { content: [{ type: 'text', text: 'Missing text' }], details: { error: 'text required' }, isError: true };
           }
-          case 'list': {
-            if (state.notes.length === 0) {
-              return { content: [{ type: 'text', text: 'No notes' }], details: { action: 'list', notes: [] }, isError: false };
-            }
-            const lines = state.notes.map(n => `#${n.id}: ${n.text}`);
-            return {
-              content: [{ type: 'text', text: lines.join('\n') }],
-              details: { action: 'list', notes: [...state.notes] },
-              isError: false,
-            };
-          }
-          case 'clear': {
-            const count = state.notes.length;
-            state.notes = [];
-            state.nextId = 1;
-            return {
-              content: [{ type: 'text', text: `Cleared ${count} notes` }],
-              details: { action: 'clear', notes: [] },
-              isError: false,
-            };
-          }
-          default: {
-            return { content: [{ type: 'text', text: `Unknown action: ${action}` }], details: { error: 'invalid action' }, isError: true };
-          }
+          const note: Note = { id: state.nextId++, text: text.trim(), created: Date.now() };
+          state.notes.push(note);
+          return {
+            content: [{ type: 'text', text: `Added note #${note.id}` }],
+            details: { action: 'add', notes: [...state.notes], nextId: state.nextId },
+            isError: false,
+          };
         }
-      } finally {
-        release();
+        case 'list': {
+          if (state.notes.length === 0) {
+            return { content: [{ type: 'text', text: 'No notes' }], details: { action: 'list', notes: [] }, isError: false };
+          }
+          const lines = state.notes.map(n => `#${n.id}: ${n.text}`);
+          return {
+            content: [{ type: 'text', text: lines.join('\n') }],
+            details: { action: 'list', notes: [...state.notes] },
+            isError: false,
+          };
+        }
+        case 'clear': {
+          const count = state.notes.length;
+          state.notes = [];
+          state.nextId = 1;
+          return {
+            content: [{ type: 'text', text: `Cleared ${count} notes` }],
+            details: { action: 'clear', notes: [] },
+            isError: false,
+          };
+        }
+        default: {
+          return { content: [{ type: 'text', text: `Unknown action: ${action}` }], details: { error: 'invalid action' }, isError: true };
+        }
       }
     },
-
     renderCall(args: any, theme: any) {
       const th = theme;
       const action = args.action || '';
       const text = `${th.fg('toolTitle', th.bold('notes'))} ${th.fg('muted', action)}`;
       return new Text(text, 0, 0);
     },
-
     renderResult(result: any, options: { expanded: boolean; isPartial: boolean }, theme: any) {
       const th = theme;
       if (options.isPartial) return new Text(th.fg('warning', 'Processing...'), 0, 0);
@@ -132,7 +111,7 @@ function createNotesTool(): ToolDefinition<any, any> {
           return new Text('', 0, 0);
       }
     },
-  };
+  });
 }
 
 export function registerNotesTool(api: ExtensionAPI): void {
