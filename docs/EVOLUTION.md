@@ -46,12 +46,13 @@
 - Coverage tool & history (R15-17)
 - Notes tool & /cancel command (R18-19)
 - Refactored common tool patterns into base-tool utility (R20)
+- Metrics collection for tool execution times and error rates (R21)
 
 **Initiatives (Pending):**
 - E2E test suite for full agent session
 
 **Remaining Work:**
-- Performance telemetry
+- (none)
 
 ## Refactoring Schedule
 

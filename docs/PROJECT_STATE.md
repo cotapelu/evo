@@ -24,6 +24,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `coverage` – Display code coverage statistics from coverage/coverage-summary.json
 - `coverage-history` – Show trends of coverage over time (read from .pi/coverage-history.json)
 - `notes` – Session-scoped scratchpad for quick temporary notes
+- `tool-metrics` – Display execution statistics for tools (times, error rates)
 - `kicad-sch` / `kicad-pcb` – KiCad schematic/PCB manipulation
 - `team` – Collaborative multi-agent operations (claim tasks, workspace sharing, messaging)
 
@@ -55,7 +56,8 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/about` command for quick system info
 - Session-scoped `notes` tool for temporary scratchpad
 - Global `/cancel` command to abort running operations
-- Strong test suite with 499 passing tests
+- `tool-metrics` tool for execution time and error rate statistics
+- Strong test suite with 503 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 
 ## Roadmap

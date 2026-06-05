@@ -6,7 +6,7 @@
 
 ## Medium Priority
 
-- [ ] Implement metrics collection (tool execution times, error rates)
+- [ ] Write E2E tests for full agent session
 
 ## Completed
 
@@ -31,3 +31,4 @@
 - [x] Add `notes` tool for session-scoped scratchpad (R18)
 - [x] Add `/cancel` command to abort running operations (R19)
 - [x] Refactor common tool patterns into base classes (R20)
+- [x] Implement metrics collection (tool execution times, error rates) (R21)
