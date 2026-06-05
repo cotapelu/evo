@@ -10,6 +10,7 @@
 import type { ExtensionAPI, ExtensionContext, ExecOptions } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 function createTestRunnerTool(api: ExtensionAPI): ToolDefinition<any, any> {
@@ -72,6 +73,38 @@ function createTestRunnerTool(api: ExtensionAPI): ToolDefinition<any, any> {
               // ignore coverage parse errors
             }
           }
+        }
+
+        // Persist coverage to history file (fire-and-forget)
+        if (coverage) {
+          (async () => {
+            try {
+              const historyDir = join(ctx.cwd, '.pi');
+              await mkdir(historyDir, { recursive: true });
+              const historyPath = join(historyDir, 'coverage-history.json');
+              let history: any[] = [];
+              try {
+                const existing = await readFile(historyPath, 'utf-8');
+                history = JSON.parse(existing);
+              } catch (e) { /* ignore */ }
+              const total = coverage.total || coverage.totals || coverage;
+              const getPct = (cov: any) => {
+                const pct = typeof cov === 'number' ? cov : (cov?.pct || cov?.percent || 0);
+                return Number(pct.toFixed?.(1) ?? pct);
+              };
+              const entry = {
+                timestamp: new Date().toISOString(),
+                statements: getPct(total.statements || total?.statements),
+                branches: getPct(total.branches || total?.branches),
+                functions: getPct(total.functions || total?.functions),
+                lines: getPct(total.lines || total?.lines),
+              };
+              history.push(entry);
+              await writeFile(historyPath, JSON.stringify(history, null, 2), 'utf-8');
+            } catch (e) {
+              // ignore history write errors
+            }
+          })();
         }
 
         return {
