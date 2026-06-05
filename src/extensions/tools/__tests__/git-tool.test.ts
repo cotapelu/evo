@@ -171,7 +171,7 @@ describe('Git Tool', () => {
     const signal = new AbortController().signal;
     api.exec.mockImplementation(async () => ({ stdout: '', stderr: '', code: 0 }));
     const ctx = createMockContext();
-    await tool.execute('1', { action: 'status' }, signal, undefined, undefined, ctx);
+    await tool.execute('1', { action: 'status' }, signal, undefined, ctx);
     expect(api.exec).toHaveBeenCalledWith(expect.any(String), expect.any(Array), expect.objectContaining({ signal, cwd: '/workspace' }));
   });
 });
