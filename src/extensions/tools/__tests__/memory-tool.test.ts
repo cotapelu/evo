@@ -196,4 +196,24 @@ describe('Memory Tool', () => {
       expect(check1.content[0].text).not.toContain('session2');
     });
   });
+
+  describe('Memory Tool – Rendering', () => {
+    test('renderCall produces Text', () => {
+      const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s } as any;
+      const txt = tool.renderCall({ action: 'add' }, theme);
+      expect(txt).toBeDefined();
+    });
+
+    test('renderResult handles various states', () => {
+      const theme = { fg: (c: string, s: string) => s, success: (s: string) => s, error: (s: string) => s, dim: (s: string) => s, accent: (s: string) => s } as any;
+      const addResult = tool.renderResult({ details: { action: 'add', memory: { id: 1, text: 'test' } } }, { expanded: false, isPartial: false }, theme);
+      expect(addResult).toBeDefined();
+      const listResult = tool.renderResult({ details: { action: 'list', memories: [{ id: 1, text: 'test' }] } }, { expanded: false, isPartial: false }, theme);
+      expect(listResult).toBeDefined();
+      const errResult = tool.renderResult({ details: { error: 'fail' }, isError: true }, { expanded: false, isPartial: false }, theme);
+      expect(errResult).toBeDefined();
+      const partialResult = tool.renderResult({}, { expanded: false, isPartial: true }, theme);
+      expect(partialResult).toBeDefined();
+    });
+  });
 });
