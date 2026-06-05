@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-05 (Evolution Round 2)
+**Last Updated:** 2026-06-05 (Evolution Round 6)
 
 ## Overview
 
@@ -13,9 +13,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `memory` – Long-term memory storage and retrieval across sessions
 - `branch` – Session tree navigation and branch management
 - `session-info` – Statistics about the current session
-- `test` – Runs project tests (npm test) with optional pattern
+- `test` – Runs project tests (npm test) with optional pattern and coverage flag
 - `git` – Git operations: status, diff, commit, add, push, pull, log
-- `code-health` – Aggregated code quality checks: lint, type-check, test, build with custom TUI rendering *(NEW)*
+- `code-health` – Aggregated code quality checks: lint, type-check, test, build, audit with custom TUI rendering
+- `format` – Code formatter using Prettier to format the entire codebase
+- `metrics` – Displays agent evolution metrics from docs/AGENT_METRICS.md
 - `kicad-sch` / `kicad-pcb` – KiCad schematic/PCB manipulation
 - `team` – Collaborative multi-agent operations (claim tasks, workspace sharing, messaging)
 
@@ -29,26 +31,20 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 433 passing, 0 failing
-- **Build:** `npm run build` succeeds
-- **Code Coverage:** Not yet measured (plan to add)
+- **Tests:** 442 passing, 0 failing
+- **Build:** `npm run build` succeeds, chmod set
+- **Code Coverage:** Not yet measured (jest --coverage available via `test` tool)
 
-## Known Issues
+## Highlights
 
-None currently.
+- Comprehensive code quality checks via `code-health`
+- Optional test coverage via `test` tool (`{ coverage: true }`)
+- Built-in formatting with `format` tool
+- Metrics introspection via `metrics` tool
+- Strong test suite with 442 passing tests
 
-## Recent Changes (Round 1)
+## Roadmap
 
-1. Fixed failing test in `git-tool.test.ts` (argument count mismatch)
-2. Added `code-health` tool with comprehensive tests
-3. Updated `src/extensions/tools/index.ts` and `src/extensions/index.ts`
-4. Created initial evolution tracking files
-
-## Next Priorities
-
-See `TODO.md` for full list.
-
-- Implement render functions for tools to improve TUI display
-- Expand `code-health` with security scanning and complexity metrics
-- Add metrics collection and reporting
-- Integrate with CI/CD pipelines
+- Implement E2E tests for full agent session
+- Add security-audit tool (standalone)
+- Generate evolution reports automatically

@@ -7,7 +7,7 @@
  */
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
-import { registerTodosTool, registerMemoryTool, registerBranchTool, registerSessionInfoTool, registerTestRunnerTool, registerGitTool, registerKicadSchTool, registerKicadPcbTool, registerCodeHealthTool, registerFormatTool } from "./tools/index.js";
+import { registerTodosTool, registerMemoryTool, registerBranchTool, registerSessionInfoTool, registerTestRunnerTool, registerGitTool, registerKicadSchTool, registerKicadPcbTool, registerCodeHealthTool, registerFormatTool, registerMetricsTool } from "./tools/index.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
 
 import piclawHeader from "./piclaw-header.js";
@@ -32,6 +32,7 @@ export default function (api: import("@earendil-works/pi-coding-agent").Extensio
   registerKicadPcbTool(api);
   registerCodeHealthTool(api);
   registerFormatTool(api);
+  registerMetricsTool(api);
 
   // ============================================
   // EXTENSIONS (Event Handlers, UI, etc.)

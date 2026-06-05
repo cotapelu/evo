@@ -17,3 +17,5 @@ export { registerKicadPcbTool } from "./kicad-pcb.js";
 
 export { registerCodeHealthTool } from "./code-health-tool.js";
 export { registerFormatTool } from "./format-tool.js";
+
+export { registerMetricsTool } from "./metrics-tool.js";

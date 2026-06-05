@@ -11,32 +11,42 @@
 
 **Metrics:** All tests passing, TypeScript clean.
 
-## Phase 2: Quality & Automation (Current)
+## Phase 2: Quality & Automation (Completed)
 
 **Goal:** Improve code quality visibility and self-check capabilities.
 
 **Completed:**
 - `code-health` tool with custom TUI rendering (Round 2)
+- Coverage flag added to `test` tool (Round 3)
+- `audit` check integrated into code-health (Round 4)
 
-**In Progress:**
-- Coverage reporting and metrics dashboard
-- Render functions for other tools
+**Metrics:** Test count grew to 436; quality checks expanded.
 
-**Upcoming:**
-- Add static security analysis (e.g., audit, cwe)
-- Integrate complexity analysis (radon, lcom)
-- Generate evolution reports automatically
+## Phase 3: Formatting & Observability (Completed)
 
-## Phase 3: Autonomy & Intelligence
+**Goal:** Add developer experience enhancements.
 
-**Goal:** Enable the agent to propose and implement its own improvements.
+**Completed:**
+- `format` tool using Prettier (Round 5)
+- `metrics` tool to display evolution data (Round 6)
 
-- Self-review of code changes
-- Automated issue triage and PR generation
-- Adaptive learning from past failures
+**Metrics:** 442 tests pass; build stable.
+
+## Phase 4: High-Value Additions (Planned)
+
+**Goal:** Fill critical gaps for security, testing, and productivity.
+
+**Initiatives:**
+- E2E test suite for full agent session
+- Security audit tool (complements existing audit check)
+- Extension template generator
+
+**Anticipated Debt:**
+- Need to measure actual code coverage
+- Render functions for remaining tools
+- Performance telemetry
 
 ## Refactoring Schedule
 
-- Anticipated: Extract common tool patterns into base classes
-- Debt: Some tools lack custom rendering, defaulting to raw JSON
-- Risk: Low – changes are isolated to extensions
+- Extract common tool patterns into base classes
+- Reduce duplication in test utilities
