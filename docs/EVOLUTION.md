@@ -51,6 +51,7 @@
 - Coverage improvement and test expansion (R23)
 - Fixed notes-tool error result to include `message` property (R25)
 - Added tests for tool-metrics-tool and default extension (R26)
+- Added render and onUpdate tests for code-health tool (R27)
 
 **Initiatives (Pending):**
 - (none)
