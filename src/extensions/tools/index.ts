@@ -23,3 +23,4 @@ export { registerMetricsTool } from "./metrics-tool.js";
 export { registerSecurityAuditTool } from "./security-audit-tool.js";
 export { registerExtensionTemplateGeneratorTool } from "./extension-template-generator.js";
 export { registerWatchTool } from "./watch-tool.js";
+export { registerCoverageTool } from "./coverage-tool.js";
