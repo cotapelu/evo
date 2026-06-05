@@ -221,6 +221,16 @@
 | **Test Count** | 506 | |
 | **Measured Coverage** | ~66.5% | (statements) Coverage collection now accurate via `npm test -- --coverage` |
 
+## Round 25 (2026-06-05)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 25 | Fixed notes-tool error test inconsistency; all tests now pass |
+| **Tasks Completed** | 1 | Bug fix: added `message` property to error results in notes-tool |
+| **Test Failure Rate** | 0% | All 508 tests pass |
+| **Test Count** | 508 | (+2 tests from previous) |
+| **Measured Coverage** | ~66.5% | No significant change; focus shifted to coverage improvement |
+
 ## Trends
 
 - Test count increased from 425 to 458 overall (+33 tests)

@@ -33,6 +33,7 @@ function createNotesTool(): ToolDefinition<any, any> {
             content: [{ type: 'text', text: `Invalid JSON: ${e.message}` }],
             details: { error: 'invalid json' },
             isError: true,
+            message: `Invalid JSON: ${e.message}`,
           };
         }
       } else {
@@ -41,14 +42,14 @@ function createNotesTool(): ToolDefinition<any, any> {
 
       const action = p?.action;
       if (!action) {
-        return { content: [{ type: 'text', text: 'Missing action' }], details: { error: 'action required' }, isError: true };
+        return { content: [{ type: 'text', text: 'Missing action' }], details: { error: 'action required' }, isError: true, message: 'Missing action' };
       }
 
       switch (action) {
         case 'add': {
           const text = p.text;
           if (typeof text !== 'string' || !text.trim()) {
-            return { content: [{ type: 'text', text: 'Missing text' }], details: { error: 'text required' }, isError: true };
+            return { content: [{ type: 'text', text: 'Missing text' }], details: { error: 'text required' }, isError: true, message: 'Missing text' };
           }
           const note: Note = { id: state.nextId++, text: text.trim(), created: Date.now() };
           state.notes.push(note);
@@ -80,7 +81,7 @@ function createNotesTool(): ToolDefinition<any, any> {
           };
         }
         default: {
-          return { content: [{ type: 'text', text: `Unknown action: ${action}` }], details: { error: 'invalid action' }, isError: true };
+          return { content: [{ type: 'text', text: `Unknown action: ${action}` }], details: { error: 'invalid action' }, isError: true, message: `Unknown action: ${action}` };
         }
       }
     },

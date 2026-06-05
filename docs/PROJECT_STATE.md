@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-05 (Evolution Round 24)
+**Last Updated:** 2026-06-05 (Evolution Round 25)
 
 ## Overview
 
@@ -38,7 +38,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 507 passing, 0 failing
+- **Tests:** 508 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
 - **Code Coverage:** Measured via jest --coverage; summary available through test tool
 
@@ -58,10 +58,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
 - E2E test for full agent session
-- Strong test suite with 504 passing tests
+- Strong test suite with 508 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 
 ## Roadmap
 
-- Implement E2E tests for full agent session
+- Increase test coverage for low-covered tools to reach ≥80% overall
 - Add render functions for remaining tools (memory)
+- Improve coverage of extension registration and metrics collector

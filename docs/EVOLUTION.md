@@ -49,6 +49,7 @@
 - Metrics collection for tool execution times and error rates (R21)
 - E2E test suite for full agent session (R22)
 - Coverage improvement and test expansion (R23)
+- Fixed notes-tool error result to include `message` property (R25)
 
 **Initiatives (Pending):**
 - (none)

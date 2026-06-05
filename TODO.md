@@ -2,8 +2,8 @@
 
 ## High Priority
 
-- [ ] Fix Jest coverage collection for ESM modules (blocking accurate coverage measurement)
-- [ ] Increase test coverage for low-covered tools: todos-tool, memory-tool, notes-tool, tool-metrics-tool, watch-tool, coverage-tool, coverage-history-tool, git-tool, branch, code-health, session-info
+- [x] Fix Jest coverage collection for ESM modules (blocking accurate coverage measurement)
+- [ ] Increase test coverage for low-covered tools: todos-tool, memory-tool, tool-metrics-tool, watch-tool, git-tool, branch, code-health, session-info (notes-tool already improved)
 - [ ] Exclude non-relevant files from coverage (entry points, team subprocess code) to reflect realistic targets
 
 ## Medium Priority
@@ -47,3 +47,5 @@
 - [x] Write E2E tests for full agent session (R22)
 - [x] Add tests for about-command error path (R23)
 - [x] Add tests for extensionLoader (R23)
+- [x] Fix Jest coverage collection for ESM modules (R24)
+- [x] Fixed notes-tool error result to include `message` property (R25)
