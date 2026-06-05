@@ -42,13 +42,13 @@
 **Completed:**
 - Extension template generator tool (Round 12)
 - Integration tests for extension registration (Round 13)
+- Watch tool for continuous feedback (Round 14)
 
 **Initiatives (Pending):**
 - E2E test suite for full agent session
-- `watch` tool for auto-running checks on file changes
 
 **Remaining Rendering Work:**
-- Render function for `memory` tool
+- Render function for `memory` tool (already present? check)
 - Automatic coverage measurement visualization
 - Performance telemetry
 

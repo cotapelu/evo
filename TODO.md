@@ -3,7 +3,6 @@
 ## High Priority
 
 - [ ] Write E2E tests for full agent session
-- [ ] Add `watch` tool to auto-run checks on file changes
 - [ ] Add render functions for `memory` tool
 - [ ] Measure and display coverage trends over time
 
@@ -31,3 +30,4 @@
 - [x] Add TUI rendering for `branch` tool (R11)
 - [x] Add `extension-template-generator` tool with scaffolding (R12)
 - [x] Add integration tests for extension registration (R13)
+- [x] Add `watch` tool to auto-run commands on file changes (R14)

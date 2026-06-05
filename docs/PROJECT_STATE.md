@@ -20,6 +20,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `security-audit` – Comprehensive security checks: npm audit, secret scanning, package-lock validation, insecure pattern detection
 - `metrics` – Displays agent evolution metrics from docs/AGENT_METRICS.md
 - `extension-template-generator` – Generate scaffold for new tools, providers, hooks with correct typings
+- `watch` – Watch files and auto-run commands on change (default: code-health, test --coverage)
 - `kicad-sch` / `kicad-pcb` – KiCad schematic/PCB manipulation
 - `team` – Collaborative multi-agent operations (claim tasks, workspace sharing, messaging)
 
@@ -45,12 +46,12 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Built-in formatting with `format` tool
 - Metrics introspection via `metrics` tool
 - Extension template generator for rapid scaffolding
-- Strong test suite with 458 passing tests
+- Watch tool for continuous feedback during development
+- Strong test suite with 471 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 
 ## Roadmap
 
 - Implement E2E tests for full agent session
-- Add `watch` tool to auto-run checks on file changes
 - Add render functions for remaining tools (memory)
 - Explore displaying coverage trends over time
