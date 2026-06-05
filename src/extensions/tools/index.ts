@@ -25,3 +25,4 @@ export { registerExtensionTemplateGeneratorTool } from "./extension-template-gen
 export { registerWatchTool } from "./watch-tool.js";
 export { registerCoverageTool } from "./coverage-tool.js";
 export { registerCoverageHistoryTool } from "./coverage-history-tool.js";
+export { registerNotesTool } from "./notes-tool.js";
