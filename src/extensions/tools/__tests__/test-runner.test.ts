@@ -99,6 +99,22 @@ describe('Test Runner Tool', () => {
     expect(result.details?.error).toBe('spawn failed');
   });
 
+  test('run: with coverage flag adds --coverage', async () => {
+    api.exec.mockResolvedValue({ stdout: '', stderr: '', code: 0 } as any);
+    const ctx = createMockContext();
+    const result = await tool.execute('1', { coverage: true }, undefined, undefined, ctx);
+    expect(api.exec).toHaveBeenCalledWith('npm', ['test', '--', '--coverage'], expect.objectContaining({ cwd: '/workspace' }));
+    expect(result.isError).toBe(false);
+  });
+
+  test('run: with pattern and coverage', async () => {
+    api.exec.mockResolvedValue({ stdout: '', stderr: '', code: 0 } as any);
+    const ctx = createMockContext();
+    const result = await tool.execute('1', { pattern: 'utils', coverage: true }, undefined, undefined, ctx);
+    expect(api.exec).toHaveBeenCalledWith('npm', ['test', '--', 'utils', '--coverage'], expect.objectContaining({ cwd: '/workspace' }));
+    expect(result.isError).toBe(false);
+  });
+
   test('run: invalid params type', async () => {
     // default mock already returns code 0
     const ctx = createMockContext();

@@ -30,8 +30,17 @@ function createTestRunnerTool(api: ExtensionAPI): ToolDefinition<any, any> {
       }
 
       const args: string[] = ['test'];
+      const afterArgs: string[] = [];
       if (pattern) {
-        args.push('--', pattern);
+        afterArgs.push(pattern);
+      }
+      // Support coverage flag
+      const paramsObj = typeof params === 'object' && params && !(params instanceof AbortSignal) ? params : (typeof params === 'string' ? JSON.parse(params) : {});
+      if (paramsObj.coverage) {
+        afterArgs.push('--coverage');
+      }
+      if (afterArgs.length > 0) {
+        args.push('--', ...afterArgs);
       }
 
       const execOptions: ExecOptions = { cwd: ctx.cwd };
