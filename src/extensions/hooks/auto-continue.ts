@@ -89,7 +89,7 @@ export default function (pi: ExtensionAPI) {
 					idleTimer = null;
 				}
 				if (ctx.hasUI) {
-					ctx.ui.notify("Auto-continue disabled", "info");
+					ctx.ui.notify("Auto-continue đã TẮT", "info");
 				}
 				return;
 			}
@@ -97,7 +97,7 @@ export default function (pi: ExtensionAPI) {
 			if (command === "on" || command === "1") {
 				enabled = true;
 				if (ctx.hasUI) {
-					ctx.ui.notify(`Auto-continue enabled - ${idleTimeoutMs / 1000}s timeout`, "info");
+					ctx.ui.notify(`Auto-continue đã BẬT - ${idleTimeoutMs / 1000}s timeout`, "info");
 				}
 				if (ctx.isIdle()) {
 					startIdleTimer();
@@ -109,7 +109,7 @@ export default function (pi: ExtensionAPI) {
 			if (!isNaN(timeoutSec) && timeoutSec > 0) {
 				idleTimeoutMs = timeoutSec * 1000;
 				if (ctx.hasUI) {
-					ctx.ui.notify(`Auto-continue timeout set to ${timeoutSec} seconds`, "info");
+					ctx.ui.notify(`Auto-continue timeout set to ${timeoutSec} giây`, "info");
 				}
 				return;
 			}
@@ -117,7 +117,7 @@ export default function (pi: ExtensionAPI) {
 			enabled = !enabled;
 			if (enabled) {
 				if (ctx.hasUI) {
-					ctx.ui.notify(`Auto-continue enabled - timeout=${idleTimeoutMs / 1000}s`, "info");
+					ctx.ui.notify(`Auto-continue đã BẬT - timeout=${idleTimeoutMs / 1000}s`, "info");
 				}
 				if (ctx.isIdle()) {
 					startIdleTimer();
@@ -128,7 +128,7 @@ export default function (pi: ExtensionAPI) {
 					idleTimer = null;
 				}
 				if (ctx.hasUI) {
-					ctx.ui.notify("Auto-continue disabled", "info");
+					ctx.ui.notify("Auto-continue đã TẮT", "info");
 				}
 			}
 		},
