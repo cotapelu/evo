@@ -38,9 +38,9 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 568 passing, 0 failing
+- **Tests:** 573 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Measured via jest --coverage; summary available through test tool (~76.79% statements)
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool (~76.95% statements)
 
 ## Highlights
 
@@ -58,17 +58,18 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
 - E2E test for full agent session
-- Strong test suite with 568 passing tests
+- Strong test suite with 573 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 - Phase-specific deletion in `todos` tool (delete by phase ID/name)
 - Localized UI messages unified to English (auto-continue)
 - Fixed extension import/export consistency (default export)
 - Fixed Jest ESM coverage collection for accurate measurement
 - Added comprehensive tests for core utilities: metrics collector, logger, piclaw-header
+- Added robust error handling tests for coverage-tool and coverage-history-tool
 
 ## Roadmap
 
-- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~74.0%)
+- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~76.95%)
 - Add render functions for remaining tools (none missing now)
-- Continue improving coverage: focus on watch-tool (40%), todos-tool (61%), and others
+- Continue improving coverage: focus on watch-tool, todos-tool, memory-tool, and other low-covered tools
 - Cover metrics-collector execution path during tool execution

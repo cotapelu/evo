@@ -67,3 +67,5 @@
 - [x] Added unit tests for utility logger (3 tests, 100% coverage) (R34)
 - [x] Added extensive tests for piclaw-header extension (7 tests covering all branches) (R34)
 - [x] Added test for selective phase deletion in todos tool (R34)
+- [x] Added error handling tests for coverage-tool (malformed JSON, render error) (R35)
+- [x] Added more error handling tests for coverage-history-tool (malformed JSON, non-array data, render error) (R35)

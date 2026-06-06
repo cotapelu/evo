@@ -67,6 +67,8 @@
 - Added unit tests for utility logger (3 tests, 100% coverage) (R34)
 - Added extensive tests for piclaw-header extension (7 tests, covering registration, config, version check, error handling) (R34)
 - Overall test coverage increased to 76.79% statements, on track for ≥80%
+- Added error handling tests for coverage-tool (2 tests) and coverage-history-tool (3 tests) (R35)
+- Overall test coverage increased to 76.95% statements, steady progress towards 80%
 
 **Initiatives (Pending):**
 - (none)
