@@ -8,6 +8,9 @@
 
 import { main as piMain } from '@earendil-works/pi-coding-agent';
 import { getExtensionFactories } from './extensions/index.js';
+import { fileURLToPath } from 'url';
+import { resolve } from 'path';
+import { realpathSync } from 'fs';
 
 export async function main() {
   const args = process.argv.slice(2);
@@ -23,6 +26,27 @@ export async function main() {
 }
 
 // Auto-run khi execute trực tiếp (không khi import)
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
+// Xử lý symlinks bằng cách so sánh canonical paths
+const mainScript = process.argv[1];
+if (mainScript) {
+  try {
+    const importPath = fileURLToPath(import.meta.url);
+    const resolvedImport = resolve(importPath);
+    const resolvedMain = resolve(mainScript);
+    // Kiểm tra khớp trực tiếp
+    if (resolvedImport === resolvedMain) {
+      await main();
+    } else {
+      // resolve symlinks để xem có cùng file không
+      const realImport = realpathSync(importPath);
+      const realMain = realpathSync(mainScript);
+      if (realImport === realMain) {
+        await main();
+      }
+      // else: file này được import, không chạy
+    }
+  } catch (error) {
+    console.error('Startup error:', error);
+    process.exit(1);
+  }
 }
