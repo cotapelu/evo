@@ -1,4 +1,4 @@
-import { getResourceLoaderOptions } from '../extensionLoader.js';
+import { getResourceLoaderOptions } from '../extensions/index.js';
 
 describe('Extension Loader', () => {
   test('getResourceLoaderOptions returns options with extensionFactories', () => {
