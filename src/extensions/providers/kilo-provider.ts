@@ -6,7 +6,7 @@
  * Registers Kilo Gateway as an API key provider.
  * Users can authenticate via /login → "Use an API key" → kilo.
  *
- * Environment variable: KILO_API_KEY
+ * Environment variable: $KILO_API_KEY (or KILO_API_KEY)
  * API endpoint: https://api.kilo.ai/v1
  */
 
@@ -22,7 +22,7 @@ export function registerKiloProvider(api: ExtensionAPI): void {
 
   const config: ProviderConfig = {
     baseUrl,
-    apiKey: "KILO_API_KEY",
+    apiKey: "$KILO_API_KEY",
     api: "openai-completions",
     models: KILO_MODELS_ALL,
   };
