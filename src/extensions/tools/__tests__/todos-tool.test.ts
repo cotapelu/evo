@@ -274,4 +274,24 @@ describe('Todos Tool – Isolation & Concurrency', () => {
       expect(result.content[0].text).toContain('Phase "non-existent" not found');
     });
   });
+
+  describe('Todos Tool – Deletion', () => {
+    test('delete: removes specific phase by ID or name', async () => {
+      const ctx = createMockContext();
+      // Create two phases
+      await tool.execute('1', { add_phase: { name: 'Phase A', tasks: [{ content: 'A1' }] } }, undefined, undefined, ctx);
+      await tool.execute('2', { add_phase: { name: 'Phase B', tasks: [{ content: 'B1' }] } }, undefined, undefined, ctx);
+      // Get list to find Phase A ID
+      const listRes = await tool.execute('3', { list: {} }, undefined, undefined, ctx);
+      const phaseA = listRes.details.phases.find((p: any) => p.name === 'Phase A');
+      expect(phaseA).toBeDefined();
+      // Delete Phase A
+      const delRes = await tool.execute('4', { delete: { phase: phaseA.id } }, undefined, undefined, ctx);
+      expect(delRes.isError).toBe(false);
+      // Verify only Phase B remains
+      const afterList = await tool.execute('5', { list: {} }, undefined, undefined, ctx);
+      expect(afterList.details.phases.length).toBe(1);
+      expect(afterList.details.phases[0].name).toBe('Phase B');
+    });
+  });
 });

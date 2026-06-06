@@ -62,6 +62,11 @@
 - Fixed watch-tool test abort handling (AbortController) (R33)
 - Enhanced todos-tool with selective phase deletion (`todos({ delete: { phase: '...' } })`) (R33)
 - Removed unused experimental hook (auto-compact-85) to maintain clean codebase (R33)
+- Fixed Jest ESM coverage collection by extending transformIgnorePatterns (R34)
+- Added comprehensive tests for metrics collector (7 tests, 97%+ coverage) (R34)
+- Added unit tests for utility logger (3 tests, 100% coverage) (R34)
+- Added extensive tests for piclaw-header extension (7 tests, covering registration, config, version check, error handling) (R34)
+- Overall test coverage increased to 76.79% statements, on track for ≥80%
 
 **Initiatives (Pending):**
 - (none)
