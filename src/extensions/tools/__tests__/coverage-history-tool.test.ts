@@ -77,4 +77,30 @@ describe('Coverage History Tool', () => {
     const result = tool.renderResult({ details: { count: 5 } }, { expanded: false, isPartial: false }, theme);
     expect(result).toBeDefined();
   });
+
+  test('execute: handles malformed JSON file', async () => {
+    const ctx = (tool as any).testCtx;
+    const historyDir = join(tempDir, '.pi');
+    await mkdir(historyDir, { recursive: true });
+    await writeFile(join(historyDir, 'coverage-history.json'), 'not valid json', 'utf-8');
+    const result = await tool.execute('1', {}, undefined, undefined, ctx);
+    expect(result.isError).toBe(true);
+    expect(result.details?.error).toBeDefined();
+  });
+
+  test('execute: handles non-array JSON content as empty', async () => {
+    const ctx = (tool as any).testCtx;
+    const historyDir = join(tempDir, '.pi');
+    await mkdir(historyDir, { recursive: true });
+    await writeFile(join(historyDir, 'coverage-history.json'), JSON.stringify({ foo: 'bar' }), 'utf-8');
+    const result = await tool.execute('1', {}, undefined, undefined, ctx);
+    expect(result.isError).toBe(false);
+    expect(result.content[0].text).toContain('empty');
+  });
+
+  test('renderResult shows error state', () => {
+    const theme = { fg: (c: string, s: string) => s, error: (s: string) => s };
+    const result = tool.renderResult({ isError: true, details: { error: 'test' } }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
 });

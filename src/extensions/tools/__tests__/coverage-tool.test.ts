@@ -87,4 +87,21 @@ describe('Coverage Tool', () => {
     const result = tool.renderResult({ details: { total: { statements: { pct: 85 } } } }, { expanded: false, isPartial: false }, theme);
     expect(result).toBeDefined();
   });
+
+  test('execute: handles malformed JSON', async () => {
+    const ctx = (tool as any).testCtx;
+    const coverageDir = join(tempDir, 'coverage');
+    await mkdir(coverageDir, { recursive: true });
+    const summaryPath = join(coverageDir, 'coverage-summary.json');
+    await writeFile(summaryPath, 'not json');
+    const result = await tool.execute('1', {}, undefined, undefined, ctx);
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Error reading coverage');
+  });
+
+  test('renderResult shows error state when result isError', () => {
+    const theme = { fg: (c: string, s: string) => s, error: (s: string) => s };
+    const result = tool.renderResult({ isError: true, content: [{ type: 'text', text: 'error' }] }, { expanded: false, isPartial: false }, theme);
+    expect(result).toBeDefined();
+  });
 });
