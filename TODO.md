@@ -56,3 +56,8 @@
 - [x] Added render tests for git-tool and fixed e2e test timeout (R30)
 - [x] Added render tests for memory-tool (R31)
 - [x] Added coverage parsing test for test-runner tool (R32)
+- [x] Fixed auto-continue messages (English) for UI consistency (R33)
+- [x] Added default export to extensions index for compatibility (R33)
+- [x] Fixed watch-tool test abort handling (AbortController) (R33)
+- [x] Enhanced todos-tool with selective phase deletion (delete by phase ID/name) (R33)
+- [x] Removed unused experimental hook (auto-compact-85) (R33)

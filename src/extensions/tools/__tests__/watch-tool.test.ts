@@ -3,6 +3,7 @@ import { registerWatchTool } from '../watch-tool.js';
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import * as fs from 'node:fs/promises';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 function createMockApi() {
   return {
@@ -66,5 +67,30 @@ describe('Watch Tool', () => {
 
   test('execute: returns error if api.exec throws (during initial run, unlikely but possible)', async () => {
     // Not easy to trigger; but we can trust the tool's structure
+  });
+
+  test('setup watches for existing files and cleans up on abort', async () => {
+    // Create a temporary cwd with a src directory and a dummy file
+    const baseTmp = await fs.mkdtemp(join(tmpdir(), 'evo-watch-test-'));
+    const srcDir = join(baseTmp, 'src');
+    await fs.mkdir(srcDir, { recursive: true });
+    await fs.writeFile(join(srcDir, 'dummy.ts'), '// dummy');
+    // Also create some of the other top-level watch targets to exercise different branches
+    await fs.writeFile(join(baseTmp, 'tsconfig.json'), '{}');
+    await fs.writeFile(join(baseTmp, 'package.json'), '{}');
+
+    const ctx = { cwd: baseTmp, api } as any;
+    const controller = new AbortController();
+    const signal = controller.signal;
+    // Start watch
+    const execPromise = tool.execute('1', {}, signal, undefined, ctx);
+    // Allow some time for async setup to complete
+    await new Promise(resolve => setTimeout(resolve, 50));
+    // Abort to close watchers
+    controller.abort();
+    const result = await execPromise;
+    expect(result.isError).toBe(false);
+    // Cleanup temp directory
+    await fs.rm(baseTmp, { recursive: true, force: true });
   });
 });

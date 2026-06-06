@@ -6,6 +6,7 @@
 
 export {
   default as extensionsAggregator,
+  default,
   getExtensionFactories,
   getResourceLoaderOptions,
 } from './factory.js';

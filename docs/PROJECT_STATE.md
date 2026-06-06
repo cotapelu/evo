@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-05 (Evolution Round 31)
+**Last Updated:** 2026-06-06 (Evolution Round 33)
 
 ## Overview
 
@@ -9,7 +9,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## Current Capabilities
 
 ### Tools
-- `todos` – Full-featured todo management with persistence to `.pi/agent/todos.json`
+- `todos` – Full-featured todo management with persistence to `.pi/agent/todos.json` (supports selective phase deletion)
 - `memory` – Long-term memory storage and retrieval across sessions
 - `branch` – Session tree navigation and branch management with TUI rendering
 - `session-info` – Statistics about the current session with TUI rendering
@@ -38,9 +38,9 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 542 passing, 0 failing
+- **Tests:** 548 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Measured via jest --coverage; summary available through test tool
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool (~74.58% statements)
 
 ## Highlights
 
@@ -58,8 +58,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
 - E2E test for full agent session
-- Strong test suite with 542 passing tests
+- Strong test suite with 548 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
+- Phase-specific deletion in `todos` tool (delete by phase ID/name)
+- Localized UI messages unified to English (auto-continue)
+- Fixed extension import/export consistency (default export)
 
 ## Roadmap
 

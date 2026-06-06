@@ -14,7 +14,7 @@ const config: Config = {
     '^@earendil-works/pi-coding-agent/(.*)$': '<rootDir>/node_modules/@earendil-works/pi-coding-agent/dist/$1',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!@earendil-works/pi-tui/)',
+    '/node_modules/(?!@earendil-works/pi-tui/|typebox/|get-east-asian-width/)/',
   ],
   testMatch: ['**/src/**/__tests__/**/*.test.ts'],
   transform: {

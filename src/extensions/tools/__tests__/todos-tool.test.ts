@@ -244,4 +244,34 @@ describe('Todos Tool – Isolation & Concurrency', () => {
       });
     }
   });
+
+  describe('Todos Tool – Error Handling', () => {
+    test('add_task: returns error if phase does not exist', async () => {
+      const ctx = createMockContext();
+      const result = await tool.execute('1', { add_task: { phase: 'non-existent', content: 'Task' } }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Phase "non-existent" not found');
+    });
+
+    test('update: returns error if task does not exist', async () => {
+      const ctx = createMockContext();
+      const result = await tool.execute('1', { update: { id: 'task-999', status: 'completed' } }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Task "task-999" not found');
+    });
+
+    test('remove_task: returns error if task does not exist', async () => {
+      const ctx = createMockContext();
+      const result = await tool.execute('1', { remove_task: { id: 'task-999' } }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Task "task-999" not found');
+    });
+
+    test('delete: returns error if phase does not exist', async () => {
+      const ctx = createMockContext();
+      const result = await tool.execute('1', { delete: { phase: 'non-existent' } }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Phase "non-existent" not found');
+    });
+  });
 });

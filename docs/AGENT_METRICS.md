@@ -301,9 +301,19 @@
 | **Test Count** | 543 | (+1 test) |
 | **Measured Coverage** | ~74.0% | Overall statements increased by ~0.68% |
 
+## Round 33 (2026-06-06)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 33 | Regression fix + feature extension |
+| **Tasks Completed** | 4 | Fixed auto-continue messages (English), default extension export, watch-tool test abort, enhanced todos-tool with selective phase deletion |
+| **Test Failure Rate** | 0% | All 548 tests pass |
+| **Test Count** | 548 | (+5 tests) |
+| **Measured Coverage** | ~74.58% | Overall statements increased by ~0.58% |
+
 ## Trends
 
-- Test count increased from 425 to 458 overall (+33 tests)
+- Test count increased from 425 to 548 overall (+123 tests)
 - Build time stable ~2s
 - All tests pass consistently
 - Added custom TUI components for code-health, git, session-info, format, metrics, branch
@@ -312,11 +322,12 @@
 - Extension template generator reduces boilerplate and ensures consistent tool/provider/hook patterns
 - Watch tool enables continuous code quality feedback during development
 - Integration tests verify all extensions load correctly
+- Phase-specific deletion in todos tool (delete by phase ID/name)
+- UI messages unified to English (auto-continue)
+- Extension module exported with default for compatibility
 
 ## Planned Improvements
 
-- Implement E2E tests for full agent session
-- Add `watch` tool for auto-running checks on file changes
-- Create extension template generator
-- Render functions for remaining tools (memory, branch, etc.)
-- Measure and display actual coverage numbers via metrics tool
+- Increase test coverage to ≥80% overall (currently ~74.58%); target todos-tool, memory-tool, notes-tool, and other lower-covered tools
+- Add more render tests for any remaining gaps
+- Cover metrics-collector execution path during tool execution

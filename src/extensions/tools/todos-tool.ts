@@ -282,7 +282,19 @@ function applySingleOp(file: TodoFile, params: any): { file: TodoFile; errors: s
   const errors: string[] = [];
 
   if (params.delete !== undefined) {
-    file = makeEmptyFile();
+    // If params.delete is an object with a 'phase' property, delete that specific phase
+    if (typeof params.delete === 'object' && params.delete !== null && params.delete.phase !== undefined) {
+      const phaseIdOrName = params.delete.phase;
+      const phaseIndex = file.phases.findIndex(p => p.id === phaseIdOrName || p.name === phaseIdOrName);
+      if (phaseIndex === -1) {
+        errors.push(`Phase "${phaseIdOrName}" not found`);
+      } else {
+        file.phases.splice(phaseIndex, 1);
+      }
+    } else {
+      // delete all phases
+      file = makeEmptyFile();
+    }
     return { file, errors };
   }
 
