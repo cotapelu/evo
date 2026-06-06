@@ -156,7 +156,7 @@ export function registerPerformanceAdvisorTool(api: ExtensionAPI) {
         }
       }
 
-      return { content: [{ type: 'text', text: content }], details };
+      return { content: [{ type: 'text', text: content }], details, isError: false };
     },
   });
 }

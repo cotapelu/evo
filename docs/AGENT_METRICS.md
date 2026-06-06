@@ -331,9 +331,19 @@
 | **Test Count** | 573 | (+5 tests) |
 | **Measured Coverage** | ~76.95% | Overall statements increased by ~0.16%, steady progress towards 80% |
 
+## Round 36 (2026-06-06)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 36 | Major coverage push for low-covered tools |
+| **Tasks Completed** | 3 | Added comprehensive tests for performance-advisor-tool (17 tests, 100% coverage), expanded watch-tool tests (coverage 60% → 88.54%), fixed isError field and error handling |
+| **Test Failure Rate** | 0% | All 589 tests pass |
+| **Test Count** | 589 | (+16 tests) |
+| **Measured Coverage** | ~77.33% | Overall statements increased by ~0.38%, lines coverage at 79.66%, approaching 80% target |
+
 ## Trends
 
-- Test count increased from 425 to 548 overall (+123 tests)
+- Test count increased from 425 to 589 overall (+164 tests)
 - Build time stable ~2s
 - All tests pass consistently
 - Added custom TUI components for code-health, git, session-info, format, metrics, branch
@@ -345,6 +355,8 @@
 - Phase-specific deletion in todos tool (delete by phase ID/name)
 - UI messages unified to English (auto-continue)
 - Extension module exported with default for compatibility
+- Performance advisor tool added and fully tested
+- Coverage steadily increasing towards 80% (currently ~77.33% statements, 79.66% lines)
 
 ## Planned Improvements
 

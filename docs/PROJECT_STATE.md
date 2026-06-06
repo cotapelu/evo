@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-06 (Evolution Round 33)
+**Last Updated:** 2026-06-06 (Evolution Round 36)
 
 ## Overview
 
@@ -38,9 +38,9 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 573 passing, 0 failing
+- **Tests:** 589 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Measured via jest --coverage; summary available through test tool (~76.95% statements)
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool (~77.33% statements, 79.66% lines)
 
 ## Highlights
 
@@ -58,7 +58,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
 - E2E test for full agent session
-- Strong test suite with 573 passing tests
+- Strong test suite with 589 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 - Phase-specific deletion in `todos` tool (delete by phase ID/name)
 - Localized UI messages unified to English (auto-continue)
@@ -66,10 +66,12 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Fixed Jest ESM coverage collection for accurate measurement
 - Added comprehensive tests for core utilities: metrics collector, logger, piclaw-header
 - Added robust error handling tests for coverage-tool and coverage-history-tool
+- `performance_advisor` tool with full test coverage (R36)
+- Watch-tool coverage improved from ~60% to 88.54% (R36)
 
 ## Roadmap
 
-- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~76.95%)
+- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~77.33%)
 - Add render functions for remaining tools (none missing now)
-- Continue improving coverage: focus on watch-tool, todos-tool, memory-tool, and other low-covered tools
+- Continue improving coverage: focus on todos-tool, team-tool, workspace, kicad-pcb
 - Cover metrics-collector execution path during tool execution

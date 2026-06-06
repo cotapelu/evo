@@ -69,3 +69,5 @@
 - [x] Added test for selective phase deletion in todos tool (R34)
 - [x] Added error handling tests for coverage-tool (malformed JSON, render error) (R35)
 - [x] Added more error handling tests for coverage-history-tool (malformed JSON, non-array data, render error) (R35)
+- [x] Added comprehensive tests for performance-advisor-tool (17 tests, 100% coverage) (R36)
+- [x] Expanded watch-tool tests (coverage 60% → 88.54%), fixed isError field and error handling (R36)

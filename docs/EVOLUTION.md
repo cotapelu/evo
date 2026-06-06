@@ -76,6 +76,21 @@
 **Remaining Work:**
 - (none)
 
+## Phase 5: Final Coverage Push (In Progress)
+
+**Goal:** Achieve ≥80% test coverage.
+
+**Completed:**
+- Comprehensive tests for performance-advisor-tool (R36)
+- Expanded watch-tool tests (R36)
+
+**Initiative (Pending):**
+- Increase coverage for remaining low-covered tools (todos-tool, team-tool, workspace, kicad-pcb) to reach 80% threshold
+
+**Remaining Work:**
+- Add targeted tests for gaps in todos-tool (selective phase deletion, edge cases)
+- Possibly add tests for team-tool and workspace if needed
+
 ## Refactoring Schedule
 
 - Extract common tool patterns into base classes
