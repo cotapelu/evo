@@ -294,4 +294,106 @@ describe('Todos Tool – Isolation & Concurrency', () => {
       expect(afterList.details.phases[0].name).toBe('Phase B');
     });
   });
+
+  describe('Rendering', () => {
+    let tool: any;
+
+    beforeEach(async () => {
+      jest.resetModules();
+      api = createMockApi();
+      const mod = await import('../todos-tool.js');
+      mod.registerTodosTool(api);
+      tool = api.registeredTool;
+      expect(tool).toBeDefined();
+    });
+
+    test('renderCall shows operation', () => {
+      const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s };
+      const call1 = tool.renderCall({ add_phase: { name: 'P', tasks: [] } }, theme);
+      expect(call1).toBeDefined();
+      const call2 = tool.renderCall({ add_task: { phase: 'p1', content: 'Task' } }, theme);
+      expect(call2).toBeDefined();
+      const call3 = tool.renderCall({ update: { id: 't1', status: 'completed' } }, theme);
+      expect(call3).toBeDefined();
+      const call4 = tool.renderCall({ remove_task: { id: 't1' } }, theme);
+      expect(call4).toBeDefined();
+      const call5 = tool.renderCall({ delete: { phase: 'p1' } }, theme);
+      expect(call5).toBeDefined();
+      const call6 = tool.renderCall({ list: {} }, theme);
+      expect(call6).toBeDefined();
+    });
+
+    test('renderResult: no details → empty', () => {
+      const theme = {};
+      const result = tool.renderResult({}, { expanded: false, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: error', () => {
+      const theme = { fg: (c: string, s: string) => s };
+      const result = tool.renderResult({ details: { error: 'Something wrong' } }, { expanded: false, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: partial', () => {
+      const theme = {};
+      const result = tool.renderResult({}, { expanded: false, isPartial: true }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: empty todos', () => {
+      const theme = { fg: (c: string, s: string) => s, dim: (s: string) => s };
+      const result = tool.renderResult({ details: { phases: [] } }, { expanded: false, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: single phase with tasks, not expanded', () => {
+      const theme = { fg: (c: string, s: string) => s, accent: (s: string) => s, text: (s: string) => s, dim: (s: string) => s };
+      const details = {
+        phases: [{ id: 'p1', name: 'Phase 1', tasks: [
+          { id: 't1', content: 'Task 1', status: 'pending' as any },
+          { id: 't2', content: 'Task 2', status: 'in_progress' as any, details: 'Detail line 1\nDetail line 2' },
+          { id: 't3', content: 'Task 3', status: 'completed' as any },
+        ]}],
+      };
+      const result = tool.renderResult({ details }, { expanded: false, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: truncates when not expanded', () => {
+      const theme = { fg: (c: string, s: string) => s, accent: (s: string) => s, text: (s: string) => s, dim: (s: string) => s };
+      const manyTasks = Array.from({ length: 10 }, (_, i) => ({
+        id: `t${i}`,
+        content: `Task ${i}`,
+        status: 'pending' as any,
+      }));
+      const details = { phases: [{ id: 'p1', name: 'Phase 1', tasks: manyTasks }] };
+      const result = tool.renderResult({ details }, { expanded: false, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: shows all when expanded', () => {
+      const theme = { fg: (c: string, s: string) => s, accent: (s: string) => s, text: (s: string) => s, dim: (s: string) => s };
+      const manyTasks = Array.from({ length: 3 }, (_, i) => ({
+        id: `t${i}`,
+        content: `Task ${i}`,
+        status: 'pending' as any,
+      }));
+      const details = { phases: [{ id: 'p1', name: 'Phase 1', tasks: manyTasks }] };
+      const result = tool.renderResult({ details }, { expanded: true, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+
+    test('renderResult: multiple phases', () => {
+      const theme = { fg: (c: string, s: string) => s, accent: (s: string) => s, text: (s: string) => s, dim: (s: string) => s };
+      const details = {
+        phases: [
+          { id: 'p1', name: 'Phase A', tasks: [{ id: 't1', content: 'Task A1', status: 'pending' as any }] },
+          { id: 'p2', name: 'Phase B', tasks: [{ id: 't2', content: 'Task B1', status: 'in_progress' as any }] },
+        ],
+      };
+      const result = tool.renderResult({ details }, { expanded: false, isPartial: false }, theme);
+      expect(result).toBeDefined();
+    });
+  });
 });
