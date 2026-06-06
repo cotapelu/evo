@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { createAgentSession, DefaultResourceLoader } from '@earendil-works/pi-coding-agent';
-import { getResourceLoaderOptions } from '../../extensionLoader.js';
+import { getResourceLoaderOptions } from '../../extensions/index.js';
 import { mkdtemp, rmdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';

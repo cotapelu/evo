@@ -48,7 +48,7 @@ describe('Team System - No Global State', () => {
   test('main.ts should NOT set globalThis.__EVO__RUNTIME__', async () => {
     // Static analysis: verify main.ts does not set globalThis
     const fs = await import('fs');
-    const mainSource = fs.readFileSync('./src/main.ts', 'utf-8');
+    const mainSource = fs.readFileSync('./src/evo.ts', 'utf-8');
     
     // Should not have assignment to globalThis.__EVO__RUNTIME__
     expect(mainSource).not.toMatch(/globalThis\.__EVO__RUNTIME__\s*=/);

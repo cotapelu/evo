@@ -29,7 +29,7 @@ function createWatchTool(api: ExtensionAPI): ToolDefinition<any, any> {
       const debounceMs = typeof p.debounceMs === 'number' ? p.debounceMs : 500;
 
       // Directories and files to watch
-      const watchDirs = ['src', 'tsconfig.json', 'package.json', 'evo.ts', 'src/main.ts', 'src/extensionLoader.ts', 'src/extensions'];
+      const watchDirs = ['src', 'tsconfig.json', 'package.json', 'evo.ts', 'src/evo.ts', 'src/extensions'];
       const watchPaths = watchDirs.map(p => join(ctx.cwd, p));
 
       // Keep track of watchers for cleanup

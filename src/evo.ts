@@ -7,7 +7,7 @@
  */
 
 import { main as piMain } from '@earendil-works/pi-coding-agent';
-import { getExtensionFactories } from './extensionLoader.js';
+import { getExtensionFactories } from './extensions/index.js';
 
 export async function main() {
   const args = process.argv.slice(2);
@@ -22,4 +22,7 @@ export async function main() {
   }
 }
 
-// main(); // Không gọi trực tiếp, để evo.ts gọi
+// Auto-run khi execute trực tiếp (không khi import)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}
