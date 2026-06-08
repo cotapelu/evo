@@ -24,6 +24,10 @@ bench-results/
 .DS_Store
 Thumbs.db
 
+# Build output
+dist/
+*.tgz
+
 # Evo specific
 .evo/
 *.log
