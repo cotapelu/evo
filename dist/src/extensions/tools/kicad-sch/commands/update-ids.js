@@ -1,0 +1,15 @@
+import { Type } from "typebox";
+export const schema = Type.Object({
+    input: Type.String(),
+    dry_run: Type.Optional(Type.Boolean()),
+});
+export async function execute(args, cwd, signal, ctx) {
+    const python = process.env.PYTHON || 'python3';
+    const cmd = [python, '-m', 'kicad.sch.update_ids', args.input];
+    if (args.dry_run)
+        cmd.push('--dry-run');
+    const result = await ctx.exec(python, cmd.slice(1), { cwd, signal });
+    return { stdout: result.stdout, stderr: result.stderr, code: result.code };
+}
+export default { schema, execute };
+//# sourceMappingURL=update-ids.js.map

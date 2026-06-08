@@ -1,0 +1,1 @@
+{"version":3,"file":"extensionLoader.js","sourceRoot":"","sources":["../../src/extensionLoader.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAEH,OAAO,oBAAoB,MAAM,uBAAuB,CAAC;AAEzD;;GAEG;AACH,MAAM,UAAU,qBAAqB;IACnC,OAAO,CAAC,oBAAoB,CAAC,CAAC;AAChC,CAAC;AAED;;GAEG;AACH,MAAM,UAAU,wBAAwB;IACtC,OAAO;QACL,kBAAkB,EAAE,qBAAqB,EAAE;KAC5C,CAAC;AACJ,CAAC"}

@@ -1,0 +1,301 @@
+/**
+ * Git Integration Extension
+ *
+ * Features:
+ * - Auto-commit on session exit with AI-generated commit messages
+ * - Git stash checkpoints before each turn for safe /fork restoration
+ */
+function validateConfig(config) {
+    if (typeof config !== 'object' || config === null) {
+        throw new Error('Git integration config must be an object');
+    }
+    // Helper to get field with type validation
+    function getBooleanField(name, defaultValue) {
+        const value = config[name];
+        if (value === undefined || value === null)
+            return defaultValue;
+        if (typeof value !== 'boolean') {
+            throw new Error(`Git config: '${name}' must be a boolean, got ${typeof value}`);
+        }
+        return value;
+    }
+    function getNumberField(name, defaultValue, min, max) {
+        const value = config[name];
+        if (value === undefined || value === null)
+            return defaultValue;
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
+            throw new Error(`Git config: '${name}' must be a finite number, got ${typeof value}`);
+        }
+        if (!Number.isInteger(value)) {
+            throw new Error(`Git config: '${name}' must be an integer, got ${value}`);
+        }
+        if (value < min || value > max) {
+            throw new Error(`Git config: '${name}' must be between ${min} and ${max}, got ${value}`);
+        }
+        return value;
+    }
+    function getEnumField(name, allowed, defaultValue) {
+        const value = config[name];
+        if (value === undefined || value === null)
+            return defaultValue;
+        if (typeof value !== 'string') {
+            throw new Error(`Git config: '${name}' must be a string, got ${typeof value}`);
+        }
+        if (!allowed.includes(value)) {
+            throw new Error(`Git config: '${name}' must be one of: ${allowed.join(', ')}; got '${value}'`);
+        }
+        return value;
+    }
+    return {
+        enabled: getBooleanField('enabled', true),
+        commitOnExit: getBooleanField('commitOnExit', true),
+        checkpointPerTurn: getBooleanField('checkpointPerTurn', true),
+        stageAllChanges: getBooleanField('stageAllChanges', false),
+        commitMessageSource: getEnumField('commitMessageSource', ['last-assistant', 'session-summary', 'last-user-message'], 'last-assistant'),
+        gitTimeoutMs: getNumberField('gitTimeoutMs', 10000, 1000, 60000),
+        maxRetries: getNumberField('maxRetries', 2, 0, 5)
+    };
+}
+const CONFIG = validateConfig({
+    enabled: true,
+    commitOnExit: true,
+    checkpointPerTurn: true,
+    stageAllChanges: false,
+    commitMessageSource: 'last-assistant',
+    gitTimeoutMs: 10000,
+    maxRetries: 2
+});
+export default function gitIntegrationExtension(pi) {
+    const checkpoints = new Map(); // entryId -> stash ref
+    let currentEntryId;
+    let isGitRepoCached = null;
+    // Safe git execution with timeout and retry
+    async function execGit(args, attempt = 1) {
+        try {
+            // Use pi.exec built-in timeout for reliable cancellation
+            const result = await pi.exec('git', args, { timeout: CONFIG.gitTimeoutMs });
+            return { stdout: result.stdout, code: result.code };
+        }
+        catch (error) {
+            console.error(`Git operation failed (attempt ${attempt}/${CONFIG.maxRetries + 1}):`, error?.message || error);
+            if (attempt <= CONFIG.maxRetries) {
+                // Exponential backoff: 100ms, 200ms, 400ms
+                const backoff = 100 * Math.pow(2, attempt - 1);
+                await new Promise(resolve => setTimeout(resolve, backoff));
+                return execGit(args, attempt + 1);
+            }
+            throw error;
+        }
+    }
+    async function isGitRepo() {
+        if (isGitRepoCached !== null)
+            return isGitRepoCached;
+        try {
+            const { code } = await execGit(['rev-parse', '--is-inside-work-tree']);
+            isGitRepoCached = code === 0;
+        }
+        catch {
+            isGitRepoCached = false;
+        }
+        return isGitRepoCached;
+    }
+    async function hasUncommittedChanges() {
+        try {
+            const { stdout } = await execGit(['status', '--porcelain']);
+            return stdout.trim().length > 0;
+        }
+        catch (error) {
+            console.debug('Git status check failed:', error.message);
+            return false;
+        }
+    }
+    async function stageChanges() {
+        try {
+            await execGit(['add', '-A']);
+            return true;
+        }
+        catch (error) {
+            console.error('Git stage failed:', error);
+            return false;
+        }
+    }
+    function sanitizeCommitMessage(message) {
+        // Remove newlines, control chars, and limit length
+        const maxLength = 72;
+        const sanitized = message
+            .replace(/[\r\n]+/g, ' ')
+            .replace(/[^\x20-\x7E]/g, '')
+            .trim();
+        return sanitized.length > maxLength ? sanitized.slice(0, maxLength - 3) + '...' : sanitized;
+    }
+    function sanitizeStashMessage(message) {
+        // Remove newlines and control chars; no length limit needed
+        return message.replace(/[\r\n\x00-\x1F\x7F]/g, '').trim();
+    }
+    async function generateCommitMessage(ctx) {
+        const entries = ctx.sessionManager.getEntries();
+        if (entries.length === 0)
+            return '[pi] No activity';
+        try {
+            switch (CONFIG.commitMessageSource) {
+                case 'last-assistant': {
+                    for (let i = entries.length - 1; i >= 0; i--) {
+                        const entry = entries[i];
+                        if (entry.type === 'message' && entry.message.role === 'assistant') {
+                            const content = entry.message.content;
+                            if (Array.isArray(content)) {
+                                const text = content
+                                    .filter((c) => c.type === 'text')
+                                    .map((c) => c.text)
+                                    .join('\n')
+                                    .trim();
+                                const firstLine = text.split('\n')[0] || 'Assistant work';
+                                return `[pi] ${firstLine.slice(0, 72)}${firstLine.length > 72 ? '...' : ''}`;
+                            }
+                        }
+                    }
+                    return '[pi] Session work';
+                }
+                case 'last-user-message': {
+                    for (let i = entries.length - 1; i >= 0; i--) {
+                        const entry = entries[i];
+                        if (entry.type === 'message' && entry.message.role === 'user') {
+                            const content = entry.message.content;
+                            if (typeof content === 'string') {
+                                const firstLine = content.split('\n')[0] || 'User request';
+                                return `[pi] ${firstLine.slice(0, 72)}${firstLine.length > 72 ? '...' : ''}`;
+                            }
+                        }
+                    }
+                    return '[pi] User-driven work';
+                }
+                case 'session-summary': {
+                    let toolCount = 0;
+                    for (const entry of entries) {
+                        if (entry.type === 'message' && entry.message.role === 'tool')
+                            toolCount++;
+                    }
+                    return `[pi] Session: ${toolCount} tool calls`;
+                }
+                default:
+                    return '[pi] Work completed';
+            }
+        }
+        catch {
+            return '[pi] Auto-commit';
+        }
+    }
+    // Session start
+    pi.on('session_start', async (_event, ctx) => {
+        if (!CONFIG.enabled)
+            return;
+        const repo = await isGitRepo();
+        if (!repo) {
+            pi.appendEntry('git-integration-info', {
+                message: 'Not a git repository - git integration disabled',
+                type: 'warning'
+            });
+            return;
+        }
+        pi.appendEntry('git-integration-info', {
+            message: 'Git integration active',
+            checkpointPerTurn: CONFIG.checkpointPerTurn,
+            commitOnExit: CONFIG.commitOnExit
+        });
+    });
+    // Track entry ID for checkpoints after tool results
+    pi.on('tool_result', async (_event, ctx) => {
+        const leaf = ctx.sessionManager.getLeafEntry();
+        if (leaf)
+            currentEntryId = leaf.id;
+    });
+    // Turn start - create checkpoint
+    pi.on('turn_start', async () => {
+        if (!CONFIG.enabled || !CONFIG.checkpointPerTurn)
+            return;
+        if (!currentEntryId)
+            return;
+        if (!(await isGitRepo()))
+            return;
+        // Sanitize entry ID to avoid control chars in stash message
+        const safeId = sanitizeStashMessage(currentEntryId);
+        if (!safeId)
+            return; // skip if empty after sanitization
+        try {
+            const { stdout } = await execGit(['stash', 'create', '-m', `pi-checkpoint-${safeId}`]);
+            const ref = stdout.trim();
+            if (ref) {
+                checkpoints.set(currentEntryId, ref);
+            }
+        }
+        catch (error) {
+            // Checkpoints are optional but log at debug level for observability
+            console.debug(`Checkpoint creation failed: ${error.message}`);
+        }
+    });
+    // Before fork - offer to restore code from checkpoint
+    pi.on('session_before_fork', async (event, ctx) => {
+        if (!CONFIG.enabled || !CONFIG.checkpointPerTurn)
+            return;
+        const ref = checkpoints.get(event.entryId);
+        if (!ref)
+            return;
+        if (!ctx.hasUI)
+            return;
+        const choice = await ctx.ui.select('Restore code state from checkpoint?', [
+            'Yes, restore code to that point',
+            'No, keep current code'
+        ]);
+        if (choice?.startsWith('Yes')) {
+            try {
+                await execGit(['stash', 'apply', ref]);
+                ctx.ui.notify('Code restored to checkpoint', 'info');
+            }
+            catch (error) {
+                ctx.ui.notify(`Failed to restore: ${error}`, 'error');
+            }
+        }
+    });
+    // Session shutdown - auto-commit
+    pi.on('session_shutdown', async (_event, ctx) => {
+        try {
+            if (!CONFIG.enabled || !CONFIG.commitOnExit)
+                return;
+            if (!(await isGitRepo()))
+                return;
+            if (!(await hasUncommittedChanges()))
+                return;
+            const staged = await stageChanges();
+            if (!staged) {
+                ctx.ui.notify('Auto-commit skipped: staging failed', 'error');
+                return;
+            }
+            let message = await generateCommitMessage(ctx);
+            message = sanitizeCommitMessage(message);
+            const { code } = await execGit(['commit', '-m', message]);
+            if (code === 0 && ctx.hasUI) {
+                ctx.ui.notify(`Auto-committed: ${message}`, 'info');
+            }
+            pi.appendEntry('git-integration-info', {
+                message: `Auto-commit: ${message}`,
+                committed: true
+            });
+        }
+        catch (error) {
+            if (ctx.hasUI) {
+                ctx.ui.notify(`Auto-commit failed: ${error.message}`, 'error');
+            }
+        }
+        finally {
+            // Always clear checkpoints and cache on shutdown
+            checkpoints.clear();
+            isGitRepoCached = null;
+        }
+    });
+    // Agent end - cleanup
+    pi.on('agent_end', async () => {
+        checkpoints.clear();
+        isGitRepoCached = null;
+    });
+}
+//# sourceMappingURL=git-integration.js.map
