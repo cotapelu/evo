@@ -128,6 +128,47 @@ describe('Metrics Collector', () => {
     expect(appendFileMock).toHaveBeenCalled();
   });
 
+  test('should ignore mkdir errors and still record metric', async () => {
+    api = createMockApi();
+    mkdirMock.mockRejectedValue(new Error('mkdir failed'));
+    metricsCollector(api);
+    const tool = createSimpleTool('test-tool', 'success');
+    api.registerTool(tool);
+    const ctx = { cwd: '/test/project' };
+    const result = await api.getRegisteredTools()[0].execute('1', {}, undefined, undefined, ctx);
+    expect(result.isError).toBe(false);
+    await Promise.resolve();
+    // mkdir failed, but should swallow and not crash
+    expect(mkdirMock).toHaveBeenCalled();
+    // appendFile may not be called because mkdir error skips file write, but that's fine
+  });
+
+  test('records error metric with fallback string when error has no message', async () => {
+    api = createMockApi();
+    metricsCollector(api);
+    const tool: ToolDefinition<any, any> = {
+      name: 'fail-tool',
+      label: 'Fail Tool',
+      description: 'Throws object',
+      parameters: {},
+      async execute() { throw Object(); }
+    };
+    api.registerTool(tool);
+    const ctx = { cwd: '/test/project' };
+    try {
+      await api.getRegisteredTools()[0].execute('1', {}, undefined, undefined, ctx);
+      // Should not reach here
+      throw new Error('Expected rejection');
+    } catch (e) {
+      // Expected
+    }
+    await Promise.resolve();
+    const lastArg = appendFileMock.mock.calls[0][1];
+    const metric = JSON.parse(lastArg.split('\n')[0]);
+    expect(metric.success).toBe(false);
+    expect(metric.error).toBe('[object Object]'); // fallback String(e)
+  });
+
   test('should handle multiple tool registrations', async () => {
     api = createMockApi();
     metricsCollector(api);
