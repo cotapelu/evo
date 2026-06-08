@@ -103,4 +103,10 @@ describe('Coverage History Tool', () => {
     const result = tool.renderResult({ isError: true, details: { error: 'test' } }, { expanded: false, isPartial: false }, theme);
     expect(result).toBeDefined();
   });
+
+  test('renderResult shows partial state when isPartial true', () => {
+    const theme = { fg: (c: string, s: string) => s, warning: (s: string) => s };
+    const result = tool.renderResult({}, { expanded: false, isPartial: true }, theme);
+    expect(result).toBeDefined();
+  });
 });
