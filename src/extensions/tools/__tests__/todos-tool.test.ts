@@ -396,4 +396,49 @@ describe('Todos Tool – Isolation & Concurrency', () => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('Todos Tool – Additional Coverage', () => {
+    const toolCallId = 'test-call-1';
+    test('rejects add_phase without name', async () => {
+      const result: any = await tool.execute(toolCallId, { add_phase: {} }, undefined, undefined, createMockContext());
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('add_phase.name must be a string');
+    });
+
+    test('rejects add_task without phase', async () => {
+      const result: any = await tool.execute(toolCallId, { add_task: { content: 'task' } }, undefined, undefined, createMockContext());
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('add_task.phase must be a string');
+    });
+
+    test('rejects add_task without content', async () => {
+      const result: any = await tool.execute(toolCallId, { add_task: { phase: 'p1' } }, undefined, undefined, createMockContext());
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('add_task.content must be a string');
+    });
+
+    test('rejects add_task to non-existent phase', async () => {
+      const result: any = await tool.execute(toolCallId, { add_task: { phase: 'nonexistent', content: 'task' } }, undefined, undefined, createMockContext());
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('not found');
+    });
+
+    test('rejects update without phase and task', async () => {
+      const result: any = await tool.execute(toolCallId, { update: { status: 'completed' } }, undefined, undefined, createMockContext());
+      expect(result.isError).toBe(true);
+    });
+
+    test('rejects remove_task without params', async () => {
+      const result: any = await tool.execute(toolCallId, { remove_task: {} }, undefined, undefined, createMockContext());
+      expect(result.isError).toBe(true);
+    });
+
+    test('add_phase rejects non-string name', async () => {
+      const ctx = createMockContext();
+      const result: any = await tool.execute(toolCallId, { add_phase: { name: 123 as any } }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('add_phase.name must be a string');
+    });
+
+  });
 });

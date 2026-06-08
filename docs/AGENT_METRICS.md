@@ -363,3 +363,33 @@
 - Increase test coverage to ≥80% overall (currently ~74.58%); target todos-tool, memory-tool, notes-tool, and other lower-covered tools
 - Add more render tests for any remaining gaps
 - Cover metrics-collector execution path during tool execution
+
+## Round 37 (2026-06-08)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 37 | Coverage push to exceed 80% |
+| **Tasks Completed** | 8 | Added 8 new test suites covering workspace, team-tool, kicad-pcb, todos-tool, metrics-tool, and more; total +56 tests |
+| **Test Failure Rate** | 0% | All 645 tests pass |
+| **Test Count** | 645 | (+56 tests) |
+| **Measured Coverage** | 80.39% | Statements +2.72% from 77.33%, lines 82.63% |
+
+## Trends
+
+- Test count increased from 589 to 645 (+56)
+- Coverage increased from ~77.33% to 80.39% statements, exceeding 80% target
+- All tests pass consistently
+- Coverage improvements across todos-tool, kicad-pcb, team-tool, workspace, metrics-tool
+- Added batch update feature test for todos-tool (ids array)
+- Added validation tests for todos-tool error handling
+- Added tests for notes/details preservation in todos tasks
+- Added tests for team-run creation errors and query operations
+- Added unit tests for SharedWorkspace (100% coverage)
+- Added coverage boost tests for kicad-pcb commands
+
+## Planned Improvements
+
+- Push coverage further beyond 80% towards 85%
+- Expand render tests for any remaining tools
+- Improve branch coverage for error handling paths
+- Continue steady evolution

@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-06 (Evolution Round 36)
+**Last Updated:** 2026-06-08 (Evolution Round 37)
 
 ## Overview
 
@@ -38,9 +38,9 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 589 passing, 0 failing
+- **Tests:** 645 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Measured via jest --coverage; summary available through test tool (~77.33% statements, 79.66% lines)
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool (80.39% statements, 82.63% lines)
 
 ## Highlights
 
