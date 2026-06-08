@@ -462,3 +462,27 @@
 - Expand render tests for any remaining tools
 - Investigate low-branch-coverage modules (auto-continue, kilo-provider)
 - Maintain 100% test pass rate
+
+## Round 41 (2026-06-08)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 41 | Auto-continue comprehensive tests |
+| **Tasks Completed** | 1 | Added auto-continue integration test suite (7 tests) |
+| **Test Failure Rate** | 0% | All 661 tests pass |
+| **Test Count** | 661 | (+7 tests) |
+| **Measured Coverage** | 82.05% | Statements +1.4%, branch 72.43% (+1.72%), lines 84.46% |
+
+## Trends
+
+- Tests increased from 654 to 661 (+7)
+- Branch coverage increased from 70.71% to 72.43%, exceeding 72% target
+- Statement coverage increased to 82.05%
+- Added comprehensive tests for auto-continue hook covering registration, command variations, and AUTO-CONTINUE.md loading
+
+## Planned Improvements
+
+- Investigate remaining low-branch-coverage modules (kilo-provider, registry)
+- Expand render tests for any remaining tools
+- Continue tightening error handling paths
+- Maintain 100% test pass rate
