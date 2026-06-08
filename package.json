@@ -1,6 +1,6 @@
 {
-  "name": "evo-agent",
-  "version": "0.0.2",
+  "name": "evo",
+  "version": "0.0.4",
   "description": "Self-Evolving AI Agent System",
   "type": "module",
   "main": "dist/src/evo.js",
