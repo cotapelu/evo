@@ -97,6 +97,23 @@
 **Remaining Work:**
 - None for coverage; focus now on quality and feature enhancements.
 
+## Phase 6: Branch Coverage & Edge Cases (Completed 2026-06-08)
+
+**Goal:** Improve branch coverage and edge case handling.
+
+**Completed:**
+- Added kicad-sch coverage boost tests (2 tests) covering all commands
+- Added about-command edge case tests (3 tests) for missing name/version fallbacks
+- Added todos-tool validation for non-string name
+- Overall branch coverage increased from 70.37% to 70.63%
+
+**Initiative:** Incremental branch coverage gains.
+
+**Remaining Work:**
+- Continue targeting >72% branch coverage
+- Expand render tests for remaining tools
+- Investigate low branch coverage modules (auto-continue, kilo-provider)
+
 ## Refactoring Schedule
 
 - Extract common tool patterns into base classes
