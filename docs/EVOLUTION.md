@@ -129,6 +129,20 @@
 - Add tests for auto-continue edge cases
 - Add tests for kilo-provider error branches
 
+## Phase 8: Signal Handling Coverage (Completed 2026-06-08)
+
+**Goal:** Improve command execution coverage for KiCad tools.
+
+**Completed:**
+- Added kicad-sch signal handling tests (2 tests)
+- Verified signal passing and default behavior
+
+**Initiative:** Ensure abort signals propagate correctly.
+
+**Remaining Work:**
+- Continue thorough signal/error handling tests across tools
+- Maintain 100% pass rate
+
 ## Refactoring Schedule
 
 - Extract common tool patterns into base classes
