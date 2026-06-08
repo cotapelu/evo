@@ -16,6 +16,7 @@ import cancelCommand from "./cancel-command.js";
 
 import piclawHeader from "./piclaw-header.js";
 import { registerTeamTool } from "./team/index.js";
+import autoCompact85 from "./hooks/auto-compact-85.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -51,6 +52,7 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   // EXTENSIONS (Event Handlers, UI, etc.)
   // ============================================
   autoContinueExtension(api);
+  autoCompact85(api);
   registerTeamTool(api);
   piclawHeader(api);
   aboutCommand(api);
