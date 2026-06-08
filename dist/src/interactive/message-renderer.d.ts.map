@@ -1,1 +1,0 @@
-{"version":3,"file":"message-renderer.d.ts","sourceRoot":"","sources":["../../../src/interactive/message-renderer.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,SAAS,EAAE,MAAM,wBAAwB,CAAC;AAExD;;;GAGG;AACH,qBAAa,eAAe;IACd,OAAO,CAAC,aAAa;gBAAb,aAAa,EAAE,SAAS;IAE5C;;OAEG;IACH,MAAM,CAAC,QAAQ,EAAE,GAAG,EAAE,GAAG,IAAI;IAW7B;;;;OAIG;IACH,OAAO,CAAC,sBAAsB;CAS/B"}
