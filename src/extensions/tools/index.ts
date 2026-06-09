@@ -27,4 +27,5 @@ export { registerCoverageTool } from "./coverage-tool.js";
 export { registerCoverageHistoryTool } from "./coverage-history-tool.js";
 export { registerNotesTool } from "./notes-tool.js";
 export { registerToolMetricsTool } from "./tool-metrics-tool.js";
+export { registerCoverageLeadersTool } from "./coverage-leaders.js";
 export { registerPerformanceAdvisorTool } from "./performance-advisor-tool.js";

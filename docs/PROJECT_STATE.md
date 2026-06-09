@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-09 (Evolution Round 43)
+**Last Updated:** 2026-06-09 (Evolution Round 46)
 
 ## Overview
 
@@ -9,11 +9,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## Current Capabilities
 
 ### Tools
-- `todos` – Full-featured todo management with persistence to `.pi/agent/todos.json` (supports selective phase deletion by ID/name) (supports selective phase deletion)
+- `todos` – Full-featured todo management with persistence to `.pi/agent/todos.json` (supports selective phase deletion by ID/name)
 - `memory` – Long-term memory storage and retrieval across sessions
 - `branch` – Session tree navigation and branch management with TUI rendering
 - `session-info` – Statistics about the current session with TUI rendering
-- `test` – Runs project tests (npm test) with optional pattern, coverage flag, and coverage summary parsing; also persists coverage history
+- `test` – Runs project tests (npm test) with optional pattern, coverage flag, and coverage summary parsing; persists coverage history
 - `git` – Git operations: status, diff, commit, add, push, pull, log with custom TUI rendering
 - `code-health` – Aggregated code quality checks: lint, type-check, test, build, audit with custom TUI rendering
 - `format` – Code formatter using Prettier to format the entire codebase
@@ -22,6 +22,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `extension-template-generator` – Generate scaffold for new tools, providers, hooks with correct typings
 - `watch` – Watch files and auto-run commands on change (default: code-health, test --coverage)
 - `coverage` – Display code coverage statistics from coverage/coverage-summary.json
+- `coverage-leaders` – Show top and bottom coverage files to guide improvement efforts
 - `coverage-history` – Show trends of coverage over time (read from .pi/coverage-history.json)
 - `notes` – Session-scoped scratchpad for quick temporary notes
 - `tool-metrics` – Display execution statistics for tools (times, error rates)
@@ -38,9 +39,9 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 671 passing, 0 failing
+- **Tests:** 684 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Measured via jest --coverage; summary available through test tool (82.16% statements, 72.6% branch, 84.55% lines)
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool (82.4% statements, 72.94% branch, 84.68% lines)
 
 ## Highlights
 
@@ -48,6 +49,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Security audit tool with minimal false positives (excludes docs, test files, and tool's own source)
 - Optional test coverage with JSON summary parsing
 - Dedicated `coverage` tool to display coverage statistics instantly
+- **New: `coverage-leaders` tool to identify top and bottom coverage files for targeted improvement**
 - Coverage history automatically persisted and viewable via `coverage-history` tool
 - Built-in formatting with `format` tool
 - Metrics introspection via `metrics` tool
@@ -58,7 +60,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
 - E2E test for full agent session
-- Strong test suite with 589 passing tests
+- Strong test suite with 684 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 - Phase-specific deletion in `todos` tool (delete by phase ID/name)
 - Localized UI messages unified to English (auto-continue)
@@ -66,12 +68,14 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Fixed Jest ESM coverage collection for accurate measurement
 - Added comprehensive tests for core utilities: metrics collector, logger, piclaw-header
 - Added robust error handling tests for coverage-tool and coverage-history-tool
-- `performance_advisor` tool with full test coverage (R36)
-- Watch-tool coverage improved from ~60% to 88.54% (R36)
+- `performance_advisor` tool with full test coverage
+- Watch-tool coverage improved from ~60% to 88.54%
 
 ## Roadmap
 
-- Increase test coverage for low-covered tools to reach ≥80% overall (currently ~77.33%)
-- Add render functions for remaining tools (none missing now)
-- Continue improving coverage: focus on todos-tool, team-tool, workspace, kicad-pcb
-- Cover metrics-collector execution path during tool execution
+- Maintain ≥80% test coverage (currently 82.4% statements)
+- Push branch coverage beyond 73%
+- Continue systematic rendering test expansion
+- Tighten error handling paths across all tools
+- Maintain 100% test pass rate
+- Add new high-impact developer productivity features

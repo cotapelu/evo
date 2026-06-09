@@ -529,3 +529,74 @@
 
 - Continue expanding error handling tests where applicable
 - Maintain 100% test pass rate
+
+## Round 44 (2026-06-09)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 44 | Coverage-history-tool partial render test |
+| **Tasks Completed** | 1 | Added partial render test to coverage-history-tool |
+| **Test Failure Rate** | 0% | All 672 tests pass |
+| **Test Count** | 672 | (+1 test) |
+| **Measured Coverage** | 82.2% | Statements +0.04%, branch 72.68% (+0.08%) |
+
+## Trends
+
+- Tests increased from 671 to 672 (+1)
+- Branch coverage increased from 72.6% to 72.68%
+- Added render call test for coverage-history-tool to improve render coverage
+
+## Planned Improvements
+
+- Continue stabilizing after refactoring
+- Expand render tests for any remaining tools
+- Maintain 100% test pass rate
+
+## Round 45 (2026-06-09)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 45 | Extension export simplification & pi install support |
+| **Tasks Completed** | 4 | Refactored extension exports; added pi install support; updated package.json; added src/index.ts |
+| **Test Failure Rate** | 0% | All 672 tests pass |
+| **Test Count** | 672 | (no new tests) |
+| **Measured Coverage** | 82.14% | Statements +0.07% (maintained), branch 72.68% (stable) |
+
+## Trends
+
+- Test count stable at 672
+- Coverage remains high: 82.14% statements, 72.68% branch, 84.55% lines
+- Completed refactoring to support both npm install and pi install workflows
+- Simplified extension exports: removed redundant getResourceLoaderOptions, kept getExtensionFactories
+- Added src/index.ts as pi extension entry point
+- Updated package.json with correct paths for both standalone and pi modes
+
+## Planned Improvements
+
+- Focus on new feature development to continue evolution
+- Explore coverage improvement opportunities
+- Maintain stability and 100% test pass rate
+
+## Round 46 (2026-06-09)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 46 | Added coverage-leaders tool |
+| **Tasks Completed** | 4 | Created coverage-leaders tool to show top/bottom coverage files; 12 new tests; registered in factory; docs updated |
+| **Test Failure Rate** | 0% | All 684 tests pass |
+| **Test Count** | 684 | (+12 tests) |
+| **Measured Coverage** | 82.4% | Statements +0.26%, branch 72.94% (+0.26%), lines 84.68% (+0.13%) |
+
+## Trends
+
+- Test count increased from 672 to 684 (+12)
+- Coverage increased across all metrics: statements 82.14% → 82.4%, branches 72.68% → 72.94%, lines 84.55% → 84.68%
+- coverage-leaders tool provides actionable insights for coverage improvement
+- Tool has 97.29% line coverage, 81.08% branch coverage
+- Stable operation with 100% test pass rate
+
+## Planned Improvements
+
+- Continue adding high-value tools that improve developer productivity
+- Investigate further branch coverage gains in remaining low-coverage modules
+- Maintain robust test suite and 100% pass rate

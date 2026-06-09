@@ -8,7 +8,7 @@
  */
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
-import { registerTodosTool, registerMemoryTool, registerBranchTool, registerSessionInfoTool, registerTestRunnerTool, registerGitTool, registerKicadSchTool, registerKicadPcbTool, registerCodeHealthTool, registerFormatTool, registerMetricsTool, registerSecurityAuditTool, registerExtensionTemplateGeneratorTool, registerWatchTool, registerCoverageTool, registerCoverageHistoryTool, registerNotesTool, registerToolMetricsTool, registerPerformanceAdvisorTool } from "./tools/index.js";
+import { registerTodosTool, registerMemoryTool, registerBranchTool, registerSessionInfoTool, registerTestRunnerTool, registerGitTool, registerKicadSchTool, registerKicadPcbTool, registerCodeHealthTool, registerFormatTool, registerMetricsTool, registerSecurityAuditTool, registerExtensionTemplateGeneratorTool, registerWatchTool, registerCoverageTool, registerCoverageHistoryTool, registerNotesTool, registerToolMetricsTool, registerPerformanceAdvisorTool, registerCoverageLeadersTool } from "./tools/index.js";
 import metricsCollector from "./metrics-collector.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
 import aboutCommand from "./about-command.js";
@@ -47,6 +47,7 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   registerNotesTool(api);
   registerToolMetricsTool(api);
   registerPerformanceAdvisorTool(api);
+  registerCoverageLeadersTool(api);
 
   // ============================================
   // EXTENSIONS (Event Handlers, UI, etc.)
