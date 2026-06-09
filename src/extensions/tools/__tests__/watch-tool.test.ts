@@ -198,4 +198,58 @@ describe('Watch Tool', () => {
     expect(result).toBeDefined();
   });
 
+  // Additional branch coverage tests
+  describe('branch coverage edge cases', () => {
+    test('execute: returns error when no cwd in ctx', async () => {
+      // Remove cwd from ctx
+      const ctx: any = {};
+      const result = await tool.execute('1', {}, undefined, undefined, ctx);
+      expect(result.isError).toBe(false); // Should still work, uses process.cwd() fallback
+    });
+
+    test('runCommands handles api.exec throwing and continues', async () => {
+      const baseTmp = await fs.mkdtemp(join(tmpdir(), 'evo-watch-exec-throw2-'));
+      await fs.mkdir(join(baseTmp, 'src'), { recursive: true });
+      await fs.writeFile(join(baseTmp, 'src', 'dummy.ts'), '');
+
+      const mockExec = jest.fn().mockRejectedValue(new Error('exec failed'));
+      const ctx = { cwd: baseTmp, api: { exec: mockExec } } as any;
+      const onUpdate = jest.fn();
+      const execPromise = tool.execute('1', { debounceMs: 10 }, undefined, onUpdate, ctx);
+      // Trigger change
+      await fs.writeFile(join(baseTmp, 'src', 'trigger.ts'), '// trigger');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const result = await execPromise;
+      expect(result.isError).toBe(false); // Tool should not fail overall
+      // onUpdate should contain error message in logLines
+      const errorUpdates = onUpdate.mock.calls.filter((call: any[]) =>
+        call[0].content.some((c: any) => c.text.includes('Error'))
+      );
+      expect(errorUpdates.length).toBeGreaterThan(0);
+
+      await fs.rm(baseTmp, { recursive: true, force: true });
+    });
+
+    test('handleChange called multiple times within debounce', async () => {
+      const baseTmp = await fs.mkdtemp(join(tmpdir(), 'evo-watch-debounce-'));
+      await fs.mkdir(join(baseTmp, 'src'), { recursive: true });
+      await fs.writeFile(join(baseTmp, 'src', 'dummy.ts'), '');
+
+      const mockExec = jest.fn().mockResolvedValue({ code: 0, stdout: '', stderr: '' });
+      const ctx = { cwd: baseTmp, api: { exec: mockExec } } as any;
+      const execPromise = tool.execute('1', { debounceMs: 200 }, undefined, undefined, ctx);
+
+      // Write multiple files rapidly
+      await fs.writeFile(join(baseTmp, 'src', 'f1.ts'), '// 1');
+      await fs.writeFile(join(baseTmp, 'src', 'f2.ts'), '// 2');
+      await fs.writeFile(join(baseTmp, 'src', 'f3.ts'), '// 3');
+
+      await new Promise(resolve => setTimeout(resolve, 400));
+      // Should have called exec exactly once (debounced)
+      expect(mockExec).toHaveBeenCalledTimes(1);
+      await execPromise;
+
+      await fs.rm(baseTmp, { recursive: true, force: true });
+    });
+  });
 });

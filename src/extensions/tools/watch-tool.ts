@@ -30,7 +30,8 @@ function createWatchTool(api: ExtensionAPI): ToolDefinition<any, any> {
 
       // Directories and files to watch
       const watchDirs = ['src', 'tsconfig.json', 'package.json', 'evo.ts', 'src/evo.ts', 'src/extensions'];
-      const watchPaths = watchDirs.map(p => join(ctx.cwd, p));
+      const watchCwd = ctx.cwd || process.cwd();
+      const watchPaths = watchDirs.map(p => join(watchCwd, p));
 
       // Keep track of watchers for cleanup
       const watchers: any[] = [];

@@ -7,7 +7,7 @@ Self-Evolving AI Agent System built on pi-coding-agent.
 ### Option 1: Install from pre-built dist (recommended)
 
 ```bash
-npm install -g https://github.com/cotapelu/evo/releases/download/v0.0.4/evo-0.0.4-dist.tgz
+npm install -g https://github.com/cotapelu/evo/releases/download/v0.0.5/evo-0.0.5.tgz
 ```
 
 ## Usage
@@ -34,4 +34,4 @@ npm test
 
 ## License
 
-MIT
+APACHE
