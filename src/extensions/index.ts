@@ -5,8 +5,9 @@
  */
 
 export {
-  default as extensionsAggregator,
-  default,
+  extensionsAggregator,
   getExtensionFactories,
-  getResourceLoaderOptions,
 } from './factory.js';
+
+// Default export để hỗ trợ: import extensions from './extensions'
+export { extensionsAggregator as default } from './factory.js';

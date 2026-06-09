@@ -3,18 +3,19 @@
   "version": "0.0.4",
   "description": "Self-Evolving AI Agent System",
   "type": "module",
-  "main": "dist/src/evo.js",
+  "main": "dist/evo.js",
   "scripts": {
-    "start": "node dist/src/evo.js",
+    "start": "node dist/evo.js",
     "dev": "ts-node --esm src/evo.ts",
-    "build": "tsc && chmod +x dist/src/evo.js",
+    "build": "tsc && chmod +x dist/evo.js",
+    "prepare": "npm run build",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint src/**/*.ts"
   },
   "bin": {
-    "evo": "./dist/src/evo.js"
+    "evo": "./dist/evo.js"
   },
   "keywords": [
     "agent",
@@ -42,6 +43,9 @@
   },
   "engines": {
     "node": ">=20.6.0"
+  },
+  "pi": {
+    "extensionEntry": "./dist/index.js"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "0.78.0",

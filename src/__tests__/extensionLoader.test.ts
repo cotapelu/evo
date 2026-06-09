@@ -1,9 +1,9 @@
-import { getResourceLoaderOptions } from '../extensions/index.js';
+import { getExtensionFactories } from '../extensions/index.js';
 
 describe('Extension Loader', () => {
-  test('getResourceLoaderOptions returns options with extensionFactories', () => {
-    const opts = getResourceLoaderOptions();
-    expect(opts).toHaveProperty('extensionFactories');
-    expect(Array.isArray(opts.extensionFactories)).toBe(true);
+  test('getExtensionFactories returns array of extension factories', () => {
+    const factories = getExtensionFactories();
+    expect(Array.isArray(factories)).toBe(true);
+    expect(factories.length).toBeGreaterThan(0);
   });
 });

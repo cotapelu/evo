@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { createAgentSession, DefaultResourceLoader } from '@earendil-works/pi-coding-agent';
-import { getResourceLoaderOptions } from '../../extensions/index.js';
+import { getExtensionFactories } from '../../extensions/index.js';
 import { mkdtemp, rmdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -15,7 +15,7 @@ describe('E2E Agent Session', () => {
   beforeAll(async () => {
     tempAgentDir = await mkdtemp(join(tmpdir(), 'evo-e2e-'));
     const rlOptions = {
-      ...getResourceLoaderOptions(),
+      extensionFactories: getExtensionFactories(),
       cwd: process.cwd(),
       agentDir: tempAgentDir,
     };
