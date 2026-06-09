@@ -249,6 +249,22 @@ describe('Branch Tool', () => {
     expect(result.content[0].text).toContain('Missing action');
   });
 
+  // Branch coverage: error paths and edge cases
+  test('get_entry: getEntry throws', async () => {
+    manager.getEntry = jest.fn(() => { throw new Error('db failure'); });
+    const result = await tool.execute('1', { action: 'get_entry', entry_id: 'e1' }, undefined, undefined, ctx);
+    expect(result.isError).toBe(true);
+    expect(result.details?.error).toBe('db failure');
+  });
+
+  test('get_branch: getBranch throws', async () => {
+    manager.getLeafId = jest.fn(() => 'leaf');
+    manager.getBranch = jest.fn(() => { throw new Error('db error'); });
+    const result = await tool.execute('1', { action: 'get_branch' }, undefined, undefined, ctx);
+    expect(result.isError).toBe(true);
+    expect(result.details?.error).toBe('db error');
+  });
+
   // Additional coverage: render functions
   test('renderCall produces Text', () => {
     const theme = { fg: (c: string, s: string) => s, bold: (s: string) => s } as any;

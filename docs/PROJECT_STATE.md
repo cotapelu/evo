@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2026-06-09 (Evolution Round 46)
+**Last Updated:** 2026-06-09 (Evolution Round 47)
 
 ## Overview
 
@@ -39,9 +39,9 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 ## System Health
 
 - **TypeScript:** Compiles without errors
-- **Tests:** 684 passing, 0 failing
+- **Tests:** 686 passing, 0 failing
 - **Build:** `npm run build` succeeds, chmod set
-- **Code Coverage:** Measured via jest --coverage; summary available through test tool (82.4% statements, 72.94% branch, 84.68% lines)
+- **Code Coverage:** Measured via jest --coverage; summary available through test tool (82.47% statements, 73.02% branch, 84.76% lines)
 
 ## Highlights
 
@@ -60,7 +60,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Global `/cancel` command to abort running operations
 - `tool-metrics` tool for execution time and error rate statistics
 - E2E test for full agent session
-- Strong test suite with 684 passing tests
+- Strong test suite with 686 passing tests
 - Custom TUI rendering for many tools (code-health, git, session-info, branch, etc.)
 - Phase-specific deletion in `todos` tool (delete by phase ID/name)
 - Localized UI messages unified to English (auto-continue)
@@ -73,8 +73,8 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 
 ## Roadmap
 
-- Maintain ≥80% test coverage (currently 82.4% statements)
-- Push branch coverage beyond 73%
+- Maintain ≥80% test coverage (currently 82.47% statements)
+- Push branch coverage towards 74%
 - Continue systematic rendering test expansion
 - Tighten error handling paths across all tools
 - Maintain 100% test pass rate
