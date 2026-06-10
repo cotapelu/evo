@@ -290,6 +290,36 @@
 - Log sandbox activations for audit trail
 - Continue Phase 14 SDK completion
 
+
+## Round 59 (2026-06-10) – Session Utils Extension (Branch Summary)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 59 | Session summary tool |
+| **Tasks Completed** | 1 (partial) | Tool: session.summary; Command: /session.summary; `compact` deferred |
+| **Test Failure Rate** | 0% | All tests pass |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~10 min | |
+| **Test Count** | 729 | (unchanged) |
+| **Measured Coverage** | Maintained | ~82.5% statements, 73% branch |
+| **Files Added** | 1 | 5.5 KB (session-utils-extension) |
+| **SDK Capabilities Used** | +1 | `prepareBranchEntries`, `generateBranchSummary` |
+
+## Trends
+
+- Exposes branch summarization via `session.summary` tool
+- Uses `prepareBranchEntries` to fit token budget
+- Requires `sdk.init` and model selection
+- Build stable, tests passing
+- `session.compact` deferred: requires `prepareCompaction` (not yet public in SDK)
+
+## Planned Improvements
+
+- Revisit `session.compact` when SDK exports `prepareCompaction`
+- Add custom compaction using manual cut point detection (if needed)
+- Continue Phase 14 tasks
+
 ## Cumulative Stats (All Time)
 
 **Total Iterations:** 54 rounds (2026-06-05 to 2026-06-10)

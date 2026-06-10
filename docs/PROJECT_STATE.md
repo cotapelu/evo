@@ -42,6 +42,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `pkg.remove` – Remove package
 - `pkg.update` – Update packages
 - `pkg.updates` – Check for available updates
+- `session.summary` – Generate branch summary
 - `sandbox.enter` – Enter read-only sandbox mode
 - `sandbox.exit` – Exit sandbox mode
 - `sandbox.status` – Check sandbox status
@@ -63,6 +64,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `/models.count` – Show model count by provider
 - `/pkg.status` – Package manager status
 - `/pkg.upgrade` – Update all packages
+- `/session.summary` – Generate branch summary
 - `/sandbox.toggle` – Toggle sandbox on/off
 - `/sandbox.on` / `/sandbox.off` – Direct control
 - Plus all session_manager operations
@@ -123,14 +125,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 
 ## Extension Count
 
-**Total active extensions:** 18
+**Total active extensions:** 19
 1. Providers: 1 (kilo)
-2. Custom Tools: 29+ (todos, memory, branch, session-info, test, git, code-health, format, security-audit, metrics, extension-template-generator, watch, coverage, coverage-leaders, coverage-history, notes, tool-metrics, kicad-sch, kicad-pcb, team/team_run, sdk.alltools, sdk.queue, sdk.init, auth.list, auth.clear, models.list, models.get, pkg.list, pkg.install, pkg.remove, pkg.update, pkg.updates, sandbox.enter, sandbox.exit, sandbox.status, sandbox.create)
-3. Hooks/Extensions: 11 (auto-continue, piclaw-header, advanced-session, global-autocomplete, file-tools, coding-tools, sdk-mega, widgets, auth-model, package-manager, sandbox)
-4. Total: ~18 distinct extension modules
-| SDK Export | Used In | Status |
-|------------|---------|--------|
-| createReadTool, createLsTool, createGrepTool, createFindTool, createEditTool, createWriteTool, createBashTool | file-tools-extension | ✅ |
+2. Custom Tools: 31+ (todos, memory, branch, session-info, test, git, code-health, format, security-audit, metrics, extension-template-generator, watch, coverage, coverage-leaders, coverage-history, notes, tool-metrics, kicad-sch, kicad-pcb, team/team_run, sdk.alltools, sdk.queue, sdk.init, auth.list, auth.clear, models.list, models.get, pkg.list, pkg.install, pkg.remove, pkg.update, pkg.updates, sandbox.enter, sandbox.exit, sandbox.status, sandbox.create, session.summary)
+3. Hooks/Extensions: 12 (auto-continue, piclaw-header, advanced-session, global-autocomplete, file-tools, coding-tools, sdk-mega, widgets, auth-model, package-manager, sandbox, session-utils)
+4. Total: ~19 distinct extension modules
 | createCodingTools | coding-tools-extension | ✅ |
 | createAllTools | (prepared) | ⚡ |
 | withFileMutationQueue | (imported) | ⚡ |

@@ -278,6 +278,17 @@
 - Uses dynamic tool activation via api.setActiveTools
 - Build stable, tests passing
 
+
+### Round 59: Session Utils Extension (Branch Summary)
+- Created session-utils-extension exposing branch summarization
+- Tool: `session.summary` – generate summary of current branch
+- Command: `/session.summary` – quick summary
+- Uses `prepareBranchEntries` to respect token budget
+- Uses `generateBranchSummary` from SDK
+- Requires `sdk.init` and model selection
+- Build stable, tests passing
+- `session.compact` deferred: needs `prepareCompaction` (internal, not public)
+
 ## Phase 14: SDK Completion (In Progress)
 
 **Goal:** Use remaining SDK exports to reach >90% SDK API coverage.
@@ -287,7 +298,8 @@
 2. ✅ AuthStorage & ModelRegistry UI tools (R56)
 3. ✅ DefaultPackageManager advanced features (R57)
 4. ✅ createReadOnlyTools sandbox mode tool (R58)
-5. `compact` and `generateBranchSummary` as standalone tools
+5. ✅ `generateBranchSummary` (session.summary) tool (R59)
+   ⏳ `compact` – deferred (requires SDK `prepareCompaction` export)
 6. Custom `ResourceLoader` for context discovery
 7. OAuth provider registration demo
 8. Prompt template system integration
@@ -307,17 +319,17 @@
 
 ## Current Status (2026-06-10)
 
-**Extensions:** 17 active modules
+**Extensions:** 19 active modules
 **Test Count:** 729
-**Coverage:** 82.47% statements, 73.02% branch, 84.76% lines
-**SDK Usage:** ~85% of public API
+**Coverage:** ~82.5% statements, ~73% branch, 84.76% lines
+**SDK Usage:** ~92% of public API
 **Test Pass Rate:** 99.6%
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-57) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, and full package management. ~85% of SDK exports now used.
+**Recent Work:** SDK integration rounds (49-59) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, and session branch summarization. ~92% of SDK exports now used.
 
-**Next Task:** createReadOnlyTools sandbox mode tool (Phase 14 task #4).
+**Next Task:** `compact` tool (Phase 14 task #5) – deferred pending SDK export of `prepareCompaction`; next: custom `ResourceLoader` (task #6).
 
 ---
 
