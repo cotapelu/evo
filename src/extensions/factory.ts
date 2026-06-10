@@ -20,6 +20,7 @@ import registerFileToolsExtension from "./file-tools-extension/index.js";
 import autoCompact85 from "./hooks/auto-compact-85.js";
 import advancedSessionExtension from "./advanced-session/index.js";
 import globalAutocompleteExtension from "./global-autocomplete/index.js";
+import registerCodingToolsExtension from "./coding-tools-extension/index.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -77,6 +78,11 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   // FILE TOOLS EXTENSION (Full SDK Factory Usage)
   // ============================================
   registerFileToolsExtension(api);
+
+  // ============================================
+  // CODING TOOLS EXTENSION (Full SDK Factory Usage)
+  // ============================================
+  registerCodingToolsExtension(api);
 }
 
 /**
