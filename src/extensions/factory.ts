@@ -17,6 +17,7 @@ import cancelCommand from "./cancel-command.js";
 import piclawHeader from "./piclaw-header.js";
 import { registerTeamTool } from "./team/index.js";
 import autoCompact85 from "./hooks/auto-compact-85.js";
+import advancedSessionExtension from "./advanced-session/index.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -58,6 +59,11 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   piclawHeader(api);
   aboutCommand(api);
   cancelCommand(api);
+
+  // ============================================
+  // ADVANCED SESSION (Full SDK Power)
+  // ============================================
+  advancedSessionExtension(api);
 }
 
 /**
