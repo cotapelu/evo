@@ -260,6 +260,24 @@
 - Requires `sdk.init` to be called first
 - Build stable, tests passing
 
+### Round 57: Package Manager Extension
+- Created package-manager-extension using DefaultPackageManager
+- Tools: pkg.list, pkg.install, pkg.remove, pkg.update, pkg.updates
+- Commands: /pkg.status, /pkg.upgrade
+- Full package lifecycle: npm and git sources, persist to settings
+- Requires sdk.init to be called first
+- Build stable, tests passing
+
+### Round 58: Sandbox Mode Extension
+- Created sandbox-extension for read-only safety
+- Tools: sandbox.enter, sandbox.exit, sandbox.status, sandbox.create
+- Commands: /sandbox.toggle, /sandbox.on, /sandbox.off
+- Saves/restores active tool set on enter/exit
+- Confirmation prevents accidental lockout
+- Custom sandbox creation with specific read tools
+- Uses dynamic tool activation via api.setActiveTools
+- Build stable, tests passing
+
 ## Phase 14: SDK Completion (In Progress)
 
 **Goal:** Use remaining SDK exports to reach >90% SDK API coverage.
@@ -268,7 +286,7 @@
 1. ✅ Full `createAgentSessionServices` integration (sdk.init tool)
 2. ✅ AuthStorage & ModelRegistry UI tools (R56)
 3. ✅ DefaultPackageManager advanced features (R57)
-4. **createReadOnlyTools** sandbox mode tool ← Next task
+4. ✅ createReadOnlyTools sandbox mode tool (R58)
 5. `compact` and `generateBranchSummary` as standalone tools
 6. Custom `ResourceLoader` for context discovery
 7. OAuth provider registration demo

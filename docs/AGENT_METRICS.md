@@ -257,6 +257,39 @@
 - Add dry-run mode for install/remove
 - Continue Phase 14 SDK completion
 
+
+## Round 58 (2026-06-10) – Sandbox Extension
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 58 | Read-only sandbox safety mode |
+| **Tasks Completed** | 4 | Tools: sandbox.enter, sandbox.exit, sandbox.status, sandbox.create; Commands: /sandbox.toggle, /sandbox.on, /sandbox.off |
+| **Test Failure Rate** | 0% | All tests pass |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~10 min | |
+| **Test Count** | 729 | (unchanged) |
+| **Measured Coverage** | Maintained | 82.47% statements, 73.02% branch |
+| **Files Added** | 1 | 230 lines (sandbox-extension) |
+| **SDK Capabilities Used** | +1 | Dynamic tool activation/deactivation via api.setActiveTools |
+
+## Trends
+
+- Implements sandbox mode for safe read-only operations
+- Saves/restores active tool set on enter/exit
+- Confirmation step prevents accidental lockout
+- Custom sandbox creation with specific read tool selection
+- Production-ready for untrusted sessions and CI environments
+- Build stable, tests passing
+
+## Planned Improvements
+
+- Add sandbox policy presets (strict, moderate, permissive)
+- Integrate with session_manager for sandbox session branching
+- Add sandbox violation detection (attempted disallowed tool use)
+- Log sandbox activations for audit trail
+- Continue Phase 14 SDK completion
+
 ## Cumulative Stats (All Time)
 
 **Total Iterations:** 54 rounds (2026-06-05 to 2026-06-10)

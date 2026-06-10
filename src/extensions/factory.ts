@@ -24,6 +24,7 @@ import registerCodingToolsExtension from "./coding-tools-extension/index.js";
 import registerSdkMegaExtension from "./sdk-mega-extension/index.js";
 import registerAuthModelExtension from "./auth-model-extension/index.js";
 import registerPackageManagerExtension from "./package-manager-extension/index.js";
+import registerSandboxExtension from "./sandbox-extension/index.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -91,6 +92,7 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   // SDK INTEGRATION EXTENSION (Advanced Features)
   // ============================================
   registerSdkMegaExtension(api);
+  registerSandboxExtension(api);
   registerPackageManagerExtension(api);
   registerAuthModelExtension(api);
 }
