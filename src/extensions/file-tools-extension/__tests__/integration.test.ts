@@ -10,6 +10,7 @@ import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-age
 function createMockApi(): any {
 	const api: any = {
 		registerTool: jest.fn(),
+		registerCommand: jest.fn(), // Add this
 		on: jest.fn(),
 		ui: { setHeader: jest.fn(), setFooter: jest.fn() },
 	};
