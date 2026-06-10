@@ -16,6 +16,7 @@ import cancelCommand from "./cancel-command.js";
 
 import piclawHeader from "./piclaw-header.js";
 import { registerTeamTool, registerTeamRunAutocomplete } from "./team/index.js";
+import registerFileToolsExtension from "./file-tools-extension/index.js";
 import autoCompact85 from "./hooks/auto-compact-85.js";
 import advancedSessionExtension from "./advanced-session/index.js";
 import globalAutocompleteExtension from "./global-autocomplete/index.js";
@@ -71,6 +72,11 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   // GLOBAL AUTOCOMPLETE (UX Enhancement)
   // ============================================
   globalAutocompleteExtension(api);
+
+  // ============================================
+  // FILE TOOLS EXTENSION (Full SDK Factory Usage)
+  // ============================================
+  registerFileToolsExtension(api);
 }
 
 /**
