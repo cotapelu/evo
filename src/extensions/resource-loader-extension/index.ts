@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Resource Loader Extension – Project Context Discovery
+ * Resource Loader Extension – Project Context Discovery with Caching
  *
  * Automatically adds project documentation to the agent's context.
  * - Hooks into `resources_discover` event
- * - Scans for common docs: AGENTS.md, README.md, README.*.md, docs/*.md, AGENTS.md
+ * - Scans for common docs: AGENTS.md, README.md, README.*.md, docs/*.md, etc.
+ * - Caches scan results for 30 seconds to avoid repeated filesystem scans
  * - Merges discovered files into the resource loader
  *
- * No manual commands needed – automatic on session start.
  * Provides tools to inspect loaded resources.
  */
 
@@ -16,12 +16,33 @@ import { join, relative } from "node:path";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 // ============================================================================
+// Cache for expensive filesystem scan
+// ============================================================================
+const CACHE_TTL_MS = 30_000; // 30 seconds
+let lastDiscoverTime = 0;
+let cachedDiscoverResult: any = null;
+
+function clearCache(): void {
+	lastDiscoverTime = 0;
+	cachedDiscoverResult = null;
+}
+
+function isCacheValid(): boolean {
+	return Date.now() - lastDiscoverTime < CACHE_TTL_MS && cachedDiscoverResult !== null;
+}
+
+// ============================================================================
 // Event Handler: resources_discover
 // ============================================================================
 function registerResourcesDiscoverHandler(api: ExtensionAPI): void {
 	// Use any for event types not exported
 	// @ts-ignore – resources_discover event types not in public SDK
 	api.on("resources_discover", async (event: any, _ctx: any): Promise<any> => {
+		// Return cached result if still valid
+		if (isCacheValid()) {
+			return cachedDiscoverResult;
+		}
+
 		const baseResult = event.result;
 		const cwd = event.cwd || process.cwd();
 		const additionalFiles: Array<{ path: string; content: string }> = [];
@@ -69,11 +90,16 @@ function registerResourcesDiscoverHandler(api: ExtensionAPI): void {
 		scanDir(cwd);
 
 		const mergedAgentsFiles = [...(baseResult.agentsFiles || []), ...additionalFiles];
-
-		return {
+		const result = {
 			...baseResult,
 			agentsFiles: mergedAgentsFiles,
 		};
+
+		// Update cache
+		lastDiscoverTime = Date.now();
+		cachedDiscoverResult = result;
+
+		return result;
 	});
 }
 
@@ -148,7 +174,7 @@ function registerResourceCommands(api: ExtensionAPI): void {
 	});
 
 	api.registerCommand("resources.reload", {
-		description: "Reload resource loader to rescan project files",
+		description: "Reload resource loader to rescan project files (with cache invalidation)",
 		handler: async (args: string, ctx: any) => {
 			const services = ctx.sdkServices;
 			if (!services?.resourceLoader) {
@@ -157,8 +183,10 @@ function registerResourceCommands(api: ExtensionAPI): void {
 			}
 
 			try {
+				// Invalidate our cache before reload so next discover gets fresh scan
+				clearCache();
 				await services.resourceLoader.reload();
-				ctx.ui.notify?.("✅ Resource loader reloaded", "success");
+				ctx.ui.notify?.("✅ Resource loader reloaded (cache cleared)", "success");
 			} catch (e: any) {
 				ctx.ui.notify?.(`❌ Reload failed: ${e.message}`, "error");
 			}
@@ -176,7 +204,7 @@ export function registerResourceLoaderExtension(api: ExtensionAPI): void {
 
 	api.sendMessage?.({
 		customType: "resource-loader",
-		content: "📚 Resource Loader extension loaded – auto-adding project docs to context",
+		content: "📚 Resource Loader extension loaded – auto-adding project docs to context (with 30s cache)",
 		display: false,
 	});
 }

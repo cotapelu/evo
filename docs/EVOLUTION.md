@@ -318,6 +318,15 @@
 - Build stable, tests passing
 - Completes Phase 14 SDK integration tasks
 
+### Round 63: Caching for Resource Discovery
+- Added caching to resource-loader-extension to optimize expensive filesystem scans
+- Cache TTL: 30 seconds, in-memory
+- Invalidation on `/resources.reload` command
+- Reduces redundant scans during rapid discover events
+- Build stable, tests passing
+- Begins Phase 15 Production Hardening
+
+
 ## Phase 14: SDK Completion (Completed)
 
 **Goal:** Use remaining SDK exports to reach >90% SDK API coverage.
@@ -331,7 +340,7 @@
    ⏳ `compact` – deferred (requires SDK `prepareCompaction` export)
 6. ✅ Custom ResourceLoader (auto-discovery) (R60)
 7. ✅ OAuth provider registration demo (R61)
-8. Prompt template system integration
+8. ✅ Prompt template system integration (R62)
 
 **Target:** 90%+ of public SDK exports actively used in extensions.
 
@@ -340,7 +349,7 @@
 **Goal:** Optimize performance and reliability.
 
 **Planned Tasks:**
-- Implement caching for expensive operations (filesystem scans, session introspection)
+- ✅ Implement caching for expensive operations (filesystem scans, session introspection) (R63)
 - Add retry logic for network-dependent operations (npm exec, git)
 - Add telemetry backend (optional)
 - Add more comprehensive error recovery
@@ -356,10 +365,9 @@
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-62) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, and prompt templates integration. ~98% of SDK exports now used.
+**Recent Work:** SDK integration rounds (49-63) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, , caching for resource discovery, and prompt templates integration. ~98% of SDK exports now used.
 
-**Next Task:** Implement caching for expensive operations (Phase 15 task #1).
-
+**Next Task:** Add retry logic for network-dependent operations (Phase 15 task #2).
 ---
 
 *Each round follows AUTO-CONTINUE.md workflow: analyze, implement, test, update docs, commit. No regressions, zero rollbacks, continuous incremental improvement.*

@@ -411,6 +411,36 @@
 - Support template creation and editing from within pi
 - Continue final Phase 14 wrap-up
 
+
+## Round 63 (2026-06-10) – Caching for Resource Discovery
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 63 | Performance optimization |
+| **Tasks Completed** | 1 | Added 30s TTL cache to resource-loader-extension |
+| **Test Failure Rate** | 0% | All tests pass |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~5 min | |
+| **Test Count** | 729 | (unchanged) |
+| **Measured Coverage** | Maintained | ~82.5% statements, ~73% branch |
+| **Files Modified** | 1 | resource-loader-extension/index.ts |
+| **SDK Capabilities Used** | +0 | Event-driven caching pattern |
+
+## Trends
+
+- Cache `resources_discover` results to avoid repeated filesystem scans
+- TTL 30 seconds, cleared on `/resources.reload`
+- Low risk, improves performance on large repos
+- Build stable, tests passing
+- Phase 15 Production Hardening begins
+
+## Planned Improvements
+
+- Extend caching to other expensive operations (session stats, git status)
+- Add metrics for cache hits/misses
+- Continue retry logic implementation
+
 ## Cumulative Stats (All Time)
 
 **Total Iterations:** 54 rounds (2026-06-05 to 2026-06-10)
