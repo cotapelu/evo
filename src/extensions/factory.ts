@@ -22,6 +22,7 @@ import advancedSessionExtension from "./advanced-session/index.js";
 import globalAutocompleteExtension from "./global-autocomplete/index.js";
 import registerCodingToolsExtension from "./coding-tools-extension/index.js";
 import registerSdkMegaExtension from "./sdk-mega-extension/index.js";
+import registerAuthModelExtension from "./auth-model-extension/index.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -89,6 +90,7 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   // SDK INTEGRATION EXTENSION (Advanced Features)
   // ============================================
   registerSdkMegaExtension(api);
+  registerAuthModelExtension(api);
 }
 
 /**
