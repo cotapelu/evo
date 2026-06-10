@@ -12,7 +12,6 @@ chỉ tập trung phát triển plugin extensions, sử dụng mọi năng lực
 Nghĩa là mọi export từ file index.ts của gói pi-coding-agent đều có thể tận dụng để phát triển code app. đọc thật kỹ file đó vào.
 
 - phải npn run test và npm run build thành công mới commit.
-- bắt buộc phải đề xuất tính năng mới cho coding-agent và hoàn thiện nó. bắt buộc khi chạy mỗi vòng thì phải đề xuất tính năng và hoàn thiện nó.
 - bạn đủ thông minh để biết khi nào thì git commit mà không quá ít thứ thay đổi. nhưng cũng đừng để quá nhiều thay đổi mà không commit. 
 nhưng phải nhớ git commit.
 nhớ npm run build và npm test pass mới commit.
