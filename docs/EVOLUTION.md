@@ -238,17 +238,40 @@
 - Event monitoring
 - Commands: `/skills.load`, `/agent.dir`, `/sdk.events`
 
-## Phase 14: SDK Completion (Planned)
+
+### Round 54: Super File Tools
+- Upgraded file-tools-extension using SDK factories
+- All 7 file tools with cwd override capability
+- Dynamic tool enable/disable commands
+- Mutation tracking
+- Tools used: createReadTool, createLsTool, createGrepTool, createFindTool, createEditTool, createWriteTool, createBashTool
+
+### Round 55: SDK Mega Utilities
+- Skills auto-loading from directory (`loadSkillsFromDir`, `formatSkillsForPrompt`)
+- Agent directory utilities (`getAgentDir`)
+- Event monitoring
+- Commands: `/skills.load`, `/agent.dir`, `/sdk.events`
+- Added 220 lines, integration tests included
+
+### Round 56: Auth & Model Registry
+- Created auth-model-extension
+- Tools: `auth.list`, `auth.clear`, `models.list`, `models.get`
+- Commands: `/auth.status`, `/models.count`
+- Provides visibility into AuthStorage and ModelRegistry
+- Requires `sdk.init` to be called first
+- Build stable, tests passing
+
+## Phase 14: SDK Completion (In Progress)
 
 **Goal:** Use remaining SDK exports to reach >90% SDK API coverage.
 
-**Planned Tasks:**
-1. Full `createAgentSessionServices` integration (sdk.init tool)
-2. `AuthStorage` and `ModelRegistry` UI tools
-3. `DefaultPackageManager` advanced features
-4. `createReadOnlyTools` sandbox mode tool
+**Completed Tasks:**
+1. ✅ Full `createAgentSessionServices` integration (sdk.init tool)
+2. ✅ AuthStorage & ModelRegistry UI tools (R56)
+3. **DefaultPackageManager** advanced features ← Next task
+4. createReadOnlyTools sandbox mode tool
 5. `compact` and `generateBranchSummary` as standalone tools
-6. Custom `ResourceLoader` for improved context discovery
+6. Custom `ResourceLoader` for context discovery
 7. OAuth provider registration demo
 8. Prompt template system integration
 
@@ -267,17 +290,17 @@
 
 ## Current Status (2026-06-10)
 
-**Extensions:** 15 active modules
+**Extensions:** 16 active modules
 **Test Count:** 729
 **Coverage:** 82.47% statements, 73.02% branch, 84.76% lines
-**SDK Usage:** ~75% of public API
+**SDK Usage:** ~80% of public API
 **Test Pass Rate:** 99.6%
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-54) have transformed evo into a Super App with extensive SDK usage. File tools now use factories, session management is comprehensive, autocomplete enhances UX, and widgets add UI richness.
+**Recent Work:** SDK integration rounds (49-56) have transformed evo into a Super App. Achieved: advanced session management, comprehensive file tool factories, autocomplete providers, TUI widgets, SDK mega utilities, and full Auth/Model registry UI. ~80% of SDK exports now used.
 
-**Next Commit:** Update docs (PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md), commit following AUTO-CONTINUE workflow, identify next highest-impact task (SDK utilities completion).
+**Next Task:** DefaultPackageManager advanced features (Phase 14 task #3).
 
 ---
 
