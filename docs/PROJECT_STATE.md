@@ -120,7 +120,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - Push branch coverage further (target >75%)
 - Complete remaining autocomplete providers (git, kilo, etc.)
   - ✅ Custom ResourceLoader (auto-discovery of project docs)
-- Add OAuth provider registration via `api.registerProvider`
+- ✅ OAuth provider registration demo (R61)
 - Implement prompt template system
 - Optimize performance: caching, batching, lazy loading
 - Add more render tests for consistency
@@ -129,11 +129,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 
 ## Extension Count
 
-**Total active extensions:** 20
+**Total active extensions:** 21
 1. Providers: 1 (kilo)
 2. Custom Tools: 32+ (todos, memory, branch, session-info, test, git, code-health, format, security-audit, metrics, extension-template-generator, watch, coverage, coverage-leaders, coverage-history, notes, tool-metrics, kicad-sch, kicad-pcb, team/team_run, sdk.alltools, sdk.queue, sdk.init, auth.list, auth.clear, models.list, models.get, pkg.list, pkg.install, pkg.remove, pkg.update, pkg.updates, sandbox.enter, sandbox.exit, sandbox.status, sandbox.create, session.summary)
-3. Hooks/Extensions: 13 (auto-continue, piclaw-header, advanced-session, global-autocomplete, file-tools, coding-tools, sdk-mega, widgets, auth-model, package-manager, sandbox, session-utils, resource-loader)
-4. Total: ~20 distinct extension modules
+3. Hooks/Extensions: 14 (auto-continue, piclaw-header, advanced-session, global-autocomplete, file-tools, coding-tools, sdk-mega, widgets, auth-model, package-manager, sandbox, session-utils, resource-loader, oauth-provider-extension)
+4. Total: ~21 distinct extension modules
 | createAllTools | (prepared) | ⚡ |
 | withFileMutationQueue | (imported) | ⚡ |
 | loadSkillsFromDir, formatSkillsForPrompt | sdk-mega-extension | ✅ |

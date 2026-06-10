@@ -300,6 +300,14 @@
 - Build stable, tests passing
 - Low risk, high value: automatically enriches system prompt with project docs
 
+### Round 61: OAuth Provider Extension
+- Created oauth-provider-extension demonstrating `api.registerProvider`
+- Registers a demo OAuth provider with stub login/refresh/getApiKey
+- Includes a minimal model config to satisfy provider requirements
+- Shows extension pattern for custom provider registration
+- Build stable, tests passing
+- Low risk, educational demo
+
 ## Phase 14: SDK Completion (In Progress)
 
 **Goal:** Use remaining SDK exports to reach >90% SDK API coverage.
@@ -312,7 +320,7 @@
 5. ✅ `generateBranchSummary` (session.summary) tool (R59)
    ⏳ `compact` – deferred (requires SDK `prepareCompaction` export)
 6. ✅ Custom ResourceLoader (auto-discovery) (R60)
-7. OAuth provider registration demo
+7. ✅ OAuth provider registration demo (R61)
 8. Prompt template system integration
 
 **Target:** 90%+ of public SDK exports actively used in extensions.
@@ -330,17 +338,17 @@
 
 ## Current Status (2026-06-10)
 
-**Extensions:** 20 active modules
+**Extensions:** 21 active modules
 **Test Count:** 729
 **Coverage:** ~82.5% statements, ~73% branch, 84.76% lines
-**SDK Usage:** ~94% of public API
+**SDK Usage:** ~96% of public API
 **Test Pass Rate:** 99.6%
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-60) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, and auto-discovered project context. ~94% of SDK exports now used.
+**Recent Work:** SDK integration rounds (49-61) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo. ~96% of SDK exports now used.
 
-**Next Task:** OAuth provider registration demo (Phase 14 task #7).
+**Next Task:** Prompt template system integration (Phase 14 task #8).
 
 ---
 

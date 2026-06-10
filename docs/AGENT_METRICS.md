@@ -351,6 +351,36 @@
 - Add resource size limits to prevent context overflow
 - Continue Phase 14 (OAuth provider demo, prompt templates)
 
+
+## Round 61 (2026-06-10) – OAuth Provider Extension
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 61 | OAuth provider registration demo |
+| **Tasks Completed** | 1 | Registered demo-oauth provider via `api.registerProvider` |
+| **Test Failure Rate** | 0% | All tests pass |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~5 min | |
+| **Test Count** | 729 | (unchanged) |
+| **Measured Coverage** | Maintained | ~82.5% statements, ~73% branch |
+| **Files Added** | 1 | 3.1 KB (oauth-provider-extension) |
+| **SDK Capabilities Used** | +1 | `api.registerProvider` with OAuth config |
+
+## Trends
+
+- Demonstrates custom OAuth provider registration pattern
+- Registers a demo provider with stub login/refresh methods
+- Shows integration with provider registry and model definitions
+- Build stable, tests passing
+- Low risk, educational value for extension developers
+
+## Planned Improvements
+
+- Add real OAuth implementation example (GitHub, Google)
+- Add tools for listing providers and triggering login
+- Continue Phase 14 remaining tasks (prompt templates)
+
 ## Cumulative Stats (All Time)
 
 **Total Iterations:** 54 rounds (2026-06-05 to 2026-06-10)
