@@ -37,6 +37,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `auth.clear` – Remove stored credential
 - `models.list` – List configured models
 - `models.get` – Get model details
+- `pkg.list` – List configured packages
+- `pkg.install` – Install package (npm/git)
+- `pkg.remove` – Remove package
+- `pkg.update` – Update packages
+- `pkg.updates` – Check for available updates
 
 ### Commands (Slash)
 - `/about` – System information
@@ -52,6 +57,8 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `/session.compact` / `/session.summary` – Session utilities
 - `/auth.status` – Show authentication status
 - `/models.count` – Show model count by provider
+- `/pkg.status` – Package manager status
+- `/pkg.upgrade` – Update all packages
 - Plus all session_manager operations
 
 ### Hooks & Extensions
@@ -63,6 +70,7 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 - `coding-tools-extension` – SDK lint/typecheck/test tools
 - `sdk-mega-extension` – SDK utilities (skills, agent info, events)
 - `auth-model-extension` – AuthStorage & ModelRegistry UI
+- `package-manager-extension` – Advanced package management (DefaultPackageManager)
 - `widgets-extension` – TUI widgets (footer, overlay, editor)
 
 ### Providers
@@ -109,11 +117,11 @@ This is a self-evolving AI agent system built on top of `@earendil-works/pi-codi
 
 ## Extension Count
 
-**Total active extensions:** 16
+**Total active extensions:** 17
 1. Providers: 1 (kilo)
-2. Custom Tools: 20+ (todos, memory, branch, session-info, test, git, code-health, format, security-audit, metrics, extension-template-generator, watch, coverage, coverage-leaders, coverage-history, notes, tool-metrics, kicad-sch, kicad-pcb, team/team_run, sdk.alltools, sdk.queue, sdk.init, auth.list, auth.clear, models.list, models.get)
-3. Hooks/Extensions: 9 (auto-continue, piclaw-header, advanced-session, global-autocomplete, file-tools, coding-tools, sdk-mega, widgets, auth-model)
-4. Total: ~16 distinct extension modules
+2. Custom Tools: 25+ (todos, memory, branch, session-info, test, git, code-health, format, security-audit, metrics, extension-template-generator, watch, coverage, coverage-leaders, coverage-history, notes, tool-metrics, kicad-sch, kicad-pcb, team/team_run, sdk.alltools, sdk.queue, sdk.init, auth.list, auth.clear, models.list, models.get, pkg.list, pkg.install, pkg.remove, pkg.update, pkg.updates)
+3. Hooks/Extensions: 10 (auto-continue, piclaw-header, advanced-session, global-autocomplete, file-tools, coding-tools, sdk-mega, widgets, auth-model, package-manager)
+4. Total: ~17 distinct extension modules
 
 ## SDK Feature Usage Matrix
 
