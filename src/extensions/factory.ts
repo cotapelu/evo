@@ -18,6 +18,7 @@ import piclawHeader from "./piclaw-header.js";
 import { registerTeamTool, registerTeamRunAutocomplete } from "./team/index.js";
 import autoCompact85 from "./hooks/auto-compact-85.js";
 import advancedSessionExtension from "./advanced-session/index.js";
+import globalAutocompleteExtension from "./global-autocomplete/index.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -65,6 +66,11 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   // ADVANCED SESSION (Full SDK Power)
   // ============================================
   advancedSessionExtension(api);
+
+  // ============================================
+  // GLOBAL AUTOCOMPLETE (UX Enhancement)
+  // ============================================
+  globalAutocompleteExtension(api);
 }
 
 /**
