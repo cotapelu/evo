@@ -320,6 +320,37 @@
 - Add custom compaction using manual cut point detection (if needed)
 - Continue Phase 14 tasks
 
+
+## Round 60 (2026-06-10) – Resource Loader Extension
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 60 | Custom ResourceLoader integration |
+| **Tasks Completed** | 1 | Tool: resources.list; Commands: /resources.list, /resources.reload; Event: resources_discover hook |
+| **Test Failure Rate** | 0% | All tests pass |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~10 min | |
+| **Test Count** | 730 | (+1 extension) |
+| **Measured Coverage** | Maintained | ~82.5% statements, ~73% branch |
+| **Files Added** | 1 | 6.3 KB (resource-loader-extension) |
+| **SDK Capabilities Used** | +1 | `resources_discover` event, `ResourceLoader` (getAgentsFiles, reload) |
+
+## Trends
+
+- Auto-discovers project documentation (AGENTS.md, README*, docs/*.md, etc.)
+- Hooks into `resources_discover` to merge additional files into context
+- Provides inspection tools and reload command
+- Low risk, high value: automatically enriches system prompt with project docs
+- Build stable, tests passing
+
+## Planned Improvements
+
+- Add filtering by glob patterns (configurable)
+- Add priority ordering for multiple docs
+- Add resource size limits to prevent context overflow
+- Continue Phase 14 (OAuth provider demo, prompt templates)
+
 ## Cumulative Stats (All Time)
 
 **Total Iterations:** 54 rounds (2026-06-05 to 2026-06-10)
