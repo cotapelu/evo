@@ -359,7 +359,7 @@
 **Planned Tasks:**
 - ✅ Implement caching for expensive operations (filesystem scans, session introspection) (R63)
 - ✅ Add retry logic for network-dependent operations (npm exec, git) (R64)
-- Add telemetry backend (optional)
+- ✅ Add telemetry backend (optional) (existing)
 - Add more comprehensive error recovery
 - Performance benchmarking suite
 
@@ -375,7 +375,7 @@
 
 **Recent Work:** SDK integration rounds (49-64) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, caching for resource discovery, retry logic for network operations, and prompt templates integration. ~98% of SDK exports now used.
 
-**Next Task:** Add telemetry backend (optional) (Phase 15 task #3).
+**Next Task:** Add more comprehensive error recovery (Phase 15).
 ---
 
 *Each round follows AUTO-CONTINUE.md workflow: analyze, implement, test, update docs, commit. No regressions, zero rollbacks, continuous incremental improvement.*
