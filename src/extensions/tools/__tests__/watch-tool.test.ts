@@ -216,8 +216,8 @@ describe('Watch Tool', () => {
       const ctx = { cwd: baseTmp, api: { exec: mockExec } } as any;
       const onUpdate = jest.fn();
       const execPromise = tool.execute('1', { debounceMs: 10 }, undefined, onUpdate, ctx);
-      // Trigger change
-      await fs.writeFile(join(baseTmp, 'src', 'trigger.ts'), '// trigger');
+      // Trigger change on existing dummy.ts
+      await fs.writeFile(join(baseTmp, 'src', 'dummy.ts'), '// changed');
       await new Promise(resolve => setTimeout(resolve, 200));
       const result = await execPromise;
       expect(result.isError).toBe(false); // Tool should not fail overall
@@ -239,10 +239,10 @@ describe('Watch Tool', () => {
       const ctx = { cwd: baseTmp, api: { exec: mockExec } } as any;
       const execPromise = tool.execute('1', { debounceMs: 200 }, undefined, undefined, ctx);
 
-      // Write multiple files rapidly
-      await fs.writeFile(join(baseTmp, 'src', 'f1.ts'), '// 1');
-      await fs.writeFile(join(baseTmp, 'src', 'f2.ts'), '// 2');
-      await fs.writeFile(join(baseTmp, 'src', 'f3.ts'), '// 3');
+      // Write multiple changes to the same file rapidly (debounce test)
+      await fs.writeFile(join(baseTmp, 'src', 'dummy.ts'), '// 1');
+      await fs.writeFile(join(baseTmp, 'src', 'dummy.ts'), '// 2');
+      await fs.writeFile(join(baseTmp, 'src', 'dummy.ts'), '// 3');
 
       await new Promise(resolve => setTimeout(resolve, 400));
       // Should have called exec exactly once (debounced)

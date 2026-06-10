@@ -41,6 +41,7 @@ function createMockApi(): any {
       setStatus: jest.fn(),
       notify: jest.fn(),
       editor: jest.fn(() => Promise.resolve(undefined)),
+      addAutocompleteProvider: jest.fn(),
     },
   };
   return api;

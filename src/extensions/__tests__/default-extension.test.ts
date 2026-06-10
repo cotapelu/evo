@@ -16,6 +16,8 @@ function createMockApi(): any {
     }),
     registerProvider: jest.fn(),
     registerCommand: jest.fn(),
+    registerShortcut: jest.fn(),
+    registerMessageRenderer: jest.fn(),
     getHandlers: () => handlers,
     exec: jest.fn(),
     ui: { setHeader: jest.fn() },
