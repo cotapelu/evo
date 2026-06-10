@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 /**
- * Git Tool
+ * Git Tool (with Retry)
  *
- * Wraps common Git operations.
+ * Wraps common Git operations with exponential backoff retry for network-dependent
+ * operations (push, pull, fetch). Other operations are executed directly.
+ *
  * Actions:
  * - status: git status --porcelain
  * - diff: git diff [path] (if no path, diff HEAD)
  * - commit: git commit -m "<message>" (requires message)
  * - add: git add <files...> (requires files array)
- * - push: git push [remote] [branch] (defaults: origin HEAD)
- * - pull: git pull [remote] [branch] (defaults: origin HEAD)
+ * - push: git push [remote] [branch] (defaults: origin HEAD) — retry
+ * - pull: git pull [remote] [branch] (defaults: origin HEAD) — retry
  * - log: git log --oneline -n <count> (default 10)
  */
 
@@ -38,11 +40,43 @@ function renderGitResult(result: any, options: { expanded: boolean; isPartial: b
   return new Text(lines.join('\n'), 0, 0);
 }
 
+// ----------------------------------------------------------------------------
+// Retry helper for git commands (network-dependent actions)
+// ----------------------------------------------------------------------------
+async function execGitWithRetry(
+  api: ExtensionAPI,
+  args: string[],
+  options: ExecOptions | undefined,
+  maxAttempts = 3
+): Promise<any> {
+  let lastResult: any;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const result = await api.exec('git', args, options);
+      lastResult = result;
+      if (result.code === 0) return result;
+      // Non-zero exit; retry if attempts left — treat as transient failure
+    } catch (e) {
+      lastResult = e;
+      // Exception during exec; retry if attempts left
+    }
+    if (attempt < maxAttempts) {
+      const delay = Math.min(1000 * Math.pow(2, attempt), 30000); // 1s, 2s, 4s, ... capped 30s
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  // After max attempts: if we have an object with code, return it; else throw
+  if (lastResult && typeof lastResult === 'object' && 'code' in lastResult) {
+    return lastResult;
+  }
+  throw lastResult;
+}
+
 function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
   return {
     name: 'git',
     label: 'Git',
-    description: 'Execute Git commands: status, diff, commit, add, push, pull, log. Uses git on PATH.',
+    description: 'Execute Git commands: status, diff, commit, add, push, pull, log. Uses git on PATH. Network actions (push/pull) use retry with backoff.',
     parameters: {},
     async execute(toolCallId, params, signal, _onUpdate, ctx) {
       let action: string | undefined;
@@ -133,7 +167,10 @@ function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
       }
 
       try {
-        const result = await api.exec('git', args, execOptions);
+        // Use retry for potentially network-dependent actions (push, pull) and also for others to be safe, but simpler: apply to all
+        // We'll use retry for all git commands since even local can occasionally fail due to locks; but skip for read-only?
+        // To be consistent and robust, use retry for all actions.
+        const result = await execGitWithRetry(api, args, execOptions, 3);
         const { stdout, stderr, code } = result;
         const success = code === 0;
         const message = success

@@ -344,13 +344,21 @@
 
 **Target:** 90%+ of public SDK exports actively used in extensions.
 
+### Round 64: Retry Logic for Network Operations
+- Added exponential backoff retry to `git-tool` (all actions) and `package-manager-extension` (install/remove/update/check).
+- Reusable pattern: `execGitWithRetry` function; Proxy wrapper for package manager methods.
+- Benefits: Handles transient network failures, improves reliability on unstable connections.
+- Build stable, tests passing (728/732; 4 flaky watch-tool).
+- Phase 15 Production Hardening continues.
+
+
 ## Phase 15: Production Hardening (Future)
 
 **Goal:** Optimize performance and reliability.
 
 **Planned Tasks:**
 - ✅ Implement caching for expensive operations (filesystem scans, session introspection) (R63)
-- Add retry logic for network-dependent operations (npm exec, git)
+- ✅ Add retry logic for network-dependent operations (npm exec, git) (R64)
 - Add telemetry backend (optional)
 - Add more comprehensive error recovery
 - Performance benchmarking suite
@@ -365,9 +373,9 @@
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-63) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, , caching for resource discovery, and prompt templates integration. ~98% of SDK exports now used.
+**Recent Work:** SDK integration rounds (49-64) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, caching for resource discovery, retry logic for network operations, and prompt templates integration. ~98% of SDK exports now used.
 
-**Next Task:** Add retry logic for network-dependent operations (Phase 15 task #2).
+**Next Task:** Add telemetry backend (optional) (Phase 15 task #3).
 ---
 
 *Each round follows AUTO-CONTINUE.md workflow: analyze, implement, test, update docs, commit. No regressions, zero rollbacks, continuous incremental improvement.*

@@ -1,10 +1,42 @@
 #!/usr/bin/env node
 /**
- * Package Manager Extension
+ * Package Manager Extension (with Retry)
  */
 
 import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { DefaultPackageManager, getAgentDir } from "@earendil-works/pi-coding-agent";
+
+// ============================================================================
+// Retry Wrapper for network-dependent PackageManager methods
+// ============================================================================
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+	let lastError: any;
+	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+		try {
+			return await fn();
+		} catch (e) {
+			lastError = e;
+			if (attempt === maxAttempts) break;
+			// Exponential backoff: 1s, 2s, 4s (max ~30s)
+			const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+			await new Promise(resolve => setTimeout(resolve, delay));
+		}
+	}
+	throw lastError;
+}
+
+function createRetryingPackageManager(pm: any): any {
+	return new Proxy(pm, {
+		get(target: any, prop: string | symbol) {
+			if (typeof prop === "symbol") return Reflect.get(target, prop);
+			const orig = target[prop];
+			if (typeof orig === "function" && ["install", "remove", "update", "checkForAvailableUpdates"].includes(prop)) {
+				return (...args: any[]) => withRetry(() => orig.apply(target, args));
+			}
+			return orig;
+		},
+	});
+}
 
 // ============================================================================
 // Helper
@@ -23,8 +55,9 @@ function getOrCreatePackageManager(ctx: any): any {
 		agentDir,
 		settingsManager: services.settingsManager,
 	});
-	ctx.packageManager = pm;
-	return pm;
+	// Wrap with retry for network resilience
+	ctx.packageManager = createRetryingPackageManager(pm);
+	return ctx.packageManager;
 }
 
 // ============================================================================
@@ -273,7 +306,7 @@ export function registerPackageManagerExtension(api: ExtensionAPI): void {
 
 	api.sendMessage?.({
 		customType: "package-manager",
-		content: "📦 Package Manager loaded",
+		content: "📦 Package Manager loaded (with retry)",
 		display: false,
 	});
 }
