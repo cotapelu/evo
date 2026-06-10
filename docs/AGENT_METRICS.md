@@ -708,3 +708,33 @@
 - Consider adding autocomplete for slash commands and tool parameters globally
 - Explore performance tuning for large directory scans (debounce, incremental)
 
+
+## Round 51 (2026-06-10) - Team Autocomplete Provider
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 51 | Added autocomplete for team_run tool |
+| **Tasks Completed** | 7 | Context detection, role suggestions, teamId/teamSize, registration, tests |
+| **Test Failure Rate** | ~0.28% | 711/713 pass (2 watch-tool flakiness unrelated) |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~15 min | |
+| **Test Count** | 713 | (+3 team-autocomplete tests) |
+| **Measured Coverage** | Maintained | 82.47% statements, 73.02% branch |
+| **Files Added** | 2 | team-autocomplete.ts + tests |
+| **SDK Capabilities Used** | +1 | AutocompleteProvider reused, TeamRegistry integration |
+
+## Trends
+
+- Team extension now has TUI autocomplete integration
+- Two extensions demonstrate full autocomplete patterns (advanced-session + team)
+- Test coverage stable, build green
+- All 116 team tests pass
+- Total tests increased from 710 to 713 (+3)
+
+## Planned Improvements
+
+- Consider extending autocomplete to other tools (git, kilo) for consistency
+- Potential performance optimization: cache TeamRegistry lookups per session
+- Continue monitoring flaky watch-tool tests
+
