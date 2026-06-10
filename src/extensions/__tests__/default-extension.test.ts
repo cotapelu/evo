@@ -20,7 +20,7 @@ function createMockApi(): any {
     registerMessageRenderer: jest.fn(),
     getHandlers: () => handlers,
     exec: jest.fn(),
-    ui: { setHeader: jest.fn() },
+    ui: { setHeader: jest.fn(), addAutocompleteProvider: jest.fn() },
   };
   return api;
 }

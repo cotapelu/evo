@@ -15,7 +15,7 @@ import aboutCommand from "./about-command.js";
 import cancelCommand from "./cancel-command.js";
 
 import piclawHeader from "./piclaw-header.js";
-import { registerTeamTool } from "./team/index.js";
+import { registerTeamTool, registerTeamRunAutocomplete } from "./team/index.js";
 import autoCompact85 from "./hooks/auto-compact-85.js";
 import advancedSessionExtension from "./advanced-session/index.js";
 
@@ -56,6 +56,7 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   autoContinueExtension(api);
   autoCompact85(api);
   registerTeamTool(api);
+  registerTeamRunAutocomplete(api);
   piclawHeader(api);
   aboutCommand(api);
   cancelCommand(api);

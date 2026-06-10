@@ -13,3 +13,6 @@ export { bootPiclawTeam, executeTeamTasks } from "./team-manager.js";
 
 // Tool registration
 export { registerTeamTool } from "./team-tool.js";
+
+// Autocomplete registration
+export { registerTeamRunAutocomplete } from "./team-autocomplete.js";
