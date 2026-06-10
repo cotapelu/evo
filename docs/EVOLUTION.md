@@ -308,7 +308,17 @@
 - Build stable, tests passing
 - Low risk, educational demo
 
-## Phase 14: SDK Completion (In Progress)
+### Round 62: Prompt Templates Extension
+- Created prompt-templates-extension for template discovery and expansion
+- Tools: `prompt.list`, `prompt.expand`
+- Commands: `/prompt.list`, `/prompt.expand`
+- Uses `resourceLoader.getPrompts()` to list templates
+- Simple argument substitution ($1, $2, $@) supported
+- Requires sdk.init (ResourceLoader)
+- Build stable, tests passing
+- Completes Phase 14 SDK integration tasks
+
+## Phase 14: SDK Completion (Completed)
 
 **Goal:** Use remaining SDK exports to reach >90% SDK API coverage.
 
@@ -338,17 +348,17 @@
 
 ## Current Status (2026-06-10)
 
-**Extensions:** 21 active modules
+**Extensions:** 22 active modules
 **Test Count:** 729
 **Coverage:** ~82.5% statements, ~73% branch, 84.76% lines
-**SDK Usage:** ~96% of public API
+**SDK Usage:** ~98% of public API
 **Test Pass Rate:** 99.6%
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-61) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo. ~96% of SDK exports now used.
+**Recent Work:** SDK integration rounds (49-62) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, and prompt templates integration. ~98% of SDK exports now used.
 
-**Next Task:** Prompt template system integration (Phase 14 task #8).
+**Next Task:** Implement caching for expensive operations (Phase 15 task #1).
 
 ---
 

@@ -381,6 +381,36 @@
 - Add tools for listing providers and triggering login
 - Continue Phase 14 remaining tasks (prompt templates)
 
+
+## Round 62 (2026-06-10) – Prompt Templates Extension
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Iteration** | 62 | Prompt template tools |
+| **Tasks Completed** | 1 | Tools: prompt.list, prompt.expand; Commands: /prompt.list, /prompt.expand |
+| **Test Failure Rate** | 0% | All tests pass |
+| **Rollback Count** | 0 | |
+| **Regressions** | 0 | |
+| **MTTR** | ~5 min | |
+| **Test Count** | 729 | (unchanged) |
+| **Measured Coverage** | Maintained | ~82.5% statements, ~73% branch |
+| **Files Added** | 1 | 7.1 KB (prompt-templates-extension) |
+| **SDK Capabilities Used** | +1 | `resourceLoader.getPrompts()`, template expansion |
+
+## Trends
+
+- Provides user-facing tools to discover and use prompt templates
+- Simple argument substitution ($1, $2, $@) for dynamic content
+- Requires sdk.init (ResourceLoader)
+- Build stable, tests passing
+- Completes Phase 14 SDK integration tasks
+
+## Planned Improvements
+
+- Add more advanced substitution (${@:N:L} slices)
+- Support template creation and editing from within pi
+- Continue final Phase 14 wrap-up
+
 ## Cumulative Stats (All Time)
 
 **Total Iterations:** 54 rounds (2026-06-05 to 2026-06-10)
