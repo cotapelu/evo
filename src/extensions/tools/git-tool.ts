@@ -1,23 +1,21 @@
 #!/usr/bin/env node
 /**
- * Git Tool (with Retry)
+ * Git Tool (with Retry and Circuit Breaker)
  *
- * Wraps common Git operations with exponential backoff retry for network-dependent
- * operations (push, pull, fetch). Other operations are executed directly.
+ * Wraps common Git operations with exponential backoff retry and circuit breaker.
+ * Network-dependent failures are retried; repeated failures open the circuit to fail fast.
  *
- * Actions:
- * - status: git status --porcelain
- * - diff: git diff [path] (if no path, diff HEAD)
- * - commit: git commit -m "<message>" (requires message)
- * - add: git add <files...> (requires files array)
- * - push: git push [remote] [branch] (defaults: origin HEAD) — retry
- * - pull: git pull [remote] [branch] (defaults: origin HEAD) — retry
- * - log: git log --oneline -n <count> (default 10)
+ * Actions: status, diff, commit, add, push, pull, log.
  */
 
 import type { ExtensionAPI, ExtensionContext, ExecOptions } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
+
+// Create and register circuit breaker for git operations
+const gitCircuit = new CircuitBreaker({ failureThreshold: 3, resetTimeout: 30000 });
+registerCircuit('git', gitCircuit);
 
 function renderGitCall(args: any, theme: any): Text {
   const action = args.action || 'unknown';
@@ -40,9 +38,7 @@ function renderGitResult(result: any, options: { expanded: boolean; isPartial: b
   return new Text(lines.join('\n'), 0, 0);
 }
 
-// ----------------------------------------------------------------------------
-// Retry helper for git commands (network-dependent actions)
-// ----------------------------------------------------------------------------
+// Retry helper
 async function execGitWithRetry(
   api: ExtensionAPI,
   args: string[],
@@ -55,17 +51,14 @@ async function execGitWithRetry(
       const result = await api.exec('git', args, options);
       lastResult = result;
       if (result.code === 0) return result;
-      // Non-zero exit; retry if attempts left — treat as transient failure
     } catch (e) {
       lastResult = e;
-      // Exception during exec; retry if attempts left
     }
     if (attempt < maxAttempts) {
-      const delay = Math.min(1000 * Math.pow(2, attempt), 30000); // 1s, 2s, 4s, ... capped 30s
+      const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  // After max attempts: if we have an object with code, return it; else throw
   if (lastResult && typeof lastResult === 'object' && 'code' in lastResult) {
     return lastResult;
   }
@@ -76,7 +69,7 @@ function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
   return {
     name: 'git',
     label: 'Git',
-    description: 'Execute Git commands: status, diff, commit, add, push, pull, log. Uses git on PATH. Network actions (push/pull) use retry with backoff.',
+    description: 'Execute Git commands: status, diff, commit, add, push, pull, log. Uses retry and circuit breaker for reliability.',
     parameters: {},
     async execute(toolCallId, params, signal, _onUpdate, ctx) {
       let action: string | undefined;
@@ -109,9 +102,6 @@ function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
       }
 
       const args: string[] = [];
-      let needCwd = true;
-      let requireConfirm = false;
-
       switch (action) {
         case 'status':
           args.push('status', '--porcelain');
@@ -129,7 +119,6 @@ function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
           if (!message) {
             return { content: [{ type: 'text', text: 'Error: message required for commit' }], details: { error: 'Missing message' }, isError: true };
           }
-          // Ask for confirmation if UI available and not forced
           if (ctx.hasUI && !(params as any).force) {
             const confirmed = await ctx.ui.confirm('Git Commit', `Commit changes with message:\n"${message}"?`, {});
             if (!confirmed) {
@@ -167,10 +156,8 @@ function createGitTool(api: ExtensionAPI): ToolDefinition<any, any> {
       }
 
       try {
-        // Use retry for potentially network-dependent actions (push, pull) and also for others to be safe, but simpler: apply to all
-        // We'll use retry for all git commands since even local can occasionally fail due to locks; but skip for read-only?
-        // To be consistent and robust, use retry for all actions.
-        const result = await execGitWithRetry(api, args, execOptions, 3);
+        // Apply circuit breaker and retry
+        const result = await gitCircuit.execute(() => execGitWithRetry(api, args, execOptions, 3));
         const { stdout, stderr, code } = result;
         const success = code === 0;
         const message = success

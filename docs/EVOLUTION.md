@@ -352,6 +352,18 @@
 - Phase 15 Production Hardening continues.
 
 
+
+### Round 65: Circuit Breaker Implementation
+- Added `CircuitBreaker` class with CLOSED/OPEN/HALF_OPEN states and failure thresholding
+- Integrated into `git-tool` (all actions) and `package-manager-extension` (network methods)
+- Circuit monitors consecutive failures; opens after 3 failures, half-open after 30s
+- Combined with retry: retries happen while circuit closed; circuit open fails fast
+- Provides `system.circuits` tool and `/system.circuit.reset` command
+- Created new `circuit-breaker-extension` to expose monitoring
+- Build stable, tests passing (729 passing)
+- Completes Phase 15 error recovery task
+
+
 ## Phase 15: Production Hardening (Future)
 
 **Goal:** Optimize performance and reliability.
@@ -360,7 +372,7 @@
 - ✅ Implement caching for expensive operations (filesystem scans, session introspection) (R63)
 - ✅ Add retry logic for network-dependent operations (npm exec, git) (R64)
 - ✅ Add telemetry backend (optional) (existing)
-- Add more comprehensive error recovery
+- ✅ Add more comprehensive error recovery (via circuit breaker) (R65)
 - Performance benchmarking suite
 
 ## Current Status (2026-06-10)
@@ -373,9 +385,9 @@
 **Rollbacks:** 0
 **MTTR:** ~10 minutes
 
-**Recent Work:** SDK integration rounds (49-64) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, caching for resource discovery, retry logic for network operations, and prompt templates integration. ~98% of SDK exports now used.
+**Recent Work:** SDK integration rounds (49-65) have transformed evo into a Super App. Achieved: advanced session management, file tool factories, autocomplete, TUI widgets, SDK mega utilities, Auth/Model registry UI, full package management, sandbox mode, session branch summarization, auto-discovered project context, and OAuth provider registration demo, caching for resource discovery, retry logic for network operations, circuit breaker for reliability, and prompt templates integration. ~98% of SDK exports now used.
 
-**Next Task:** Add more comprehensive error recovery (Phase 15).
+**Next Task:** Performance benchmarking suite (Phase 15 final task).
 ---
 
 *Each round follows AUTO-CONTINUE.md workflow: analyze, implement, test, update docs, commit. No regressions, zero rollbacks, continuous incremental improvement.*

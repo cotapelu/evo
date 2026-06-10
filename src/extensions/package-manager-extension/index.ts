@@ -1,41 +1,34 @@
 #!/usr/bin/env node
 /**
- * Package Manager Extension (with Retry)
+ * Package Manager Extension (with Retry and Circuit Breaker)
  */
 
 import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { DefaultPackageManager, getAgentDir } from "@earendil-works/pi-coding-agent";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
 
 // ============================================================================
-// Retry Wrapper for network-dependent PackageManager methods
+// Circuit Breaker for Package Manager network operations
+// ============================================================================
+const pmCircuit = new CircuitBreaker({ failureThreshold: 3, resetTimeout: 30000 });
+registerCircuit('package-manager', pmCircuit);
+
+// ============================================================================
+// Retry Wrapper (fallback for transient failures before circuit opens)
 // ============================================================================
 async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
-	let lastError: any;
-	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-		try {
-			return await fn();
-		} catch (e) {
-			lastError = e;
-			if (attempt === maxAttempts) break;
-			// Exponential backoff: 1s, 2s, 4s (max ~30s)
-			const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
-			await new Promise(resolve => setTimeout(resolve, delay));
-		}
-	}
-	throw lastError;
-}
-
-function createRetryingPackageManager(pm: any): any {
-	return new Proxy(pm, {
-		get(target: any, prop: string | symbol) {
-			if (typeof prop === "symbol") return Reflect.get(target, prop);
-			const orig = target[prop];
-			if (typeof orig === "function" && ["install", "remove", "update", "checkForAvailableUpdates"].includes(prop)) {
-				return (...args: any[]) => withRetry(() => orig.apply(target, args));
-			}
-			return orig;
-		},
-	});
+  let lastError: any;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      if (attempt === maxAttempts) break;
+      const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
 }
 
 // ============================================================================
@@ -55,9 +48,22 @@ function getOrCreatePackageManager(ctx: any): any {
 		agentDir,
 		settingsManager: services.settingsManager,
 	});
-	// Wrap with retry for network resilience
+	// Wrap with retry for network resilience (methods wrapped via Proxy)
 	ctx.packageManager = createRetryingPackageManager(pm);
 	return ctx.packageManager;
+}
+
+function createRetryingPackageManager(pm: any): any {
+	return new Proxy(pm, {
+		get(target: any, prop: string | symbol) {
+			if (typeof prop === "symbol") return Reflect.get(target, prop);
+			const orig = target[prop];
+			if (typeof orig === "function" && ["install", "remove", "update", "checkForAvailableUpdates"].includes(prop)) {
+				return (...args: any[]) => withRetry(() => orig.apply(target, args));
+			}
+			return orig;
+		},
+	});
 }
 
 // ============================================================================
@@ -123,7 +129,7 @@ export function createInstallPackageTool(): ToolDefinition<any, any> {
 				const { source, persist = true } = params as { source: string; persist?: boolean };
 				const pm = getOrCreatePackageManager(ctx);
 
-				await pm.install(source, { local: persist });
+				await pmCircuit.execute(() => pm.install(source, { local: persist }));
 				if (persist) {
 					pm.addSourceToSettings(source, { local: persist });
 				}
@@ -161,7 +167,7 @@ export function createRemovePackageTool(): ToolDefinition<any, any> {
 				const { source, unpersist = true } = params as { source: string; unpersist?: boolean };
 				const pm = getOrCreatePackageManager(ctx);
 
-				await pm.remove(source);
+				await pmCircuit.execute(() => pm.remove(source));
 				if (unpersist) {
 					pm.removeSourceFromSettings(source);
 				}
@@ -198,13 +204,13 @@ export function createUpdatePackagesTool(): ToolDefinition<any, any> {
 				const pm = getOrCreatePackageManager(ctx);
 
 				if (source) {
-					await pm.update(source);
+					await pmCircuit.execute(() => pm.update(source));
 					return {
 						content: [{ type: "text", text: `✅ Updated: ${source}` }],
 						details: { source, updated: true },
 					};
 				} else {
-					await pm.update();
+					await pmCircuit.execute(() => pm.update());
 					const configured = pm.listConfiguredPackages();
 					return {
 						content: [{ type: "text", text: `✅ Updated ${configured.length} configured packages` }],
@@ -231,7 +237,7 @@ export function createCheckUpdatesTool(): ToolDefinition<any, any> {
 		async execute(toolCallId: string, params: any, _signal: any, _onUpdate: any, ctx: any) {
 			try {
 				const pm = getOrCreatePackageManager(ctx);
-				const updates = await pm.checkForAvailableUpdates();
+				const updates: any = await pmCircuit.execute(() => pm.checkForAvailableUpdates());
 
 				if (updates.length === 0) {
 					return { content: [{ type: "text", text: "All packages are up-to-date." }], details: { count: 0, updates: [] } };
@@ -306,7 +312,7 @@ export function registerPackageManagerExtension(api: ExtensionAPI): void {
 
 	api.sendMessage?.({
 		customType: "package-manager",
-		content: "📦 Package Manager loaded (with retry)",
+		content: "📦 Package Manager loaded (with retry + circuit breaker)",
 		display: false,
 	});
 }
