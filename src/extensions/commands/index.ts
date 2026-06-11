@@ -3,7 +3,7 @@
  * Re-exports all command registration functions
  */
 
-export { registerSessionTreeCommand } from "./session-tree-command.js";
+// export { registerSessionTreeCommand } from "./session-tree-command.js"; // removed - using built-in '/tree'
 // export { registerSettingsCommand } from "./settings-command.js"; // skipped - external dep
 export { registerProviderCommand } from "./provider-command.js";
 export { registerCopyCommand } from "./copy-command.js";

@@ -4,7 +4,6 @@
  *
  * Provides an interactive UI to navigate the session tree.
  */
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 export declare class EntryDetailView {
     private entry;
@@ -15,5 +14,4 @@ export declare class EntryDetailView {
     render(width: number): string[];
     invalidate(): void;
 }
-export declare function registerSessionTreeCommand(api: ExtensionAPI): void;
 //# sourceMappingURL=session-tree-command.d.ts.map

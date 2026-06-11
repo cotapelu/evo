@@ -15,7 +15,7 @@ import piclawHeader from './piclaw-header.js';
 import { registerTeamTool, registerTeamRunAutocomplete } from './team/index.js';
 import { registerTeamWidget } from './team/team-widget.js';
 // Commands from extensions_qclaw
-import { registerSessionTreeCommand, registerProviderCommand, registerCopyCommand, registerTeamCommand, registerMetricsCommand, } from './commands/index.js';
+import { registerProviderCommand, registerCopyCommand, registerTeamCommand, registerMetricsCommand, } from './commands/index.js';
 // Renderers from extensions_qclaw
 import { registerBranchSummaryRenderer, registerMemoryRenderer, registerTeamOpsRenderer, registerMetricsWidget, } from './renderers/index.js';
 // Keybinding extension from extensions_qclaw
@@ -85,7 +85,6 @@ export default function extensionsAggregator(api) {
         withMutedSendMessage(aboutCommand),
         withMutedSendMessage(cancelCommand),
         // COMMANDS from extensions_qclaw
-        withMutedSendMessage(registerSessionTreeCommand),
         withMutedSendMessage(registerProviderCommand),
         withMutedSendMessage(registerCopyCommand),
         withMutedSendMessage(registerTeamCommand),

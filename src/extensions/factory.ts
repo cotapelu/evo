@@ -41,7 +41,6 @@ import { registerTeamWidget } from './team/team-widget.js';
 
 // Commands from extensions_qclaw
 import {
-  registerSessionTreeCommand,
   registerProviderCommand,
   registerCopyCommand,
   registerTeamCommand,
@@ -141,7 +140,6 @@ export default function extensionsAggregator(api: ExtensionAPI) {
     withMutedSendMessage(cancelCommand),
 
     // COMMANDS from extensions_qclaw
-    withMutedSendMessage(registerSessionTreeCommand),
     withMutedSendMessage(registerProviderCommand),
     withMutedSendMessage(registerCopyCommand),
     withMutedSendMessage(registerTeamCommand),
