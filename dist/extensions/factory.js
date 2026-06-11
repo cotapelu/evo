@@ -13,6 +13,15 @@ import aboutCommand from './about-command.js';
 import cancelCommand from './cancel-command.js';
 import piclawHeader from './piclaw-header.js';
 import { registerTeamTool, registerTeamRunAutocomplete } from './team/index.js';
+import { registerTeamWidget } from './team/team-widget.js';
+// Commands from extensions_qclaw
+import { registerSessionTreeCommand, registerProviderCommand, registerCopyCommand, registerTeamCommand, registerMetricsCommand, } from './commands/index.js';
+// Renderers from extensions_qclaw
+import { registerBranchSummaryRenderer, registerMemoryRenderer, registerTeamOpsRenderer, registerMetricsWidget, } from './renderers/index.js';
+// Keybinding extension from extensions_qclaw
+// import registerKeybindingExtension from './keybinding/keybinding-extension.js'; // skipped - needs config-manager
+// Additional tools from extensions_qclaw
+import { registerUniversalTool, registerAuditTool, registerBuildTool, registerFormatterTool, registerScriptsTool, registerSecretScannerTool, registerTestTool, registerToolTemplate, registerSubToolLoaderExtension, } from './tools/index.js';
 import registerFileToolsExtension from './file-tools-extension/index.js';
 import autoCompact85 from './hooks/auto-compact-85.js';
 import advancedSessionExtension from './advanced-session/index.js';
@@ -71,9 +80,31 @@ export default function extensionsAggregator(api) {
         withMutedSendMessage(autoCompact85),
         withMutedSendMessage(registerTeamTool),
         withMutedSendMessage(registerTeamRunAutocomplete),
+        withMutedSendMessage(registerTeamWidget),
         withMutedSendMessage(piclawHeader),
         withMutedSendMessage(aboutCommand),
         withMutedSendMessage(cancelCommand),
+        // COMMANDS from extensions_qclaw
+        withMutedSendMessage(registerSessionTreeCommand),
+        withMutedSendMessage(registerProviderCommand),
+        withMutedSendMessage(registerCopyCommand),
+        withMutedSendMessage(registerTeamCommand),
+        withMutedSendMessage(registerMetricsCommand),
+        // RENDERERS from extensions_qclaw
+        withMutedSendMessage(registerBranchSummaryRenderer),
+        withMutedSendMessage(registerMemoryRenderer),
+        withMutedSendMessage(registerTeamOpsRenderer),
+        withMutedSendMessage(registerMetricsWidget),
+        // ADDITIONAL TOOLS from extensions_qclaw
+        withMutedSendMessage(registerUniversalTool),
+        withMutedSendMessage(registerAuditTool),
+        withMutedSendMessage(registerBuildTool),
+        withMutedSendMessage(registerFormatterTool),
+        withMutedSendMessage(registerScriptsTool),
+        withMutedSendMessage(registerSecretScannerTool),
+        withMutedSendMessage(registerTestTool),
+        withMutedSendMessage(registerToolTemplate),
+        withMutedSendMessage(registerSubToolLoaderExtension),
         // ADVANCED SESSION (Full SDK Power)
         withMutedSendMessage(advancedSessionExtension),
         // GLOBAL AUTOCOMPLETE (UX Enhancement)

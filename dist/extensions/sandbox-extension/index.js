@@ -54,6 +54,7 @@ export function createSandboxEnterTool() {
                             text: `✅ Sandbox activated\n\nActive: ${readOnly.join(", ")}\nExit: sandbox.exit()`,
                         }],
                     details: { active: true, activeTools: readOnly, previousTools: currentTools },
+                    isError: false,
                 };
             }
             catch (e) {
@@ -84,6 +85,7 @@ export function createSandboxExitTool() {
                     return {
                         content: [{ type: "text", text: "⚠️ Sandbox not active" }],
                         details: { active: false },
+                        isError: false,
                     };
                 }
                 const previous = ctx.preSandboxTools;
@@ -98,6 +100,7 @@ export function createSandboxExitTool() {
                 return {
                     content: [{ type: "text", text: `✅ Sandbox exited\nRestored ${previous?.length || 0} tools` }],
                     details: { active: false, restoredCount: previous?.length || 0 },
+                    isError: false,
                 };
             }
             catch (e) {
@@ -129,6 +132,7 @@ export function createSandboxStatusTool() {
                         text: `🔒 Sandbox: ${isActive ? "ACTIVE (read-only)" : "INACTIVE"}\n\nActive tools (${activeTools.length}):\n${activeTools.join(", ") || "(none)"}`,
                     }],
                 details: { active: isActive, activeTools },
+                isError: false,
             };
         },
     };
@@ -167,6 +171,7 @@ export function createSandboxCreateTool() {
                             text: `✅ Sandbox created\nTools: ${tools.join(", ")}\nExit: sandbox.exit()`,
                         }],
                     details: { tools, previousCount: currentTools.length },
+                    isError: false,
                 };
             }
             catch (e) {

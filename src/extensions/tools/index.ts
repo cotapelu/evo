@@ -29,3 +29,14 @@ export { registerNotesTool } from "./notes-tool.js";
 export { registerToolMetricsTool } from "./tool-metrics-tool.js";
 export { registerCoverageLeadersTool } from "./coverage-leaders.js";
 export { registerPerformanceAdvisorTool } from "./performance-advisor-tool.js";
+
+// From extensions_qclaw
+ export { registerUniversalTool } from "./universal-tool.js";
+ export { registerAuditTool } from "./audit-tool.js";
+ export { registerBuildTool } from "./build-tool.js";
+ export { registerFormatterTool } from "./formatter-tool.js";
+ export { registerScriptsTool } from "./scripts-tool.js";
+ export { registerSecretScannerTool } from "./secret-scanner-tool.js";
+ export { registerTestTool } from "./test-tool.js";
+ export { registerToolTemplate } from "./tool-template.js";
+ export { registerSubToolLoaderExtension } from "./subtool-loader.js";

@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { watch } from 'node:fs';
 import { Mutex } from '../utils/mutex.js';
 function createWatchTool(api) {
-    return {
+    const tool = {
         name: 'watch',
         label: 'Watch',
         description: 'Watch files and auto-run commands on change. Runs code-health and test by default.',
@@ -92,7 +92,10 @@ function createWatchTool(api) {
                 triggered = true;
                 scheduleRun();
             }
-            // Set up watchers
+            // Expose test hook for triggering changes in tests
+            const testHook = { trigger: handleChange };
+            // @ts-ignore – internal test hook
+            tool._testHook = testHook;
             async function setupWatchers(paths) {
                 for (const p of paths) {
                     try {
@@ -142,19 +145,29 @@ function createWatchTool(api) {
                     // ignore unreadable dirs
                 }
             }
-            await setupWatchers(watchPaths);
-            logLines.push('Watch started (press Ctrl+C to stop)');
-            updateDisplay();
-            // Wait for abort signal
-            if (signal) {
-                signal.addEventListener('abort', () => {
-                    logLines.push('🛑 Stopping...');
-                    for (const w of watchers)
-                        w.close();
-                    if (timeout)
-                        clearTimeout(timeout);
-                    updateDisplay();
-                });
+            try {
+                await setupWatchers(watchPaths);
+                logLines.push('Watch started (press Ctrl+C to stop)');
+                updateDisplay();
+                // Wait for abort signal
+                if (signal) {
+                    signal.addEventListener('abort', () => {
+                        logLines.push('🛑 Stopping...');
+                        for (const w of watchers)
+                            w.close();
+                        if (timeout)
+                            clearTimeout(timeout);
+                        updateDisplay();
+                    });
+                }
+            }
+            finally {
+                // Clear test hook when execution ends
+                // @ts-ignore
+                if (tool._testHook === testHook) {
+                    // @ts-ignore
+                    delete tool._testHook;
+                }
             }
             return {
                 content: [{ type: 'text', text: 'Watch tool started' }],
@@ -178,6 +191,7 @@ function createWatchTool(api) {
             return new Text(th.fg('success', `👀 Watching ${active} paths`), 0, 0);
         },
     };
+    return tool;
 }
 export function registerWatchTool(api) {
     api.registerTool(createWatchTool(api));
