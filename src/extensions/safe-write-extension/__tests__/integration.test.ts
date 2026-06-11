@@ -45,7 +45,7 @@ describe('Safe Write Extension', () => {
 		registerSafeWriteExtension(api);
 		const tool: ToolDefinition = api.registerTool.mock.calls[0][0];
 
-		const tmp = await mkdir(join(tmpdir(), 'safe-write-test'));
+		const tmp = await mkdir(join(tmpdir(), 'safe-write-test'), { recursive: true });
 		const cwd = tmp;
 		const ctx = { cwd, exec: () => Promise.resolve({code:0}) };
 		const filePath = 'output.txt';

@@ -53,6 +53,7 @@ export function createListPromptTemplatesTool(): ToolDefinition<any, any> {
 					return {
 						content: [{ type: "text", text: "No prompt templates loaded." }],
 						details: { count: 0 },
+						isError: false,
 					};
 				}
 
@@ -60,6 +61,7 @@ export function createListPromptTemplatesTool(): ToolDefinition<any, any> {
 				return {
 					content: [{ type: "text", text: `Prompt templates (${templates.length}):\n${lines}` }],
 					details: { count: templates.length, templates: templates.map(p => p.name) },
+					isError: false,
 				};
 			} catch (e: any) {
 				return {
@@ -131,6 +133,7 @@ export function createExpandPromptTemplateTool(): ToolDefinition<any, any> {
 						argCount: args.length,
 						expandedLength: expanded.length,
 					},
+					isError: false,
 				};
 			} catch (e: any) {
 				return {

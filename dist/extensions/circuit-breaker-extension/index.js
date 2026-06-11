@@ -6,7 +6,7 @@
  * - Tool: system.circuits – list all circuit breakers and their state
  * - Command: /system.circuit.reset <name> – reset a circuit to CLOSED
  */
-import { listCircuits, getCircuit } from "../utils/circuit-breaker";
+import { listCircuits, getCircuit } from "../utils/circuit-breaker.js";
 function createCircuitsListTool() {
     return {
         name: 'system.circuits',

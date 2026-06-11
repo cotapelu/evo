@@ -18,7 +18,7 @@ import { readFileSync, readdirSync } from "node:fs";
 const CACHE_TTL_MS = 30_000; // 30 seconds
 let lastDiscoverTime = 0;
 let cachedDiscoverResult = null;
-function clearCache() {
+export function clearCache() {
     lastDiscoverTime = 0;
     cachedDiscoverResult = null;
 }
@@ -122,12 +122,14 @@ export function createListResourcesTool() {
                     return {
                         content: [{ type: "text", text: "No agent files loaded." }],
                         details: { count: 0 },
+                        isError: false,
                     };
                 }
                 const lines = files.map((f) => `  ${f.path} (${f.content.length} bytes)`).join("\n");
                 return {
                     content: [{ type: "text", text: `Loaded resources (${files.length}):\n${lines}` }],
                     details: { count: files.length, files: files.map((f) => f.path) },
+                    isError: false,
                 };
             }
             catch (e) {

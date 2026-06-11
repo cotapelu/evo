@@ -152,7 +152,11 @@ export function createTeamRunAutocompleteProvider(current, cache) {
  */
 export function registerTeamRunAutocomplete(api) {
     const cache = new Map();
-    // Provider
-    api.ui.addAutocompleteProvider((current) => createTeamRunAutocompleteProvider(current, cache));
+    // Register autocomplete provider after session starts via UI context
+    api.on('session_start', (_event, ctx) => {
+        if (ctx.ui?.addAutocompleteProvider) {
+            ctx.ui.addAutocompleteProvider((current) => createTeamRunAutocompleteProvider(current, cache));
+        }
+    });
 }
 //# sourceMappingURL=team-autocomplete.js.map

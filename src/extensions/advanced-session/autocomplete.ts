@@ -272,8 +272,12 @@ export function registerSessionManagerAutocomplete(api: ExtensionAPI): void {
 		sessionCwd = ctx.cwd;
 	});
 
-	// Register provider
-	(api as any).ui.addAutocompleteProvider((current: any) =>
-		createSessionManagerAutocompleteProvider(current, getSuggestionsCache)
-	);
+	// Register autocomplete provider after session starts via UI context
+	api.on('session_start', (_event, ctx: any) => {
+		if (ctx.ui?.addAutocompleteProvider) {
+			ctx.ui.addAutocompleteProvider((current: any) =>
+				createSessionManagerAutocompleteProvider(current, getSuggestionsCache)
+			);
+		}
+	});
 }

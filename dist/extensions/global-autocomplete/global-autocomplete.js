@@ -69,8 +69,7 @@ function detectGlobalContext(lines, cursorLine, cursorCol) {
     if (slashMatch) {
         return { type: 'slash', token: slashMatch[1] };
     }
-    // Tool call: word followed by '(' (within reasonable distance)
-    // Look back up to 30 chars for pattern: word(
+    // Tool call: word followed by '('
     const toolPattern = /([a-z][a-z0-9_-]*)\s*\($/i;
     const segment = textBeforeCursor.slice(-30);
     const toolMatch = segment.match(toolPattern);
@@ -169,7 +168,6 @@ export function createGlobalAutocompleteProvider(current, cache) {
             return { lines: newLines, cursorLine, cursorCol: newCursorCol };
         },
         shouldTriggerFileCompletion() {
-            // No file completion
             return false;
         },
     };
@@ -179,6 +177,11 @@ export function createGlobalAutocompleteProvider(current, cache) {
  */
 export function registerGlobalAutocomplete(api) {
     const cache = new Map();
-    api.ui.addAutocompleteProvider((current) => createGlobalAutocompleteProvider(current, cache));
+    api.on('session_start', (_event, ctx) => {
+        if (ctx.ui?.addAutocompleteProvider) {
+            ctx.ui.addAutocompleteProvider((current) => createGlobalAutocompleteProvider(current, cache));
+        }
+    });
 }
+export default registerGlobalAutocomplete;
 //# sourceMappingURL=global-autocomplete.js.map

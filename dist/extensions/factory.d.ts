@@ -5,7 +5,8 @@
  * This function registers all custom extensions for Piclaw.
  * Exported as default extension function for factory creation.
  */
-export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI): void;
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+export default function extensionsAggregator(api: ExtensionAPI): void;
 /**
  * Extension Configuration
  */

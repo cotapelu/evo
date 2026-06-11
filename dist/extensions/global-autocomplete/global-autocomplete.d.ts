@@ -15,4 +15,5 @@ export declare function createGlobalAutocompleteProvider(current: AutocompletePr
  * Register global autocomplete provider
  */
 export declare function registerGlobalAutocomplete(api: ExtensionAPI): void;
+export default registerGlobalAutocomplete;
 //# sourceMappingURL=global-autocomplete.d.ts.map

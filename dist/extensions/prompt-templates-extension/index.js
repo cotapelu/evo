@@ -47,12 +47,14 @@ export function createListPromptTemplatesTool() {
                     return {
                         content: [{ type: "text", text: "No prompt templates loaded." }],
                         details: { count: 0 },
+                        isError: false,
                     };
                 }
                 const lines = templates.map(p => `  /${p.name} – ${p.description || "(no description)"}`).join("\n");
                 return {
                     content: [{ type: "text", text: `Prompt templates (${templates.length}):\n${lines}` }],
                     details: { count: templates.length, templates: templates.map(p => p.name) },
+                    isError: false,
                 };
             }
             catch (e) {
@@ -120,6 +122,7 @@ export function createExpandPromptTemplateTool() {
                         argCount: args.length,
                         expandedLength: expanded.length,
                     },
+                    isError: false,
                 };
             }
             catch (e) {

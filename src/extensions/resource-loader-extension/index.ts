@@ -22,7 +22,7 @@ const CACHE_TTL_MS = 30_000; // 30 seconds
 let lastDiscoverTime = 0;
 let cachedDiscoverResult: any = null;
 
-function clearCache(): void {
+export function clearCache(): void {
 	lastDiscoverTime = 0;
 	cachedDiscoverResult = null;
 }
@@ -130,6 +130,7 @@ export function createListResourcesTool(): ToolDefinition<any, any> {
 					return {
 						content: [{ type: "text", text: "No agent files loaded." }],
 						details: { count: 0 },
+						isError: false,
 					};
 				}
 
@@ -137,6 +138,7 @@ export function createListResourcesTool(): ToolDefinition<any, any> {
 				return {
 					content: [{ type: "text", text: `Loaded resources (${files.length}):\n${lines}` }],
 					details: { count: files.length, files: files.map((f: any) => f.path) },
+					isError: false,
 				};
 			} catch (e: any) {
 				return {

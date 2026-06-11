@@ -8,7 +8,7 @@
  * Actions: status, diff, commit, add, push, pull, log.
  */
 import { Text } from "@earendil-works/pi-tui";
-import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker.js";
 // Create and register circuit breaker for git operations
 const gitCircuit = new CircuitBreaker({ failureThreshold: 3, resetTimeout: 30000 });
 registerCircuit('git', gitCircuit);

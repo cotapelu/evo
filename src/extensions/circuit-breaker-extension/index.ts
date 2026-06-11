@@ -8,7 +8,7 @@
  */
 
 import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
-import { listCircuits, getCircuit, CircuitBreaker } from "../utils/circuit-breaker";
+import { listCircuits, getCircuit, CircuitBreaker } from "../utils/circuit-breaker.js";
 
 function createCircuitsListTool(): ToolDefinition<any, any> {
 	return {

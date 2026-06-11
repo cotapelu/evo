@@ -62,6 +62,7 @@ export function registerOAuthProviderExtension(api) {
             {
                 id: "demo-model-v1",
                 name: "Demo Model v1",
+                baseUrl: "https://demo.example.com",
                 api: "faux", // Use faux API type for demo
                 reasoning: false,
                 input: ["text"],

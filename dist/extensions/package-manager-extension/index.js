@@ -3,7 +3,7 @@
  * Package Manager Extension (with Retry and Circuit Breaker)
  */
 import { DefaultPackageManager, getAgentDir } from "@earendil-works/pi-coding-agent";
-import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker.js";
 // ============================================================================
 // Circuit Breaker for Package Manager network operations
 // ============================================================================

@@ -184,8 +184,12 @@ export function createTeamRunAutocompleteProvider(
 export function registerTeamRunAutocomplete(api: ExtensionAPI): void {
 	const cache = new Map<string, AutocompleteItem[]>();
 
-	// Provider
-	(api as any).ui.addAutocompleteProvider((current: any) =>
-		createTeamRunAutocompleteProvider(current, cache)
-	);
+	// Register autocomplete provider after session starts via UI context
+	api.on('session_start', (_event, ctx: any) => {
+		if (ctx.ui?.addAutocompleteProvider) {
+			ctx.ui.addAutocompleteProvider((current: any) =>
+				createTeamRunAutocompleteProvider(current, cache)
+			);
+		}
+	});
 }

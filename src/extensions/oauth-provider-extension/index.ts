@@ -73,6 +73,7 @@ export function registerOAuthProviderExtension(api: ExtensionAPI): void {
 			{
 				id: "demo-model-v1",
 				name: "Demo Model v1",
+				baseUrl: "https://demo.example.com",
 				api: "faux" as any, // Use faux API type for demo
 				reasoning: false,
 				input: ["text"],

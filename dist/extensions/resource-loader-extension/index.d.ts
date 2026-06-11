@@ -11,6 +11,7 @@
  * Provides tools to inspect loaded resources.
  */
 import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
+export declare function clearCache(): void;
 export declare function createListResourcesTool(): ToolDefinition<any, any>;
 export declare function registerResourceLoaderExtension(api: ExtensionAPI): void;
 export default registerResourceLoaderExtension;

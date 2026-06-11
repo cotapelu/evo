@@ -11,7 +11,7 @@
 import type { ExtensionAPI, ExtensionContext, ExecOptions } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker.js";
 
 // Create and register circuit breaker for git operations
 const gitCircuit = new CircuitBreaker({ failureThreshold: 3, resetTimeout: 30000 });

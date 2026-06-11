@@ -234,7 +234,11 @@ export function registerSessionManagerAutocomplete(api) {
         sessionManager = ctx.sessionManager;
         sessionCwd = ctx.cwd;
     });
-    // Register provider
-    api.ui.addAutocompleteProvider((current) => createSessionManagerAutocompleteProvider(current, getSuggestionsCache));
+    // Register autocomplete provider after session starts via UI context
+    api.on('session_start', (_event, ctx) => {
+        if (ctx.ui?.addAutocompleteProvider) {
+            ctx.ui.addAutocompleteProvider((current) => createSessionManagerAutocompleteProvider(current, getSuggestionsCache));
+        }
+    });
 }
 //# sourceMappingURL=autocomplete.js.map

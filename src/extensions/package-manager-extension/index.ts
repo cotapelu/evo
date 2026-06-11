@@ -5,7 +5,7 @@
 
 import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { DefaultPackageManager, getAgentDir } from "@earendil-works/pi-coding-agent";
-import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker.js";
 
 // ============================================================================
 // Circuit Breaker for Package Manager network operations
