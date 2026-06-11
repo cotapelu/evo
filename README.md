@@ -4,25 +4,22 @@ Self-Evolving AI Agent System built on pi-coding-agent.
 
 ## Quick Install
 
-Download and install the pre-built release (recommended):
+### Option 1: Install from pre-built release (recommended)
 
 ```bash
 npm install -g https://github.com/cotapelu/evo/releases/download/v0.0.6/evo-0.0.6.tgz
 ```
 
-Or install directly from the GitHub repository:
-
-```bash
-npm install -g github:cotapelu/evo
-```
-
-Or clone and install locally:
+### Option 2: Install from local clone
 
 ```bash
 git clone https://github.com/cotapelu/evo.git
 cd evo
 npm install -g .
 ```
+
+Both methods install the `evo` command globally.
+
 
 ## Usage
 
