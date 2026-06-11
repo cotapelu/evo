@@ -31,4 +31,5 @@ export { registerSecretScannerTool } from "./secret-scanner-tool.js";
 export { registerTestTool } from "./test-tool.js";
 export { registerToolTemplate } from "./tool-template.js";
 export { registerSubToolLoaderExtension } from "./subtool-loader.js";
+export { registerSkillReaderExtension } from "./skill-reader/skill-reader.js";
 //# sourceMappingURL=index.d.ts.map

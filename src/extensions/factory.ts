@@ -70,6 +70,7 @@ import {
   registerTestTool,
   registerToolTemplate,
   registerSubToolLoaderExtension,
+  registerSkillReaderExtension,
 } from './tools/index.js';
 import registerFileToolsExtension from './file-tools-extension/index.js';
 import autoCompact85 from './hooks/auto-compact-85.js';
@@ -162,6 +163,7 @@ export default function extensionsAggregator(api: ExtensionAPI) {
     withMutedSendMessage(registerTestTool),
     withMutedSendMessage(registerToolTemplate),
     withMutedSendMessage(registerSubToolLoaderExtension),
+    withMutedSendMessage(registerSkillReaderExtension),
 
     // ADVANCED SESSION (Full SDK Power)
     withMutedSendMessage(advancedSessionExtension),

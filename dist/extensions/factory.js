@@ -21,7 +21,7 @@ import { registerBranchSummaryRenderer, registerMemoryRenderer, registerTeamOpsR
 // Keybinding extension from extensions_qclaw
 // import registerKeybindingExtension from './keybinding/keybinding-extension.js'; // skipped - needs config-manager
 // Additional tools from extensions_qclaw
-import { registerUniversalTool, registerAuditTool, registerBuildTool, registerFormatterTool, registerScriptsTool, registerSecretScannerTool, registerTestTool, registerToolTemplate, registerSubToolLoaderExtension, } from './tools/index.js';
+import { registerUniversalTool, registerAuditTool, registerBuildTool, registerFormatterTool, registerScriptsTool, registerSecretScannerTool, registerTestTool, registerToolTemplate, registerSubToolLoaderExtension, registerSkillReaderExtension, } from './tools/index.js';
 import registerFileToolsExtension from './file-tools-extension/index.js';
 import autoCompact85 from './hooks/auto-compact-85.js';
 import advancedSessionExtension from './advanced-session/index.js';
@@ -105,6 +105,7 @@ export default function extensionsAggregator(api) {
         withMutedSendMessage(registerTestTool),
         withMutedSendMessage(registerToolTemplate),
         withMutedSendMessage(registerSubToolLoaderExtension),
+        withMutedSendMessage(registerSkillReaderExtension),
         // ADVANCED SESSION (Full SDK Power)
         withMutedSendMessage(advancedSessionExtension),
         // GLOBAL AUTOCOMPLETE (UX Enhancement)
