@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Piclaw Extensions - Extension Function
+ * Evo Extensions - Extension Function
  *
- * This function registers all custom extensions for Piclaw.
+ * This function registers all custom extensions for Evo.
  * Exported as default extension function for factory creation.
  */
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';

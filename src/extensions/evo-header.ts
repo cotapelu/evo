@@ -5,8 +5,8 @@ import { Text } from "@earendil-works/pi-tui";
 import { VERSION as PI_VERSION, getAgentDir } from "@earendil-works/pi-coding-agent";
 
 // Default values (fallback)
-let PICLAW_APP_NAME = "piclaw";
-let PICLAW_VERSION = "0.0.1";
+let EVO_APP_NAME = "evo";
+let EVO_VERSION = "0.0.1";
 
 // Try to read package.json from agent directory
 const agentDir = getAgentDir();
@@ -15,11 +15,11 @@ try {
     if (existsSync(pkgPath)) {
         const content = readFileSync(pkgPath, "utf-8");
         const pkg = JSON.parse(content);
-        if (pkg.name) PICLAW_APP_NAME = pkg.name;
-        if (pkg.version) PICLAW_VERSION = pkg.version;
+        if (pkg.name) EVO_APP_NAME = pkg.name;
+        if (pkg.version) EVO_VERSION = pkg.version;
     }
 } catch (e) {
-    console.debug('[PiclawHeader] Using default app name/version (could not read package.json):', e instanceof Error ? e.message : e);
+    console.debug('[EvoHeader] Using default app name/version (could not read package.json):', e instanceof Error ? e.message : e);
 }
 
 async function checkForUpdate(): Promise<string | undefined> {
@@ -40,7 +40,7 @@ async function checkForUpdate(): Promise<string | undefined> {
     } catch (e) {
         // Only log at debug level - network errors are common and expected
         if (!process.env.PI_SKIP_VERSION_CHECK && !process.env.PI_OFFLINE) {
-          console.debug('[PiclawHeader] Version check failed (network or parse error):', e instanceof Error ? e.message : e);
+          console.debug('[EvoHeader] Version check failed (network or parse error):', e instanceof Error ? e.message : e);
         }
     }
     return undefined;
@@ -52,12 +52,12 @@ export default function (api: ExtensionAPI): void {
 			const updateVersion = await checkForUpdate();
 
 			ctx.ui.setHeader((_tui, theme) => {
-				let header = `${theme.fg("dim", `${PICLAW_APP_NAME} agent build on top of pi.dev sdk.`)} \n`;
-				header += `${theme.bold(theme.fg("accent", PICLAW_APP_NAME))}${theme.fg("dim", ` v${PICLAW_VERSION}`)}`;
+				let header = `${theme.fg("dim", `${EVO_APP_NAME} agent build on top of pi.dev sdk.`)} \n`;
+				header += `${theme.bold(theme.fg("accent", EVO_APP_NAME))}${theme.fg("dim", ` v${EVO_VERSION}`)}`;
 				if (updateVersion) {
 					header += `\n${theme.fg("warning", "Update Available")}`;
 					header += `\n${theme.fg("dim", `New version ${updateVersion} is available.`)}`;
-					header += `\n${theme.bold("Run piclaw update")}`;
+					header += `\n${theme.bold("Run evo update")}`;
 				}
 				return new Text(header, 1, 0);
 			});

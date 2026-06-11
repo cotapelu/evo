@@ -5,7 +5,7 @@
  * Single tool: team_run
  * Just provide tasks, team size, roles -> team auto-completes
  */
-import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
+import { bootEvoTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
 export function registerTeamTool(api) {
     api.registerTool(createTeamTool());
 }
@@ -149,7 +149,7 @@ export function createTeamTool() {
                     details: { teamSize, teamRoles, taskCount: tasks.length }
                 });
                 // Boot team
-                const team = await bootPiclawTeam(parentRuntime, {
+                const team = await bootEvoTeam(parentRuntime, {
                     teamSize,
                     teamRoles
                 });

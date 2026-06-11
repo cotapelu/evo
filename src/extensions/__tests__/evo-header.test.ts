@@ -17,9 +17,9 @@ jest.unstable_mockModule('@earendil-works/pi-coding-agent', () => ({
   VERSION: PI_VERSION_MOCK,
 }));
 
-const { default: piclawHeader } = await import('../piclaw-header.js');
+const { default: evoHeader } = await import('../evo-header.js');
 
-describe('Piclaw Header', () => {
+describe('Evo Header', () => {
   let api: any;
   let capturedHandler: any;
 
@@ -39,7 +39,7 @@ describe('Piclaw Header', () => {
 
   test('registers session_start event', () => {
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     expect(api.on).toHaveBeenCalledWith('session_start', expect.any(Function));
     capturedHandler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
   });
@@ -47,7 +47,7 @@ describe('Piclaw Header', () => {
   test('sets header with defaults when package.json missing', async () => {
     existsSyncMock.mockReturnValue(false);
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn((fn: Function) => {
       // Call the render function to ensure it executes without error
@@ -69,7 +69,7 @@ describe('Piclaw Header', () => {
     existsSyncMock.mockReturnValue(true);
     readFileSyncMock.mockReturnValue(JSON.stringify({ name: 'myapp', version: '2.3.4' }));
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn((fn: Function) => fn(null, { fg: () => '', bold: () => '', dim: () => '', accent: () => '', warning: () => '' }));
     const ctx = { hasUI: true, ui: { setHeader: mockSetHeader } } as any;
@@ -85,7 +85,7 @@ describe('Piclaw Header', () => {
       json: async () => ({ version: '2.0.0' }),
     });
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn((fn: Function) => fn(null, { fg: () => '', bold: () => '', dim: () => '', accent: () => '', warning: () => '' }));
     const ctx = { hasUI: true, ui: { setHeader: mockSetHeader } } as any;
@@ -103,7 +103,7 @@ describe('Piclaw Header', () => {
       json: async () => ({ version: '1.0.0' }),
     });
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn((fn: Function) => fn(null, { fg: () => '', bold: () => '', dim: () => '', accent: () => '', warning: () => '' }));
     const ctx = { hasUI: true, ui: { setHeader: mockSetHeader } } as any;
@@ -117,7 +117,7 @@ describe('Piclaw Header', () => {
     readFileSyncMock.mockReturnValue(JSON.stringify({ name: 'app', version: '1.0.0' }));
     (global.fetch as jest.Mock).mockRejectedValue(new Error('network down'));
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn((fn: Function) => fn(null, { fg: () => '', bold: () => '', dim: () => '', accent: () => '', warning: () => '' }));
     const ctx = { hasUI: true, ui: { setHeader: mockSetHeader } } as any;
@@ -127,7 +127,7 @@ describe('Piclaw Header', () => {
 
   test('does nothing when hasUI false', async () => {
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn();
     const ctx = { hasUI: false, ui: { setHeader: mockSetHeader } } as any;
@@ -138,7 +138,7 @@ describe('Piclaw Header', () => {
   test('skips version check when PI_SKIP_VERSION_CHECK set', async () => {
     process.env.PI_SKIP_VERSION_CHECK = '1';
     api = { on: jest.fn() };
-    piclawHeader(api);
+    evoHeader(api);
     const handler = api.on.mock.calls.find(c => c[0] === 'session_start')[1];
     const mockSetHeader = jest.fn((fn: Function) => fn(null, { fg: () => '', bold: () => '', dim: () => '', accent: () => '', warning: () => '' }));
     const ctx = { hasUI: true, ui: { setHeader: mockSetHeader } } as any;

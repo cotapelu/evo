@@ -161,7 +161,7 @@ export declare class TeamRegistry {
         totalTasks: number;
     } | null>;
 }
-export declare function bootPiclawTeam(parentRuntime: AgentSessionRuntime, options?: {
+export declare function bootEvoTeam(parentRuntime: AgentSessionRuntime, options?: {
     teamSize?: number;
     teamRoles?: string[];
     tools?: string[];

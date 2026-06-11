@@ -576,7 +576,7 @@ export class AgentTeam implements AgentTeamRuntime {
       };
 
       // Create child runtime using parent's services and new sessionManager
-      // We'll use a factory similar to bootPiclawTeam but without reusing parent's sessionManager
+      // We'll use a factory similar to bootEvoTeam but without reusing parent's sessionManager
       const factory: CreateAgentSessionRuntimeFactory = async ({
         cwd: sessionCwd,
         agentDir: sessionAgentDir,
@@ -929,7 +929,7 @@ export class TeamRegistry {
   }
 }
 
-export async function bootPiclawTeam(
+export async function bootEvoTeam(
   parentRuntime: AgentSessionRuntime,
   options: {
     teamSize?: number;

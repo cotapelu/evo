@@ -3,7 +3,7 @@
  * Verifies hidden global state is eliminated.
  */
 
-import { bootPiclawTeam, TeamRegistry } from '../team-manager.js';
+import { bootEvoTeam, TeamRegistry } from '../team-manager.js';
 import { createTeamTool } from '../team-tool.js';
 
 describe('Team System - No Global State', () => {
@@ -22,9 +22,9 @@ describe('Team System - No Global State', () => {
     delete (globalThis as any).__EVO__RUNTIME__;
   });
 
-  test('globalThis.__EVO__RUNTIME__ should NOT be set after bootPiclawTeam', async () => {
+  test('globalThis.__EVO__RUNTIME__ should NOT be set after bootEvoTeam', async () => {
     // Create a team (using real parent runtime from imported module if available)
-    // This test checks that bootPiclawTeam does NOT set global variable
+    // This test checks that bootEvoTeam does NOT set global variable
     
     // Verify globalThis is clean
     expect((globalThis as any).__EVO__RUNTIME__).toBeUndefined();

@@ -18,7 +18,7 @@ import {
 } from '../tools/index.js';
 import { registerTeamTool } from '../team/index.js';
 import autoContinueExtension from '../hooks/auto-continue.js';
-import piclawHeader from '../piclaw-header.js';
+import evoHeader from '../evo-header.js';
 
 function createMockApi(): any {
   return {
@@ -147,7 +147,7 @@ describe('Extension Registration Integration', () => {
     expect(() => autoContinueExtension(api)).not.toThrow();
   });
 
-  test('piclaw-header executes without throwing', () => {
-    expect(() => piclawHeader(api)).not.toThrow();
+  test('evo-header executes without throwing', () => {
+    expect(() => evoHeader(api)).not.toThrow();
   });
 });

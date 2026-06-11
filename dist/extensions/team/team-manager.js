@@ -472,7 +472,7 @@ export class AgentTeam {
                 reason: 'new'
             };
             // Create child runtime using parent's services and new sessionManager
-            // We'll use a factory similar to bootPiclawTeam but without reusing parent's sessionManager
+            // We'll use a factory similar to bootEvoTeam but without reusing parent's sessionManager
             const factory = async ({ cwd: sessionCwd, agentDir: sessionAgentDir, sessionManager: providedSessionManager, sessionStartEvent: startEvent, }) => {
                 // Use parent's shared services (auth, settings, model) but isolated session
                 const services = await createAgentSessionServices({
@@ -761,7 +761,7 @@ export class TeamRegistry {
         return await team.getTeamStatus();
     }
 }
-export async function bootPiclawTeam(parentRuntime, options = {}) {
+export async function bootEvoTeam(parentRuntime, options = {}) {
     const { size: teamSize, roles: normalizedRoles } = validateOptions(options.teamSize ?? 2, Array.isArray(options.teamRoles) ? options.teamRoles : []);
     const team = new AgentTeam();
     team.setTeamId(`team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);

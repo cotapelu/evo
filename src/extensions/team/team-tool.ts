@@ -6,7 +6,7 @@
  * Just provide tasks, team size, roles -> team auto-completes
  */
 
-import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
+import { bootEvoTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
 import type { ToolDefinition, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 
@@ -167,7 +167,7 @@ export function createTeamTool(): ToolDefinition {
         });
 
         // Boot team
-        const team = await bootPiclawTeam(parentRuntime, {
+        const team = await bootEvoTeam(parentRuntime, {
           teamSize,
           teamRoles
         });

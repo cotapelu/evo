@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Piclaw Extensions - Extension Function
+ * Evo Extensions - Extension Function
  *
- * This function registers all custom extensions for Piclaw.
+ * This function registers all custom extensions for Evo.
  * Exported as default extension function for factory creation.
  */
 
@@ -35,7 +35,7 @@ import autoContinueExtension from './hooks/auto-continue.js';
 import aboutCommand from './about-command.js';
 import cancelCommand from './cancel-command.js';
 
-import piclawHeader from './piclaw-header.js';
+import evoHeader from './evo-header.js';
 import { registerTeamTool, registerTeamRunAutocomplete } from './team/index.js';
 import { registerTeamWidget } from './team/team-widget.js';
 
@@ -135,7 +135,7 @@ export default function extensionsAggregator(api: ExtensionAPI) {
     withMutedSendMessage(registerTeamTool),
     withMutedSendMessage(registerTeamRunAutocomplete),
     withMutedSendMessage(registerTeamWidget),
-    withMutedSendMessage(piclawHeader),
+    withMutedSendMessage(evoHeader),
     withMutedSendMessage(aboutCommand),
     withMutedSendMessage(cancelCommand),
 
