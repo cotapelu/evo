@@ -1,8 +1,7 @@
 import { jest } from '@jest/globals';
 import { join } from 'node:path';
-import registerResourceLoaderExtension, { clearCache } from '..';
 
-// Mock functions
+// Mock node:fs
 const mockReaddirSync = jest.fn();
 const mockExistsSync = jest.fn();
 const mockReadFileSync = jest.fn();
@@ -42,6 +41,12 @@ function createMockContext(custom?: any) {
   } as any;
 }
 
+// Helper to reset module state (cache)
+async function resetAndImport() {
+  await jest.resetModules();
+  return import('..');
+}
+
 describe('Resource Loader Extension', () => {
   let api: any;
   let handler: any;
@@ -54,22 +59,27 @@ describe('Resource Loader Extension', () => {
     mockReaddirSync.mockReturnValue([]);
     mockExistsSync.mockReturnValue(false);
     mockReadFileSync.mockReturnValue('');
-    clearCache();
-    api = createMockApi();
-    registerResourceLoaderExtension(api);
-    handler = api.getHandlers()['resources_discover'][0];
   });
 
   describe('registration', () => {
-    test('registers resources_discover handler', () => {
+    test('registers resources_discover handler', async () => {
+      const { default: register } = await resetAndImport();
+      api = createMockApi();
+      register(api);
       expect(api.on).toHaveBeenCalledWith('resources_discover', expect.any(Function));
     });
 
-    test('registers resources.list tool', () => {
+    test('registers resources.list tool', async () => {
+      const { default: register } = await resetAndImport();
+      api = createMockApi();
+      register(api);
       expect(api.registerTool).toHaveBeenCalledWith(expect.objectContaining({ name: 'resources.list' }));
     });
 
-    test('registers resources.reload and resources.list commands', () => {
+    test('registers resources.reload and resources.list commands', async () => {
+      const { default: register } = await resetAndImport();
+      api = createMockApi();
+      register(api);
       expect(api.registerCommand).toHaveBeenCalledWith('resources.list', expect.any(Object));
       expect(api.registerCommand).toHaveBeenCalledWith('resources.reload', expect.any(Object));
     });
@@ -77,10 +87,19 @@ describe('Resource Loader Extension', () => {
 
   describe('resources_discover handler', () => {
     test('scans project docs and caches result', async () => {
+      const { default: register } = await resetAndImport();
+      api = createMockApi();
+      register(api);
+      const handlers = api.getHandlers();
+      handler = handlers['resources_discover'][0];
+
       const cwd = '/project';
       mockReaddirSync.mockImplementation((dir: string) => {
         if (dir === cwd) {
-          return [{ name: 'AGENTS.md', isDirectory: () => false }, { name: 'docs', isDirectory: () => true }];
+          return [
+            { name: 'AGENTS.md', isDirectory: () => false },
+            { name: 'docs', isDirectory: () => true },
+          ];
         } else if (dir === join(cwd, 'docs')) {
           return [{ name: 'README.md', isDirectory: () => false }];
         }
@@ -109,7 +128,10 @@ describe('Resource Loader Extension', () => {
   describe('resources.list tool', () => {
     let tool: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      const { default: register } = await resetAndImport();
+      api = createMockApi();
+      register(api);
       tool = api.registerTool.mock.calls.find((c: any) => c[0].name === 'resources.list')[0];
     });
 
@@ -138,6 +160,9 @@ describe('Resource Loader Extension', () => {
 
   describe('resources.reload command', () => {
     test('handler calls resourceLoader.reload and sends notification', async () => {
+      const { default: register } = await resetAndImport();
+      api = createMockApi();
+      register(api);
       const reloadCmd = api.registerCommand.mock.calls.find((c: any) => c[0] === 'resources.reload')[1];
       const mockResourceLoader: any = { reload: jest.fn().mockResolvedValue(undefined) };
       const ctx = createMockContext({ sdkServices: { resourceLoader: mockResourceLoader } } as any);
