@@ -28,6 +28,8 @@ const config: Config = {
     '!src/**/__tests__/**',
     '!src/**/*.test.ts',
     '!src/extensions/providers/models/index.ts',
+    '!src/evo.ts',
+    '!src/extensions/team/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html']

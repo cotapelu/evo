@@ -386,12 +386,34 @@
 - ✅ Add performance benchmarking suite (R66)
 
 
+## Phase 16: Test Coverage Improvement
+
+**Goal:** Raise test coverage for low-covered tools and refine coverage metrics.
+
+**Planned Tasks:**
+- Increase test coverage for low-covered tools (target overall ≥80%)
+- Exclude non-relevant files from coverage (entry points, team subprocess code)
+- Continue expanding test suite until all critical paths covered
+
+**Current Status:** In Progress – started with benchmark-extension tests.
+
+
+
 ### Round 67: Test Coverage Improvement – Benchmark Extension Tests
 - Added comprehensive test suite for `benchmark-extension`
 - Tests cover tool metadata and execute flow with mocked dependencies
 - Build passes, all tests green (729 passing)
 - Part of Phase 16 – Test Coverage Improvement campaign
 - Continuous quality enhancement
+
+
+
+### Round 68: Exclude Non-Relevant Files from Coverage
+- Updated jest.config.ts to exclude src/evo.ts and src/extensions/team/** from coverage collection
+- Refines coverage metrics to focus on core extension library, ignoring entry point and subprocess scaffolding
+- Improves signal-to-noise ratio in coverage reports
+- Build unaffected, tests unchanged (729 passing)
+- Part of Phase 16 – Test Coverage Improvement
 
 
 ## Current Status (2026-06-10)

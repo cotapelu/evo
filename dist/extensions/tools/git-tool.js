@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 /**
- * Git Tool
+ * Git Tool (with Retry and Circuit Breaker)
  *
- * Wraps common Git operations.
- * Actions:
- * - status: git status --porcelain
- * - diff: git diff [path] (if no path, diff HEAD)
- * - commit: git commit -m "<message>" (requires message)
- * - add: git add <files...> (requires files array)
- * - push: git push [remote] [branch] (defaults: origin HEAD)
- * - pull: git pull [remote] [branch] (defaults: origin HEAD)
- * - log: git log --oneline -n <count> (default 10)
+ * Wraps common Git operations with exponential backoff retry and circuit breaker.
+ * Network-dependent failures are retried; repeated failures open the circuit to fail fast.
+ *
+ * Actions: status, diff, commit, add, push, pull, log.
  */
 import { Text } from "@earendil-works/pi-tui";
+import { CircuitBreaker, registerCircuit } from "../utils/circuit-breaker";
+// Create and register circuit breaker for git operations
+const gitCircuit = new CircuitBreaker({ failureThreshold: 3, resetTimeout: 30000 });
+registerCircuit('git', gitCircuit);
 function renderGitCall(args, theme) {
     const action = args.action || 'unknown';
     const text = `${theme.fg("toolTitle", theme.bold("git"))} ${theme.fg("muted", action)}`;
@@ -34,11 +33,34 @@ function renderGitResult(result, options, theme) {
     }
     return new Text(lines.join('\n'), 0, 0);
 }
+// Retry helper
+async function execGitWithRetry(api, args, options, maxAttempts = 3) {
+    let lastResult;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const result = await api.exec('git', args, options);
+            lastResult = result;
+            if (result.code === 0)
+                return result;
+        }
+        catch (e) {
+            lastResult = e;
+        }
+        if (attempt < maxAttempts) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    if (lastResult && typeof lastResult === 'object' && 'code' in lastResult) {
+        return lastResult;
+    }
+    throw lastResult;
+}
 function createGitTool(api) {
     return {
         name: 'git',
         label: 'Git',
-        description: 'Execute Git commands: status, diff, commit, add, push, pull, log. Uses git on PATH.',
+        description: 'Execute Git commands: status, diff, commit, add, push, pull, log. Uses retry and circuit breaker for reliability.',
         parameters: {},
         async execute(toolCallId, params, signal, _onUpdate, ctx) {
             let action;
@@ -70,8 +92,6 @@ function createGitTool(api) {
                 };
             }
             const args = [];
-            let needCwd = true;
-            let requireConfirm = false;
             switch (action) {
                 case 'status':
                     args.push('status', '--porcelain');
@@ -90,7 +110,6 @@ function createGitTool(api) {
                     if (!message) {
                         return { content: [{ type: 'text', text: 'Error: message required for commit' }], details: { error: 'Missing message' }, isError: true };
                     }
-                    // Ask for confirmation if UI available and not forced
                     if (ctx.hasUI && !params.force) {
                         const confirmed = await ctx.ui.confirm('Git Commit', `Commit changes with message:\n"${message}"?`, {});
                         if (!confirmed) {
@@ -126,7 +145,8 @@ function createGitTool(api) {
                 execOptions.signal = signal;
             }
             try {
-                const result = await api.exec('git', args, execOptions);
+                // Apply circuit breaker and retry
+                const result = await gitCircuit.execute(() => execGitWithRetry(api, args, execOptions, 3));
                 const { stdout, stderr, code } = result;
                 const success = code === 0;
                 const message = success

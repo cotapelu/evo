@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { registerBenchmarkExtension } from '../benchmark-extension.js';
+import { registerBenchmarkExtension } from '..';
 
 function createMockApi() {
   const api: any = { registerTool: jest.fn() };

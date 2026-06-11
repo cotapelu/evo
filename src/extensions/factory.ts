@@ -30,6 +30,7 @@ import registerResourceLoaderExtension from "./resource-loader-extension/index.j
 import registerOAuthProviderExtension from "./oauth-provider-extension/index.js";
 import registerPromptTemplatesExtension from "./prompt-templates-extension/index.js";
 import registerCircuitBreakerExtension from "./circuit-breaker-extension/index.js";
+import registerBenchmarkExtension from "./benchmark-extension/index.js";
 
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
   // ============================================
@@ -105,6 +106,7 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   registerOAuthProviderExtension(api);
   registerPromptTemplatesExtension(api);
   registerCircuitBreakerExtension(api);
+  registerBenchmarkExtension(api);
 }
 
 /**

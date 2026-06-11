@@ -20,6 +20,14 @@ import globalAutocompleteExtension from "./global-autocomplete/index.js";
 import registerCodingToolsExtension from "./coding-tools-extension/index.js";
 import registerSdkMegaExtension from "./sdk-mega-extension/index.js";
 import registerAuthModelExtension from "./auth-model-extension/index.js";
+import registerPackageManagerExtension from "./package-manager-extension/index.js";
+import registerSandboxExtension from "./sandbox-extension/index.js";
+import registerSessionUtilsExtension from "./session-utils-extension/index.js";
+import registerResourceLoaderExtension from "./resource-loader-extension/index.js";
+import registerOAuthProviderExtension from "./oauth-provider-extension/index.js";
+import registerPromptTemplatesExtension from "./prompt-templates-extension/index.js";
+import registerCircuitBreakerExtension from "./circuit-breaker-extension/index.js";
+import registerBenchmarkExtension from "./benchmark-extension/index.js";
 export default function extensionsAggregator(api) {
     // ============================================
     // PROVIDERS
@@ -79,7 +87,15 @@ export default function extensionsAggregator(api) {
     // SDK INTEGRATION EXTENSION (Advanced Features)
     // ============================================
     registerSdkMegaExtension(api);
+    registerSandboxExtension(api);
+    registerPackageManagerExtension(api);
     registerAuthModelExtension(api);
+    registerSessionUtilsExtension(api);
+    registerResourceLoaderExtension(api);
+    registerOAuthProviderExtension(api);
+    registerPromptTemplatesExtension(api);
+    registerCircuitBreakerExtension(api);
+    registerBenchmarkExtension(api);
 }
 /**
  * Extension Configuration

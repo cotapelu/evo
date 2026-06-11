@@ -1,16 +1,11 @@
 #!/usr/bin/env node
 /**
- * Git Tool
+ * Git Tool (with Retry and Circuit Breaker)
  *
- * Wraps common Git operations.
- * Actions:
- * - status: git status --porcelain
- * - diff: git diff [path] (if no path, diff HEAD)
- * - commit: git commit -m "<message>" (requires message)
- * - add: git add <files...> (requires files array)
- * - push: git push [remote] [branch] (defaults: origin HEAD)
- * - pull: git pull [remote] [branch] (defaults: origin HEAD)
- * - log: git log --oneline -n <count> (default 10)
+ * Wraps common Git operations with exponential backoff retry and circuit breaker.
+ * Network-dependent failures are retried; repeated failures open the circuit to fail fast.
+ *
+ * Actions: status, diff, commit, add, push, pull, log.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 export declare function registerGitTool(api: ExtensionAPI): void;
