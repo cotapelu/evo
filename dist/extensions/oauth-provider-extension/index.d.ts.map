@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/extensions/oauth-provider-extension/index.ts"],"names":[],"mappings":";AACA;;;;;;;GAOG;AAEH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,iCAAiC,CAAC;AAsDpE,wBAAgB,8BAA8B,CAAC,GAAG,EAAE,YAAY,GAAG,IAAI,CA8BtE;AAED,eAAe,8BAA8B,CAAC"}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/extensions/oauth-provider-extension/index.ts"],"names":[],"mappings":";AACA;;;;;;;GAOG;AAEH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,iCAAiC,CAAC;AAsDpE,wBAAgB,8BAA8B,CAAC,GAAG,EAAE,YAAY,GAAG,IAAI,CA+BtE;AAED,eAAe,8BAA8B,CAAC"}

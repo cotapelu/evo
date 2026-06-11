@@ -57,6 +57,7 @@ export function registerOAuthProviderExtension(api) {
     api.registerProvider("demo-oauth", {
         // Provider-level configuration
         name: "Demo OAuth",
+        baseUrl: "https://demo.example.com",
         // Define a demo model with minimal required fields
         models: [
             {
