@@ -13,12 +13,12 @@
 import type { ExtensionAPI, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { Text } from '@earendil-works/pi-tui';
 import { mkdir, readdir, stat } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { watch } from 'node:fs';
 import { Mutex } from '../utils/mutex.js';
 
 function createWatchTool(api: ExtensionAPI): ToolDefinition<any, any> {
-  return {
+  const tool: ToolDefinition<any, any> = {
     name: 'watch',
     label: 'Watch',
     description: 'Watch files and auto-run commands on change. Runs code-health and test by default.',
@@ -97,7 +97,11 @@ function createWatchTool(api: ExtensionAPI): ToolDefinition<any, any> {
         scheduleRun();
       }
 
-      // Set up watchers
+      // Expose test hook for triggering changes in tests
+      const testHook = { trigger: handleChange };
+      // @ts-ignore – internal test hook
+      tool._testHook = testHook;
+
       async function setupWatchers(paths: string[]) {
         for (const p of paths) {
           try {
@@ -142,19 +146,28 @@ function createWatchTool(api: ExtensionAPI): ToolDefinition<any, any> {
         }
       }
 
-      await setupWatchers(watchPaths);
+      try {
+        await setupWatchers(watchPaths);
 
-      logLines.push('Watch started (press Ctrl+C to stop)');
-      updateDisplay();
+        logLines.push('Watch started (press Ctrl+C to stop)');
+        updateDisplay();
 
-      // Wait for abort signal
-      if (signal) {
-        signal.addEventListener('abort', () => {
-          logLines.push('🛑 Stopping...');
-          for (const w of watchers) w.close();
-          if (timeout) clearTimeout(timeout);
-          updateDisplay();
-        });
+        // Wait for abort signal
+        if (signal) {
+          signal.addEventListener('abort', () => {
+            logLines.push('🛑 Stopping...');
+            for (const w of watchers) w.close();
+            if (timeout) clearTimeout(timeout);
+            updateDisplay();
+          });
+        }
+      } finally {
+        // Clear test hook when execution ends
+        // @ts-ignore
+        if (tool._testHook === testHook) {
+          // @ts-ignore
+          delete tool._testHook;
+        }
       }
 
       return {
@@ -179,6 +192,8 @@ function createWatchTool(api: ExtensionAPI): ToolDefinition<any, any> {
       return new Text(th.fg('success', `👀 Watching ${active} paths`), 0, 0);
     },
   };
+
+  return tool;
 }
 
 export function registerWatchTool(api: ExtensionAPI): void {

@@ -152,7 +152,9 @@ export function createGlobalAutocompleteProvider(
       if (cache.has(cacheKey)) {
         const cached = cache.get(cacheKey)!;
         if (cached.length > 0) {
-          return { items: cached, prefix: token };
+          // For slash commands, prefix includes the leading slash to avoid double-slash bug
+          const prefix = type === 'slash' ? '/' + token : token;
+          return { items: cached, prefix };
         }
       }
 
@@ -175,7 +177,9 @@ export function createGlobalAutocompleteProvider(
         return current.getSuggestions(lines, cursorLine, cursorCol, options);
       }
 
-      return { items: suggestions, prefix: token };
+      // For slash commands, prefix includes the leading slash
+      const prefix = type === 'slash' ? '/' + token : token;
+      return { items: suggestions, prefix };
     },
 
     applyCompletion(lines: string[], cursorLine: number, cursorCol: number, item: AutocompleteItem, prefix: string) {

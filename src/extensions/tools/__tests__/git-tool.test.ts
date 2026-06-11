@@ -158,7 +158,7 @@ describe('Git Tool', () => {
     const ctx = createMockContext();
     const result = await tool.execute('1', { action: 'status' }, undefined, undefined, ctx);
     expect(result.isError).toBe(true);
-  });
+  }, 10000); // Increase timeout for retry logic (3 attempts with backoff)
 
   test('unknown action', async () => {
     const ctx = createMockContext();
