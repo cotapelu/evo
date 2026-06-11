@@ -11,7 +11,8 @@ const KEYBINDINGS: Array<{ key: string; modifiers: string[]; action: string; des
 
 export function registerSessionKeybindings(api: ExtensionAPI): void {
   for (const kb of KEYBINDINGS) {
-    api.registerShortcut({ key: kb.key, modifiers: kb.modifiers } as any, { handler: async (ctx) => {
+    const shortcut = kb.modifiers?.length ? `${kb.modifiers.join('+')}+${kb.key}` : kb.key;
+    api.registerShortcut(shortcut as any, { handler: async (ctx) => {
       await handleKeybinding(ctx, kb.action);
     }});
   }
