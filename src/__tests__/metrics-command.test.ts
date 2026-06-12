@@ -33,8 +33,8 @@ describe("Metrics Command", () => {
     });
 
     it("should toggle metrics widget and notify shown", async () => {
-      (getMetricsWidgetEnabled as any).mockReturnValue(false);
-      (toggleMetricsWidget as any).mockReturnValue(true);
+      vi.mocked(getMetricsWidgetEnabled).mockReturnValue(false);
+      vi.mocked(toggleMetricsWidget).mockReturnValue(true);
 
       const api = createMockApi();
       registerMetricsCommand(api);
@@ -48,8 +48,8 @@ describe("Metrics Command", () => {
     });
 
     it("should toggle to false and notify hidden", async () => {
-      (getMetricsWidgetEnabled as any).mockReturnValue(true);
-      (toggleMetricsWidget as any).mockReturnValue(false);
+      vi.mocked(getMetricsWidgetEnabled).mockReturnValue(true);
+      vi.mocked(toggleMetricsWidget).mockReturnValue(false);
 
       const api = createMockApi();
       registerMetricsCommand(api);
