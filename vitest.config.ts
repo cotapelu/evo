@@ -1,6 +1,16 @@
 import { defineConfig } from "vitest/config";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@extensions': path.resolve(__dirname, 'src/extensions')
+    }
+  },
   test: {
     include: ["src/**/*.test.ts"],
     exclude: ["node_modules", "dist", "llm-context"],

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getCapabilityRegistry, resetCapabilityRegistry } from "../../extensions/capability-system/registry";
+import { getCapabilityRegistry, resetCapabilityRegistry } from "@extensions/capability-system/registry";
 
 describe("Security & System Plugin Capabilities", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     resetCapabilityRegistry();
-    const { default: capabilitySystemExtension } = await import("../../extensions/capability-system/extension.js");
+    const { default: capabilitySystemExtension } = await import("@extensions/capability-system/extension.js");
     const api = { registerTool: vi.fn(), registerCommand: vi.fn() };
     await capabilitySystemExtension(api);
   });

@@ -22,6 +22,8 @@ Last Updated: 2026-06-12
 ### Third Round
 - Updated `extensionsAggregator` to `async` and `await`ed `capabilitySystemExtension`.
 - Fixed extension tests to be async: `extensions-integration.test.ts`, `extensions-aggregator.test.ts`, `extensions-index.test.ts`.
+- Introduced path alias `@extensions` in Vitest config to simplify imports and reduce fragility.
+- Updated plugin tests to use `@extensions` alias.
 - Confirmed all tests pass (98 suites, 935 tests).
 
 ## Planned Refactors

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { getCapabilityRegistry, resetCapabilityRegistry } from "../../extensions/capability-system/registry";
-import { PluginLoader } from "../../extensions/capability-system/plugin-loader";
+import { getCapabilityRegistry, resetCapabilityRegistry } from "@extensions/capability-system/registry";
+import { PluginLoader } from "@extensions/capability-system/plugin-loader";
 import { join } from "path";
 
 describe("Git Plugin Capabilities", () => {
@@ -13,11 +13,11 @@ describe("Git Plugin Capabilities", () => {
     resetCapabilityRegistry();
     api = { registerTool: vi.fn(), registerCommand: vi.fn() };
     // Load capability system
-    const { default: capabilitySystemExtension } = await import("../../extensions/capability-system/extension.js");
+    const { default: capabilitySystemExtension } = await import("@extensions/capability-system/extension.js");
     await capabilitySystemExtension(api);
 
     // Get loader and load git plugin
-    const { getGlobalLoader } = await import("../../extensions/capability-system/plugin-loader.js");
+    const { getGlobalLoader } = await import("@extensions/capability-system/plugin-loader.js");
     loader = getGlobalLoader();
     if (!loader) throw new Error("Loader not initialized");
   });

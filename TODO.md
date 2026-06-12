@@ -17,7 +17,6 @@ Last Updated: 2026-06-12
 - (none)
 
 ## Upcoming
-- [ ] Introduce path aliases in vitest config to simplify imports
 - [ ] Replace `fs.rmdir` usage with `fs.rm` in codebase where applicable
 - [ ] Document the extension initialization sequence
 - [ ] Expand test coverage for plugin loading edge cases (e.g., invalid manifest)
