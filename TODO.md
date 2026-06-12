@@ -20,7 +20,8 @@ Last Updated: 2026-06-12
 - (none)
 
 ## Upcoming
-- (none)
+- [ ] Clean up typecheck errors in test files (implicit any, missing imports)
+- [ ] Centralize test mock factories to reduce duplication
 
 ## Notes
 - All tests passing; build green.
