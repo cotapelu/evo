@@ -139,6 +139,12 @@ Last Updated: 2026-06-12
 - Consistent pattern with metrics-command and provider-command.
 - All command tests now any-free.
 
+### Twentieth Round (Reduce `any` in todos-renderer.test.ts)
+- Introduced `RendererFn` type alias: `(message: { details?: unknown }, options: unknown, theme: unknown) => Text`.
+- Replaced all `renderer(... as any)` calls with typed renderer and direct argument passing.
+- Result casting removed: `result.content` used directly.
+- Successfully eliminated 12 `as any` occurrences.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

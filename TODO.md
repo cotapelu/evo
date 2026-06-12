@@ -44,12 +44,15 @@ Last Updated: 2026-06-12
   - Enables parallel test execution by avoiding singleton global state
 - [x] Reduce `any` casts in tests
   - Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`
-  - Updated `git-capabilities.test.ts`, `dev-capabilities.test.ts`, and `security-system-capabilities.test.ts` to use typed mocks
-  - Refactored `provider-command.test.ts` and `copy-command.test.ts`
-  - All plugin capability tests now free of `as any` casts; several command tests also cleaned
+  - Updated plugin capability tests (git, dev, security-system) to use typed mocks
+  - Refactored command tests: provider-command, metrics-command, copy-command, team-command
+  - Refactored renderer test: todos-renderer (introduced RendererFn type)
+  - Pattern: typed mocks, vi.mocked(), custom typed contexts, typed renderer function
+  - Reduced total `as any` occurrences from ~48 to ~33
+
 
 ## In Progress
-- Reduce `any` casts in remaining test suites (~35 files left). Already cleaned: git, dev, security-system, provider-command, metrics-command, copy-command, team-command.
+- Reduce `as any` casts in remaining test files. Estimated ~33 occurrences left across ~40 files. Progress: 8 files cleaned, ~48→~33 occurrences.
 
 ## Upcoming
 - (none)
