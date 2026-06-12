@@ -3,8 +3,8 @@
 Last Updated: 2026-06-12
 
 ## Session Summary
-- Iterations: 1 (initial analysis → fix → verify)
-- Tasks Completed: 1 (fix failing capability tests)
+- Iterations: 2
+- Tasks Completed: 2 (fix failing capability tests; add waitForLoad)
 
 ## Test Metrics
 - Total Test Suites: 98

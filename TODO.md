@@ -10,17 +10,21 @@ Last Updated: 2026-06-12
   - [x] Make extension async and await plugin loading
   - [x] Update tests to await extension
   - [x] Replace missing mock-api with inline mock
+- [x] Add `waitForLoad` helper with idempotent loadAll to PluginLoader
 
 ## In Progress
 - (none)
 
 ## Upcoming
-- [ ] Add `waitForInitialization` helper in capability system for tests
 - [ ] Introduce path aliases in vitest config to simplify imports
 - [ ] Replace `fs.rmdir` usage with `fs.rm` in codebase where applicable
 - [ ] Document the extension initialization sequence
-- [ ] Review `extensionsAggregator` for async/await alignment
+- [ ] Review `extensionsAggregator` for optional awaity
 - [ ] Expand test coverage for plugin loading edge cases (e.g., invalid manifest)
+
+## Notes
+- All tests passing; build green.
+- Next priority: reduce test fragility around path imports.
 
 ## Notes
 - All tests passing; build green.

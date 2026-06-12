@@ -21,6 +21,6 @@ Last Updated: 2026-06-12
 - Good separation of concerns in capability system.
 
 ## Recommendations
-- Add a `waitForInitialization()` helper for tests.
+- ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.
 - Use path aliases (e.g., `@capability-system`) to avoid brittle relative paths.
-- Consider making plugin loading synchronous at startup if feasible, or provide a readiness promise.
+- Plugin loading is now async with explicit await; consider if further optimizations needed.

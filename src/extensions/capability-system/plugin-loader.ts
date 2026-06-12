@@ -27,6 +27,8 @@ export class PluginLoader {
   private resolveCache: Map<string, { module: any; timestamp: number }> = new Map();
   private watchHandles: Map<string, { close: () => void }> = new Map();
   private rootWatcher: { close: () => void } | null = null;
+  private loadPromise: Promise<PluginLoaderStats> | null = null;
+  private isLoaded = false;
 
   constructor(options: PluginLoaderOptions = {}) {
     this.options = {
@@ -38,6 +40,28 @@ export class PluginLoader {
   }
 
   async loadAll(): Promise<PluginLoaderStats> {
+    if (this.isLoaded) {
+      return this.getStats();
+    }
+    if (this.loadPromise) {
+      return this.loadPromise;
+    }
+
+    this.loadPromise = (async () => {
+      try {
+        const stats = await this.performLoadAll();
+        this.isLoaded = true;
+        return stats;
+      } catch (error) {
+        this.loadPromise = null; // Allow retry
+        throw error;
+      }
+    })();
+
+    return this.loadPromise;
+  }
+
+  private async performLoadAll(): Promise<PluginLoaderStats> {
     const errors: Array<{ pluginId: string; error: string }> = [];
     const pluginsDir = resolve(this.options.pluginsDir);
 
@@ -67,6 +91,21 @@ export class PluginLoader {
       loadTimeMs: 0,
       errors
     };
+  }
+
+  /**
+   * Wait for the initial plugin load to complete.
+   * Returns a promise that resolves with stats when loading finishes.
+   * If already loaded, returns a resolved promise with current stats.
+   */
+  waitForLoad(): Promise<PluginLoaderStats> {
+    if (this.isLoaded) {
+      return Promise.resolve(this.getStats());
+    }
+    if (this.loadPromise) {
+      return this.loadPromise;
+    }
+    return this.loadAll();
   }
 
   async loadPlugin(pluginFolder: string): Promise<LoadedPlugin> {
