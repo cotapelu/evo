@@ -85,6 +85,16 @@ Last Updated: 2026-06-12
 - Test suite expanded to 99 suites, 936 tests passing (2 new tests).
 - All changes maintain zero typecheck errors and full test pass rate.
 
+### Thirteenth Round (Tool Definition Improvement)
+- Enhanced `createCapabilityRouterTool()` in `extension.ts`:
+  - Tool now dynamically queries `CapabilityRegistry` for all registered capabilities at runtime.
+  - Auto-generates comprehensive `promptGuidelines` listing every capability by plugin with IDs and descriptions.
+  - Changed `promptSnippet` from invalid `'plugin.capability'` to valid `'system.capabilities'` example.
+  - Updated `description` to show actual counts: "Execute any of N registered capabilities across M plugins...".
+  - Updated `parameters.capability.description` with real examples: `'git.status', 'dev.test', ...`.
+- **Impact**: LLMs now immediately see all available capabilities in the tool definition without needing to call `system.capabilities` first. Tool is self-documenting and reduces friction.
+- Build green, all plugin capability tests pass (dev, git, security-system).
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

@@ -3,8 +3,8 @@
 Last Updated: 2026-06-12
 
 ## Session Summary
-- Iterations: 10
-- Tasks Completed: 10 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias; add waitForInitialization helper; fix residual typecheck errors after import migration; final typecheck polish; improve PluginLoader watch mode with debounced reload, deletion handling, and integration tests)
+- Iterations: 11
+- Tasks Completed: 11 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias; add waitForInitialization helper; fix residual typecheck errors after import migration; final typecheck polish; improve PluginLoader watch mode with debounced reload, deletion handling, and integration tests; **enhance capability router tool with dynamic capabilities list**)
 
 ## Test Metrics
 - Total Test Suites: 99
@@ -23,6 +23,7 @@ Last Updated: 2026-06-12
 - Initial failure causes: incorrect relative import paths in test files, missing `async` on `beforeEach`, missing `setGlobalLoader` in capability system, and async initialization race.
 - All issues resolved; later introduced minor test regression due to status literal changes, fixed promptly.
 - System stable with comprehensive edge case tests and documentation.
+- **Capability router tool** now self-documenting: dynamically lists all registered capabilities in guidelines, improving LLM discoverability and reducing need for explicit `system.capabilities` calls.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627

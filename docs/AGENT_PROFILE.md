@@ -25,6 +25,7 @@ Last Updated: 2026-06-12
 - Good separation of concerns in capability system.
 - All tests passing; build green.
 - Zero TypeScript typecheck errors with strict settings.
+- Capability router tool is self-documenting: dynamically lists all registered capabilities in its guidelines, providing immediate discoverability for LLMs.
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

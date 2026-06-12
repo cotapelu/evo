@@ -10,6 +10,11 @@ Last Updated: 2026-06-12
   - [x] Make extension async and await plugin loading
   - [x] Update tests to await extension
   - [x] Replace missing mock-api with inline mock
+- [x] Enhance capability router tool with dynamic capabilities list
+  - Tool now auto-discovers and displays all registered capabilities in guidelines
+  - LLM sees full list of capabilities with IDs and descriptions
+  - Fixed invalid promptSnippet example (was 'plugin.capability', now 'system.capabilities')
+  - Made tool self-documenting and immediately usable
 - [x] Add `waitForLoad` helper with idempotent loadAll to PluginLoader
 - [x] Update extensionsAggregator to async and fix related tests (extensions-integration, extensions-aggregator, extensions-index)
 - [x] Introduce path aliases in Vitest config (`@extensions`), updated plugin tests to use alias
