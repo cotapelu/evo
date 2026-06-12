@@ -30,7 +30,7 @@ describe("Universal Tool", () => {
     const api = createMockApi();
     registerUniversalTool(api);
     const tool = api.registerTool.mock.calls[0][0];
-    const params = tool.parameters as any;
+    const params = tool.parameters; // tool is any from mock, params implicitly any
     expect(params.properties.action.enum).toContain("echo");
     expect(params.properties.action.enum).toContain("calc");
     expect(params.required).toContain("action");
