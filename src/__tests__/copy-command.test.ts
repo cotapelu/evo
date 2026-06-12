@@ -14,6 +14,11 @@ import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 const mockNotify = vi.fn();
 
+interface CopyTestContext {
+  sessionManager?: { getTree: () => unknown[] } | null;
+  ui: { notify: (msg: string, type?: string) => void };
+}
+
 const mockSessionEntry = (role: string, text: string) => ({
   type: "message" as const,
   message: {
@@ -22,13 +27,9 @@ const mockSessionEntry = (role: string, text: string) => ({
   },
 });
 
-const createMockCtx = (tree: any[] = []) => ({
-  sessionManager: {
-    getTree: () => tree,
-  },
-  ui: {
-    notify: mockNotify,
-  },
+const createMockCtx = (tree: unknown[] = []): CopyTestContext => ({
+  sessionManager: { getTree: () => tree },
+  ui: { notify: mockNotify },
 });
 
 const createMockApi = () => createMockExtensionAPI();
@@ -50,7 +51,7 @@ describe("Copy Command", () => {
       registerCopyCommand(api);
 
       const ctx = createMockCtx([]);
-      ctx.sessionManager = null as any;
+      ctx.sessionManager = null;
 
       // Get the handler
       const handler = api.registerCommand.mock.calls[0][1].handler;
@@ -127,7 +128,7 @@ describe("Copy Command", () => {
 
     it("should handle copy error", async () => {
       const { copyToClipboard } = await import("@earendil-works/pi-coding-agent");
-      (copyToClipboard as any).mockRejectedValue(new Error("Clipboard access denied"));
+      vi.mocked(copyToClipboard).mockRejectedValue(new Error("Clipboard access denied"));
 
       const api = createMockApi();
       registerCopyCommand(api);
