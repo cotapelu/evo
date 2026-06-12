@@ -1,11 +1,12 @@
 import { vi } from "vitest";
-// Types are omitted to allow flexible mock usage (properties like .mock)
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 /**
  * Creates a mock ExtensionAPI with optional overrides.
+ * Returns a typed object to reduce `any` casts in tests.
  */
-export function createMockExtensionAPI(overrides?: any): any {
-  return {
+export function createMockExtensionAPI(overrides?: Partial<ExtensionAPI>): ExtensionAPI {
+  const api: ExtensionAPI = {
     on: vi.fn(),
     registerTool: vi.fn(),
     registerCommand: vi.fn(),
@@ -13,14 +14,16 @@ export function createMockExtensionAPI(overrides?: any): any {
       addChild: vi.fn(),
       removeChild: vi.fn(),
       requestRender: vi.fn(),
-    } as any,
+    } as any, // TUI structure complex, keep as any
     getContext: vi.fn(() => createMockContext()),
     ...overrides,
-  } as any;
+  } as ExtensionAPI;
+  return api;
 }
 
 /**
  * Creates a mock TeamRegistry with optional overrides.
+ * Kept as any due to complex type, but centralize here.
  */
 export function createMockTeamRegistry(overrides?: any): any {
   return {
@@ -41,8 +44,8 @@ export function createMockTeamRegistry(overrides?: any): any {
 /**
  * Creates a mock ExtensionContext with optional overrides.
  */
-export function createMockContext(overrides?: any): any {
-  const base: any = {
+export function createMockContext(overrides: Partial<ExtensionContext> = {}): ExtensionContext {
+  const base: ExtensionContext = {
     cwd: process.cwd(),
     ui: {
       setWidget: vi.fn(),
@@ -50,6 +53,6 @@ export function createMockContext(overrides?: any): any {
     },
     getContext: vi.fn(() => base),
     registerCommand: vi.fn(),
-  } as any;
+  } as ExtensionContext;
   return { ...base, ...overrides };
 }

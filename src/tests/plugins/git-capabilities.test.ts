@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockExtensionAPI } from "../utils/mock-factory.js";
-
+import { createMockExtensionAPI, createMockContext } from "../utils/mock-factory.js";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getCapabilityRegistry, resetCapabilityRegistry } from "@extensions/capability-system/registry";
 import { PluginLoader } from "@extensions/capability-system/plugin-loader";
 import { join } from "path";
 
 describe("Git Plugin Capabilities", () => {
-  let api: any;
+  let api: ExtensionAPI;
   let loader: PluginLoader;
 
   beforeEach(async () => {
@@ -35,7 +35,8 @@ describe("Git Plugin Capabilities", () => {
       const registry = getCapabilityRegistry();
       const cap = registry.get("git.status")!; // non-null
 
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/repo", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/repo", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(result.details?.branch).toBe("main");
@@ -53,7 +54,8 @@ describe("Git Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("git.status")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain("git status failed");
@@ -70,7 +72,8 @@ describe("Git Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("git.diff")!;
-      const result = await cap.execute("test-id", { revision: "HEAD~1" }, null, null, { cwd: "/repo", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/repo", exec: mockExec });
+      const result = await cap.execute("test-id", { revision: "HEAD~1" }, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(result.details?.revision).toBe("HEAD~1");
@@ -82,7 +85,8 @@ describe("Git Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("git.diff")!;
-      await cap.execute("test-id", {}, null, null, { cwd: "/repo", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/repo", exec: mockExec });
+      await cap.execute("test-id", {}, null, null, ctx);
 
       expect(mockExec).toHaveBeenCalledWith("git", expect.arrayContaining(["diff", "HEAD", "--color=never"]), expect.any(Object));
     });
@@ -98,7 +102,8 @@ describe("Git Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("git.commit")!;
-      const result = await cap.execute("test-id", { message: "feat: add login" }, null, null, { cwd: "/repo", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/repo", exec: mockExec });
+      const result = await cap.execute("test-id", { message: "feat: add login" }, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("git", ["commit", "-m", "feat: add login"], expect.any(Object));
@@ -109,7 +114,8 @@ describe("Git Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("git.commit")!;
-      await cap.execute("test-id", { message: "fix: bug", all: true }, null, null, { cwd: "/repo", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/repo", exec: mockExec });
+      await cap.execute("test-id", { message: "fix: bug", all: true }, null, null, ctx);
 
       expect(mockExec).toHaveBeenCalledWith("git", ["commit", "-a", "-m", "fix: bug"], expect.any(Object));
     });
