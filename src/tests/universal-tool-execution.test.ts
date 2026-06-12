@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerUniversalTool } from "../extensions/tools/universal-tool.js";
+import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock the entire package to replace createBashToolDefinition
 vi.mock("@earendil-works/pi-coding-agent", () => ({
@@ -20,7 +21,7 @@ describe("Universal Tool Execution", () => {
       details: {},
     });
     (createBashToolDefinition as any).mockReturnValue({ execute: mockBashExecute });
-    mockApi = { registerTool: vi.fn() };
+    mockApi = createMockExtensionAPI();
     registerUniversalTool(mockApi);
   });
 

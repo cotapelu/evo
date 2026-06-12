@@ -33,6 +33,7 @@ vi.mock("../extensions/metrics/metrics-widget.js", () => ({ registerMetricsWidge
 
 // Now import the module under test and the mocked functions
 import { extensionsAggregator, getExtensionFactories } from "../extensions/factory";
+import { createMockExtensionAPI } from "./utils/mock-factory.js";
 import { registerKiloProvider } from "../extensions/providers/kilo-provider";
 import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "../extensions/tools/index";
 // Tools moved to plugins, no direct imports
@@ -58,7 +59,7 @@ import { registerMetricsWidget } from "../extensions/metrics/metrics-widget";
 //
 
 describe("Extensions Aggregator", () => {
-  const mockApi: any = { registerTool: vi.fn(), on: vi.fn(), registerFlag: vi.fn(), getFlag: vi.fn() };
+  const mockApi: any = createMockExtensionAPI({ registerFlag: vi.fn(), getFlag: vi.fn() });
 
   beforeEach(() => {
     vi.clearAllMocks();

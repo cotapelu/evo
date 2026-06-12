@@ -2,11 +2,16 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import extensionsIndex from '../extensions/index.js';
+import { createMockExtensionAPI } from './utils/mock-factory.js';
 
 describe('extensions/index', () => {
   let mockApi: any;
   beforeEach(() => {
-    mockApi = { on: vi.fn(), registerCommand: vi.fn(), registerTool: vi.fn(), registerProvider: vi.fn(), registerMessageRenderer: vi.fn(), registerFlag: vi.fn() };
+    mockApi = createMockExtensionAPI({
+      registerProvider: vi.fn(),
+      registerMessageRenderer: vi.fn(),
+      registerFlag: vi.fn()
+    });
   });
 
   it('should register all extensions without throwing', async () => {

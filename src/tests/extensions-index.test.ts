@@ -33,6 +33,7 @@ vi.mock('../extensions/tools/subtool-loader', () => ({
 
 // Now import the module after mocks are set up
 import extensionIndex from '../extensions/index.js';
+import { createMockExtensionAPI } from './utils/mock-factory.js';
 import { registerKiloProvider } from '../extensions/providers/kilo-provider.js';
 import { registerTodosTool, registerMemoryTool, registerUniversalTool } from '../extensions/tools/index.js';
 import { registerSubToolLoaderExtension } from '../extensions/tools/subtool-loader';
@@ -47,14 +48,11 @@ describe('extensions/index', () => {
     expect(typeof extensionIndex).toBe('function');
   });
 
-  const createMockApi = () => ({
-    registerTool: vi.fn(),
-    registerCommand: vi.fn(),
+  const createMockApi = () => createMockExtensionAPI({
     registerProvider: vi.fn(),
     registerMessageRenderer: vi.fn(),
-    on: vi.fn(),
     registerFlag: vi.fn(),
-    getFlag: vi.fn(),
+    getFlag: vi.fn()
   }) as any;
 
   it('should register kilo provider', async () => {

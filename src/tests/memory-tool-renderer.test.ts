@@ -1,14 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { registerMemoryTool } from "../extensions/tools/memory-tool";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { createMockExtensionAPI } from "./utils/mock-factory.js";
 import { Text } from "@earendil-works/pi-tui";
 
-function createMockApi(): ExtensionAPI {
-  return {
-    registerTool: vi.fn(),
-    appendEntry: vi.fn(),
-    on: vi.fn(),
-  } as any;
+function createMockApi(): any {
+  return createMockExtensionAPI({ appendEntry: vi.fn() });
 }
 
 describe("Memory Tool Renderer", () => {
