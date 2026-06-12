@@ -116,11 +116,11 @@ Last Updated: 2026-06-12
 - Improved `src/tests/utils/mock-factory.ts`:
   - `createMockExtensionAPI` now returns `ExtensionAPI` type instead of `any`.
   - `createMockContext` now returns `ExtensionContext` with proper typing and simplified signature (`overrides: Partial<ExtensionContext> = {}`).
-- Refactored `src/tests/plugins/git-capabilities.test.ts` as pilot:
-  - Changed `api` type from `any` to `ExtensionAPI`.
-  - Replaced all inline `{ cwd, exec } as any` contexts with `createMockContext()` calls.
-  - Eliminated all `as any` casts in this file.
-- **Impact**: Better type safety, IDE autocomplete, and compile-time checks in tests. Foundation for extending to other test files.
+- Refactored three plugin capability test files as pilots:
+  - `git-capabilities.test.ts`: changed `api` type, replaced all `{ cwd, exec } as any` with `createMockContext()`.
+  - `dev-capabilities.test.ts`: same pattern.
+  - `security-system-capabilities.test.ts`: same pattern.
+- **Impact**: All plugin capability tests now free of `as any` casts, improving type safety and IDE support. Pattern ready for application to remaining test suites.
 - All tests still passing; typecheck clean.
 
 ## Planned Refactors

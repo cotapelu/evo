@@ -42,10 +42,10 @@ Last Updated: 2026-06-12
   - Allow injection of custom loader via `api.pluginLoader` in extension
   - Backward compatible: production uses default loader and sets global
   - Enables parallel test execution by avoiding singleton global state
-- [x] Reduce `any` casts in tests (partial)
+- [x] Reduce `any` casts in tests
   - Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`
-  - Updated `git-capabilities.test.ts` to use `createMockContext` and removed all `as any` casts
-  - More files to refactor in next round
+  - Updated `git-capabilities.test.ts`, `dev-capabilities.test.ts`, and `security-system-capabilities.test.ts` to use typed mocks
+  - All plugin capability tests now free of `as any` casts; other test suites to follow
 
 ## In Progress
 - (none)
