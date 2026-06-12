@@ -123,6 +123,17 @@ Last Updated: 2026-06-12
 - **Impact**: All plugin capability tests now free of `as any` casts, improving type safety and IDE support. Pattern ready for application to remaining test suites.
 - All tests still passing; typecheck clean.
 
+### Seventeenth Round (Reduce `any` in Command Tests)
+- Refactored `provider-command.test.ts`: replaced cast with `vi.mocked(getMetricsWidgetEnabled)` and `vi.mocked(toggleMetricsWidget)`.
+- Refactored `metrics-command.test.ts`: similarly replaced `as any` casts with `vi.mocked()`.
+- Small but steady progress toward any-free test suite.
+
+### Eighteenth Round (Reduce `any` in copy-command.test.ts)
+- copy-command.test.ts: defined `CopyTestContext` interface with proper typing for `sessionManager` and `ui`.
+- Changed `createMockCtx` to return typed context; replaced `ctx.sessionManager = null as any` with simple `ctx.sessionManager = null`.
+- Used `vi.mocked(copyToClipboard)` to replace cast on mocks.
+- Entire file now free of `as any` casts.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
