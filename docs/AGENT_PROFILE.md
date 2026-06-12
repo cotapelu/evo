@@ -12,7 +12,6 @@ Last Updated: 2026-06-12
 - Test setup for async systems may need helper utilities to ensure readiness.
 - Path calculations in nested test directories prone to errors; consider using path aliases.
 - Many tests require `any` casts for complex object shapes, reducing type safety; these could be refined with proper mocks and helper factories.
-- Hot-reload for execute file changes remains challenging due to ES module caching; requires deeper investigation.
 
 ## Fragile Modules
 - `src/extensions/capability-system/extension.ts`: initialization flow is critical; ensure future changes propagate correctly.
@@ -21,7 +20,7 @@ Last Updated: 2026-06-12
 ## Strengths
 - Comprehensive test coverage (99 suites, 936 tests).
 - Clear modular architecture for capabilities.
-- Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, and hot-reload for execute files via ES module cache clearing.
+- Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, and debounced new plugin detection (500ms).
 - Good separation of concerns in capability system.
 - All tests passing; build green.
 - Zero TypeScript typecheck errors with strict settings.
@@ -33,4 +32,6 @@ Last Updated: 2026-06-12
 - ✅ Made extensionsAggregator async and awaited capability system init.
 - ✅ Eliminated deprecation warnings and removed obsolete test code.
 - ✅ Improved watch mode: debounced reload, deletion handling, integration tests.
-- Future: consider scoped loaders for parallel test execution and address ES module cache for true code hot-reload.
+- ✅ Implemented hot-reload for execute files by clearing ES module cache.
+- ✅ Added debounced new plugin detection to prevent race conditions.
+- Future: consider scoped loaders for parallel test execution.

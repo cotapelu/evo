@@ -14,13 +14,10 @@ Last Updated: 2026-06-12
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
 
 ## Known Issues
-- **Hot-reload for execute file changes**: ESM module caching prevents code changes from being reflected without restart. Future work needed to clear Node's ESM cache or adopt alternative strategy.
-- **New plugin creation detection**: May have race conditions when manifest not immediately present; improvement possible (e.g., delayed check).
+- None currently; all recent issues resolved.
 
 ## Next Steps (High Impact)
-1. Address ESM caching to enable true hot-reload of execute files during development.
-2. Improve new plugin detection reliability (debounced check after folder creation).
-3. Explore scoped loaders for parallel test execution.
+1. Explore scoped loaders for parallel test execution (address singleton globalPluginLoader limitation).
 
 ## Environment
 - Node.js: likely v18+ (based on deprecation warnings)

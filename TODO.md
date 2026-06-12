@@ -34,12 +34,16 @@ Last Updated: 2026-06-12
   - Modified PluginLoader.dynamicImport to clear Node ES module cache before import
   - Combined with watch mode, file changes to execute/renderer modules now reload correctly
   - Developers can edit capability code and see changes without restart
+- [x] Improve new plugin creation detection with debounced load
+  - Added 500ms debounce to root watcher to prevent race conditions
+  - Schedules load after manifest likely fully written
+  - Clears pending timers on unloadAll
 
 ## In Progress
 - (none)
 
 ## Upcoming
-- Robust new plugin creation detection (improve race handling)
+- Investigate scoped PluginLoader instances to enable parallel test execution (avoid global singleton issues)
 
 ## Notes
 - All tests passing; build green.
