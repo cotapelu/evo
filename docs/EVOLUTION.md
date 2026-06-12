@@ -19,14 +19,19 @@ Last Updated: 2026-06-12
 - Made `loadAll()` idempotent with caching to prevent multiple loads.
 - Internal refactor: split `loadAll` into `performLoadAll` for clarity.
 
+### Third Round
+- Updated `extensionsAggregator` to `async` and `await`ed `capabilitySystemExtension`.
+- Fixed extension tests to be async: `extensions-integration.test.ts`, `extensions-aggregator.test.ts`, `extensions-index.test.ts`.
+- Confirmed all tests pass (98 suites, 935 tests).
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
+- [x] Update `extensionsAggregator` to async and await capability system init.
+- [x] Update extension tests to handle async aggregator.
 - [ ] Centralize test mock factories to avoid duplication.
 - [ ] Add integration test to verify extension initialization under watch mode.
-- [ ] Review `extensionsAggregator` to optionally await capability system init if needed in production.
 
 ## Anticipated Technical Debt
-- The async change in `capabilitySystemExtension` may require updating non-test callers if they rely on sync completion. Currently only `extensionsAggregator` calls it without await; this is acceptable but should be reviewed.
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets

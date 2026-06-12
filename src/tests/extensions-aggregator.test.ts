@@ -64,8 +64,8 @@ describe("Extensions Aggregator", () => {
     vi.clearAllMocks();
   });
 
-  it("registers all extensions and hooks", () => {
-    extensionsAggregator(mockApi);
+  it("registers all extensions and hooks", async () => {
+    await extensionsAggregator(mockApi);
 
     expect(registerKiloProvider).toHaveBeenCalledWith(mockApi);
     expect(registerTodosTool).toHaveBeenCalledWith(mockApi);

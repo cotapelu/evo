@@ -57,39 +57,39 @@ describe('extensions/index', () => {
     getFlag: vi.fn(),
   }) as any;
 
-  it('should register kilo provider', () => {
+  it('should register kilo provider', async () => {
     const mockApi = createMockApi();
-    extensionIndex(mockApi);
+    await extensionIndex(mockApi);
     expect(registerKiloProvider).toHaveBeenCalledWith(mockApi);
   });
 
-  it('should register todos tool', () => {
+  it('should register todos tool', async () => {
     const mockApi = createMockApi();
-    extensionIndex(mockApi);
+    await extensionIndex(mockApi);
     expect(registerTodosTool).toHaveBeenCalledWith(mockApi);
   });
 
-  it('should register memory tool', () => {
+  it('should register memory tool', async () => {
     const mockApi = createMockApi();
-    extensionIndex(mockApi);
+    await extensionIndex(mockApi);
     expect(registerMemoryTool).toHaveBeenCalledWith(mockApi);
   });
 
-  it('should register universal tool', () => {
+  it('should register universal tool', async () => {
     const mockApi = createMockApi();
-    extensionIndex(mockApi);
+    await extensionIndex(mockApi);
     expect(registerUniversalTool).toHaveBeenCalledWith(mockApi);
   });
 
-  it('should register subtool loader extension', () => {
+  it('should register subtool loader extension', async () => {
     const mockApi = createMockApi();
-    extensionIndex(mockApi);
+    await extensionIndex(mockApi);
     expect(registerSubToolLoaderExtension).toHaveBeenCalledWith(mockApi);
   });
 
-  it('should call all registrations in correct order (not guaranteed but all called)', () => {
+  it('should call all registrations in correct order (not guaranteed but all called)', async () => {
     const mockApi = createMockApi();
-    extensionIndex(mockApi);
+    await extensionIndex(mockApi);
     // All mocks should be called exactly once
     expect(registerKiloProvider).toHaveBeenCalledTimes(1);
     expect(registerTodosTool).toHaveBeenCalledTimes(1);

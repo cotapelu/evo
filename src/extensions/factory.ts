@@ -40,12 +40,12 @@ import { registerKeybindingExtension } from "./keybinding/keybinding-extension.j
  * Registers all custom extensions for Piclaw.
  * Called by the extension factory system.
  */
-export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
+export default async function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI): Promise<void> {
   // ============================================================================
   // 1. CAPABILITY SYSTEM (Plugin Architecture)
   // ============================================================================
   // Loads plugins from ./plugins folder and registers capability router tool
-  capabilitySystemExtension(api);
+  await capabilitySystemExtension(api);
 
   // Register providers
   registerKiloProvider(api);
