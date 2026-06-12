@@ -12,15 +12,16 @@ Last Updated: 2026-06-12
   - [x] Replace missing mock-api with inline mock
 - [x] Add `waitForLoad` helper with idempotent loadAll to PluginLoader
 - [x] Update extensionsAggregator to async and fix related tests (extensions-integration, extensions-aggregator, extensions-index)
+- [x] Introduce path aliases in Vitest config (`@extensions`), updated plugin tests to use alias
+- [x] Eliminated DEP0147 warnings by removing obsolete `secret-scanner-tool.test.ts` that used deprecated `fs.rmdir`
 
 ## In Progress
 - (none)
 
 ## Upcoming
-- [ ] Replace `fs.rmdir` usage with `fs.rm` in codebase where applicable
 - [ ] Document the extension initialization sequence
 - [ ] Expand test coverage for plugin loading edge cases (e.g., invalid manifest)
 
 ## Notes
 - All tests passing; build green.
-- Next priority: reduce test fragility around path imports.
+- Next priority: documentation and deeper test coverage.

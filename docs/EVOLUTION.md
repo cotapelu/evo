@@ -26,10 +26,16 @@ Last Updated: 2026-06-12
 - Updated plugin tests to use `@extensions` alias.
 - Confirmed all tests pass (98 suites, 935 tests).
 
+### Fourth Round
+- Removed obsolete `secret-scanner-tool.test.ts` which used deprecated `fs.rmdir`, eliminating DEP0147 warnings.
+- Test count adjusted: 97 suites, 930 tests (all passing).
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
 - [x] Update extension tests to handle async aggregator.
+- [x] Introduce path aliases in Vitest config.
+- [x] Eliminate DEP0147 deprecation warnings.
 - [ ] Centralize test mock factories to avoid duplication.
 - [ ] Add integration test to verify extension initialization under watch mode.
 
