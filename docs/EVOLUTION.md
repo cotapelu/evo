@@ -112,6 +112,17 @@ Last Updated: 2026-06-12
 - **Impact**: Tests can create isolated `PluginLoader` instances, enabling parallel test execution without shared state race conditions. Production unchanged.
 - All changes maintain existing functionality and zero typecheck errors.
 
+### Sixteenth Round (Reduce `any` Casts in Tests)
+- Improved `src/tests/utils/mock-factory.ts`:
+  - `createMockExtensionAPI` now returns `ExtensionAPI` type instead of `any`.
+  - `createMockContext` now returns `ExtensionContext` with proper typing and simplified signature (`overrides: Partial<ExtensionContext> = {}`).
+- Refactored `src/tests/plugins/git-capabilities.test.ts` as pilot:
+  - Changed `api` type from `any` to `ExtensionAPI`.
+  - Replaced all inline `{ cwd, exec } as any` contexts with `createMockContext()` calls.
+  - Eliminated all `as any` casts in this file.
+- **Impact**: Better type safety, IDE autocomplete, and compile-time checks in tests. Foundation for extending to other test files.
+- All tests still passing; typecheck clean.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
