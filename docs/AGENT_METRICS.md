@@ -3,8 +3,8 @@
 Last Updated: 2026-06-12
 
 ## Session Summary
-- Iterations: 13
-- Tasks Completed: 13 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias; add waitForInitialization helper; fix residual typecheck errors after import migration; final typecheck polish; improve PluginLoader watch mode with debounced reload, deletion handling, and integration tests; **enhance capability router tool with dynamic capabilities list**; **enable hot-reload for execute files by clearing ES module cache**; **improve new plugin detection with debounced load**)
+- Iterations: 14
+- Tasks Completed: 14 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias; add waitForInitialization helper; fix residual typecheck errors after import migration; final typecheck polish; improve PluginLoader watch mode with debounced reload, deletion handling, and integration tests; **enhance capability router tool with dynamic capabilities list**; **enable hot-reload for execute files by clearing ES module cache**; **improve new plugin detection with debounced load**; **implement scoped PluginLoader support**)
 
 ## Test Metrics
 - Total Test Suites: 99
@@ -26,6 +26,7 @@ Last Updated: 2026-06-12
 - **Capability router tool** now self-documenting: dynamically lists all registered capabilities in guidelines, improving LLM discoverability and reducing need for explicit `system.capabilities` calls.
 - **Hot-reload for execute files**: Cleared Node ES module cache in `dynamicImport` to enable instant reload of capability code during development; watch mode now covers all file types.
 - **New plugin detection**: Added 500ms debounce to root watcher to avoid race conditions when creating new plugins; manifest is guaranteed to be present before load attempt.
+- **Scoped PluginLoader**: Modified `capabilitySystemExtension` to accept optional custom loader via `api.pluginLoader`. Backward compatible; enables parallel test execution by avoiding global singleton state.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627

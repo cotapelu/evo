@@ -7,15 +7,13 @@ import { join, dirname } from "path";
 import type { Component } from "@earendil-works/pi-tui";
 import { Text } from "@earendil-works/pi-tui";
 import { fileURLToPath } from "url";
-import { PluginLoader, getGlobalLoader, setGlobalLoader } from "./plugin-loader.js";
+import { PluginLoader, getGlobalLoader, setGlobalLoader, createPluginLoader } from "./plugin-loader.js";
 import { getCapabilityRegistry } from "./registry.js";
 import type { Capability } from "./types.js";
 import { createCapabilityDiscoveryCapability } from "./prompt-integration.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-let globalPluginLoader: PluginLoader | null = null;
 
 /**
  * Extension factory.
@@ -25,18 +23,24 @@ export default async function capabilitySystemExtension(api: any): Promise<void>
 
   const registry = getCapabilityRegistry();
 
-  globalPluginLoader = new PluginLoader({
+  // Allow injection of custom loader (for scoped/test usage)
+  const customLoader = api?.pluginLoader as PluginLoader | undefined;
+  const loader = customLoader || createPluginLoader({
     pluginsDir: getPluginsPath(),
     watchMode: isDevMode(),
     onPluginLoaded: (m) => console.log(`[CapabilitySystem] Loaded plugin: ${m.name}`),
     onPluginUnloaded: (id) => console.log(`[CapabilitySystem] Unloaded: ${id}`)
   });
 
-  // Set global loader for test access
-  setGlobalLoader(globalPluginLoader);
+  // Set global loader only if using default (production) loader
+  if (!customLoader) {
+    setGlobalLoader(loader);
+  }
+
+  // Store reference for this extension instance (for watch mode cleanup if needed)
 
   try {
-    const stats = await globalPluginLoader.loadAll();
+    const stats = await loader.loadAll();
     console.log(`[CapabilitySystem] ${stats.totalPlugins} plugins, ${stats.totalCapabilities} capabilities`);
     if (stats.errors.length) console.warn(stats.errors);
   } catch (err) {

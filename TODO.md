@@ -38,12 +38,16 @@ Last Updated: 2026-06-12
   - Added 500ms debounce to root watcher to prevent race conditions
   - Schedules load after manifest likely fully written
   - Clears pending timers on unloadAll
+- [x] Implement scoped PluginLoader support
+  - Allow injection of custom loader via `api.pluginLoader` in extension
+  - Backward compatible: production uses default loader and sets global
+  - Enables parallel test execution by avoiding singleton global state
 
 ## In Progress
 - (none)
 
 ## Upcoming
-- Investigate scoped PluginLoader instances to enable parallel test execution (avoid global singleton issues)
+- (none)
 
 ## Notes
 - All tests passing; build green.

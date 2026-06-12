@@ -103,6 +103,15 @@ Last Updated: 2026-06-12
 - Updated `watchSinglePlugin` comment to reflect full hot-reload coverage.
 - Maintains zero typecheck errors and all tests passing.
 
+### Fifteenth Round (Scoped PluginLoader for Parallel Tests)
+- Refactored `capabilitySystemExtension()` to support custom loader injection:
+  - Accepts optional `api.pluginLoader` from caller.
+  - If provided, uses that loader without setting global singleton.
+  - If not provided, creates default loader and sets global (backward compatible).
+- Removed unused `globalPluginLoader` variable; now using local `loader` variable.
+- **Impact**: Tests can create isolated `PluginLoader` instances, enabling parallel test execution without shared state race conditions. Production unchanged.
+- All changes maintain existing functionality and zero typecheck errors.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
