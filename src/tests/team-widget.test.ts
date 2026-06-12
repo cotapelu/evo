@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock TeamRegistry
 vi.mock('../extensions/team/team-manager.js', () => ({
@@ -18,7 +19,7 @@ describe("Team Widget Toggle (per-session)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    mockApi = { on: vi.fn(), registerCommand: vi.fn() } as any;
+    mockApi = createMockExtensionAPI();
     registerTeamWidget(mockApi);
 
     // Extract session_start handler
@@ -64,13 +65,13 @@ describe("Team Widget Registration", () => {
   it("registerTeamWidget is function", () => expect(typeof registerTeamWidget).toBe("function"));
 
   it("registers session_start listener", () => {
-    const mockApi = { on: vi.fn(), registerCommand: vi.fn() } as any;
+    const mockApi = createMockExtensionAPI();
     registerTeamWidget(mockApi);
     expect(mockApi.on).toHaveBeenCalledWith("session_start", expect.any(Function));
   });
 
   it("registers session_shutdown listener per session", async () => {
-    const mockApi = { on: vi.fn() } as any;
+    const mockApi = createMockExtensionAPI();
     registerTeamWidget(mockApi);
     // Simulate session_start
     const sessionStartCall = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start");

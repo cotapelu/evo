@@ -18,11 +18,12 @@ Last Updated: 2026-06-12
 - [x] Clean up typecheck errors in test files (implicit any, missing imports)
 
 ## In Progress
-- (none)
+- Centralize test mock factories to reduce duplication
+  - Created mock-factory.ts and migrated team widget and plugin tests to use it
 
 ## Upcoming
 
-- [ ] Centralize test mock factories to reduce duplication
+
 
 ## Notes
 - All tests passing; build green.

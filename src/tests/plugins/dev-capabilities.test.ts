@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createMockExtensionAPI } from "../utils/mock-factory.js";
 import { getCapabilityRegistry, resetCapabilityRegistry } from "@extensions/capability-system/registry";
 import { PluginLoader } from "@extensions/capability-system/plugin-loader";
 
@@ -9,7 +10,7 @@ describe("Dev Plugin Capabilities", () => {
     vi.clearAllMocks();
     resetCapabilityRegistry();
     const { default: capabilitySystemExtension } = await import("@extensions/capability-system/extension.js");
-    const api = { registerTool: vi.fn(), registerCommand: vi.fn() };
+    const api = createMockExtensionAPI();
     await capabilitySystemExtension(api);
 
     const { getGlobalLoader } = await import("@extensions/capability-system/plugin-loader.js");

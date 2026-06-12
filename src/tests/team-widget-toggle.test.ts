@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock TeamRegistry
 vi.mock('../extensions/team/team-manager.js', () => ({
@@ -18,7 +19,7 @@ describe("Team Widget Toggle (per-session)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    mockApi = { on: vi.fn(), registerCommand: vi.fn() };
+    mockApi = createMockExtensionAPI();
     registerTeamWidget(mockApi);
 
     // Extract session_start handler

@@ -21,6 +21,7 @@ Last Updated: 2026-06-12
 2. Consider migrating relative test imports to path aliases to reduce fragility.
 3. Review `extension.ts` for proper error handling and logging.
 4. Document the plugin loading lifecycle for future contributors.
+5. Migrate remaining tests to central mock factory to eliminate duplication.
 
 ## Environment
 - Node.js: likely v18+ (based on deprecation warnings)

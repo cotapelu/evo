@@ -3,8 +3,8 @@
 Last Updated: 2026-06-12
 
 ## Session Summary
-- Iterations: 4
-- Tasks Completed: 3 (fix failing capability tests; add waitForLoad; fix test regressions)
+- Iterations: 5
+- Tasks Completed: 4 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup)
 
 ## Test Metrics
 - Total Test Suites: 98
@@ -28,3 +28,9 @@ Last Updated: 2026-06-12
 - Initial typecheck errors in test files: 627
 - Final typecheck errors: 0
 - Approach: Added explicit `any` casts where necessary, fixed implicit any in callbacks, corrected mock method signatures, added missing imports, and aligned test data with interfaces.
+
+## Mock Centralization
+- Created `src/tests/utils/mock-factory.ts` with reusable mock factories.
+- Migrated team widget tests and plugin capability tests to use the factory.
+- Reduced duplication and improved maintainability of test setup.
+- Work in progress: remaining tests still use inline mocks.

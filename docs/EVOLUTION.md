@@ -49,6 +49,12 @@ Last Updated: 2026-06-12
 - Reduced TypeScript typecheck errors from 627 to 0 while keeping tests green (98 suites, 935 tests).
 - Updated development documentation to reflect improvements.
 
+### Eighth Round
+- Added central mock factory (`src/tests/utils/mock-factory.ts`) to reduce duplication.
+- Migrated team widget tests and plugin capability tests to use the factory.
+- Updated `TODO.md` and `PROJECT_STATE.md` to reflect progress.
+- Maintained 100% test pass rate and typecheck clean.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

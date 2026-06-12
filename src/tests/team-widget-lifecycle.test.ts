@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { registerTeamWidget } from "../extensions/team/team-widget";
 import { TeamRegistry } from "../extensions/team/team-manager";
+import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock TeamRegistry
 vi.mock("../extensions/team/team-manager", () => ({
@@ -35,7 +36,7 @@ describe("Team Widget Lifecycle", () => {
   });
 
   it("triggers refresh on session_start and renders team status", async () => {
-    const mockApi = { on: vi.fn(), registerTool: vi.fn() } as any;
+    const mockApi = createMockExtensionAPI();
     registerTeamWidget(mockApi);
     const handler = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start")?.[1];
     expect(handler).toBeDefined();
@@ -53,7 +54,7 @@ describe("Team Widget Lifecycle", () => {
   });
 
   it("registers session_shutdown listener", async () => {
-    const mockApi = { on: vi.fn(), registerTool: vi.fn() } as any;
+    const mockApi = createMockExtensionAPI();
     registerTeamWidget(mockApi);
     const handler = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start")?.[1];
     await handler(null, ctx);
