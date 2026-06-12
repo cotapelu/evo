@@ -26,6 +26,7 @@ export class PluginLoader {
   private loadedPlugins: Map<string, LoadedPlugin> = new Map();
   private resolveCache: Map<string, { module: any; timestamp: number }> = new Map();
   private watchHandles: Map<string, { close: () => void }> = new Map();
+  private reloadTimers: Map<string, NodeJS.Timeout> = new Map();
   private rootWatcher: { close: () => void } | null = null;
   private loadPromise: Promise<PluginLoaderStats> | null = null;
   private isLoaded = false;
@@ -147,6 +148,12 @@ export class PluginLoader {
     }
 
     this.options.onPluginLoaded(manifest);
+
+    // Set up file watcher for this plugin if watch mode is enabled
+    if (this.options.watchMode) {
+      this.watchSinglePlugin(pluginPath, pluginFolder);
+    }
+
     return loaded;
   }
 
@@ -210,20 +217,20 @@ export class PluginLoader {
   }
 
   private startWatchMode(pluginsDir: string): void {
-    const pluginFolders = readdirSync(pluginsDir, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name);
-
-    for (const folder of pluginFolders) {
-      const pluginPath = join(pluginsDir, folder);
-      this.watchSinglePlugin(pluginPath, folder);
-    }
-
+    // Root watcher to detect new plugin folders and deletions
     this.rootWatcher = watch(pluginsDir, { recursive: false }, (event: string, filename: string | null) => {
       if (filename && event === 'rename') {
-        const newPath = join(pluginsDir, filename);
-        if (existsSync(join(newPath, MANIFEST_FILENAME))) {
-          this.loadPlugin(filename).catch(console.error);
+        const pluginPath = join(pluginsDir, filename);
+        const pluginExists = existsSync(pluginPath);
+        if (pluginExists) {
+          // New plugin folder created (or renamed into view)
+          if (existsSync(join(pluginPath, MANIFEST_FILENAME))) {
+            // Load directly (not debounced) for new plugin
+            this.loadPlugin(filename).catch(console.error);
+          }
+        } else {
+          // Plugin folder was deleted
+          this.unloadPlugin(filename);
         }
       }
     });
@@ -234,13 +241,10 @@ export class PluginLoader {
       if (!filename) return;
       if (filename.includes('node_modules') || filename.includes('.git')) return;
 
-      const manifestPath = join(pluginPath, MANIFEST_FILENAME);
-      if (filename === MANIFEST_FILENAME && (event === 'change' || event === 'rename')) {
-        this.loadPlugin(pluginFolder).catch(console.error);
-        return;
-      }
-
+      // Clear module cache for this plugin before reload to ensure fresh imports
       this.resolveCache.clear();
+      // Debounce reload to avoid flooding on rapid changes
+      this.scheduleReload(pluginFolder);
     });
 
     this.watchHandles.set(pluginFolder, { close: () => watcher.close() });
@@ -260,7 +264,15 @@ export class PluginLoader {
   }
 
   unloadAll(): void {
-    for (const [pluginId] of this.loadedPlugins) {
+    // Clear all pending reload timers
+    for (const timer of this.reloadTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.reloadTimers.clear();
+
+    // Unload all plugins (collect keys first to avoid mutation during iteration)
+    const pluginIds = Array.from(this.loadedPlugins.keys());
+    for (const pluginId of pluginIds) {
       this.unloadPlugin(pluginId);
     }
     this.resolveCache.clear();
@@ -278,9 +290,40 @@ export class PluginLoader {
     return Array.from(this.loadedPlugins.values());
   }
 
+  private scheduleReload(pluginId: string): void {
+    // Clear any pending reload
+    const existing = this.reloadTimers.get(pluginId);
+    if (existing) {
+      clearTimeout(existing);
+    }
+
+    const timer = setTimeout(() => {
+      this.reloadTimers.delete(pluginId);
+      if (this.loadedPlugins.has(pluginId)) {
+        this.loadPlugin(pluginId).catch(err => console.error(`[PluginLoader] Reload failed for ${pluginId}:`, err));
+      }
+    }, 200); // 200ms debounce
+
+    this.reloadTimers.set(pluginId, timer);
+  }
+
   private unloadPlugin(pluginId: string): void {
+    // Clear any pending reload timer
+    const timer = this.reloadTimers.get(pluginId);
+    if (timer) {
+      clearTimeout(timer);
+      this.reloadTimers.delete(pluginId);
+    }
+
     const plugin = this.loadedPlugins.get(pluginId);
     if (!plugin) return;
+
+    // Close its file watcher
+    const handle = this.watchHandles.get(pluginId);
+    if (handle) {
+      handle.close();
+      this.watchHandles.delete(pluginId);
+    }
 
     for (const cap of plugin.capabilities) {
       this.registry.unregister(cap.id);

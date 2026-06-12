@@ -3,12 +3,16 @@
  * Capability System Extension
  */
 
-import { join } from "path";
+import { join, dirname } from "path";
 import type { Component } from "@earendil-works/pi-tui";
 import { Text } from "@earendil-works/pi-tui";
-import { PluginLoader, getGlobalLoader, setGlobalLoader } from "./plugin-loader";
-import { getCapabilityRegistry } from "./registry";
-import { createCapabilityDiscoveryCapability } from "./prompt-integration";
+import { fileURLToPath } from "url";
+import { PluginLoader, getGlobalLoader, setGlobalLoader } from "./plugin-loader.js";
+import { getCapabilityRegistry } from "./registry.js";
+import { createCapabilityDiscoveryCapability } from "./prompt-integration.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 let globalPluginLoader: PluginLoader | null = null;
 

@@ -23,15 +23,17 @@ Last Updated: 2026-06-12
   - Replaced relative `../extensions/` imports and `vi.mock` calls across 80+ test files.
   - Completed via automated script.
 - [x] Add `waitForInitialization` helper to simplify testing of async components
+- [x] Improve PluginLoader watch mode: debounced reload, deletion handling, per-plugin watcher lifecycle
+- [x] Add integration tests for watch mode (plugin deletion detection, manifest change reload)
 
 ## In Progress
 - (none)
 
 ## Upcoming
-
-
+- Hot-reload for execute file changes (requires addressing ES module caching)
+- Robust new plugin creation detection (improve race handling)
 
 ## Notes
 - All tests passing; build green.
-- Current evolution cycle objectives achieved: robust async init, path aliases, eliminated deprecation warnings, expanded test coverage, documented initialization.
+- Current evolution cycle objectives achieved: robust async init, path aliases, eliminated deprecation warnings, expanded test coverage, documented initialization, improved watch mode.
 - System stable; awaiting next strategic direction.

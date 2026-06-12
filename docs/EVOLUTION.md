@@ -71,8 +71,19 @@ Last Updated: 2026-06-12
 - Final typecheck polish: fixed remaining errors in team backoff/behaviors tests by adding non-null assertions on `claimTask` and casting private property accesses.
 - Achieved zero TypeScript typecheck errors across entire codebase under strict settings.
 - Confirmed all 934 tests passing; build stable.
-- Maintained strict `noImplicitAny` without compiler relaxations.
-- Updated evolution metrics (iteration 9) and final documentation.
+- Maintained strict `noImplicitAny` without compiler option relaxations.
+- Updated evolution metrics and final documentation.
+
+### Twelfth Round (Watch Mode Enhancements)
+- Enhanced `PluginLoader` watch mode:
+  - Added `reloadTimers` map for debounced reloads (200ms), preventing event storms.
+  - Reload now triggers on any file change (execute, renderer, etc.) by clearing module cache and scheduling reload.
+  - Root watcher now detects plugin folder deletion and unloads plugins cleanly.
+  - Each loaded plugin receives its own file watcher; `unloadPlugin` closes watcher and clears pending timers to prevent leaks.
+- Added integration tests (`src/tests/plugin-loader-watch-mode.test.ts`) verifying manifest change reload and folder deletion unload.
+- Updated documentation files (AGENT_METRICS.md, AGENT_PROFILE.md, TODO.md, EVOLUTION.md).
+- Test suite expanded to 99 suites, 936 tests passing (2 new tests).
+- All changes maintain zero typecheck errors and full test pass rate.
 
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
@@ -82,11 +93,12 @@ Last Updated: 2026-06-12
 - [x] Eliminate DEP0147 deprecation warnings.
 - [x] Expand test coverage for plugin loading edge cases.
 - [x] Document extension initialization sequence.
-- [ ] Centralize test mock factories to avoid duplication.
-- [ ] Add integration test to verify extension initialization under watch mode.
+- [x] Centralize test mock factories to avoid duplication.
+- [x] Add integration test to verify extension initialization under watch mode.
 
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
+- ES module caching prevents hot-reload of execute file changes; requires using internal APIs or switching to CJS for plugins (not yet implemented).
 
 ## Quality Targets
 - Maintain ≥80% test coverage (currently high).
