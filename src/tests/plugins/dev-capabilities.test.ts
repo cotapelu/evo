@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockExtensionAPI } from "../utils/mock-factory.js";
+import { createMockExtensionAPI, createMockContext } from "../utils/mock-factory.js";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getCapabilityRegistry, resetCapabilityRegistry } from "@extensions/capability-system/registry";
 import { PluginLoader } from "@extensions/capability-system/plugin-loader";
 
@@ -28,7 +29,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.test")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("bash", expect.arrayContaining(["-c", "npm test"]), expect.any(Object));
@@ -39,7 +41,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.test")!;
-      await cap.execute("test-id", { files: ["src/foo.test.ts", "src/bar.test.ts"] }, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      await cap.execute("test-id", { files: ["src/foo.test.ts", "src/bar.test.ts"] }, null, null, ctx);
 
       expect(mockExec).toHaveBeenCalledWith("bash", expect.arrayContaining(["-c", `npm test -- "src/foo.test.ts" "src/bar.test.ts"`]), expect.any(Object));
     });
@@ -55,7 +58,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.format")!;
-      const result = await cap.execute("test-id", { files: ["src/index.ts", "lib/util.ts"] }, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", { files: ["src/index.ts", "lib/util.ts"] }, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("npx", ["prettier", "--write", "src/index.ts", "lib/util.ts"], expect.any(Object));
@@ -72,7 +76,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.audit")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("npm", ["audit"], expect.any(Object));
@@ -83,7 +88,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.audit")!;
-      await cap.execute("test-id", { fix: true }, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      await cap.execute("test-id", { fix: true }, null, null, ctx);
 
       expect(mockExec).toHaveBeenCalledWith("npm", ["audit", "--", "fix"], expect.any(Object));
     });
@@ -99,7 +105,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.build")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("npm", ["run", "build"], expect.any(Object));
@@ -116,7 +123,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.scripts")!;
-      const result = await cap.execute("test-id", { action: "list" }, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", { action: "list" }, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("npm", ["run"], expect.any(Object));
@@ -127,7 +135,8 @@ describe("Dev Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.scripts")!;
-      await cap.execute("test-id", { action: "run", script: "start" }, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      await cap.execute("test-id", { action: "run", script: "start" }, null, null, ctx);
 
       expect(mockExec).toHaveBeenCalledWith("npm", ["run", "start"], expect.any(Object));
     });
@@ -135,7 +144,9 @@ describe("Dev Plugin Capabilities", () => {
     it("should error if script missing for run action", async () => {
       const registry = getCapabilityRegistry();
       const cap = registry.get("dev.scripts")!;
-      const result = await cap.execute("test-id", { action: "run" }, null, null, { cwd: "/project", exec: vi.fn() } as any);
+      const execMock = vi.fn();
+      const ctx = createMockContext({ cwd: "/project", exec: execMock });
+      const result = await cap.execute("test-id", { action: "run" }, null, null, ctx);
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain("script required");

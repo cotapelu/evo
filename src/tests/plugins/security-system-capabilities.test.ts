@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockExtensionAPI } from "../utils/mock-factory.js";
+import { createMockExtensionAPI, createMockContext } from "../utils/mock-factory.js";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getCapabilityRegistry, resetCapabilityRegistry } from "@extensions/capability-system/registry";
 
 describe("Security & System Plugin Capabilities", () => {
@@ -21,7 +22,8 @@ describe("Security & System Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("security.scan")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(mockExec).toHaveBeenCalledWith("npx", ["secret-scanner", "--path", "/project"], expect.any(Object));
@@ -32,7 +34,8 @@ describe("Security & System Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("security.scan")!;
-      await cap.execute("test-id", { path: "/src" }, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      await cap.execute("test-id", { path: "/src" }, null, null, ctx);
 
       expect(mockExec).toHaveBeenCalledWith("npx", ["secret-scanner", "--path", "/src"], expect.any(Object));
     });
@@ -48,7 +51,8 @@ describe("Security & System Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("system.metrics")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(result.details?.uptime).toBe(12345);
@@ -63,7 +67,8 @@ describe("Security & System Plugin Capabilities", () => {
 
       const registry = getCapabilityRegistry();
       const cap = registry.get("system.metrics")!;
-      const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
+      const ctx = createMockContext({ cwd: "/project", exec: mockExec });
+      const result = await cap.execute("test-id", {}, null, null, ctx);
 
       expect(result.isError).toBe(false);
       expect(result.details?.raw).toBe("not json");
