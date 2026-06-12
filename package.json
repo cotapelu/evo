@@ -1,15 +1,15 @@
 {
-  "name": "piclaw",
+  "name": "evo",
   "version": "0.0.1",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
-  "description": "Piclaw Coding Agent CLI - Professional AI coding assistant",
+  "description": "Evo Coding Agent CLI - Professional AI coding assistant",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "piclaw": "dist/cli.js"
+    "evo": "dist/cli.js"
   },
   "scripts": {
     "generate-custom-models": "tsx scripts/generate-custom-models.ts",
