@@ -9,14 +9,8 @@ vi.mock("../extensions/tools/index.js", () => ({
   registerMemoryTool: vi.fn(),
   registerUniversalTool: vi.fn(),
 }));
-vi.mock("../extensions/tools/git-tool.js", () => ({ registerGitTool: vi.fn() }));
-vi.mock("../extensions/tools/test-tool.js", () => ({ registerTestTool: vi.fn() }));
-vi.mock("../extensions/tools/formatter-tool.js", () => ({ registerFormatterTool: vi.fn() }));
-vi.mock("../extensions/tools/audit-tool.js", () => ({ registerAuditTool: vi.fn() }));
-vi.mock("../extensions/tools/build-tool.js", () => ({ registerBuildTool: vi.fn() }));
-vi.mock("../extensions/tools/metrics-tool.js", () => ({ registerMetricsTool: vi.fn() }));
-vi.mock("../extensions/tools/secret-scanner-tool.js", () => ({ registerSecretScannerTool: vi.fn() }));
-vi.mock("../extensions/tools/scripts-tool.js", () => ({ registerScriptsTool: vi.fn() }));
+// Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
+// No mocking needed
 vi.mock("../extensions/team/index.js", () => ({ registerTeamTool: vi.fn() }));
 vi.mock("../extensions/tools/subtool-loader.js", () => ({ registerSubToolLoaderExtension: vi.fn() }));
 vi.mock("../extensions/tools/tool-template.js", () => ({ registerToolTemplate: vi.fn() }));
@@ -41,13 +35,7 @@ vi.mock("../extensions/metrics/metrics-widget.js", () => ({ registerMetricsWidge
 import { extensionsAggregator, getExtensionFactories } from "../extensions/factory";
 import { registerKiloProvider } from "../extensions/providers/kilo-provider";
 import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "../extensions/tools/index";
-import { registerGitTool } from "../extensions/tools/git-tool";
-import { registerTestTool } from "../extensions/tools/test-tool";
-import { registerFormatterTool } from "../extensions/tools/formatter-tool";
-import { registerAuditTool } from "../extensions/tools/audit-tool";
-import { registerBuildTool } from "../extensions/tools/build-tool";
-import { registerMetricsTool } from "../extensions/tools/metrics-tool";
-import { registerSecretScannerTool } from "../extensions/tools/secret-scanner-tool";
+// Tools moved to plugins, no direct imports
 import { registerTeamTool } from "../extensions/team/index";
 import { registerSubToolLoaderExtension } from "../extensions/tools/subtool-loader";
 import { registerToolTemplate } from "../extensions/tools/tool-template";
@@ -67,7 +55,7 @@ import { registerCopyCommand } from "../extensions/commands/copy-command";
 import { registerTeamCommand } from "../extensions/commands/team-command";
 import { registerMetricsCommand } from "../extensions/commands/metrics-command";
 import { registerMetricsWidget } from "../extensions/metrics/metrics-widget";
-import { registerScriptsTool } from "../extensions/tools/scripts-tool";
+//
 
 describe("Extensions Aggregator", () => {
   const mockApi: any = { registerTool: vi.fn(), on: vi.fn(), registerFlag: vi.fn(), getFlag: vi.fn() };
@@ -83,14 +71,7 @@ describe("Extensions Aggregator", () => {
     expect(registerTodosTool).toHaveBeenCalledWith(mockApi);
     expect(registerMemoryTool).toHaveBeenCalledWith(mockApi);
     expect(registerUniversalTool).toHaveBeenCalledWith(mockApi);
-    expect(registerGitTool).toHaveBeenCalledWith(mockApi);
-    expect(registerTestTool).toHaveBeenCalledWith(mockApi);
-    expect(registerFormatterTool).toHaveBeenCalledWith(mockApi);
-    expect(registerAuditTool).toHaveBeenCalledWith(mockApi);
-    expect(registerBuildTool).toHaveBeenCalledWith(mockApi);
-    expect(registerMetricsTool).toHaveBeenCalledWith(mockApi);
-    expect(registerSecretScannerTool).toHaveBeenCalledWith(mockApi);
-    expect(registerScriptsTool).toHaveBeenCalledWith(mockApi);
+    // Plugin-based tools are loaded automatically, not directly registered
     expect(registerTeamTool).toHaveBeenCalledWith(mockApi);
     expect(registerSubToolLoaderExtension).toHaveBeenCalledWith(mockApi);
     expect(registerToolTemplate).toHaveBeenCalledWith(mockApi);

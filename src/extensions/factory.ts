@@ -9,17 +9,11 @@
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
 import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "./tools/index.js";
-import { registerGitTool } from "./tools/git-tool.js";
-import { registerTestTool } from "./tools/test-tool.js";
-import { registerFormatterTool } from "./tools/formatter-tool.js";
-import { registerAuditTool } from "./tools/audit-tool.js";
-import { registerBuildTool } from "./tools/build-tool.js";
-import { registerMetricsTool } from "./tools/metrics-tool.js";
-import { registerSecretScannerTool } from "./tools/secret-scanner-tool.js";
-import { registerScriptsTool } from "./tools/scripts-tool.js";
+// Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
 import { registerTeamTool } from "./team/index.js";
 import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
 import { registerToolTemplate } from "./tools/tool-template.js";
+import capabilitySystemExtension from "./capability-system/extension.js";
 import { registerSkillReaderExtension } from "./tools/skill-reader.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
 import autoCompact85Extension from "./hooks/auto-compact-85.js";
@@ -47,6 +41,12 @@ import { registerKeybindingExtension } from "./keybinding/keybinding-extension.j
  * Called by the extension factory system.
  */
 export default function extensionsAggregator(api: import("@earendil-works/pi-coding-agent").ExtensionAPI) {
+  // ============================================================================
+  // 1. CAPABILITY SYSTEM (Plugin Architecture)
+  // ============================================================================
+  // Loads plugins from ./plugins folder and registers capability router tool
+  capabilitySystemExtension(api);
+
   // Register providers
   registerKiloProvider(api);
 
@@ -57,27 +57,10 @@ export default function extensionsAggregator(api: import("@earendil-works/pi-cod
   registerToolTemplate(api);
   registerSkillReaderExtension(api);
 
-  // Register universal tool (replaces echo and system_info)
+  // Register universal tool
   registerUniversalTool(api);
-  // Register git tool
-  registerGitTool(api);
-  // Register test tool
-  registerTestTool(api);
-  // Register formatter tool
-  registerFormatterTool(api);
-  // Register audit tool
-  registerAuditTool(api);
-  // Register build tool
-  registerBuildTool(api);
-  // Register metrics tool
-  registerMetricsTool(api);
-  // Register secret scanner tool
-  registerSecretScannerTool(api);
-  // Register scripts tool
-  registerScriptsTool(api);
-  // Register subtool loader extension
+  // Register sub-tool loader
   registerSubToolLoaderExtension(api);
-  // (subtool-loader replaced by skill-loader)
 
   // Register custom message renderers
   registerTodosRenderer(api);
