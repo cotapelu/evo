@@ -134,6 +134,11 @@ Last Updated: 2026-06-12
 - Used `vi.mocked(copyToClipboard)` to replace cast on mocks.
 - Entire file now free of `as any` casts.
 
+### Nineteenth Round (Reduce `any` in team-command.test.ts)
+- team-command.test.ts: replaced all `(getTeamWidgetEnabled as any)` and `(toggleTeamWidget as any)` with `vi.mocked()` equivalents.
+- Consistent pattern with metrics-command and provider-command.
+- All command tests now any-free.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

@@ -49,7 +49,7 @@ Last Updated: 2026-06-12
   - All plugin capability tests now free of `as any` casts; several command tests also cleaned
 
 ## In Progress
-- Reduce `any` casts in remaining test suites (~40 files left). Already cleaned: git, dev, security-system, provider-command, metrics-command, copy-command.
+- Reduce `any` casts in remaining test suites (~35 files left). Already cleaned: git, dev, security-system, provider-command, metrics-command, copy-command, team-command.
 
 ## Upcoming
 - (none)
