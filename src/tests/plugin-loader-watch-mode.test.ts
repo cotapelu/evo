@@ -80,8 +80,8 @@ describe('PluginLoader Watch Mode Integration', () => {
     await loader.waitForLoad();
 
     const registry = getCapabilityRegistry();
-    let cap = registry.get(`${pluginId}.get`);
-    let result = await cap.execute('t1', {}, null, null, {});
+    let cap = registry.get(`${pluginId}.get`)!;
+    let result = await cap.execute('t1', {}, null, null, {} as any);
     expect(result.content[0].text).toBe('get-v1');
 
     // Change manifest (version and name)
@@ -96,9 +96,8 @@ describe('PluginLoader Watch Mode Integration', () => {
     await waitFor(() => loader.getStats().totalPlugins === 1 && loadedPlugins.filter(id => id === pluginId).length >= 2);
 
     // Verify plugin reloaded (capability still exists)
-    cap = registry.get(`${pluginId}.get`);
-    expect(cap).toBeDefined();
-    result = await cap.execute('t2', {}, null, null, {});
+    cap = registry.get(`${pluginId}.get`)!;
+    result = await cap.execute('t2', {}, null, null, {} as any);
     expect(result.content[0].text).toBe('get-v1');
   });
 
@@ -139,7 +138,8 @@ describe('PluginLoader Watch Mode Integration', () => {
 
     expect(loader.getStats().totalPlugins).toBe(1);
     const registry = getCapabilityRegistry();
-    expect(registry.get(`${pluginId}.action`)).toBeDefined();
+    const cap = registry.get(`${pluginId}.action`)!;
+    expect(cap).toBeDefined();
 
     // Delete the plugin folder
     fs.rmSync(pluginDir, { recursive: true, force: true });
