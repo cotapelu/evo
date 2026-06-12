@@ -9,6 +9,7 @@ import { Text } from "@earendil-works/pi-tui";
 import { fileURLToPath } from "url";
 import { PluginLoader, getGlobalLoader, setGlobalLoader } from "./plugin-loader.js";
 import { getCapabilityRegistry } from "./registry.js";
+import type { Capability } from "./types.js";
 import { createCapabilityDiscoveryCapability } from "./prompt-integration.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -87,21 +88,57 @@ export default async function capabilitySystemExtension(api: any): Promise<void>
 // ============================================================================
 
 function createCapabilityRouterTool() {
+  const registry = getCapabilityRegistry();
+  const allCaps = registry.listAll();
+
+  // Group capabilities by plugin for clear presentation
+  const byPlugin = new Map<string, Capability[]>();
+  for (const cap of allCaps) {
+    const pluginCaps = byPlugin.get(cap.pluginId) || [];
+    pluginCaps.push(cap);
+    byPlugin.set(cap.pluginId, pluginCaps);
+  }
+
+  // Build comprehensive guidelines
+  const guidelines: string[] = [
+    "Execute any registered capability.",
+    "First call system.capabilities() to see the full list and get current capabilities.",
+    "Then call the specific capability you need.",
+    "",
+    "Available capabilities by plugin:"
+  ];
+
+  // List actual capabilities with IDs and short descriptions
+  const sortedPluginIds = Array.from(byPlugin.keys()).sort();
+  for (const pluginId of sortedPluginIds) {
+    const caps = byPlugin.get(pluginId)!;
+    guidelines.push(`\n**${pluginId}** (${caps.length}):`);
+    for (const cap of caps) {
+      guidelines.push(`- ${cap.id}: ${cap.description}`);
+    }
+  }
+
+  guidelines.push("");
+  guidelines.push("Format: { capability: 'plugin.capability', params: { ... } }");
+  guidelines.push("Example: { capability: 'system.capabilities', params: { tag: 'git' } }");
+
   return {
     name: "capability",
     label: "Capability Router",
-    description: "Execute a capability by ID.",
-    promptSnippet: "{ capability: 'plugin.capability', params: {...} }",
-    promptGuidelines: [
-      "Execute registered capabilities.",
-      "Format: { capability: 'plugin.id', params: {...} }",
-      "Discover: system.capabilities"
-    ],
+    description: `Execute any of ${allCaps.length} registered capabilities across ${byPlugin.size} plugins (git, dev, security, system, etc.). Discover available operations with system.capabilities().`,
+    promptSnippet: "{ capability: 'system.capabilities', params: {} }",
+    promptGuidelines: guidelines,
     parameters: {
       type: "object",
       properties: {
-        capability: { type: "string", description: "Capability ID (e.g., 'git.status')" },
-        params: { type: "object", description: "Arguments for the capability" }
+        capability: { 
+          type: "string", 
+          description: "Capability ID (e.g., 'git.status', 'dev.test', 'security.scan', 'system.metrics')"
+        },
+        params: { 
+          type: "object", 
+          description: "Arguments for the capability (see each capability's schema)"
+        }
       },
       required: ["capability", "params"]
     },
