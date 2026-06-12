@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { registerSettingsCommand } from "../../extensions/commands/settings-command.js";
 
 describe("Settings Command Integration", () => {
   let mockApi: any;
-  let mockNotify: vi.Mock;
+  let mockNotify: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();

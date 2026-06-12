@@ -9,9 +9,9 @@ describe("PiclawPackageManager.update", () => {
 
   beforeEach(() => {
     pm = new PiclawPackageManager({ cwd: "/tmp/cwd", agentDir: "/tmp/agent" });
-    getEntriesSpy = vi.spyOn(pm, 'getConfiguredEntries');
-    updateNpmSpy = vi.spyOn(pm, 'updateNpm').mockResolvedValue(undefined);
-    updateGitSpy = vi.spyOn(pm, 'updateGit').mockResolvedValue(undefined);
+    getEntriesSpy = vi.spyOn(pm as any, 'getConfiguredEntries');
+    updateNpmSpy = vi.spyOn(pm as any, 'updateNpm').mockResolvedValue(undefined);
+    updateGitSpy = vi.spyOn(pm as any, 'updateGit').mockResolvedValue(undefined);
   });
 
   afterEach(() => {

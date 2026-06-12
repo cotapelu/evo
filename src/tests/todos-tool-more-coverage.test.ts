@@ -1,4 +1,5 @@
 import { vi, describe, it, expect } from 'vitest';
+import type { TodoPhase } from '../extensions/utils/tool-types.js';
 
 // Mock fs
 vi.mock('node:fs', () => ({
@@ -24,14 +25,14 @@ import {
 describe('TodosTool Additional Coverage (core functions)', () => {
   describe('applyOp success paths', () => {
     it('remove_task removes task and returns no errors', () => {
-      const phases = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' }] }];
+      const phases: TodoPhase[] = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' as const }] }];
       const { phases: result, errors } = applyOp(phases, 1, 1, { remove_task: { id: 't1' } });
       expect(result[0].tasks).toHaveLength(0);
       expect(errors).toEqual([]);
     });
 
     it('list returns phases unchanged (non-empty)', () => {
-      const phases = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' }] }];
+      const phases: TodoPhase[] = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' as const }] }];
       const { phases: result } = applyOp(phases, 1, 1, { list: {} });
       expect(result).toEqual(phases);
     });
@@ -53,7 +54,7 @@ describe('TodosTool Additional Coverage (core functions)', () => {
     });
 
     it('update with all unknown IDs returns error for each and "no valid tasks"', () => {
-      const phases = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' }] }];
+      const phases: TodoPhase[] = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' as const }] }];
       const { errors } = applyOp(phases, 1, 1, { update: { ids: ['missing1', 'missing2'] } });
       expect(errors).toContain('Task "missing1" not found');
       expect(errors).toContain('Task "missing2" not found');
@@ -61,7 +62,7 @@ describe('TodosTool Additional Coverage (core functions)', () => {
     });
 
     it('formatSummary includes errors line and remaining stats', () => {
-      const phases = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' }] }];
+      const phases: TodoPhase[] = [{ id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T', status: 'pending' as const }] }];
       const summary = formatSummary(phases, ['Something went wrong']);
       expect(summary).toContain('Errors: Something went wrong');
       expect(summary).toContain('Remaining'); // "Remaining items" line
@@ -116,7 +117,7 @@ describe('TodosTool Additional Coverage (core functions)', () => {
     });
 
     it('returns phases from latest valid entry', () => {
-      const data = [{ id: 'phase-1', name: 'P1', tasks: [] }];
+      const data: TodoPhase[] = [{ id: 'phase-1', name: 'P1', tasks: [] }];
       const entries = [
         { type: 'message', message: { role: 'toolResult', toolName: 'other' } },
         { type: 'message', message: { role: 'toolResult', toolName: 'todos', details: { phases: data } } },

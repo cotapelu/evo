@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { registerMemoryTool } from "../extensions/tools/memory-tool";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -35,7 +35,7 @@ describe("Memory Tool", () => {
   });
 
   it("renderCall formats action", () => {
-    const theme: any = { fg: (c: string, t?: string) => (t ?? c), bold: (t) => t };
+    const theme: any = { fg: (c: string, t?: string) => (t ?? c), bold: (t: any) => t };
     const comp = tool.renderCall({ action: "add", text: "note", tags: ["a"] }, theme, {} as any);
     expect(comp.text).toContain("memory");
     expect(comp.text).toContain("add");

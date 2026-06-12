@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { registerSessionTreeCommand } from "../../extensions/commands/session-tree-command.js";
 
 describe("Session Tree Command Integration", () => {
   let mockApi: any;
-  let mockNotify: vi.Mock;
+  let mockNotify: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();

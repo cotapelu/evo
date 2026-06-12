@@ -35,6 +35,11 @@ Last Updated: 2026-06-12
 - Documented extension initialization sequence in `docs/EXTENSION_INIT.md`.
 - All planned refactors for this cycle completed; upcoming tasks cleared.
 
+### Sixth Round
+- Fixed test regressions introduced by status literal changes in `todos-tool-more-coverage.test.ts`.
+- Corrected mock call assertions in `todos-tool.test.ts` (`expect(...).toHaveBeenCalled()`).
+- Maintained all tests passing (98 suites, 934 tests).
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

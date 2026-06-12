@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { registerTeamCommand } from "../../extensions/commands/team-command.js";
 import * as teamWidget from "../../extensions/team/team-widget.js";
 
 describe("Team Command Integration", () => {
   let mockApi: any;
-  let mockNotify: vi.Mock;
+  let mockNotify: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();

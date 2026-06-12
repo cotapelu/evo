@@ -23,7 +23,7 @@ describe("TodoState", () => {
 
   it("updateTask modifies", () => {
     const p = s.addPhase("Do");
-    const t = s.addTask(p.id, "Task");
+    const t = s.addTask(p.id, "Task")!;
     const u = s.updateTask(t.id, { status: "in_progress" });
     expect(u!).not.toBeNull();
     expect(u!.status).toBe("in_progress");
@@ -32,7 +32,7 @@ describe("TodoState", () => {
 
   it("removeTask deletes", () => {
     const p = s.addPhase("R");
-    const t = s.addTask(p.id, "Delete");
+    const t = s.addTask(p.id, "Delete")!;
     expect(s.removeTask(t.id)).toBe(true);
     expect(s.getPhases()[0].tasks.length).toBe(0);
   });

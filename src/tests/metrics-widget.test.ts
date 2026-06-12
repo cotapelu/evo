@@ -11,7 +11,7 @@ describe("Metrics Widget (per-session)", () => {
     mockApi = { on: vi.fn() };
     registerMetricsWidget(mockApi);
 
-    const sessionStartCall = mockApi.on.mock.calls.find(c => c[0] === "session_start");
+    const sessionStartCall = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start");
     expect(sessionStartCall).toBeDefined();
     sessionStartHandler = sessionStartCall[1];
 
@@ -50,9 +50,9 @@ describe("Metrics Widget (per-session)", () => {
 
 describe("Metrics Widget Registration", () => {
   it("registers session_start and session_shutdown", () => {
-    const mockApi = { on: vi.fn() };
+    const mockApi: any = { on: vi.fn() };
     registerMetricsWidget(mockApi);
-    const startCalls = mockApi.on.mock.calls.filter(c => c[0] === "session_start");
+    const startCalls = mockApi.on.mock.calls.filter((c: any) => c[0] === "session_start");
     expect(startCalls.length).toBeGreaterThan(0);
     const handler = startCalls[0][1];
     const ctx = {

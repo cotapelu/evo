@@ -40,7 +40,7 @@ describe('todos tool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue('/cwd');
-    existsSync.mockReturnValue(false);
+    vi.mocked(existsSync).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -124,9 +124,9 @@ describe('todos tool', () => {
 
     it('loadFromFile loads data from file', async () => {
       const fileData = { phases: [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T1', status: 'pending' }] }], nextTaskId: 2, nextPhaseId: 2, version: 1 };
-      existsSync.mockReturnValue(true);
+      vi.mocked(existsSync).mockReturnValue(true);
       // readFile with encoding returns a string
-      promises.readFile.mockResolvedValue(JSON.stringify(fileData));
+      vi.mocked(promises.readFile).mockResolvedValue(JSON.stringify(fileData));
       const loaded = await state.loadFromFile();
       expect(loaded).toBe(true);
       expect(state.getPhases()).toHaveLength(1);
@@ -135,16 +135,16 @@ describe('todos tool', () => {
     });
 
     it('loadFromFile returns false if no file', async () => {
-      existsSync.mockReturnValue(false);
+      vi.mocked(existsSync).mockReturnValue(false);
       const loaded = await state.loadFromFile();
       expect(loaded).toBe(false);
     });
 
     it('saveToFile writes to file', async () => {
       state.addPhase('Phase 1', [{ content: 'Task' }]);
-      promises.mkdir.mockResolvedValue({});
+      vi.mocked(promises.mkdir).mockResolvedValue({});
       await state.saveToFile();
-      expect(promises.writeFile).toHaveBeenCalled();
+      expect(vi.mocked(promises.writeFile)).toHaveBeenCalled();
     });
 
     it('setStorageType updates storage type', () => {
@@ -395,9 +395,9 @@ describe('todos tool', () => {
 
     beforeEach(() => {
       // Reset fs mocks to default successful state
-      existsSync.mockReturnValue(false);
-      promises.mkdir.mockResolvedValue({});
-      promises.writeFile.mockResolvedValue(undefined);
+      vi.mocked(existsSync).mockReturnValue(false);
+      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.writeFile).mockResolvedValue(undefined as any);
     });
 
     it('registers session event listeners', () => {
@@ -542,7 +542,7 @@ describe('todos tool', () => {
       mockApi = createMockApi();
       mockCtx = createMockCtx();
       // Simulate writeFile error
-      promises.writeFile.mockRejectedValue(new Error('disk full'));
+      vi.mocked(promises.writeFile).mockRejectedValue(new Error('disk full'));
       registerTodosTool(mockApi);
       const tool = capturedTool;
 

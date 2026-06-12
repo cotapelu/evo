@@ -14,6 +14,7 @@ Last Updated: 2026-06-12
 - [x] Update extensionsAggregator to async and fix related tests (extensions-integration, extensions-aggregator, extensions-index)
 - [x] Introduce path aliases in Vitest config (`@extensions`), updated plugin tests to use alias
 - [x] Eliminated DEP0147 warnings by removing obsolete `secret-scanner-tool.test.ts` that used deprecated `fs.rmdir`
+- [x] Fix test regressions (normalizeParams expectations, saveToFile assertion) after adding `as const`
 
 ## In Progress
 - (none)

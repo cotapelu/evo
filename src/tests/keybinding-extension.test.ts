@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { registerKeybindingExtension } from "../extensions/keybinding/keybinding-extension.js";
 import * as configManager from "../config/config-manager.js";
 
 describe("Keybinding Extension", () => {
   let mockApi: any;
   let mockOn: any;
-  let mockOnTerminalInput: vi.Mock;
-  let unsubscribe: vi.Mock;
-  let mockSendUserMessage: vi.Mock;
+  let mockOnTerminalInput: Mock;
+  let unsubscribe: Mock;
+  let mockSendUserMessage: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();

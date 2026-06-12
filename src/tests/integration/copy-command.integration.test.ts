@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 
 // Mock the pi-coding-agent module before importing copy-command
 vi.mock("@earendil-works/pi-coding-agent", () => {
@@ -17,7 +18,7 @@ const copyToClipboard = pi.copyToClipboard as any;
 
 describe("Copy Command Integration", () => {
   let mockApi: any;
-  let mockNotify: vi.Mock;
+  let mockNotify: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();

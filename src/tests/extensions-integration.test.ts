@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import extensionsIndex from '../extensions/index.js';
 
 describe('extensions/index', () => {
