@@ -48,7 +48,7 @@ Last Updated: 2026-06-12
   - All plugin capability tests now free of `as any` casts; other test suites to follow
 
 ## In Progress
-- (none)
+- Reduce `any` casts in remaining test suites (team tests, command tests, renderer tests, etc.)
 
 ## Upcoming
 - (none)

@@ -189,7 +189,7 @@ describe("Provider Command", () => {
         const api = createMockApi();
         registerProviderCommand(api);
         const ctx = createMockCtx();
-        ctx.modelRegistry.getAvailable = (() => []) as any; // no available
+        ctx.modelRegistry.getAvailable.mockImplementation(() => []); // no available
 
         const handler = api.registerCommand.mock.calls[0][1].handler;
         await handler("test unknown", ctx);
