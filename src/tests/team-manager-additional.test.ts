@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AgentTeam, TeamRegistry, executeTeamTasks } from '../extensions/team/team-manager.js';
 
 const AGENT_TIMEOUT_MS = 2 * 60 * 1000;
@@ -213,7 +213,7 @@ describe('AgentTeam Additional Coverage', () => {
           sessionId: 'sess1',
           prompt: vi.fn().mockImplementation(async () => {
             // Abort after prompt to exit loop
-            const ctrl = team.childControllers.get('agent-1');
+            const ctrl = (team as any).childControllers.get('agent-1');
             ctrl?.abort();
           }),
           subscribe: vi.fn(),
@@ -249,7 +249,7 @@ describe('AgentTeam Additional Coverage', () => {
       // Advance timers to complete one iteration (which will hit error)
       await vi.advanceTimersByTimeAsync(1000);
       // Abort to stop further loops
-      const ctrl = team.childControllers.get('agent-1');
+      const ctrl = (team as any).childControllers.get('agent-1');
       ctrl?.abort();
       await Promise.all(team.childPromises);
       // Should have error update
@@ -329,7 +329,8 @@ describe('AgentTeam Additional Coverage', () => {
     beforeEach(() => {
       setIntervalCallback = null;
       vi.useFakeTimers();
-      vi.spyOn(globalThis, 'setInterval').mockImplementation((cb: any, ms: number) => {
+      vi.spyOn(globalThis, 'setInterval').mockImplementation((...args: any[]) => {
+        const [cb, ms] = args;
         setIntervalCallback = cb;
         return 1 as any;
       });
@@ -346,7 +347,7 @@ describe('AgentTeam Additional Coverage', () => {
         pendingTasks: 0,
         failedTasks: 0,
         agents: []
-      });
+      } as any);
 
       vi.spyOn(team, 'initialize').mockResolvedValue(undefined);
       vi.spyOn(team, 'setupChildRuntimes').mockResolvedValue(undefined);

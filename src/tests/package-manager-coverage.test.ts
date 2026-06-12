@@ -161,7 +161,7 @@ describe('PiclawPackageManager Coverage Gaps', () => {
     it('should reject on command failure', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       vi.spyOn(pm as any, 'runCommandCapture').mockRejectedValue(new Error('command failed'));
-      await expect(pm.getLatestNpmVersion('pkg')).rejects.toThrow('command failed');
+      await expect((pm as any).getLatestNpmVersion('pkg')).rejects.toThrow('command failed');
     });
   });
 

@@ -1,4 +1,5 @@
 import { createTeamTool } from '../team-tool.js';
+import { describe, it, expect, vi } from 'vitest';
 
 // Minimal mock - enough to test param validation
 const mockCtx: any = {

@@ -24,7 +24,7 @@ describe("Keybinding Extension", () => {
 
   it("registers session_start listener", () => {
     registerKeybindingExtension(mockApi);
-    const sessionStartCalls = mockOn.mock.calls.filter(c => c[0] === "session_start");
+    const sessionStartCalls = mockOn.mock.calls.filter((c: any) => c[0] === "session_start");
     expect(sessionStartCalls.length).toBeGreaterThan(0);
   });
 
@@ -34,7 +34,7 @@ describe("Keybinding Extension", () => {
     } as any);
 
     registerKeybindingExtension(mockApi);
-    const sessionStartCall = mockOn.mock.calls.find(c => c[0] === "session_start");
+    const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
     expect(sessionStartCall).toBeDefined();
     const handler = sessionStartCall![1];
 
@@ -65,7 +65,7 @@ describe("Keybinding Extension", () => {
     } as any);
 
     registerKeybindingExtension(mockApi);
-    const sessionStartCall = mockOn.mock.calls.find(c => c[0] === "session_start");
+    const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
     const handler = sessionStartCall![1];
 
     const mockOnTerminal = vi.fn().mockReturnValue(unsubscribe);
@@ -89,7 +89,7 @@ describe("Keybinding Extension", () => {
     } as any);
 
     registerKeybindingExtension(mockApi);
-    const sessionStartCall = mockOn.mock.calls.find(c => c[0] === "session_start");
+    const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
     const handler = sessionStartCall![1];
 
     const mockOnTerminal = vi.fn().mockReturnValue(unsubscribe);

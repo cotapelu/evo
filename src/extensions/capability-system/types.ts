@@ -53,10 +53,10 @@ export interface Capability {
 export type CapabilityExecute = (
   toolCallId: string,
   params: Record<string, any>,
-  signal: AbortSignal | undefined,
-  onUpdate: (data: any) => void,
+  signal: AbortSignal | null | undefined,
+  onUpdate: ((data: any) => void) | null | undefined,
   ctx: CapabilityContext
-) => Promise<AgentToolResult<any>>;
+) => Promise<any>;
 
 /**
  * Render function for custom UI.

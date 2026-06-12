@@ -18,12 +18,12 @@ describe("Team Widget Toggle (per-session)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    mockApi = { on: vi.fn(), registerCommand: vi.fn() };
+    mockApi = { on: vi.fn(), registerCommand: vi.fn() } as any;
     registerTeamWidget(mockApi);
 
     // Extract session_start handler
     const onCalls = mockApi.on.mock.calls;
-    const sessionStartCall = onCalls.find(c => c[0] === "session_start");
+    const sessionStartCall = onCalls.find((c: any) => c[0] === "session_start");
     expect(sessionStartCall).toBeDefined();
     sessionStartHandler = sessionStartCall[1];
 
@@ -64,19 +64,19 @@ describe("Team Widget Registration", () => {
   it("registerTeamWidget is function", () => expect(typeof registerTeamWidget).toBe("function"));
 
   it("registers session_start listener", () => {
-    const mockApi = { on: vi.fn(), registerCommand: vi.fn() };
+    const mockApi = { on: vi.fn(), registerCommand: vi.fn() } as any;
     registerTeamWidget(mockApi);
     expect(mockApi.on).toHaveBeenCalledWith("session_start", expect.any(Function));
   });
 
   it("registers session_shutdown listener per session", async () => {
-    const mockApi = { on: vi.fn() };
+    const mockApi = { on: vi.fn() } as any;
     registerTeamWidget(mockApi);
     // Simulate session_start
-    const sessionStartCall = mockApi.on.mock.calls.find(c => c[0] === "session_start");
+    const sessionStartCall = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start");
     await sessionStartCall![1](null, { ui: { setWidget: vi.fn() } });
     // Should have registered session_shutdown
-    const shutdownCalls = mockApi.on.mock.calls.filter(c => c[0] === "session_shutdown");
+    const shutdownCalls = mockApi.on.mock.calls.filter((c: any) => c[0] === "session_shutdown");
     expect(shutdownCalls.length).toBeGreaterThan(0);
   });
 });

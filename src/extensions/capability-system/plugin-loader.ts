@@ -182,7 +182,7 @@ export class PluginLoader {
       promptGuidelines: [...capMan.promptGuidelines, `Call: { capability: '${capabilityId}', params: {...} }`],
       parameters: capMan.inputSchema,
       outputSchema: capMan.outputSchema,
-      execute: (toolCallId: string, params: any, signal: AbortSignal | undefined, onUpdate: (u: any) => void, ctx: any) => {
+      execute: (toolCallId: string, params: Record<string, any>, signal: AbortSignal | null | undefined, onUpdate: ((data: any) => void) | null | undefined, ctx: any) => {
         return executeFn(params, ctx).then((result: any) => ({
           ...result,
           details: { ...result.details, capabilityId }

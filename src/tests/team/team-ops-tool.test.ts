@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTeamOpsTool } from '../../extensions/team/team-ops-tool.js';
 import { AgentTeam } from '../../extensions/team/team-manager.js';
 

@@ -47,7 +47,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     realFs.realMkdirSync(cwd, { recursive: true });
     vi.stubEnv('HOME', tempHome);
     vi.clearAllMocks();
-    existsSync.mockReturnValue(false);
+    (existsSync as any).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -111,7 +111,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
           { id: 'task-20', content: 'T20', status: 'pending' }
         ]},
         { id: 'phase-100', name: 'P100', tasks: [] }
-      ];
+      ] as any;
       state.replacePhases(newPhases);
       const phases = state.getPhases();
       expect(phases).toHaveLength(2);
@@ -187,14 +187,14 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     });
 
     it('update empty ids is no-op', () => {
-      const start = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
+      const start = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }] as any;
       const { phases, errors } = applyOp(start, 1, 1, { update: { ids: [] } });
       expect(phases[0].tasks[0].content).toBe('T');
       expect(errors).toEqual([]);
     });
 
     it('update unknown task id records error but continues', () => {
-      const start = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
+      const start = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }] as any;
       const { phases, errors } = applyOp(start, 1, 1, { update: { ids: ['missing'] } });
       expect(errors).toContain('Task "missing" not found');
       expect(phases[0].tasks).toHaveLength(1);
@@ -212,7 +212,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
         { id: 't1', content: 'T1', status: 'pending' },
         { id: 't2', content: 'T2', status: 'in_progress' },
         { id: 't3', content: 'T3', status: 'completed' }
-      ]}];
+      ]}] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toContain('2 remaining');
       expect(summary).toContain('1 completed');
@@ -222,7 +222,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
       const phases = [{ id: 'p', name: 'P', tasks: [
         { id: 't1', content: 'T1', status: 'completed' },
         { id: 't2', content: 'T2', status: 'abandoned' }
-      ]}];
+      ]}] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toContain('0 remaining');
       expect(summary).toContain('1 completed'); // only status === 'completed'
@@ -232,7 +232,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
       const phases = [
         { id: 'p1', name: 'P1', tasks: [] },
         { id: 'p2', name: 'P2', tasks: [{ id: 't', content: 'T', status: 'pending' }] }
-      ];
+      ] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toContain('Remaining items (1)');
       expect(summary).not.toContain('P1');
@@ -241,7 +241,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     it('shows details for in_progress task', () => {
       const phases = [{ id: 'p', name: 'P', tasks: [
         { id: 't', content: 'T', status: 'in_progress', details: 'line1\nline2' }
-      ]}];
+      ]}] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toContain('line1');
       expect(summary).toContain('line2');
@@ -330,31 +330,31 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
 
   describe('File operations failures', () => {
     it('loadFromFile returns false when file missing', async () => {
-      existsSync.mockReturnValue(false);
+      (existsSync as any).mockReturnValue(false);
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
     });
 
     it('loadFromFile returns false on JSON parse error', async () => {
-      existsSync.mockReturnValue(true);
-      promises.readFile.mockResolvedValue('invalid json');
+      (existsSync as any).mockReturnValue(true);
+      (promises.readFile as any).mockResolvedValue('invalid json');
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
     });
 
     it('loadFromFile returns false on invalid version', async () => {
-      existsSync.mockReturnValue(true);
-      promises.readFile.mockResolvedValue(JSON.stringify({ version: 2, phases: [] }));
+      (existsSync as any).mockReturnValue(true);
+      (promises.readFile as any).mockResolvedValue(JSON.stringify({ version: 2, phases: [] }));
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
     });
 
     it('loadFromFile returns false on read exception', async () => {
-      existsSync.mockReturnValue(true);
-      promises.readFile.mockRejectedValue(new Error('read failed'));
+      (existsSync as any).mockReturnValue(true);
+      (promises.readFile as any).mockRejectedValue(new Error('read failed'));
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
@@ -363,24 +363,24 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     it('saveToFile propagates mkdir error', async () => {
       const state = new TodoState();
       state.addPhase('P', [{ content: 'T' }]);
-      promises.mkdir.mockRejectedValue(new Error('no perms'));
+      (promises.mkdir as any).mockRejectedValue(new Error('no perms'));
       await expect(state.saveToFile(cwd)).rejects.toThrow('no perms');
     });
 
     it('saveToFile propagates writeFile error', async () => {
       const state = new TodoState();
       state.addPhase('P', [{ content: 'T' }]);
-      promises.mkdir.mockResolvedValue({});
-      promises.writeFile.mockRejectedValue(new Error('disk full'));
+      (promises.mkdir as any).mockResolvedValue({});
+      (promises.writeFile as any).mockRejectedValue(new Error('disk full'));
       await expect(state.saveToFile(cwd)).rejects.toThrow('disk full');
     });
 
     it('saveToFile propagates rename error', async () => {
       const state = new TodoState();
       state.addPhase('P', [{ content: 'T' }]);
-      promises.mkdir.mockResolvedValue({});
-      promises.writeFile.mockResolvedValue({});
-      promises.rename.mockRejectedValue(new Error('rename failed'));
+      (promises.mkdir as any).mockResolvedValue({});
+      (promises.writeFile as any).mockResolvedValue({});
+      (promises.rename as any).mockRejectedValue(new Error('rename failed'));
       await expect(state.saveToFile(cwd)).rejects.toThrow('rename failed');
     });
   });

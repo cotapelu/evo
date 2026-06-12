@@ -65,7 +65,7 @@ describe('subtool_loader', () => {
 
     beforeEach(() => {
       // Create mock SDK tools
-      mockHttpTool = createMockSdkTool(async (toolCallId, params, signal, onUpdate, ctx) => ({
+      mockHttpTool = createMockSdkTool(async (toolCallId: any, params: any, signal: any, onUpdate: any, ctx: any) => ({
         isError: false,
         content: [{ type: 'text', text: 'HTTP response' }],
         details: { url: params.args.command },
@@ -100,7 +100,7 @@ describe('subtool_loader', () => {
       const mockCtx = createMockContext('/cwd');
       // Mock the tool cache to return our mock Http tool
       const originalExecute = tool.execute;
-      tool.execute = async (toolCallId: string, params: any, signal, onUpdate, ctx) => {
+      tool.execute = async (toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) => {
         if (params.subtool === 'http') {
           return await mockHttpTool.execute(toolCallId, params, signal, onUpdate, ctx);
         }
@@ -138,7 +138,7 @@ describe('subtool_loader', () => {
 
     it('should handle successful ls delegation', async () => {
       const mockCtx = createMockContext('/cwd');
-      tool.execute = async (toolCallId: string, params: any, signal, onUpdate, ctx) => {
+      tool.execute = async (toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) => {
         if (params.subtool === 'ls') {
           return await mockLsTool.execute(toolCallId, params, signal, onUpdate, ctx);
         }
@@ -156,7 +156,7 @@ describe('subtool_loader', () => {
 
     it('should handle successful find delegation', async () => {
       const mockCtx = createMockContext('/cwd');
-      tool.execute = async (toolCallId: string, params: any, signal, onUpdate, ctx) => {
+      tool.execute = async (toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) => {
         if (params.subtool === 'find') {
           return await mockFindTool.execute(toolCallId, params, signal, onUpdate, ctx);
         }
@@ -173,7 +173,7 @@ describe('subtool_loader', () => {
 
     it('should handle successful grep delegation', async () => {
       const mockCtx = createMockContext('/cwd');
-      tool.execute = async (toolCallId: string, params: any, signal, onUpdate, ctx) => {
+      tool.execute = async (toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) => {
         if (params.subtool === 'grep') {
           return await mockGrepTool.execute(toolCallId, params, signal, onUpdate, ctx);
         }
@@ -190,7 +190,7 @@ describe('subtool_loader', () => {
 
     it('should handle successful read delegation', async () => {
       const mockCtx = createMockContext('/cwd');
-      tool.execute = async (toolCallId: string, params: any, signal, onUpdate, ctx) => {
+      tool.execute = async (toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) => {
         if (params.subtool === 'read') {
           return await mockReadTool.execute(toolCallId, params, signal, onUpdate, ctx);
         }
@@ -211,7 +211,7 @@ describe('subtool_loader', () => {
         content: [{ type: 'text', text: 'Tool error' }],
       }));
       const mockCtx = createMockContext('/cwd');
-      tool.execute = async (toolCallId: string, params: any, signal, onUpdate, ctx) => {
+      tool.execute = async (toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) => {
         if (params.subtool === 'read') {
           return await mockErrorTool.execute(toolCallId, params, signal, onUpdate, ctx);
         }

@@ -13,7 +13,7 @@ describe("Dev Plugin Capabilities", () => {
     await capabilitySystemExtension(api);
 
     const { getGlobalLoader } = await import("@extensions/capability-system/plugin-loader.js");
-    loader = getGlobalLoader();
+    loader = getGlobalLoader()!;
     if (!loader) throw new Error("Loader not initialized");
   });
 
@@ -26,7 +26,7 @@ describe("Dev Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.test");
+      const cap = registry.get("dev.test")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -37,7 +37,7 @@ describe("Dev Plugin Capabilities", () => {
       const mockExec = vi.fn().mockResolvedValue({ code: 0, stdout: "ok", stderr: "" });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.test");
+      const cap = registry.get("dev.test")!;
       await cap.execute("test-id", { files: ["src/foo.test.ts", "src/bar.test.ts"] }, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(mockExec).toHaveBeenCalledWith("bash", expect.arrayContaining(["-c", `npm test -- "src/foo.test.ts" "src/bar.test.ts"`]), expect.any(Object));
@@ -53,7 +53,7 @@ describe("Dev Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.format");
+      const cap = registry.get("dev.format")!;
       const result = await cap.execute("test-id", { files: ["src/index.ts", "lib/util.ts"] }, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -70,7 +70,7 @@ describe("Dev Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.audit");
+      const cap = registry.get("dev.audit")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -81,7 +81,7 @@ describe("Dev Plugin Capabilities", () => {
       const mockExec = vi.fn().mockResolvedValue({ code: 0, stdout: "fixed", stderr: "" });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.audit");
+      const cap = registry.get("dev.audit")!;
       await cap.execute("test-id", { fix: true }, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(mockExec).toHaveBeenCalledWith("npm", ["audit", "--", "fix"], expect.any(Object));
@@ -97,7 +97,7 @@ describe("Dev Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.build");
+      const cap = registry.get("dev.build")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -114,7 +114,7 @@ describe("Dev Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.scripts");
+      const cap = registry.get("dev.scripts")!;
       const result = await cap.execute("test-id", { action: "list" }, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -125,7 +125,7 @@ describe("Dev Plugin Capabilities", () => {
       const mockExec = vi.fn().mockResolvedValue({ code: 0, stdout: "starting...", stderr: "" });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.scripts");
+      const cap = registry.get("dev.scripts")!;
       await cap.execute("test-id", { action: "run", script: "start" }, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(mockExec).toHaveBeenCalledWith("npm", ["run", "start"], expect.any(Object));
@@ -133,7 +133,7 @@ describe("Dev Plugin Capabilities", () => {
 
     it("should error if script missing for run action", async () => {
       const registry = getCapabilityRegistry();
-      const cap = registry.get("dev.scripts");
+      const cap = registry.get("dev.scripts")!;
       const result = await cap.execute("test-id", { action: "run" }, null, null, { cwd: "/project", exec: vi.fn() } as any);
 
       expect(result.isError).toBe(true);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PiclawPackageManager } from '../piclaw-package-manager.js';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -34,13 +34,13 @@ describe('PiclawPackageManager Error Handling', () => {
     it('should reject when runCommandCapture throws', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       vi.spyOn(pm as any, 'runCommandCapture').mockRejectedValue(new Error('network fail'));
-      await expect(pm.getLatestNpmVersion('pkg')).rejects.toThrow('network fail');
+      await expect((pm as any).getLatestNpmVersion('pkg')).rejects.toThrow('network fail');
     });
 
     it('should reject on invalid JSON output', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       vi.spyOn(pm as any, 'runCommandCapture').mockResolvedValue({ code: 0, stdout: 'invalid-json', stderr: '' });
-      await expect(pm.getLatestNpmVersion('pkg')).rejects.toThrow(); // SyntaxError expected
+      await expect((pm as any).getLatestNpmVersion('pkg')).rejects.toThrow(); // SyntaxError expected
     });
   });
 
@@ -81,7 +81,7 @@ describe('PiclawPackageManager Error Handling', () => {
   describe('resolveExtensionSources with missing package', () => {
     it('should return empty arrays for non-existent source', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const result = await pm.resolveExtensionSources(['npm:nonexistent'], { includeDependencies: false });
+      const result = await (pm as any).resolveExtensionSources(['npm:nonexistent'], { includeDependencies: false });
       expect(result.extensions).toHaveLength(0);
       expect(result.skills).toHaveLength(0);
       expect(result.prompts).toHaveLength(0);
@@ -100,7 +100,7 @@ describe('PiclawPackageManager Error Handling', () => {
       mkdirSync(join(globalPath, '..'), { recursive: true });
       writeFileSync(globalPath, JSON.stringify(invalidSettings));
       const entries = (pm as any).getConfiguredEntries();
-      expect(entries.find(e => e.source === 'npm:good')).toBeDefined();
+      expect(entries.find((e: any) => e.source === 'npm:good')).toBeDefined();
     });
   });
 });

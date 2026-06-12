@@ -22,7 +22,7 @@ describe("Team Widget Toggle (per-session)", () => {
     registerTeamWidget(mockApi);
 
     // Extract session_start handler
-    const sessionStartCall = mockApi.on.mock.calls.find(c => c[0] === "session_start");
+    const sessionStartCall = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start");
     expect(sessionStartCall).toBeDefined();
     sessionStartHandler = sessionStartCall[1];
 

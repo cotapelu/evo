@@ -35,9 +35,9 @@ describe("Team Widget Lifecycle", () => {
   });
 
   it("triggers refresh on session_start and renders team status", async () => {
-    const mockApi = { on: vi.fn(), registerTool: vi.fn() };
+    const mockApi = { on: vi.fn(), registerTool: vi.fn() } as any;
     registerTeamWidget(mockApi);
-    const handler = mockApi.on.mock.calls.find(c => c[0] === "session_start")?.[1];
+    const handler = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start")?.[1];
     expect(handler).toBeDefined();
     await handler(null, ctx);
     // refreshWidget should have called setWidget at least twice: initial and after team status? Actually startWidget triggers refresh, which calls setWidget multiple times possibly. At least one call.
@@ -53,11 +53,11 @@ describe("Team Widget Lifecycle", () => {
   });
 
   it("registers session_shutdown listener", async () => {
-    const mockApi = { on: vi.fn(), registerTool: vi.fn() };
+    const mockApi = { on: vi.fn(), registerTool: vi.fn() } as any;
     registerTeamWidget(mockApi);
-    const handler = mockApi.on.mock.calls.find(c => c[0] === "session_start")?.[1];
+    const handler = mockApi.on.mock.calls.find((c: any) => c[0] === "session_start")?.[1];
     await handler(null, ctx);
-    const shutdownCalls = mockApi.on.mock.calls.filter(c => c[0] === "session_shutdown");
+    const shutdownCalls = mockApi.on.mock.calls.filter((c: any) => c[0] === "session_shutdown");
     expect(shutdownCalls.length).toBeGreaterThan(0);
   });
 });

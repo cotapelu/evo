@@ -257,7 +257,7 @@ describe("PiclawPackageManager", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       const source = { type: "git", host: "github.com", path: "user/repo" } as any;
       const runCommandSpy = vi.spyOn(pm as any, 'runCommand').mockRejectedValue(new Error("git clone failed"));
-      await expect(pm.installGit(source, "user")).rejects.toThrow("git clone failed");
+      await expect((pm as any).installGit(source, "user")).rejects.toThrow("git clone failed");
       // Should attempt clone with targetDir under agentDir/git
       expect(runCommandSpy).toHaveBeenCalledWith(
         "git",
@@ -271,7 +271,7 @@ describe("PiclawPackageManager", () => {
       const targetDir = join(agentDir, "git", "github.com", "user", "repo");
       mkdirSync(targetDir, { recursive: true });
       const runCommandSpy = vi.spyOn(pm as any, 'runCommand');
-      await pm.installGit(source, "user");
+      await (pm as any).installGit(source, "user");
       expect(runCommandSpy).not.toHaveBeenCalled();
     });
   });
@@ -502,7 +502,7 @@ describe("PiclawPackageManager", () => {
       const getLatestSpy = vi.spyOn(pm as any, 'getLatestNpmVersion').mockResolvedValue("2.0.0");
       await (pm as any).updateNpm(parsed, 'project');
       expect(runNpmSpy).toHaveBeenCalledTimes(1);
-      const args = runNpmSpy.mock.calls[0][0];
+      const args = runNpmSpy.mock.calls[0][0] as string[];
       expect(args[0]).toBe("install");
       expect(args).toContain(parsed.name);
       expect(args).toContain("--prefix");
@@ -623,9 +623,9 @@ describe("PiclawPackageManager", () => {
       mkdirSync(dirname(globalSettingsPath), { recursive: true });
       writeFileSync(globalSettingsPath, JSON.stringify(corrupt));
       const entries = (pm as any).getConfiguredEntries();
-      const sources = entries.map(e => e.source);
+      const sources = entries.map((e: any) => e.source);
       expect(sources).toContain("npm:good");
-      expect(sources.filter(s => s === null)).toHaveLength(0);
+      expect(sources.filter((s: any) => s === null)).toHaveLength(0);
     });
   });
 });

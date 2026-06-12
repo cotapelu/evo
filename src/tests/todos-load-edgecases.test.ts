@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TodoState } from '../extensions/tools/todos-tool.js';
 import { mkdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

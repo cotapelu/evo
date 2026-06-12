@@ -127,7 +127,7 @@ describe('todos tool', () => {
       vi.mocked(existsSync).mockReturnValue(true);
       // readFile with encoding returns a string
       vi.mocked(promises.readFile).mockResolvedValue(JSON.stringify(fileData));
-      const loaded = await state.loadFromFile();
+      const loaded = await state.loadFromFile('/cwd');
       expect(loaded).toBe(true);
       expect(state.getPhases()).toHaveLength(1);
       expect(state.getPhases()[0].name).toBe('P1');
@@ -136,14 +136,14 @@ describe('todos tool', () => {
 
     it('loadFromFile returns false if no file', async () => {
       vi.mocked(existsSync).mockReturnValue(false);
-      const loaded = await state.loadFromFile();
+      const loaded = await state.loadFromFile('/cwd');
       expect(loaded).toBe(false);
     });
 
     it('saveToFile writes to file', async () => {
       state.addPhase('Phase 1', [{ content: 'Task' }]);
-      vi.mocked(promises.mkdir).mockResolvedValue({});
-      await state.saveToFile();
+      vi.mocked(promises.mkdir).mockResolvedValue(undefined);
+      await state.saveToFile('/cwd');
       expect(vi.mocked(promises.writeFile)).toHaveBeenCalled();
     });
 
@@ -396,7 +396,7 @@ describe('todos tool', () => {
     beforeEach(() => {
       // Reset fs mocks to default successful state
       vi.mocked(existsSync).mockReturnValue(false);
-      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.mkdir).mockResolvedValue(undefined);
       vi.mocked(promises.writeFile).mockResolvedValue(undefined as any);
     });
 

@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { TeamRegistry, AgentTeam } from '../extensions/team/team-manager.js';
 
 describe('TeamManager coverage gaps', () => {

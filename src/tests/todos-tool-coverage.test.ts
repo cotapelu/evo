@@ -48,7 +48,7 @@ describe('TodosTool Coverage Gaps', () => {
     realFs.realMkdirSync(cwd, { recursive: true });
     vi.stubEnv('HOME', tempHome);
     vi.clearAllMocks();
-    existsSync.mockReturnValue(false);
+    (existsSync as any).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -153,8 +153,8 @@ describe('TodosTool Coverage Gaps', () => {
 
   describe('TodoState file operations', () => {
     it('loadFromFile returns false on JSON parse error', async () => {
-      existsSync.mockReturnValue(true);
-      promises.readFile.mockResolvedValue('invalid json');
+      (existsSync as any).mockReturnValue(true);
+      (promises.readFile as any).mockResolvedValue('invalid json');
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
@@ -162,17 +162,17 @@ describe('TodosTool Coverage Gaps', () => {
     });
 
     it('saveToFile propagates write error', async () => {
-      promises.mkdir.mockResolvedValue({});
-      promises.writeFile.mockRejectedValue(new Error('disk full'));
+      (promises.mkdir as any).mockResolvedValue({});
+      (promises.writeFile as any).mockRejectedValue(new Error('disk full'));
       const state = new TodoState();
       state.addPhase('P1', [{ content: 'T' }]);
       await expect(state.saveToFile(cwd)).rejects.toThrow('disk full');
     });
 
     it('saveToFile propagates rename error', async () => {
-      promises.mkdir.mockResolvedValue({});
-      promises.writeFile.mockResolvedValue({});
-      promises.rename.mockRejectedValue(new Error('rename failed'));
+      (promises.mkdir as any).mockResolvedValue({});
+      (promises.writeFile as any).mockResolvedValue({});
+      (promises.rename as any).mockRejectedValue(new Error('rename failed'));
       const state = new TodoState();
       state.addPhase('P1', [{ content: 'T' }]);
       await expect(state.saveToFile(cwd)).rejects.toThrow('rename failed');

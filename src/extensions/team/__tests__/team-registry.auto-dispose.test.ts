@@ -1,4 +1,5 @@
 import { TeamRegistry, AgentTeam } from '../team-manager.js';
+import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 
 describe('TeamRegistry Auto-Dispose', () => {
   let registry: TeamRegistry;

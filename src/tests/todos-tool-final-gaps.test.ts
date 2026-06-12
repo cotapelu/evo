@@ -41,7 +41,7 @@ describe('TodosTool Final Coverage Gaps', () => {
     realFs.realMkdirSync(cwd, { recursive: true });
     vi.stubEnv('HOME', tempHome);
     vi.clearAllMocks();
-    existsSync.mockReturnValue(false);
+    (existsSync as any).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -55,7 +55,7 @@ describe('TodosTool Final Coverage Gaps', () => {
 
   describe('TodoState file operations - success', () => {
     it('loadFromFile returns true and populates state from valid file', async () => {
-      existsSync.mockReturnValue(true);
+      (existsSync as any).mockReturnValue(true);
       const persisted = {
         version: 1,
         phases: [
@@ -65,7 +65,7 @@ describe('TodosTool Final Coverage Gaps', () => {
         nextPhaseId: 3,
         updatedAt: new Date().toISOString(),
       };
-      promises.readFile.mockResolvedValue(JSON.stringify(persisted));
+      (promises.readFile as any).mockResolvedValue(JSON.stringify(persisted));
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(true);
@@ -79,9 +79,9 @@ describe('TodosTool Final Coverage Gaps', () => {
     });
 
     it('saveToFile success writes and renames', async () => {
-      promises.mkdir.mockResolvedValue({});
-      promises.writeFile.mockResolvedValue({});
-      promises.rename.mockResolvedValue({});
+      (promises.mkdir as any).mockResolvedValue({});
+      (promises.writeFile as any).mockResolvedValue({});
+      (promises.rename as any).mockResolvedValue({});
       const state = new TodoState();
       state.addPhase('P1', [{ content: 'T1' }, { content: 'T2' }]);
       expect(state.nextTaskId).toBe(3);
@@ -98,7 +98,7 @@ describe('TodosTool Final Coverage Gaps', () => {
       const phases = [{ id: 'p1', name: 'P1', tasks: [
         { id: 't1', content: 'T1', status: 'pending' },
         { id: 't2', content: 'T2', status: 'completed' }
-      ]}];
+      ]}] as any;
       const { phases: result, errors } = applyOp(phases, 1, 1, { remove_task: { id: 't1' } });
       expect(result[0].tasks).toHaveLength(1);
       expect(result[0].tasks[0].id).toBe('t2');
@@ -109,7 +109,7 @@ describe('TodosTool Final Coverage Gaps', () => {
       const phases = [
         { id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T1', status: 'pending' }] },
         { id: 'p2', name: 'P2', tasks: [{ id: 't2', content: 'T2', status: 'completed' }] }
-      ];
+      ] as any;
       const { phases: result } = applyOp(phases, 1, 1, { list: {} });
       expect(result).toEqual(phases);
     });
@@ -133,7 +133,7 @@ describe('TodosTool Final Coverage Gaps', () => {
     it('shows details for in_progress task multi-line', () => {
       const phases = [{ id: 'p', name: 'P', tasks: [
         { id: 't', content: 'T', status: 'in_progress', details: 'line1\nline2' }
-      ]}];
+      ]}] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toContain('line1');
       expect(summary).toContain('line2');
@@ -143,7 +143,7 @@ describe('TodosTool Final Coverage Gaps', () => {
       const phases = [{ id: 'p', name: 'P', tasks: [
         { id: 't1', content: 'T1', status: 'completed' },
         { id: 't2', content: 'T2', status: 'pending' }
-      ]}];
+      ]}] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toMatch(/\d+\/\d+ tasks complete/);
     });

@@ -1,4 +1,5 @@
 import { AgentTeam, TeamRegistry } from '../team-manager.js';
+import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
 describe('AgentTeam Workspace Concurrency', () => {

@@ -6,6 +6,7 @@
  */
 
 import { AgentTeam } from '../team-manager.js';
+import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 
 // Mock runtime minimal
 const mockRuntime = (id: string) => ({ session: { sessionId: id } } as any);

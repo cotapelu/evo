@@ -19,7 +19,7 @@ describe("Security & System Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("security.scan");
+      const cap = registry.get("security.scan")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -30,7 +30,7 @@ describe("Security & System Plugin Capabilities", () => {
       const mockExec = vi.fn().mockResolvedValue({ code: 0, stdout: "Scan complete", stderr: "" });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("security.scan");
+      const cap = registry.get("security.scan")!;
       await cap.execute("test-id", { path: "/src" }, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(mockExec).toHaveBeenCalledWith("npx", ["secret-scanner", "--path", "/src"], expect.any(Object));
@@ -46,7 +46,7 @@ describe("Security & System Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("system.metrics");
+      const cap = registry.get("system.metrics")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -61,7 +61,7 @@ describe("Security & System Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("system.metrics");
+      const cap = registry.get("system.metrics")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/project", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);

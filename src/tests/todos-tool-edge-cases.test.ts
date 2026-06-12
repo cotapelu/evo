@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { normalizeParams, applyOp, getLatestTodoPhasesFromEntries, TodoState, formatSummary, registerTodosTool } from '../extensions/tools/todos-tool.js';
 import { existsSync, mkdirSync, rmSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
@@ -52,25 +52,25 @@ describe('TodosTool Edge Cases', () => {
     });
 
     it('should clear all phases when delete specified', () => {
-      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }];
+      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }] as any;
       const result = applyOp(phases, 1, 1, { delete: true });
       expect(result.phases.length).toBe(0);
     });
 
     it('should list phases and return them unchanged', () => {
-      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }];
+      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }] as any;
       const result = applyOp(phases, 1, 1, { list: true });
       expect(result.phases.length).toBe(1);
     });
 
     it('should error update with invalid status', () => {
-      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }];
+      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }] as any;
       const result = applyOp(phases, 1, 1, { update: { id: 't1', status: 'invalid' } });
       expect(result.errors[0]).toContain('Invalid status: invalid');
     });
 
     it('should update task content successfully', () => {
-      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }];
+      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c', status: 'pending' }] }] as any;
       const result = applyOp(phases, 1, 1, { update: { id: 't1', content: 'new content' } });
       expect(result.errors).toHaveLength(0);
       expect(result.phases[0].tasks[0].content).toBe('new content');
@@ -81,7 +81,7 @@ describe('TodosTool Edge Cases', () => {
       const phases = [{ id: 'phase-1', name: 'P', tasks: [
         { id: 't1', content: 'c', status: 'pending' },
         { id: 't2', content: 'c2', status: 'pending' }
-      ] }];
+      ] }] as any;
       const result = applyOp(phases, 1, 1, { update: { ids: ['t1','t2'], status: 'completed' } });
       expect(result.errors).toHaveLength(0);
       expect(result.phases[0].tasks[0].status).toBe('completed');
@@ -89,13 +89,13 @@ describe('TodosTool Edge Cases', () => {
     });
 
     it('should error when update matches no tasks', () => {
-      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c' }] }];
+      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c' }] }] as any;
       const result = applyOp(phases, 1, 1, { update: { ids: ['nonexistent'], status: 'completed' } });
       expect(result.errors).toContain('No valid tasks found to update');
     });
 
     it('should remove task successfully', () => {
-      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c' }] }];
+      const phases = [{ id: 'phase-1', name: 'P', tasks: [{ id: 't1', content: 'c' }] }] as any;
       const result = applyOp(phases, 1, 1, { remove_task: { id: 't1' } });
       expect(result.errors).toHaveLength(0);
       expect(result.phases[0].tasks).toHaveLength(0);
@@ -131,7 +131,7 @@ describe('TodosTool Edge Cases', () => {
       const state = new TodoState();
       const phases = [
         { id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 't1', status: 'pending' }] },
-      ];
+      ] as any;
       const entries = [
         { type: 'message', message: { role: 'toolResult', toolName: 'todos', details: { phases }, isError: false } },
       ];
@@ -187,7 +187,7 @@ describe('TodosTool Edge Cases', () => {
     it('should show remaining tasks correctly', () => {
       const phases = [
         { id: 'phase-1', name: 'P1', tasks: [{ id: 't1', content: 'c1', status: 'pending' }] },
-      ];
+      ] as any;
       const summary = formatSummary(phases, []);
       expect(summary).toContain('remaining');
       expect(summary).toContain('t1');

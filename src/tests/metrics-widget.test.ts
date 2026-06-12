@@ -62,7 +62,7 @@ describe("Metrics Widget Registration", () => {
       signal: null,
     } as any;
     handler(null, ctx);
-    const shutdownCalls = mockApi.on.mock.calls.filter(c => c[0] === "session_shutdown");
+    const shutdownCalls = mockApi.on.mock.calls.filter((c: any) => c[0] === "session_shutdown");
     expect(shutdownCalls.length).toBeGreaterThan(0);
   });
 });

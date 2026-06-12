@@ -15,12 +15,13 @@ Last Updated: 2026-06-12
 - [x] Introduce path aliases in Vitest config (`@extensions`), updated plugin tests to use alias
 - [x] Eliminated DEP0147 warnings by removing obsolete `secret-scanner-tool.test.ts` that used deprecated `fs.rmdir`
 - [x] Fix test regressions (normalizeParams expectations, saveToFile assertion) after adding `as const`
+- [x] Clean up typecheck errors in test files (implicit any, missing imports)
 
 ## In Progress
 - (none)
 
 ## Upcoming
-- [ ] Clean up typecheck errors in test files (implicit any, missing imports)
+
 - [ ] Centralize test mock factories to reduce duplication
 
 ## Notes

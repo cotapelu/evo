@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { PiclawConfig } from "../../config/config-manager.js";
+import type { PiclawConfig } from "../config/config-manager";
 
 // Re-export functions to test (we'll inline them for isolation)
 interface SettingItem {

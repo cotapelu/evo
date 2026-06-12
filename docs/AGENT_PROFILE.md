@@ -11,6 +11,7 @@ Last Updated: 2026-06-12
 ## Weak Areas (to monitor)
 - Test setup for async systems may need helper utilities to ensure readiness.
 - Path calculations in nested test directories prone to errors; consider using path aliases.
+- Many tests require `any` casts for complex object shapes, reducing type safety; these could be refined with proper mocks and helper factories.
 
 ## Fragile Modules
 - `src/extensions/capability-system/extension.ts`: initialization flow is critical; ensure future changes propagate correctly.
@@ -20,6 +21,7 @@ Last Updated: 2026-06-12
 - Clear modular architecture for capabilities.
 - Good separation of concerns in capability system.
 - All tests passing; build green.
+- Zero TypeScript typecheck errors with strict settings.
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

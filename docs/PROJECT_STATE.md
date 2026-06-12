@@ -5,7 +5,7 @@ Last Updated: 2026-06-12
 ## Status
 ✅ Build: Green
 ✅ Tests: All passing (98 suites, 935 tests, 3 skipped)
-⚠️ Warnings: Deprecation warnings from Node.js (fs.rmdir) – non-critical.
+✅ Typecheck: Clean (0 errors)
 
 ## Key Components
 - **Capability System**: Now properly initializes plugins asynchronously and exposes global loader. All built-in plugins (dev, git, security, system) load correctly.
@@ -13,7 +13,7 @@ Last Updated: 2026-06-12
 - **Test Suite**: Fully green. Previously failing tests fixed.
 
 ## Known Issues
-- Node.js deprecation warnings (`fs.rmdir`) should be addressed by replacing with `fs.rm` in dependencies (external).
+
 - No functional issues.
 
 ## Next Steps (High Impact)

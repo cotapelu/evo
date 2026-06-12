@@ -18,7 +18,7 @@ describe("Git Plugin Capabilities", () => {
 
     // Get loader and load git plugin
     const { getGlobalLoader } = await import("@extensions/capability-system/plugin-loader.js");
-    loader = getGlobalLoader();
+    loader = getGlobalLoader()!;
     if (!loader) throw new Error("Loader not initialized");
   });
 
@@ -32,8 +32,7 @@ describe("Git Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("git.status");
-      expect(cap).toBeDefined();
+      const cap = registry.get("git.status")!; // non-null
 
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/repo", exec: mockExec } as any);
 
@@ -52,7 +51,7 @@ describe("Git Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("git.status");
+      const cap = registry.get("git.status")!;
       const result = await cap.execute("test-id", {}, null, null, { cwd: "/", exec: mockExec } as any);
 
       expect(result.isError).toBe(true);
@@ -69,7 +68,7 @@ describe("Git Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("git.diff");
+      const cap = registry.get("git.diff")!;
       const result = await cap.execute("test-id", { revision: "HEAD~1" }, null, null, { cwd: "/repo", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -81,7 +80,7 @@ describe("Git Plugin Capabilities", () => {
       const mockExec = vi.fn().mockResolvedValue({ code: 0, stdout: "diff HEAD", stderr: "" });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("git.diff");
+      const cap = registry.get("git.diff")!;
       await cap.execute("test-id", {}, null, null, { cwd: "/repo", exec: mockExec } as any);
 
       expect(mockExec).toHaveBeenCalledWith("git", expect.arrayContaining(["diff", "HEAD", "--color=never"]), expect.any(Object));
@@ -97,7 +96,7 @@ describe("Git Plugin Capabilities", () => {
       });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("git.commit");
+      const cap = registry.get("git.commit")!;
       const result = await cap.execute("test-id", { message: "feat: add login" }, null, null, { cwd: "/repo", exec: mockExec } as any);
 
       expect(result.isError).toBe(false);
@@ -108,7 +107,7 @@ describe("Git Plugin Capabilities", () => {
       const mockExec = vi.fn().mockResolvedValue({ code: 0, stdout: "committed", stderr: "" });
 
       const registry = getCapabilityRegistry();
-      const cap = registry.get("git.commit");
+      const cap = registry.get("git.commit")!;
       await cap.execute("test-id", { message: "fix: bug", all: true }, null, null, { cwd: "/repo", exec: mockExec } as any);
 
       expect(mockExec).toHaveBeenCalledWith("git", ["commit", "-a", "-m", "fix: bug"], expect.any(Object));

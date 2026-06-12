@@ -7,6 +7,10 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": ".",
+    "paths": {
+      "@extensions/*": ["src/extensions/*"]
+    },
+    "types": ["node", "vitest"],
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,

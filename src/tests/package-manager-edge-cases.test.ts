@@ -31,18 +31,18 @@ describe('PiclawPackageManager Edge Cases', () => {
   describe('validateParsed', () => {
     it('should throw for npm source with empty name', () => {
       const parsed = { type: 'npm', name: '', pinned: false } as any;
-      expect(() => pm.validateParsed(parsed)).toThrow('Invalid npm source: missing package name');
+      expect(() => (pm as any).validateParsed(parsed)).toThrow('Invalid npm source: missing package name');
     });
 
     it('should throw for git source with path lacking slash', () => {
       // Simulate parsing git:github.com/repo but if path were just 'repo' (missing user)
       const parsed = { type: 'git', host: 'github.com', path: 'repo', ref: undefined } as any;
-      expect(() => pm.validateParsed(parsed)).toThrow('path must be in the form host/path');
+      expect(() => (pm as any).validateParsed(parsed)).toThrow('path must be in the form host/path');
     });
 
     it('should throw for git source with missing host', () => {
       const parsed = { type: 'git', host: '', path: 'something', ref: undefined } as any;
-      expect(() => pm.validateParsed(parsed)).toThrow('missing host or path');
+      expect(() => (pm as any).validateParsed(parsed)).toThrow('missing host or path');
     });
   });
 
@@ -74,13 +74,13 @@ describe('PiclawPackageManager Edge Cases', () => {
   describe('runCommandCapture', () => {
     it('should reject when spawn throws', async () => {
       const pmAny = pm as any;
-      mockSpawn.mockImplementation(() => { throw new Error('spawn error'); });
+      (mockSpawn as any).mockImplementation(() => { throw new Error('spawn error'); });
       await expect(pmAny.runCommandCapture('test', ['cmd'], {})).rejects.toThrow('spawn error');
     });
 
     it('should reject when child exits with non-zero code', async () => {
       const pmAny = pm as any;
-      mockSpawn.mockReturnValue({
+      (mockSpawn as any).mockReturnValue({
         on: vi.fn((event, cb) => { if (event === 'close') cb(1); }),
         stdout: { on: vi.fn() },
       } as any);
@@ -89,7 +89,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
     it('should return stdout string on success', async () => {
       const pmAny = pm as any;
-      mockSpawn.mockReturnValue({
+      (mockSpawn as any).mockReturnValue({
         stdout: { on: vi.fn((event, cb) => cb('output')) },
         on: vi.fn((event, cb) => { if (event === 'close') cb(0); }),
       } as any);
@@ -128,7 +128,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
     it('should get global npm root via spawnSync', () => {
       const pmAny = pm as any;
-      mockSpawnSync.mockReturnValue({ status: 0, stdout: '/global/path', stderr: '' } as any);
+      (mockSpawnSync as any).mockReturnValue({ status: 0, stdout: '/global/path', stderr: '' } as any);
       const root = pmAny.getGlobalNpmRoot();
       expect(root).toBe('/global/path');
     });
@@ -172,7 +172,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   it('should get global npm root fallback when npm root -g fails', () => {
     const pmAny = pm as any;
-    mockSpawnSync.mockReturnValue({ status: 1, stdout: '', stderr: '' } as any);
+    (mockSpawnSync as any).mockReturnValue({ status: 1, stdout: '', stderr: '' } as any);
     const root = pmAny.getGlobalNpmRoot();
     const expected = join(os.homedir(), '.npm', 'global', 'node_modules');
     expect(root).toBe(expected);
@@ -329,9 +329,9 @@ describe('PiclawPackageManager Edge Cases', () => {
       pm.addSourceToSettings('npm:global-pkg', { local: false });
       // Add to project (cwd)
       pm.addSourceToSettings({ source: 'git:gh/u/repo', filter: {} }, { local: true });
-      const entries = pm.getConfiguredEntries();
-      expect(entries.some(e => e.source === 'npm:global-pkg' && e.scope === 'user')).toBe(true);
-      expect(entries.some(e => e.source === 'git:gh/u/repo' && e.scope === 'project')).toBe(true);
+      const entries = (pm as any).getConfiguredEntries();
+      expect(entries.some((e: any) => e.source === 'npm:global-pkg' && e.scope === 'user')).toBe(true);
+      expect(entries.some((e: any) => e.source === 'git:gh/u/repo' && e.scope === 'project')).toBe(true);
     });
 
     it('should handle local install when path exists', async () => {

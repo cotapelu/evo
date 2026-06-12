@@ -30,7 +30,7 @@ describe('team_run tool', () => {
   it('requires tasks array', async () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
-    const result = await tool.execute('id', {} as any, undefined, undefined, ctx);
+    const result = (await tool.execute('id', {} as any, undefined, undefined, ctx)) as any;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('tasks must be a non-empty array');
   });
@@ -38,14 +38,14 @@ describe('team_run tool', () => {
   it('rejects non-array tasks', async () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
-    const result = await tool.execute('id', { tasks: 'not array' } as any, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { tasks: 'not array' } as any, undefined, undefined, ctx)) as any;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('tasks must be a non-empty array');
   });
 
   it('requires parentRuntime in context', async () => {
     const ctx = {} as any;
-    const result = await tool.execute('id', { tasks: ['t1'] }, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { tasks: ['t1'] }, undefined, undefined, ctx)) as any;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('No runtime context');
   });
@@ -54,10 +54,10 @@ describe('team_run tool', () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
     const mockTeam = { id: 'team-json', roles: ['agent'], dispose: vi.fn().mockResolvedValue(undefined) };
-    bootPiclawTeam.mockResolvedValue(mockTeam);
-    executeTeamTasks.mockResolvedValue(undefined);
+    (bootPiclawTeam as any).mockResolvedValue(mockTeam);
+    (executeTeamTasks as any).mockResolvedValue(undefined);
 
-    const result = await tool.execute('id', '{"tasks":["t1"]}' as any, undefined, undefined, ctx);
+    const result = (await tool.execute('id', '{"tasks":["t1"]}' as any, undefined, undefined, ctx)) as any;
     expect(result.isError).toBe(false);
     expect(bootPiclawTeam).toHaveBeenCalledWith(parent, { teamSize: undefined, teamRoles: undefined });
     expect(executeTeamTasks).toHaveBeenCalledWith(mockTeam, ['t1'], undefined, {});
@@ -72,10 +72,10 @@ describe('team_run tool', () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
     const mockTeam = { id: 'team-default', roles: ['a', 'b'], dispose: vi.fn().mockResolvedValue(undefined) };
-    bootPiclawTeam.mockResolvedValue(mockTeam);
-    executeTeamTasks.mockResolvedValue(undefined);
+    (bootPiclawTeam as any).mockResolvedValue(mockTeam);
+    (executeTeamTasks as any).mockResolvedValue(undefined);
 
-    const result = await tool.execute('id', { tasks: ['Task 1', 'Task 2'] }, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { tasks: ['Task 1', 'Task 2'] }, undefined, undefined, ctx)) as any;
 
     expect(bootPiclawTeam).toHaveBeenCalledWith(parent, { teamSize: undefined, teamRoles: undefined });
     expect(executeTeamTasks).toHaveBeenCalledWith(mockTeam, ['Task 1', 'Task 2'], undefined, {});
@@ -90,9 +90,9 @@ describe('team_run tool', () => {
   it('passes custom teamSize and teamRoles', async () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
-    const mockTeam = { dispose: vi.fn().mockResolvedValue(undefined) };
-    bootPiclawTeam.mockResolvedValue(mockTeam);
-    executeTeamTasks.mockResolvedValue(undefined);
+    const mockTeam = { dispose: vi.fn().mockResolvedValue(undefined) } as any;
+    (bootPiclawTeam as any).mockResolvedValue(mockTeam);
+    (executeTeamTasks as any).mockResolvedValue(undefined);
     mockTeam.getResults = vi.fn().mockResolvedValue(['Result']);
 
     await tool.execute('id', { tasks: ['t1'], teamSize: 3, teamRoles: ['planner', 'coder'] }, undefined, undefined, ctx);
@@ -105,9 +105,9 @@ describe('team_run tool', () => {
   it('handles bootPiclawTeam failure', async () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
-    bootPiclawTeam.mockRejectedValue(new Error('Boot failed'));
+    (bootPiclawTeam as any).mockRejectedValue(new Error('Boot failed'));
 
-    const result = await tool.execute('id', { tasks: ['t1'] }, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { tasks: ['t1'] }, undefined, undefined, ctx)) as any;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Team execution failed');
     expect(result.details.error).toBe('Boot failed');
@@ -117,10 +117,10 @@ describe('team_run tool', () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent } as any;
     const mockTeam = { dispose: vi.fn().mockResolvedValue(undefined) };
-    bootPiclawTeam.mockResolvedValue(mockTeam);
-    executeTeamTasks.mockRejectedValue(new Error('Task exec failed'));
+    (bootPiclawTeam as any).mockResolvedValue(mockTeam);
+    (executeTeamTasks as any).mockRejectedValue(new Error('Task exec failed'));
 
-    const result = await tool.execute('id', { tasks: ['t1'] }, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { tasks: ['t1'] }, undefined, undefined, ctx)) as any;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Team execution failed');
     expect(result.details.error).toBe('Task exec failed');
@@ -137,8 +137,8 @@ describe('team_run tool', () => {
     const onUpdate = (u: any) => updates.push(u);
 
     const mockTeam = { id: 'team-acc', roles: ['a'], dispose: vi.fn().mockResolvedValue(undefined) };
-    bootPiclawTeam.mockResolvedValue(mockTeam);
-    executeTeamTasks.mockResolvedValue(undefined);
+    (bootPiclawTeam as any).mockResolvedValue(mockTeam);
+    (executeTeamTasks as any).mockResolvedValue(undefined);
 
     await tool.execute('id', { tasks: ['t1'] }, undefined, onUpdate, ctx);
 
@@ -165,7 +165,7 @@ describe('team_run tool', () => {
     mockRegistry.get.mockReturnValue(mockTeam);
     (TeamRegistry.getInstance as any).mockReturnValue(mockRegistry);
 
-    const result = await tool.execute('id', { teamId: 'team-1' }, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { teamId: 'team-1' }, undefined, undefined, ctx)) as any;
 
     expect(mockRegistry.get).toHaveBeenCalledWith('team-1');
     expect(mockRegistry.resetAutoDisposeTimer).toHaveBeenCalledWith('team-1');
@@ -185,7 +185,7 @@ describe('team_run tool', () => {
     mockRegistry.get.mockReturnValue(undefined);
     (TeamRegistry.getInstance as any).mockReturnValue(mockRegistry);
 
-    const result = await tool.execute('id', { teamId: 'missing' }, undefined, undefined, ctx);
+    const result = (await tool.execute('id', { teamId: 'missing' }, undefined, undefined, ctx)) as any;
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Team with ID missing not found');
