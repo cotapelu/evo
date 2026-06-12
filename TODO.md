@@ -45,6 +45,7 @@ Last Updated: 2026-06-12
 - [x] Reduce `any` casts in tests
   - Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`
   - Updated `git-capabilities.test.ts`, `dev-capabilities.test.ts`, and `security-system-capabilities.test.ts` to use typed mocks
+  - Refactored `provider-command.test.ts` to use mockImplementation instead of casts
   - All plugin capability tests now free of `as any` casts; other test suites to follow
 
 ## In Progress

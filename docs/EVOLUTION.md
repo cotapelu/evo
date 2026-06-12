@@ -133,6 +133,9 @@ Last Updated: 2026-06-12
 - [x] Document extension initialization sequence.
 - [x] Centralize test mock factories to avoid duplication.
 - [x] Add integration test to verify extension initialization under watch mode.
+- [x] Reduce `as any` casts in tests: typed mock-factory, cleaned plugin capability tests (git, dev, security-system), and refactored provider-command to use mockImplementation.
+
+## Anticipated Technical Debt
 
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
