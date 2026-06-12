@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import extensionsIndex from '../extensions/index.js';
+import extensionsIndex from '@extensions/index.js';
 import { createMockExtensionAPI } from './utils/mock-factory.js';
 
 describe('extensions/index', () => {

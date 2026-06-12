@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { registerTeamWidget } from "../extensions/team/team-widget";
-import { TeamRegistry } from "../extensions/team/team-manager";
+import { registerTeamWidget } from "@extensions/team/team-widget";
+import { TeamRegistry } from "@extensions/team/team-manager";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock TeamRegistry

@@ -8,36 +8,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock dependencies before importing the module under test
-vi.mock('../extensions/providers/kilo-provider.js', () => ({
+vi.mock('@extensions/providers/kilo-provider.js', () => ({
   registerKiloProvider: vi.fn(),
 }));
 
-vi.mock('../extensions/tools/index.js', () => ({
+vi.mock('@extensions/tools/index.js', () => ({
   registerTodosTool: vi.fn(),
   registerMemoryTool: vi.fn(),
   registerUniversalTool: vi.fn(),
 }));
 
-vi.mock('../extensions/auto-memory.js', () => ({
+vi.mock('@extensions/auto-memory.js', () => ({
   default: vi.fn(),
 }));
 
-vi.mock('../extensions/hooks/auto-continue.js', () => ({
+vi.mock('@extensions/hooks/auto-continue.js', () => ({
   default: vi.fn(),
 }));
 
-vi.mock('../extensions/tools/subtool-loader', () => ({
+vi.mock('@extensions/tools/subtool-loader', () => ({
   createSubLoaderToolDefinition: vi.fn().mockReturnValue({ name: 'mock-tool' }),
   registerSubToolLoaderExtension: vi.fn(),
 }));
 
 // Now import the module after mocks are set up
-import extensionIndex from '../extensions/index.js';
+import extensionIndex from '@extensions/index.js';
 import { createMockExtensionAPI } from './utils/mock-factory.js';
-import { registerKiloProvider } from '../extensions/providers/kilo-provider.js';
-import { registerTodosTool, registerMemoryTool, registerUniversalTool } from '../extensions/tools/index.js';
-import { registerSubToolLoaderExtension } from '../extensions/tools/subtool-loader';
-import autoContinueExtension from '../extensions/hooks/auto-continue.js';
+import { registerKiloProvider } from '@extensions/providers/kilo-provider.js';
+import { registerTodosTool, registerMemoryTool, registerUniversalTool } from '@extensions/tools/index.js';
+import { registerSubToolLoaderExtension } from '@extensions/tools/subtool-loader';
+import autoContinueExtension from '@extensions/hooks/auto-continue.js';
 
 describe('extensions/index', () => {
   beforeEach(() => {

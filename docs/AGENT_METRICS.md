@@ -3,8 +3,8 @@
 Last Updated: 2026-06-12
 
 ## Session Summary
-- Iterations: 5
-- Tasks Completed: 5 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories)
+- Iterations: 6
+- Tasks Completed: 6 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias)
 
 ## Test Metrics
 - Total Test Suites: 98
@@ -33,4 +33,10 @@ Last Updated: 2026-06-12
 - Created `src/tests/utils/mock-factory.ts` with reusable mock factories.
 - Migrated team widget tests and plugin capability tests to use the factory.
 - Reduced duplication and improved maintainability of test setup.
-- Work in progress: remaining tests still use inline mocks.
+- All tests now use the factory where appropriate.
+
+## Import Alias Migration
+- Migrated all test files from relative imports of `../extensions/` to the `@extensions` path alias.
+- Updated both regular imports and `vi.mock` calls across 80+ test files.
+- Significantly reduces fragility of test imports when files are moved.
+- Fully automated via a custom script.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { registerMemoryTool } from "../extensions/tools/memory-tool";
+import { registerMemoryTool } from "@extensions/tools/memory-tool";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 function createMockApi(): any {

@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createSubLoaderToolDefinition } from '../extensions/tools/subtool-loader';
+import { createSubLoaderToolDefinition } from '@extensions/tools/subtool-loader';
 
 // Mock context that mimics ExtensionContext but with mocked tool execution
 const createMockContext = (cwd = '/tmp') => ({

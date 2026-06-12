@@ -18,10 +18,8 @@ Last Updated: 2026-06-12
 
 ## Next Steps (High Impact)
 1. Add `waitForInitialization` helper to simplify testing of async components.
-2. Consider migrating relative test imports to path aliases to reduce fragility.
-3. Review `extension.ts` for proper error handling and logging.
-4. Document the plugin loading lifecycle for future contributors.
-5. Migrate remaining tests to central mock factory to eliminate duplication.
+2. Review `extension.ts` for proper error handling and logging.
+3. Document the plugin loading lifecycle for future contributors.
 
 ## Environment
 - Node.js: likely v18+ (based on deprecation warnings)

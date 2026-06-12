@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { registerUniversalTool } from "../extensions/tools/universal-tool.js";
+import { registerUniversalTool } from "@extensions/tools/universal-tool.js";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock the entire package to replace createBashToolDefinition

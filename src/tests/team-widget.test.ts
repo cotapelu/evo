@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
 
 // Mock TeamRegistry
-vi.mock('../extensions/team/team-manager.js', () => ({
+vi.mock('@extensions/team/team-manager.js', () => ({
   TeamRegistry: {
     getInstance: vi.fn(() => ({
       getAll: vi.fn(() => new Map()) // empty teams
@@ -10,7 +10,7 @@ vi.mock('../extensions/team/team-manager.js', () => ({
   }
 }));
 
-import { toggleTeamWidget, getTeamWidgetEnabled, registerTeamWidget } from "../extensions/team/team-widget.js";
+import { toggleTeamWidget, getTeamWidgetEnabled, registerTeamWidget } from "@extensions/team/team-widget.js";
 
 describe("Team Widget Toggle (per-session)", () => {
   let mockApi: any;

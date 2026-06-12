@@ -18,6 +18,9 @@ Last Updated: 2026-06-12
 - [x] Clean up typecheck errors in test files (implicit any, missing imports)
 - [x] Centralize test mock factories to reduce duplication
   - Created mock-factory.ts and migrated team widget and plugin tests to use it.
+- [x] Migrate all test imports to path alias (@extensions)
+  - Replaced relative `../extensions/` imports and `vi.mock` calls across 80+ test files.
+  - Completed via automated script.
 
 ## In Progress
 - (none)

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EntryDetailView } from "../extensions/commands/session-tree-command";
+import { EntryDetailView } from "@extensions/commands/session-tree-command";
 
 function fakeTheme() {
   return { fg: (color: string, text: string) => text };

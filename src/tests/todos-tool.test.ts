@@ -30,7 +30,7 @@ import {
   TodoItem,
   getLatestTodoPhasesFromEntries,
   registerTodosTool,
-} from '../extensions/tools/todos-tool.js';
+} from '@extensions/tools/todos-tool.js';
 
 const { existsSync, mkdirSync, promises } = fs;
 

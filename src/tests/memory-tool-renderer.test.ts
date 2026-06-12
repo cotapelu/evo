@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { registerMemoryTool } from "../extensions/tools/memory-tool";
+import { registerMemoryTool } from "@extensions/tools/memory-tool";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
 import { Text } from "@earendil-works/pi-tui";
 

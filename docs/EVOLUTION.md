@@ -55,6 +55,12 @@ Last Updated: 2026-06-12
 - Updated `TODO.md` and `PROJECT_STATE.md` to reflect progress.
 - Maintained 100% test pass rate and typecheck clean.
 
+### Ninth Round
+- Completed migration of all test imports to the `@extensions` path alias.
+- Replaced relative `../extensions/` imports and `vi.mock` paths with alias across 80+ test files.
+- Reduced risk of import path errors when restructuring directories.
+- Maintained 100% test pass rate and typecheck clean throughout.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

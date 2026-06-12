@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { normalizeParams, applyOp, getLatestTodoPhasesFromEntries, TodoState, formatSummary, registerTodosTool } from '../extensions/tools/todos-tool.js';
+import { normalizeParams, applyOp, getLatestTodoPhasesFromEntries, TodoState, formatSummary, registerTodosTool } from '@extensions/tools/todos-tool.js';
 import { existsSync, mkdirSync, rmSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 
