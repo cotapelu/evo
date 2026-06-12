@@ -27,6 +27,7 @@ export class PluginLoader {
   private resolveCache: Map<string, { module: any; timestamp: number }> = new Map();
   private watchHandles: Map<string, { close: () => void }> = new Map();
   private reloadTimers: Map<string, NodeJS.Timeout> = new Map();
+  private newPluginTimers: Map<string, NodeJS.Timeout> = new Map();
   private rootWatcher: { close: () => void } | null = null;
   private loadPromise: Promise<PluginLoaderStats> | null = null;
   private isLoaded = false;
@@ -234,21 +235,46 @@ export class PluginLoader {
   private startWatchMode(pluginsDir: string): void {
     // Root watcher to detect new plugin folders and deletions
     this.rootWatcher = watch(pluginsDir, { recursive: false }, (event: string, filename: string | null) => {
-      if (filename && event === 'rename') {
-        const pluginPath = join(pluginsDir, filename);
-        const pluginExists = existsSync(pluginPath);
-        if (pluginExists) {
-          // New plugin folder created (or renamed into view)
-          if (existsSync(join(pluginPath, MANIFEST_FILENAME))) {
-            // Load directly (not debounced) for new plugin
-            this.loadPlugin(filename).catch(console.error);
-          }
-        } else {
-          // Plugin folder was deleted
-          this.unloadPlugin(filename);
-        }
+      if (!filename) return;
+      if (event !== 'rename') return;
+
+      const pluginPath = join(pluginsDir, filename);
+      const pluginExists = existsSync(pluginPath);
+      if (pluginExists) {
+        // New plugin folder created - schedule load with debounce to wait for manifest
+        this.scheduleNewPluginLoad(filename);
+      } else {
+        // Plugin folder was deleted
+        this.unloadPlugin(filename);
       }
     });
+  }
+
+  private scheduleNewPluginLoad(pluginFolder: string): void {
+    // Clear any pending load for this plugin
+    const existing = this.newPluginTimers.get(pluginFolder);
+    if (existing) {
+      clearTimeout(existing);
+    }
+
+    const timer = setTimeout(async () => {
+      this.newPluginTimers.delete(pluginFolder);
+      const pluginPath = join(this.options.pluginsDir, pluginFolder);
+      const manifestPath = join(pluginPath, MANIFEST_FILENAME);
+
+      // Only load if manifest exists now
+      if (existsSync(manifestPath)) {
+        try {
+          await this.loadPlugin(pluginFolder);
+        } catch (err) {
+          console.error(`[PluginLoader] Delayed load failed for ${pluginFolder}:`, err);
+        }
+      } else {
+        console.warn(`[PluginLoader] Manifest not found for ${pluginFolder} after delay, skipping`);
+      }
+    }, 500); // 500ms debounce allows file system operations to complete
+
+    this.newPluginTimers.set(pluginFolder, timer);
   }
 
   private watchSinglePlugin(pluginPath: string, pluginFolder: string): void {
@@ -284,6 +310,12 @@ export class PluginLoader {
       clearTimeout(timer);
     }
     this.reloadTimers.clear();
+
+    // Clear all pending new plugin load timers
+    for (const timer of this.newPluginTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.newPluginTimers.clear();
 
     // Unload all plugins (collect keys first to avoid mutation during iteration)
     const pluginIds = Array.from(this.loadedPlugins.keys());

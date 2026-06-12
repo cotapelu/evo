@@ -30,12 +30,15 @@ Last Updated: 2026-06-12
 - [x] Add `waitForInitialization` helper to simplify testing of async components
 - [x] Improve PluginLoader watch mode: debounced reload, deletion handling, per-plugin watcher lifecycle
 - [x] Add integration tests for watch mode (plugin deletion detection, manifest change reload)
+- [x] Enable hot-reload for capability execute files
+  - Modified PluginLoader.dynamicImport to clear Node ES module cache before import
+  - Combined with watch mode, file changes to execute/renderer modules now reload correctly
+  - Developers can edit capability code and see changes without restart
 
 ## In Progress
 - (none)
 
 ## Upcoming
-- Hot-reload for execute file changes (requires addressing ES module caching)
 - Robust new plugin creation detection (improve race handling)
 
 ## Notes

@@ -95,6 +95,14 @@ Last Updated: 2026-06-12
 - **Impact**: LLMs now immediately see all available capabilities in the tool definition without needing to call `system.capabilities` first. Tool is self-documenting and reduces friction.
 - Build green, all plugin capability tests pass (dev, git, security-system).
 
+### Fourteenth Round (Hot-Reload for Execute Files)
+- Modified `PluginLoader.dynamicImport()` to clear Node.js ES module cache before importing:
+  - Clears internal `module._cache` entry for the file URL, enabling true hot-reload during development.
+  - Combined with existing watch mode (debounced 200ms), any change to `execute` or `renderer` files now reloads the plugin correctly.
+  - Developers can edit capability code and see changes immediately without restarting the agent.
+- Updated `watchSinglePlugin` comment to reflect full hot-reload coverage.
+- Maintains zero typecheck errors and all tests passing.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
@@ -108,7 +116,6 @@ Last Updated: 2026-06-12
 
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
-- ES module caching prevents hot-reload of execute file changes; requires using internal APIs or switching to CJS for plugins (not yet implemented).
 
 ## Quality Targets
 - Maintain ≥80% test coverage (currently high).

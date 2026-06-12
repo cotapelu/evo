@@ -21,7 +21,7 @@ Last Updated: 2026-06-12
 ## Strengths
 - Comprehensive test coverage (99 suites, 936 tests).
 - Clear modular architecture for capabilities.
-- Robust PluginLoader with watch mode: debounced reloads, deletion handling, and per-plugin watcher lifecycle.
+- Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, and hot-reload for execute files via ES module cache clearing.
 - Good separation of concerns in capability system.
 - All tests passing; build green.
 - Zero TypeScript typecheck errors with strict settings.
