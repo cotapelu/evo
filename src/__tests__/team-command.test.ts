@@ -33,8 +33,8 @@ describe("Team Command", () => {
     });
 
     it("should toggle team widget and notify", async () => {
-      (getTeamWidgetEnabled as any).mockReturnValue(false);
-      (toggleTeamWidget as any).mockReturnValue(true);
+      vi.mocked(getTeamWidgetEnabled).mockReturnValue(false);
+      vi.mocked(toggleTeamWidget).mockReturnValue(true);
 
       const api = createMockApi();
       registerTeamCommand(api);
@@ -48,8 +48,8 @@ describe("Team Command", () => {
     });
 
     it("should handle toggle to false", async () => {
-      (getTeamWidgetEnabled as any).mockReturnValue(true);
-      (toggleTeamWidget as any).mockReturnValue(false);
+      vi.mocked(getTeamWidgetEnabled).mockReturnValue(true);
+      vi.mocked(toggleTeamWidget).mockReturnValue(false);
 
       const api = createMockApi();
       registerTeamCommand(api);
