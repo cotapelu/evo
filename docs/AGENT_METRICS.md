@@ -4,7 +4,7 @@ Last Updated: 2026-06-12
 
 ## Session Summary
 - Iterations: 5
-- Tasks Completed: 4 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup)
+- Tasks Completed: 5 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories)
 
 ## Test Metrics
 - Total Test Suites: 98

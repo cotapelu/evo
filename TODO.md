@@ -16,10 +16,11 @@ Last Updated: 2026-06-12
 - [x] Eliminated DEP0147 warnings by removing obsolete `secret-scanner-tool.test.ts` that used deprecated `fs.rmdir`
 - [x] Fix test regressions (normalizeParams expectations, saveToFile assertion) after adding `as const`
 - [x] Clean up typecheck errors in test files (implicit any, missing imports)
+- [x] Centralize test mock factories to reduce duplication
+  - Created mock-factory.ts and migrated team widget and plugin tests to use it.
 
 ## In Progress
-- Centralize test mock factories to reduce duplication
-  - Created mock-factory.ts and migrated team widget and plugin tests to use it
+- (none)
 
 ## Upcoming
 
