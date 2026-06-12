@@ -42,7 +42,7 @@ export function createMockTeamRegistry(overrides?: any): any {
  * Creates a mock ExtensionContext with optional overrides.
  */
 export function createMockContext(overrides?: any): any {
-  const base: ExtensionContext = {
+  const base: any = {
     cwd: process.cwd(),
     ui: {
       setWidget: vi.fn(),

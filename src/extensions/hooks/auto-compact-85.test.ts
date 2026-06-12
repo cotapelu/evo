@@ -23,7 +23,7 @@ describe('auto-compact-85 hook', () => {
     const handler = vi.fn(); // will be the registered callback
 
     const mockPi = {
-      on: (event: string, cb: Function) => {
+      on: (event: string, cb: any) => {
         if (event === 'turn_end') handler.mockImplementation(cb);
       }
     };
@@ -45,7 +45,7 @@ describe('auto-compact-85 hook', () => {
     const handler = vi.fn();
 
     const mockPi = {
-      on: (event: string, cb: Function) => {
+      on: (event: string, cb: any) => {
         if (event === 'turn_end') handler.mockImplementation(cb);
       }
     };
@@ -65,7 +65,7 @@ describe('auto-compact-85 hook', () => {
     const handler = vi.fn();
 
     const mockPi = {
-      on: (event: string, cb: Function) => {
+      on: (event: string, cb: any) => {
         if (event === 'turn_end') handler.mockImplementation(cb);
       }
     };

@@ -26,7 +26,7 @@ describe('AgentTeam Backoff & Retry', () => {
   it('should apply backoff when task is released with retry', async () => {
     await team.initialize(['task1']);
     // Agent-1 claims task
-    const idx = await team.claimTask('agent-1');
+    const idx = (await team.claimTask('agent-1'))!;
     expect(idx).toBe(0);
 
     // Simulate release with error causing retry (by using handleAgentFailure)
@@ -35,12 +35,12 @@ describe('AgentTeam Backoff & Retry', () => {
     const status = await team.getTeamStatus();
     expect(status.tasks[0].status).toBe('pending');
     expect(status.tasks[0].retryCount).toBe(1);
-    expect(status.tasks[0].retryAvailableAt).toBeGreaterThan(Date.now() + 900);
+    expect((status.tasks[0].retryAvailableAt as number)).toBeGreaterThan(Date.now() + 900);
   });
 
   it('should increment retryCount on each failure (manual backoff expiry)', async () => {
     await team.initialize(['task1']);
-    const idx = await team.claimTask('agent-1');
+    const idx = (await team.claimTask('agent-1'))!;
     expect(idx).toBe(0);
 
     // Fail first time
@@ -52,7 +52,7 @@ describe('AgentTeam Backoff & Retry', () => {
     task1.retryAvailableAt = 0;
 
     // Re-claim
-    const idx2 = await team.claimTask('agent-1');
+    const idx2 = (await team.claimTask('agent-1'))!;
     expect(idx2).toBe(0);
 
     // Fail second time
@@ -63,7 +63,7 @@ describe('AgentTeam Backoff & Retry', () => {
     task2.retryAvailableAt = 0;
 
     // Re-claim
-    const idx3 = await team.claimTask('agent-1');
+    const idx3 = (await team.claimTask('agent-1'))!;
     expect(idx3).toBe(0);
 
     // Fail third time -> should mark failed

@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerMetricsCommand } from "../extensions/commands/metrics-command.js";
 import { toggleMetricsWidget, getMetricsWidgetEnabled } from "../extensions/metrics/metrics-widget.js";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 // Mock metrics-widget
 vi.mock("../extensions/metrics/metrics-widget.js", () => ({
@@ -17,9 +18,7 @@ const createMockCtx = () => ({
   },
 });
 
-const createMockApi = () => ({
-  registerCommand: vi.fn(),
-});
+const createMockApi = () => createMockExtensionAPI();
 
 describe("Metrics Command", () => {
   beforeEach(() => {
@@ -34,8 +33,8 @@ describe("Metrics Command", () => {
     });
 
     it("should toggle metrics widget and notify shown", async () => {
-      getMetricsWidgetEnabled.mockReturnValue(false);
-      toggleMetricsWidget.mockReturnValue(true);
+      (getMetricsWidgetEnabled as any).mockReturnValue(false);
+      (toggleMetricsWidget as any).mockReturnValue(true);
 
       const api = createMockApi();
       registerMetricsCommand(api);
@@ -49,8 +48,8 @@ describe("Metrics Command", () => {
     });
 
     it("should toggle to false and notify hidden", async () => {
-      getMetricsWidgetEnabled.mockReturnValue(true);
-      toggleMetricsWidget.mockReturnValue(false);
+      (getMetricsWidgetEnabled as any).mockReturnValue(true);
+      (toggleMetricsWidget as any).mockReturnValue(false);
 
       const api = createMockApi();
       registerMetricsCommand(api);

@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerSettingsCommand } from "../extensions/commands/settings-command.js";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 // Mock config manager completely (no direct import)
 vi.mock("../../config/config-manager.js", () => ({
@@ -42,7 +43,7 @@ const createMockCtx = (overrides = {}) => ({
   ...overrides,
 });
 
-const createMockApi = () => ({ registerCommand: vi.fn() });
+const createMockApi = () => createMockExtensionAPI();
 
 describe("Settings Command", () => {
   beforeEach(() => {

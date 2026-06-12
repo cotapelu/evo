@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerSessionTreeCommand } from "../extensions/commands/session-tree-command.js";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 // Mock SDK and TUI
 vi.mock("@earendil-works/pi-coding-agent", () => ({
@@ -37,7 +38,7 @@ const createMockCtx = (overrides = {}) => ({
   ...overrides,
 });
 
-const createMockApi = () => ({ registerCommand: vi.fn() });
+const createMockApi = () => createMockExtensionAPI();
 
 describe("Session Tree Command", () => {
   beforeEach(() => {

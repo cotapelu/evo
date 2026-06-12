@@ -4,7 +4,7 @@ Last Updated: 2026-06-12
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (98 suites, 935 tests, 3 skipped)
+✅ Tests: All passing (98 suites, 934 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -17,9 +17,8 @@ Last Updated: 2026-06-12
 - No functional issues.
 
 ## Next Steps (High Impact)
-1. Add `waitForInitialization` helper to simplify testing of async components.
-2. Review `extension.ts` for proper error handling and logging.
-3. Document the plugin loading lifecycle for future contributors.
+1. Review `extension.ts` for proper error handling and logging.
+2. Document the plugin loading lifecycle for future contributors.
 
 ## Environment
 - Node.js: likely v18+ (based on deprecation warnings)

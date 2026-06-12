@@ -298,4 +298,16 @@ let globalLoader: PluginLoader | null = null;
 export function setGlobalLoader(loader: PluginLoader): void { globalLoader = loader; }
 export function getGlobalLoader(): PluginLoader | null { return globalLoader; }
 
+/**
+ * Helper for tests: wait until the capability system has finished loading plugins.
+ * Throws if the system was not initialized (extensionsAggregator not yet run).
+ */
+export async function waitForInitialization(): Promise<void> {
+  const loader = getGlobalLoader();
+  if (!loader) {
+    throw new Error("Capability system not initialized. Ensure the capabilitySystemExtension has been called.");
+  }
+  await loader.waitForLoad();
+}
+
 export default PluginLoader;

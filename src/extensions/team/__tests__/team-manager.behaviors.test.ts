@@ -86,7 +86,7 @@ describe('AgentTeam Behaviors', () => {
       team.getWorkspace().set('k1', 'v1', 'agent-1');
       team.getWorkspace().set('k2', 'v2', 'agent-2');
       expect(team.getWorkspace().list()).toHaveLength(2);
-      await team.workspaceClear();
+      await (team as any).workspaceClear();
       expect(team.getWorkspace().list()).toHaveLength(0);
     });
 

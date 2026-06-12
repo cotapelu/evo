@@ -1,6 +1,7 @@
 import { registerBranchSummaryRenderer } from "../extensions/renderers/branch-summary-renderer.js";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { Text } from "@earendil-works/pi-tui";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 // Mock pi-tui Text class
 vi.mock("@earendil-works/pi-tui", () => ({
@@ -13,15 +14,13 @@ describe("Branch Summary Renderer", () => {
   let mockApi: any;
 
   beforeEach(() => {
-    mockApi = {
-      registerMessageRenderer: vi.fn(),
-    };
+    mockApi = createMockExtensionAPI({ registerMessageRenderer: vi.fn() });
   });
 
   describe("registerBranchSummaryRenderer", () => {
     it("should not register if api.registerMessageRenderer is not a function", () => {
       const apiWithoutRenderer = { registerMessageRenderer: null as any };
-      registerBranchSummaryRenderer(apiWithoutRenderer);
+      registerBranchSummaryRenderer(apiWithoutRenderer as any);
       // Nothing should be called
     });
 
@@ -41,10 +40,10 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({} as any, {}, mockTheme);
+      const result = renderer({} as any, {}, mockTheme) as any;
 
       expect(result).toBeInstanceOf(Text);
-      expect((result as Text).content).toBe("🌿 Branch point");
+      expect(result.content).toBe("🌿 Branch point");
     });
 
     it("should render full branch summary with details", () => {
@@ -67,9 +66,9 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme);
+      const result = renderer({ details } as any, {}, mockTheme) as any;
 
-      const content = (result as Text).content;
+      const content = result.content;
 
       // Check key components
       expect(content).toContain("Branch Summary");
@@ -96,9 +95,9 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme);
+      const result = renderer({ details } as any, {}, mockTheme) as any;
 
-      const content = (result as Text).content;
+      const content = result.content;
       expect(content).toContain("Additional context:");
       expect(content).toContain("Some additional string context");
     });
@@ -115,9 +114,9 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme);
+      const result = renderer({ details } as any, {}, mockTheme) as any;
 
-      const content = (result as Text).content;
+      const content = result.content;
       expect(content).toContain("From entry: entry-789");
       expect(content).toContain("─".repeat(40));
     });
@@ -134,13 +133,13 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme);
+      const result = renderer({ details } as any, {}, mockTheme) as any;
 
-      const content = (result as Text).content;
+      const content = result.content;
       expect(content).toContain("Only summary, no fromId");
       // Should not have "From entry:" section when fromId missing
       const lines = content.split("\n");
-      const hasFromEntryLine = lines.some(line => line.includes("From entry:"));
+      const hasFromEntryLine = lines.some((line: string) => line.includes("From entry:"));
       expect(hasFromEntryLine).toBe(false);
     });
 
@@ -160,9 +159,9 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme);
+      const result = renderer({ details } as any, {}, mockTheme) as any;
 
-      const content = (result as Text).content;
+      const content = result.content;
       expect(content).toContain("entry-999");
       expect(content).toContain("Additional context:");
       expect(content).toContain("complex");

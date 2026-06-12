@@ -34,7 +34,7 @@ describe("Todos Renderer", () => {
       const result = renderer({} as any, {}, mockTheme);
 
       expect(result).toBeInstanceOf(Text);
-      expect((result as Text).content).toBe("📋 Todo operation completed");
+      expect((result as any).content).toBe("📋 Todo operation completed");
     });
 
     it("should render progress bar correctly", () => {
@@ -50,7 +50,7 @@ describe("Todos Renderer", () => {
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
       const result = renderer({ details } as any, {}, mockTheme);
 
-      const content = (result as Text).content;
+      const content = (result as any).content;
       expect(content).toContain("Progress: 5/10 (50%)");
       expect(content).toContain("█".repeat(10)); // half filled bar (50% of 20)
     });
@@ -76,7 +76,7 @@ describe("Todos Renderer", () => {
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
       const result = renderer({ details } as any, {}, mockTheme);
 
-      const content = (result as Text).content;
+      const content = (result as any).content;
       expect(content).toContain("Phase 1");
       expect(content).toContain("⏳ Task 1");
       expect(content).toContain("🔄 Task 2");
@@ -98,7 +98,7 @@ describe("Todos Renderer", () => {
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
       const result = renderer({ details } as any, {}, mockTheme);
 
-      const content = (result as Text).content;
+      const content = (result as any).content;
       expect(content).toContain("Progress: 0/0 (0%)");
     });
 
@@ -114,7 +114,7 @@ describe("Todos Renderer", () => {
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
       const result = renderer({ details } as any, {}, mockTheme);
 
-      const content = (result as Text).content;
+      const content = (result as any).content;
       expect(content).toContain("Todo list retrieved");
     });
 
@@ -131,7 +131,7 @@ describe("Todos Renderer", () => {
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
       const result = renderer({ details } as any, {}, mockTheme);
 
-      const content = (result as Text).content;
+      const content = (result as any).content;
       expect(content).toContain("0%");
     });
   });

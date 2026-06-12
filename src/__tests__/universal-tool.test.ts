@@ -1,11 +1,12 @@
 import { vi, describe, it, expect } from "vitest";
 import { registerUniversalTool } from "../extensions/tools/universal-tool.js";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 vi.mock("@earendil-works/pi-tui", () => ({
   Text: class Text { constructor(public content: string) {} },
 }));
 
-const createMockApi = () => ({ registerTool: vi.fn() });
+const createMockApi = () => createMockExtensionAPI();
 
 describe("Universal Tool", () => {
   it("should register tool with correct name", () => {

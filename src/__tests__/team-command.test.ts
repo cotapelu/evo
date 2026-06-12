@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerTeamCommand } from "../extensions/commands/team-command.js";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 import { toggleTeamWidget, getTeamWidgetEnabled } from "../extensions/team/team-widget.js";
 
 // Mock team-widget module functions are already imported
@@ -17,9 +18,7 @@ const createMockCtx = () => ({
   },
 });
 
-const createMockApi = () => ({
-  registerCommand: vi.fn(),
-});
+const createMockApi = () => createMockExtensionAPI();
 
 describe("Team Command", () => {
   beforeEach(() => {
@@ -34,8 +33,8 @@ describe("Team Command", () => {
     });
 
     it("should toggle team widget and notify", async () => {
-      getTeamWidgetEnabled.mockReturnValue(false);
-      toggleTeamWidget.mockReturnValue(true);
+      (getTeamWidgetEnabled as any).mockReturnValue(false);
+      (toggleTeamWidget as any).mockReturnValue(true);
 
       const api = createMockApi();
       registerTeamCommand(api);
@@ -49,8 +48,8 @@ describe("Team Command", () => {
     });
 
     it("should handle toggle to false", async () => {
-      getTeamWidgetEnabled.mockReturnValue(true);
-      toggleTeamWidget.mockReturnValue(false);
+      (getTeamWidgetEnabled as any).mockReturnValue(true);
+      (toggleTeamWidget as any).mockReturnValue(false);
 
       const api = createMockApi();
       registerTeamCommand(api);

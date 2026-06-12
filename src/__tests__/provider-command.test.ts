@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerProviderCommand } from "../extensions/commands/provider-command.js";
+import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
 
 // Mock external dependencies
 vi.mock("@earendil-works/pi-tui", () => ({
@@ -53,9 +54,7 @@ const createMockCtx = (overrides: any = {}) => ({
   mode: "tui",
 });
 
-const createMockApi = () => ({
-  registerCommand: vi.fn(),
-});
+const createMockApi = () => createMockExtensionAPI();
 
 describe("Provider Command", () => {
   beforeEach(() => {
@@ -190,7 +189,7 @@ describe("Provider Command", () => {
         const api = createMockApi();
         registerProviderCommand(api);
         const ctx = createMockCtx();
-        ctx.modelRegistry.getAvailable = () => []; // no available
+        ctx.modelRegistry.getAvailable = (() => []) as any; // no available
 
         const handler = api.registerCommand.mock.calls[0][1].handler;
         await handler("test unknown", ctx);
