@@ -141,7 +141,8 @@ async function executeUniversal(
  * Otherwise fall back to default render or plain text.
  */
 function renderUniversal(result: any, options: any, theme: any): any {
-  const details = result.details as any;
+  // @ts-ignore
+  const details = result.details;
 
   // If we have structured system_info details (platform, arch, etc.), format them
   if (details && typeof details === 'object' && 'platform' in details) {

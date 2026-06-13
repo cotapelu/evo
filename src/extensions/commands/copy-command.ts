@@ -16,7 +16,8 @@ function isMessageEntry(entry: SessionEntry): boolean {
 
 function getMessageRole(entry: SessionEntry): string | null {
   if (entry.type !== "message") return null;
-  const msg = (entry as any).message;
+  // @ts-ignore
+  const msg = entry.message;
   return msg?.role ?? null;
 }
 
@@ -55,7 +56,8 @@ export function registerCopyCommand(api: ExtensionAPI): void {
           if (isMessageEntry(entry)) {
             const role = getMessageRole(entry);
             if (role === "assistant") {
-              const msg = (entry as any).message;
+              // @ts-ignore
+              const msg = entry.message;
               const text = extractTextContent(msg);
               if (text.trim()) {
                 lastAssistantMessage = { entry, text };

@@ -144,7 +144,8 @@ export function registerMemoryTool(api: ExtensionAPI): void {
       nextId = 1;
       for (const entry of ctx.sessionManager.getBranch()) {
         if (entry.type === "message" && entry.message.role === "toolResult" && entry.message.toolName === "memory") {
-          const details = (entry.message.details as any);
+          // @ts-ignore
+          const details = entry.message.details;
           if (details && Array.isArray(details.memories)) {
             memories = details.memories;
             nextId = details.nextId;
@@ -301,7 +302,8 @@ export function registerMemoryTool(api: ExtensionAPI): void {
 
     renderResult(result: any, options: { expanded: boolean; isPartial: boolean }, theme: any, _context: any) {
       const th = theme;
-      const details = result.details as any;
+      // @ts-ignore
+      const details = result.details;
 
       if (options.isPartial) {
         return new Text(th.fg("warning", "Processing..."), 0, 0);

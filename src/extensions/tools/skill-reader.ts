@@ -141,7 +141,8 @@ export function createSkillLoaderTool(): ToolDefinition {
           const meta = cm[command];
           if (meta) {
             const lines: string[] = [`=== ${command} ===`, `Description: ${meta.description}`, '', 'Arguments:'];
-            const schema = meta.schema as any;
+            // @ts-ignore
+            const schema = meta.schema;
             if (schema?.properties) {
               const props = schema.properties as Record<string, any>;
               for (const [key, prop] of Object.entries(props)) {

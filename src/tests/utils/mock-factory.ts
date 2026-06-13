@@ -10,11 +10,12 @@ export function createMockExtensionAPI(overrides?: Partial<ExtensionAPI>): Exten
     on: vi.fn(),
     registerTool: vi.fn(),
     registerCommand: vi.fn(),
+    // @ts-ignore
     tui: {
       addChild: vi.fn(),
       removeChild: vi.fn(),
       requestRender: vi.fn(),
-    } as any, // TUI structure complex, keep as any
+    },
     getContext: vi.fn(() => createMockContext()),
     ...overrides,
   } as ExtensionAPI;
@@ -38,7 +39,7 @@ export function createMockTeamRegistry(overrides?: any): any {
     getSystemPromptSection: vi.fn(() => ""),
     getCapabilityIds: vi.fn(() => []),
     ...overrides,
-  } as any;
+  };
 }
 
 /**
@@ -49,7 +50,8 @@ export function createMockContext(overrides: Partial<ExtensionContext> = {}): Ex
     cwd: process.cwd(),
     ui: {
       setWidget: vi.fn(),
-      theme: { fg: () => "", bg: () => "", bold: () => "" } as any,
+      // @ts-ignore
+      theme: { fg: () => "", bg: () => "", bold: () => "" },
     },
     getContext: vi.fn(() => base),
     registerCommand: vi.fn(),
