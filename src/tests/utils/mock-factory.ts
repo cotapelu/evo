@@ -5,12 +5,11 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
  * Creates a mock ExtensionAPI with optional overrides.
  * Returns a typed object to reduce `any` casts in tests.
  */
-export function createMockExtensionAPI(overrides?: Partial<ExtensionAPI>): ExtensionAPI {
-  const api: ExtensionAPI = {
+export function createMockExtensionAPI(overrides?: Partial<ExtensionAPI>): any {
+  const api = {
     on: vi.fn(),
     registerTool: vi.fn(),
     registerCommand: vi.fn(),
-    // @ts-ignore
     tui: {
       addChild: vi.fn(),
       removeChild: vi.fn(),
@@ -18,7 +17,7 @@ export function createMockExtensionAPI(overrides?: Partial<ExtensionAPI>): Exten
     },
     getContext: vi.fn(() => createMockContext()),
     ...overrides,
-  } as ExtensionAPI;
+  };
   return api;
 }
 

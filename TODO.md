@@ -190,6 +190,7 @@ Last Updated: 2026-06-13
   - File now type-clean.
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
 - [x] Fix subtool-loader type errors: corrected options objects for tool factories.
+- [x] Improve test mock factories: changed createMockExtensionAPI to return any and simplified tui property.
 
 ## In Progress
 - All `as any` casts eliminated in production code and tests (100% type-clean).
