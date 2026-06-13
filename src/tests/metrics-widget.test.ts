@@ -60,7 +60,7 @@ describe("Metrics Widget Registration", () => {
       getContextUsage: () => undefined,
       isIdle: () => true,
       signal: null,
-    } as any;
+    };
     handler(null, ctx);
     const shutdownCalls = mockApi.on.mock.calls.filter((c: any) => c[0] === "session_shutdown");
     expect(shutdownCalls.length).toBeGreaterThan(0);
