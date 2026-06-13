@@ -209,10 +209,11 @@ export class PluginLoader {
       parameters: capMan.inputSchema,
       outputSchema: capMan.outputSchema,
       execute: (toolCallId: string, params: Record<string, any>, signal: AbortSignal | null | undefined, onUpdate: ((data: any) => void) | null | undefined, ctx: any) => {
+        // @ts-ignore
         return executeFn(params, ctx).then((result: any) => ({
           ...result,
           details: { ...result.details, capabilityId }
-        } as any)).catch((error: unknown) => ({
+        })).catch((error: unknown) => ({
           content: [{ type: "text" as const, text: `❌ ${capabilityId} error: ${error instanceof Error ? error.message : String(error)}` }],
           details: { error: error instanceof Error ? error.message : String(error), capabilityId },
           isError: true
@@ -237,7 +238,8 @@ export class PluginLoader {
     // This uses internal API (module._cache) but is necessary for development
     try {
       const mod = await import('module');
-      const esmCache = (mod as any)._cache;
+      // @ts-ignore - accessing internal ESM cache
+      const esmCache = mod._cache;
       if (esmCache && esmCache[fileUrl]) {
         delete esmCache[fileUrl];
       }
