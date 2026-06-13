@@ -1,4 +1,5 @@
 import { AgentTeam } from '../team-manager.js';
+import { createMockRuntime } from './test-utils.js';
 import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 
 describe('AgentTeam Edge Cases', () => {
@@ -6,9 +7,9 @@ describe('AgentTeam Edge Cases', () => {
 
   beforeEach(() => {
     team = new AgentTeam();
-    team.registerRuntime({ session: { sessionId: 'parent' } } as any, 'parent');
-    team.registerRuntime({ session: { sessionId: 'agent1' } } as any, 'agent-1');
-    team.registerRuntime({ session: { sessionId: 'agent2' } } as any, 'agent-2');
+    team.registerRuntime(createMockRuntime(), 'parent');
+    team.registerRuntime(createMockRuntime(), 'agent-1');
+    team.registerRuntime(createMockRuntime(), 'agent-2');
   });
 
   afterEach(async () => {

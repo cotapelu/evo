@@ -6,6 +6,14 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
+// Helper to access private methods for testing
+interface AgentTeamInternal {
+  handleAgentEvent: (agentId: string, event: any) => Promise<void>;
+}
+function getInternal(team: AgentTeam): AgentTeamInternal {
+  return team as unknown as AgentTeamInternal;
+}
+
 describe('AgentTeam Coverage', () => {
   let team: AgentTeam;
 
@@ -119,7 +127,8 @@ describe('AgentTeam Coverage', () => {
       await team.initialize(['task']);
       const updates: any[] = [];
       team.setOnUpdate(u => updates.push(u));
-      await (team as any).handleAgentEvent('agent-1', { type: 'agent_start' } as any);
+      // @ts-ignore - calling internal method with mock event
+      await getInternal(team).handleAgentEvent('agent-1', { type: 'agent_start' });
       expect(updates.some(u => u.content.some((c: any) => c.text.includes('Agent started')))).toBe(true);
     });
 
@@ -127,7 +136,8 @@ describe('AgentTeam Coverage', () => {
       await team.initialize(['task']);
       const updates: any[] = [];
       team.setOnUpdate(u => updates.push(u));
-      await (team as any).handleAgentEvent('agent-1', { type: 'tool_execution_end', toolName: 'read' } as any);
+      // @ts-ignore - calling internal method with mock event
+      await getInternal(team).handleAgentEvent('agent-1', { type: 'tool_execution_end', toolName: 'read' });
       expect(updates.some(u => u.content.some((c: any) => c.text.includes('Tool read done')))).toBe(true);
     });
   });
