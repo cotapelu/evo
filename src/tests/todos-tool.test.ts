@@ -9,11 +9,11 @@ vi.mock('node:fs', () => ({
     writeFile: vi.fn(),
     mkdir: vi.fn(),
     rename: vi.fn(),
-  },
+  }
 }));
 vi.mock('node:path', () => ({
   dirname: vi.fn(() => '/dir'),
-  join: vi.fn(() => '/path/to/todos.json'),
+  join: vi.fn(() => '/path/to/todos.json')
 }));
 
 // Import mocked modules to access mock functions
@@ -31,6 +31,7 @@ import {
   getLatestTodoPhasesFromEntries,
   registerTodosTool,
 } from '@extensions/tools/todos-tool.js';
+import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 
 const { existsSync, mkdirSync, promises } = fs;
 
@@ -262,7 +263,8 @@ describe('todos tool', () => {
     });
 
     it('throws on non-object', () => {
-      expect(() => normalizeParams(42 as any)).toThrow('Parameters must be an object');
+      // @ts-ignore
+      expect(() => normalizeParams(42)).toThrow('Parameters must be an object');
     });
 
     it('parses add_phase tasks from comma string', () => {
@@ -391,13 +393,13 @@ describe('todos tool', () => {
     const createMockCtx = () => ({
       sessionManager: { getBranch: vi.fn().mockReturnValue([]) },
       hasUI: true,
-    } as any);
+    } as unknown as ExtensionContext);
 
     beforeEach(() => {
       // Reset fs mocks to default successful state
       vi.mocked(existsSync).mockReturnValue(false);
       vi.mocked(promises.mkdir).mockResolvedValue(undefined);
-      vi.mocked(promises.writeFile).mockResolvedValue(undefined as any);
+      vi.mocked(promises.writeFile).mockResolvedValue(undefined);
     });
 
     it('registers session event listeners', () => {
@@ -567,18 +569,18 @@ describe('todos tool', () => {
         sendMessage: vi.fn(),
         on: vi.fn(),
       };
-      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true } as any;
+      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true } as unknown as ExtensionContext;
       registerTodosTool(mockApi);
     });
 
     it('renderCall executes', () => {
-      const theme = { fg: () => '', bold: () => '', muted: () => '', accent: '', text: '', dim: () => '' } as any;
+      const theme = { fg: () => '', bold: () => '', muted: () => '', accent: '', text: '', dim: () => '' } as unknown as Theme;
       const rendered = capturedTool.renderCall({ add_phase: { name: 'P' } }, theme, mockCtx);
       expect(rendered).toBeDefined();
     });
 
     it('renderResult executes', () => {
-      const theme = { fg: () => '', dim: () => '', warning: '', success: '', accent: '', text: '' } as any;
+      const theme = { fg: () => '', dim: () => '', warning: '', success: '', accent: '', text: '' } as unknown as Theme;
       const details = { phases: [], storage: 'file' as const };
       const result = { content: [{ type: 'text', text: 'ok' }], details };
       const rendered = capturedTool.renderResult(result, { expanded: false, isPartial: false }, theme, mockCtx);
@@ -586,7 +588,7 @@ describe('todos tool', () => {
     });
 
     it('renderResult shows error', () => {
-      const theme = { fg: () => '', dim: () => '', error: '' } as any;
+      const theme = { fg: () => '', dim: () => '', error: '' } as unknown as Theme;
       const result = { content: [{ type: 'text', text: '' }], details: { error: 'oops' } };
       const rendered = capturedTool.renderResult(result, { expanded: false, isPartial: false }, theme, mockCtx);
       expect(rendered).toBeDefined();
