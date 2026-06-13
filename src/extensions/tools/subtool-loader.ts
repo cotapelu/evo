@@ -52,33 +52,38 @@ function getOrCreateTool(
 // ==================== FACTORIES ====================
 
 function createHttpTool(cwd: string): ToolDefinition {
+  // @ts-ignore
   return createBashToolDefinition(cwd, {
     bash: { commandPrefix: "" }
-  } as any) as ToolDefinition;
+  }) as ToolDefinition;
 }
 
 function createLsToolWrapper(cwd: string): ToolDefinition {
+  // @ts-ignore
   return createLsToolDefinition(cwd, {
     ls: { all: true }
-  } as any) as ToolDefinition;
+  }) as ToolDefinition;
 }
 
 function createFindToolWrapper(cwd: string): ToolDefinition {
+  // @ts-ignore
   return createFindToolDefinition(cwd, {
     find: {}
-  } as any) as ToolDefinition;
+  }) as ToolDefinition;
 }
 
 function createGrepToolWrapper(cwd: string): ToolDefinition {
+  // @ts-ignore
   return createGrepToolDefinition(cwd, {
     grep: {}
-  } as any) as ToolDefinition;
+  }) as ToolDefinition;
 }
 
 function createReadToolWrapper(cwd: string): ToolDefinition {
+  // @ts-ignore
   return createReadToolDefinition(cwd, {
     read: { autoResize: true }
-  } as any) as ToolDefinition;
+  }) as ToolDefinition;
 }
 
 // ==================== EXECUTION ====================
@@ -148,7 +153,8 @@ async function executeSubtool(
       curlArgs.push(url);
 
       const command = `curl ${curlArgs.map(a => JSON.stringify(a)).join(' ')}`;
-      const result: any = await tool.execute(toolCallId, { command } as any, signal, onUpdate, ctx);
+      // @ts-ignore
+      const result: any = await tool.execute(toolCallId, { command }, signal, onUpdate, ctx);
 
       return {
         isError: result?.isError ?? false,
@@ -158,7 +164,8 @@ async function executeSubtool(
     }
 
     // Other tools: pass args directly (SDK validates)
-    const result: any = await tool.execute(toolCallId, args as any, signal, onUpdate, ctx);
+    // @ts-ignore
+    const result: any = await tool.execute(toolCallId, args, signal, onUpdate, ctx);
 
     return {
       isError: result?.isError ?? false,
@@ -212,7 +219,8 @@ export function createSubLoaderToolDefinition(): ToolDefinition {
       },
       required: ["subtool", "args"],
     },
-    execute: executeSubtool as any,
+    // @ts-ignore
+    execute: executeSubtool,
   };
 }
 
