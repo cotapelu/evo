@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { TodoState } from "../extensions/tools/todos-tool";
-import type { TodoPhase } from "../utils/tool-types.js";
+import { TodoState } from "../extensions/tools/todos-tool.js";
+import type { TodoPhase } from "../extensions/tools/todos-tool.js";
 
 describe("TodoState", () => {
   let s: TodoState;

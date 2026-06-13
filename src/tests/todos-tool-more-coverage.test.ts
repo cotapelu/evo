@@ -1,5 +1,5 @@
 import { vi, describe, it, expect } from 'vitest';
-import type { TodoPhase } from '../extensions/utils/tool-types.js';
+import type { TodoPhase } from '../extensions/tools/todos-tool.js';
 
 // Mock fs
 vi.mock('node:fs', () => ({

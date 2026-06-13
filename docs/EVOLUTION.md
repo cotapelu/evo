@@ -319,6 +319,17 @@ Last Updated: 2026-06-13
 - Replaced all `as any` casts in `src/tests/package-manager.test.ts` (93 occurrences) by introducing a local `any<T>()` helper and applying systematic transformations: parenthesized casts `(x as any)` => `(any(x))`, object literal casts `{...} as any` => `any({...})`, and simple identifier/member casts `x as any` => `any(x)`.
 - All tests passing; build successful.
 
+### Sixty-Fourth Round (Tool Definitions Cleanup)
+- Refactored `memory-tool` to use proper factory pattern:
+  - Introduced `createMemoryTool(api)` returning `ToolDefinition`.
+  - Added full JSON Schema `parameters` for actions: add, list, get, delete, clear, search with properties (text, tags, id, query).
+  - Improved `promptSnippet` to `memory({ action: '<action>', ...params })`.
+  - Simplified `renderCall` implementation.
+- Refactored `universal-tool`:
+  - Enriched `parameters` schema with dynamic properties (message for echo, min/max for random, expression for calc).
+  - Updated `promptSnippet` and `promptGuidelines` for clarity.
+- All tests pass; build stable.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

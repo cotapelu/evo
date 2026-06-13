@@ -26,6 +26,7 @@ Last Updated: 2026-06-13
 - Zero TypeScript typecheck errors with strict settings.
 - Capability router tool is self-documenting: dynamically lists all registered capabilities in its guidelines, providing immediate discoverability for LLMs.
 - Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases, team-ops-renderer, package-manager.test.ts).
+- Tool definitions improved: `memory-tool` now uses factory pattern and complete parameters schema; `universal-tool` enriched parameters and prompt guidelines. Both are fully documented for LLM use.
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

@@ -17,18 +17,92 @@ import { Text } from "@earendil-works/pi-tui";
 import { Mutex } from "../utils/mutex.js";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME } from "../../config/config-manager.js";
-import type {
-  TodosParams,
-  TodoPhase,
-  TodoToolDetails,
-  TodoStatus,
-  TodoItem,
-  TodoTaskInput,
-  TodoPhaseInput,
-} from "../utils/tool-types.js";
+// --- Types (migrated from tool-types.ts) ---
+export type TodoStatus = "pending" | "in_progress" | "completed" | "abandoned";
 
-// Re-export types for external use
-export type { TodoStatus, TodoItem, TodoPhase, TodoToolDetails, TodosParams };
+export interface TodoTaskInput {
+  content: string;
+  status?: TodoStatus;
+  notes?: string;
+  details?: string;
+}
+
+export interface TodoPhaseInput {
+  name: string;
+  tasks?: TodoTaskInput[];
+}
+
+export interface TodosAddPhaseParams {
+  add_phase: TodoPhaseInput;
+}
+
+export interface TodosAddTaskParams {
+  add_task: {
+    phase: string;
+    content: string;
+    notes?: string;
+    details?: string;
+  };
+}
+
+export interface TodosUpdateParams {
+  update: {
+    id?: string;
+    ids?: string[];
+    status?: TodoStatus;
+    content?: string;
+    notes?: string;
+    details?: string;
+  };
+}
+
+export interface TodosRemoveTaskParams {
+  remove_task: { id: string };
+}
+
+export interface TodosDeleteParams {
+  delete: Record<string, never>;
+}
+
+export interface TodosListParams {
+  list: Record<string, never>;
+}
+
+export type TodosParams =
+  | TodosAddPhaseParams
+  | TodosAddTaskParams
+  | TodosUpdateParams
+  | TodosRemoveTaskParams
+  | TodosDeleteParams
+  | TodosListParams;
+
+// Result types
+export interface TodoItem {
+  id: string;
+  content: string;
+  status: TodoStatus;
+  notes?: string;
+  details?: string;
+}
+
+export interface TodoPhase {
+  id: string;
+  name: string;
+  tasks: TodoItem[];
+}
+
+export interface TodoToolDetails {
+  phases: TodoPhase[];
+  storage: "session" | "memory" | "file";
+  error?: string;
+}
+
+export interface TodoFile {
+  phases: TodoPhase[];
+  nextTaskId: number;
+  nextPhaseId: number;
+}
+
 
 // Per-session state storage
 interface TodoSessionState {
