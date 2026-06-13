@@ -6,17 +6,15 @@
  */
 
 import { AgentTeam } from '../team-manager.js';
+import { createMockRuntime } from './test-utils.js';
 import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
-
-// Mock runtime minimal
-const mockRuntime = (id: string) => ({ session: { sessionId: id } } as any);
 
 describe('AgentTeam Concurrency', () => {
   let team: AgentTeam;
 
   beforeEach(() => {
     team = new AgentTeam();
-    team.registerRuntime(mockRuntime('parent'), 'parent');
+    team.registerRuntime(createMockRuntime(), 'parent');
   });
 
   afterEach(async () => {
@@ -29,7 +27,7 @@ describe('AgentTeam Concurrency', () => {
     const agents = ['agent-1', 'agent-2', 'agent-3', 'agent-4'];
     const tasks = ['t0', 't1', 't2', 't3']; // 4 tasks for 4 agents
 
-    agents.forEach(a => team.registerRuntime(mockRuntime(a), a));
+    agents.forEach(a => team.registerRuntime(createMockRuntime(), a));
     await team.initialize(tasks);
 
     // Run many iterations to expose race condition
