@@ -14,6 +14,8 @@ vi.mock('node:child_process', async () => {
   };
 });
 
+
+function any<T>(value: T): any { return value; }
 describe("PiclawPackageManager", () => {
   let originalHome: string;
   let tempHome: string;
@@ -42,8 +44,8 @@ describe("PiclawPackageManager", () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     try {
-      (cp as any).spawn?.mockClear?.();
-      (cp as any).spawn?.mockReset?.();
+      (any(cp)).spawn?.mockClear?.();
+      (any(cp)).spawn?.mockReset?.();
     } catch {}
   });
 
@@ -103,8 +105,8 @@ describe("PiclawPackageManager", () => {
     it("should get correct project npm install path", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       // Use internal method to get expected path without existence check
-      const parsed = (pm as any).parseSource("npm:chalk");
-      const path = (pm as any).getNpmInstallPath(parsed, "project");
+      const parsed = (any(pm)).parseSource("npm:chalk");
+      const path = (any(pm)).getNpmInstallPath(parsed, "project");
       expect(path).toBe(join(cwd, ".piclaw", "npm", "node_modules", "chalk"));
     });
 
@@ -126,25 +128,25 @@ describe("PiclawPackageManager", () => {
   describe("Source Parsing", () => {
     it("should parse npm source", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       expect(parsed).toEqual({ type: "npm", name: "chalk", pinned: undefined });
     });
 
     it("should parse npm source with version", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk@1.0.0");
+      const parsed = (any(pm)).parseSource("npm:chalk@1.0.0");
       expect(parsed).toEqual({ type: "npm", name: "chalk", pinned: "1.0.0" });
     });
 
     it("should parse scoped npm package", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:@myorg/package");
+      const parsed = (any(pm)).parseSource("npm:@myorg/package");
       expect(parsed).toEqual({ type: "npm", name: "@myorg/package", pinned: undefined });
     });
 
     it("should parse local source", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("./local-pkg");
+      const parsed = (any(pm)).parseSource("./local-pkg");
       expect(parsed).toEqual({ type: "local", path: "./local-pkg" });
     });
   });
@@ -229,8 +231,8 @@ describe("PiclawPackageManager", () => {
   describe("Path Helpers", () => {
     it("should compute git install path correctly", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const source = { type: "git", host: "github.com", path: "user/repo" } as any;
-      const path = (pm as any).getGitInstallPath(source, "user");
+      const source = any({ type: "git", host: "github.com", path: "user/repo" });
+      const path = (any(pm)).getGitInstallPath(source, "user");
       expect(path).toBe(join(agentDir, "git", "github.com", "user", "repo"));
     });
   });
@@ -255,9 +257,9 @@ describe("PiclawPackageManager", () => {
   describe("installGit error handling", () => {
     it("should propagate error if git clone fails", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const source = { type: "git", host: "github.com", path: "user/repo" } as any;
-      const runCommandSpy = vi.spyOn(pm as any, 'runCommand').mockRejectedValue(new Error("git clone failed"));
-      await expect((pm as any).installGit(source, "user")).rejects.toThrow("git clone failed");
+      const source = any({ type: "git", host: "github.com", path: "user/repo" });
+      const runCommandSpy = vi.spyOn(any(pm), 'runCommand').mockRejectedValue(new Error("git clone failed"));
+      await expect(any((pm)).installGit(source, "user")).rejects.toThrow("git clone failed");
       // Should attempt clone with targetDir under agentDir/git
       expect(runCommandSpy).toHaveBeenCalledWith(
         "git",
@@ -267,18 +269,18 @@ describe("PiclawPackageManager", () => {
 
     it("should skip if target directory already exists", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const source = { type: "git", host: "github.com", path: "user/repo" } as any;
+      const source = any({ type: "git", host: "github.com", path: "user/repo" });
       const targetDir = join(agentDir, "git", "github.com", "user", "repo");
       mkdirSync(targetDir, { recursive: true });
-      const runCommandSpy = vi.spyOn(pm as any, 'runCommand');
-      await (pm as any).installGit(source, "user");
+      const runCommandSpy = vi.spyOn(any(pm), 'runCommand');
+      await (any(pm)).installGit(source, "user");
       expect(runCommandSpy).not.toHaveBeenCalled();
     });
   });
 
   describe("runCommandCapture error handling", () => {
     afterEach(() => {
-      (cp as any).spawn?.mockReset?.();
+      (any(cp)).spawn?.mockReset?.();
     });
     it("should reject when command exits with non-zero code", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
@@ -292,22 +294,22 @@ describe("PiclawPackageManager", () => {
           if (event === 'close') cb(1); // non-zero exit
         }
       };
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockReturnValue(mockChild);
 
-      await expect((pm as any).runCommandCapture("npm", ["view", "test", "version"])).rejects.toThrow("npm exited with code 1");
+      await expect(any((pm)).runCommandCapture("npm", ["view", "test", "version"])).rejects.toThrow("npm exited with code 1");
       expect(spawnMock).toHaveBeenCalledWith("npm", expect.arrayContaining(["view", "test", "version"]), expect.anything());
     });
 
     it("should reject when spawn throws (e.g., command not found)", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       const spawnError = new Error("Command not found");
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockImplementation(() => {
         throw spawnError;
       });
 
-      await expect((pm as any).runCommandCapture("nonexistent-cmd", [])).rejects.toThrow("Command not found");
+      await expect(any((pm)).runCommandCapture("nonexistent-cmd", [])).rejects.toThrow("Command not found");
       expect(spawnMock).toHaveBeenCalledWith("nonexistent-cmd", [], expect.anything());
     });
 
@@ -323,10 +325,10 @@ describe("PiclawPackageManager", () => {
           if (event === 'close') cb(0);
         })
       };
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockReturnValue(mockChild);
 
-      const result = await (pm as any).runCommandCapture("echo", ["test"]);
+      const result = await (any(pm)).runCommandCapture("echo", ["test"]);
       expect(result).toBe("some output");
       expect(spawnMock).toHaveBeenCalledWith("echo", ["test"], expect.anything());
     });
@@ -339,17 +341,17 @@ describe("PiclawPackageManager", () => {
           if (event === 'error') cb(new Error('spawn ENOENT'));
         })
       };
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockReturnValue(mockChild);
 
-      await expect((pm as any).runCommandCapture("nonexistent", [])).rejects.toThrow('spawn ENOENT');
+      await expect(any((pm)).runCommandCapture("nonexistent", [])).rejects.toThrow('spawn ENOENT');
       expect(spawnMock).toHaveBeenCalledWith("nonexistent", [], expect.anything());
     });
   });
 
   describe("runCommand method", () => {
     afterEach(() => {
-      (cp as any).spawn?.mockReset?.();
+      (any(cp)).spawn?.mockReset?.();
     });
     it("should resolve when command exits with code 0", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
@@ -360,10 +362,10 @@ describe("PiclawPackageManager", () => {
           if (event === 'close') cb(0);
         })
       };
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockReturnValue(mockChild);
 
-      await expect((pm as any).runCommand("echo", ["hello"])).resolves.toBeUndefined();
+      await expect(any((pm)).runCommand("echo", ["hello"])).resolves.toBeUndefined();
       expect(spawnMock).toHaveBeenCalledWith("echo", ["hello"], expect.anything());
     });
 
@@ -376,19 +378,19 @@ describe("PiclawPackageManager", () => {
           if (event === 'close') cb(1);
         })
       };
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockReturnValue(mockChild);
 
-      await expect((pm as any).runCommand("false", [])).rejects.toThrow("false exited with code 1");
+      await expect(any((pm)).runCommand("false", [])).rejects.toThrow("false exited with code 1");
     });
 
     it("should reject when spawn throws", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       const spawnError = new Error("Spawn error");
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockImplementation(() => { throw spawnError; });
 
-      await expect((pm as any).runCommand("nonexistent", [])).rejects.toThrow("Spawn error");
+      await expect(any((pm)).runCommand("nonexistent", [])).rejects.toThrow("Spawn error");
     });
 
     it("should pass cwd option to spawn", async () => {
@@ -400,10 +402,10 @@ describe("PiclawPackageManager", () => {
           if (event === 'close') cb(0);
         })
       };
-      const spawnMock = cp.spawn as any;
+      const spawnMock = any(cp.spawn);
       spawnMock.mockReturnValue(mockChild);
 
-      await (pm as any).runCommand("echo", ["test"], { cwd });
+      await (any(pm)).runCommand("echo", ["test"], { cwd });
       expect(spawnMock).toHaveBeenCalledWith("echo", ["test"], { cwd, stdio: "inherit", shell: false });
     });
   });
@@ -411,36 +413,36 @@ describe("PiclawPackageManager", () => {
   describe("installNpm and uninstallNpm methods", () => {
     it("should call runNpmCommand with install args for project", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
-      const runSpy = vi.spyOn(pm as any, 'runNpmCommand').mockResolvedValue(undefined);
-      await (pm as any).installNpm(parsed, 'project');
+      const parsed = (any(pm)).parseSource("npm:chalk");
+      const runSpy = vi.spyOn(any(pm), 'runNpmCommand').mockResolvedValue(undefined);
+      await (any(pm)).installNpm(parsed, 'project');
       const expectedRoot = join(cwd, ".piclaw", "npm");
       expect(runSpy).toHaveBeenCalledWith(['install', parsed.name, '--prefix', expectedRoot, '--no-audit', '--no-fund']);
     });
 
     it("should reject when installNpm fails", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       const err = new Error("npm install error");
-      vi.spyOn(pm as any, 'runNpmCommand').mockRejectedValue(err);
-      await expect((pm as any).installNpm(parsed, 'project')).rejects.toThrow("npm install error");
+      vi.spyOn(any(pm), 'runNpmCommand').mockRejectedValue(err);
+      await expect(any((pm)).installNpm(parsed, 'project')).rejects.toThrow("npm install error");
     });
 
     it("should call runNpmCommand with uninstall args for project", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
-      const runSpy = vi.spyOn(pm as any, 'runNpmCommand').mockResolvedValue(undefined);
-      await (pm as any).uninstallNpm(parsed, 'project');
+      const parsed = (any(pm)).parseSource("npm:chalk");
+      const runSpy = vi.spyOn(any(pm), 'runNpmCommand').mockResolvedValue(undefined);
+      await (any(pm)).uninstallNpm(parsed, 'project');
       const expectedRoot = join(cwd, ".piclaw", "npm");
       expect(runSpy).toHaveBeenCalledWith(['uninstall', parsed.name, '--prefix', expectedRoot]);
     });
 
     it("should reject when uninstall fails", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       const err = new Error("npm uninstall error");
-      vi.spyOn(pm as any, 'runNpmCommand').mockRejectedValue(err);
-      await expect((pm as any).uninstallNpm(parsed, 'project')).rejects.toThrow("npm uninstall error");
+      vi.spyOn(any(pm), 'runNpmCommand').mockRejectedValue(err);
+      await expect(any((pm)).uninstallNpm(parsed, 'project')).rejects.toThrow("npm uninstall error");
     });
   });
 
@@ -453,24 +455,24 @@ describe("PiclawPackageManager", () => {
 
     it("should skip reinstall if package not installed", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       const fakePath = join(cwd, "non-existent");
-      vi.spyOn(pm as any, 'getNpmInstallPath').mockReturnValue(fakePath);
-      const runNpmSpy = vi.spyOn(pm as any, 'runNpmCommand');
-      await (pm as any).updateNpm(parsed, 'project');
+      vi.spyOn(any(pm), 'getNpmInstallPath').mockReturnValue(fakePath);
+      const runNpmSpy = vi.spyOn(any(pm), 'runNpmCommand');
+      await (any(pm)).updateNpm(parsed, 'project');
       expect(runNpmSpy).not.toHaveBeenCalled();
     });
 
     it("should skip if source is pinned", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk@1.0");
+      const parsed = (any(pm)).parseSource("npm:chalk@1.0");
       const fakePath = join(cwd, "fake-npm");
       mkdirSync(fakePath, { recursive: true });
-      vi.spyOn(pm as any, 'getNpmInstallPath').mockReturnValue(fakePath);
-      const runNpmSpy = vi.spyOn(pm as any, 'runNpmCommand');
-      const getInstalledSpy = vi.spyOn(pm as any, 'getInstalledNpmVersion');
-      const getLatestSpy = vi.spyOn(pm as any, 'getLatestNpmVersion');
-      await (pm as any).updateNpm(parsed, 'project');
+      vi.spyOn(any(pm), 'getNpmInstallPath').mockReturnValue(fakePath);
+      const runNpmSpy = vi.spyOn(any(pm), 'runNpmCommand');
+      const getInstalledSpy = vi.spyOn(any(pm), 'getInstalledNpmVersion');
+      const getLatestSpy = vi.spyOn(any(pm), 'getLatestNpmVersion');
+      await (any(pm)).updateNpm(parsed, 'project');
       expect(runNpmSpy).not.toHaveBeenCalled();
       expect(getInstalledSpy).not.toHaveBeenCalled();
       expect(getLatestSpy).not.toHaveBeenCalled();
@@ -478,14 +480,14 @@ describe("PiclawPackageManager", () => {
 
     it("should not reinstall when installedVersion equals latestVersion", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       const fakePath = join(cwd, "fake-npm");
       mkdirSync(fakePath, { recursive: true });
-      vi.spyOn(pm as any, 'getNpmInstallPath').mockReturnValue(fakePath);
-      const runNpmSpy = vi.spyOn(pm as any, 'runNpmCommand');
-      const getInstalledSpy = vi.spyOn(pm as any, 'getInstalledNpmVersion').mockReturnValue("1.0.0");
-      const getLatestSpy = vi.spyOn(pm as any, 'getLatestNpmVersion').mockResolvedValue("1.0.0");
-      await (pm as any).updateNpm(parsed, 'project');
+      vi.spyOn(any(pm), 'getNpmInstallPath').mockReturnValue(fakePath);
+      const runNpmSpy = vi.spyOn(any(pm), 'runNpmCommand');
+      const getInstalledSpy = vi.spyOn(any(pm), 'getInstalledNpmVersion').mockReturnValue("1.0.0");
+      const getLatestSpy = vi.spyOn(any(pm), 'getLatestNpmVersion').mockResolvedValue("1.0.0");
+      await (any(pm)).updateNpm(parsed, 'project');
       expect(runNpmSpy).not.toHaveBeenCalled();
       expect(getInstalledSpy).toHaveBeenCalledWith(fakePath);
       expect(getLatestSpy).toHaveBeenCalledWith(parsed.name);
@@ -493,14 +495,14 @@ describe("PiclawPackageManager", () => {
 
     it("should reinstall when installedVersion differs from latestVersion", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       const fakePath = join(cwd, "fake-npm");
       mkdirSync(fakePath, { recursive: true });
-      vi.spyOn(pm as any, 'getNpmInstallPath').mockReturnValue(fakePath);
-      const runNpmSpy = vi.spyOn(pm as any, 'runNpmCommand').mockResolvedValue(undefined);
-      const getInstalledSpy = vi.spyOn(pm as any, 'getInstalledNpmVersion').mockReturnValue("1.0.0");
-      const getLatestSpy = vi.spyOn(pm as any, 'getLatestNpmVersion').mockResolvedValue("2.0.0");
-      await (pm as any).updateNpm(parsed, 'project');
+      vi.spyOn(any(pm), 'getNpmInstallPath').mockReturnValue(fakePath);
+      const runNpmSpy = vi.spyOn(any(pm), 'runNpmCommand').mockResolvedValue(undefined);
+      const getInstalledSpy = vi.spyOn(any(pm), 'getInstalledNpmVersion').mockReturnValue("1.0.0");
+      const getLatestSpy = vi.spyOn(any(pm), 'getLatestNpmVersion').mockResolvedValue("2.0.0");
+      await (any(pm)).updateNpm(parsed, 'project');
       expect(runNpmSpy).toHaveBeenCalledTimes(1);
       const args = runNpmSpy.mock.calls[0][0] as string[];
       expect(args[0]).toBe("install");
@@ -515,14 +517,14 @@ describe("PiclawPackageManager", () => {
 
     it("should still reinstall if getLatestNpmVersion fails", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const parsed = (pm as any).parseSource("npm:chalk");
+      const parsed = (any(pm)).parseSource("npm:chalk");
       const fakePath = join(cwd, "fake-npm");
       mkdirSync(fakePath, { recursive: true });
-      vi.spyOn(pm as any, 'getNpmInstallPath').mockReturnValue(fakePath);
-      const runNpmSpy = vi.spyOn(pm as any, 'runNpmCommand').mockResolvedValue(undefined);
-      const getInstalledSpy = vi.spyOn(pm as any, 'getInstalledNpmVersion').mockReturnValue("1.0.0");
-      const getLatestSpy = vi.spyOn(pm as any, 'getLatestNpmVersion').mockRejectedValue(new Error("network error"));
-      await (pm as any).updateNpm(parsed, 'project');
+      vi.spyOn(any(pm), 'getNpmInstallPath').mockReturnValue(fakePath);
+      const runNpmSpy = vi.spyOn(any(pm), 'runNpmCommand').mockResolvedValue(undefined);
+      const getInstalledSpy = vi.spyOn(any(pm), 'getInstalledNpmVersion').mockReturnValue("1.0.0");
+      const getLatestSpy = vi.spyOn(any(pm), 'getLatestNpmVersion').mockRejectedValue(new Error("network error"));
+      await (any(pm)).updateNpm(parsed, 'project');
       expect(runNpmSpy).toHaveBeenCalledTimes(1);
       expect(getInstalledSpy).toHaveBeenCalledWith(fakePath);
       expect(getLatestSpy).toHaveBeenCalledWith(parsed.name);
@@ -533,53 +535,53 @@ describe("PiclawPackageManager", () => {
   describe("getLatestNpmVersion error handling", () => {
     it("should reject when npm view returns empty output", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const runCommandCaptureSpy = vi.spyOn(pm as any, 'runCommandCapture').mockResolvedValue("");
+      const runCommandCaptureSpy = vi.spyOn(any(pm), 'runCommandCapture').mockResolvedValue("");
 
-      await expect((pm as any).getLatestNpmVersion("test-pkg")).rejects.toThrow("Empty response from npm view");
+      await expect(any((pm)).getLatestNpmVersion("test-pkg")).rejects.toThrow("Empty response from npm view");
       expect(runCommandCaptureSpy).toHaveBeenCalledWith("npm", ["view", "test-pkg", "version", "--json"]);
     });
 
     it("should reject when npm view returns invalid JSON", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      vi.spyOn(pm as any, 'runCommandCapture').mockResolvedValue("not json");
+      vi.spyOn(any(pm), 'runCommandCapture').mockResolvedValue("not json");
 
-      await expect((pm as any).getLatestNpmVersion("test-pkg")).rejects.toThrow("not valid JSON");
+      await expect(any((pm)).getLatestNpmVersion("test-pkg")).rejects.toThrow("not valid JSON");
     });
 
     it("should propagate errors from runCommandCapture", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      vi.spyOn(pm as any, 'runCommandCapture').mockRejectedValue(new Error("npm command failed"));
+      vi.spyOn(any(pm), 'runCommandCapture').mockRejectedValue(new Error("npm command failed"));
 
-      await expect((pm as any).getLatestNpmVersion("test-pkg")).rejects.toThrow("npm command failed");
+      await expect(any((pm)).getLatestNpmVersion("test-pkg")).rejects.toThrow("npm command failed");
     });
 
     it("should resolve with version when npm view returns valid JSON", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      vi.spyOn(pm as any, 'runCommandCapture').mockResolvedValue('"1.2.3"');
-      const version = await (pm as any).getLatestNpmVersion("test-pkg");
+      vi.spyOn(any(pm), 'runCommandCapture').mockResolvedValue('"1.2.3"');
+      const version = await (any(pm)).getLatestNpmVersion("test-pkg");
       expect(version).toBe("1.2.3");
     });
 
     it("should retry on transient network error and eventually succeed", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const runCommandCaptureSpy = vi.spyOn(pm as any, 'runCommandCapture')
+      const runCommandCaptureSpy = vi.spyOn(any(pm), 'runCommandCapture')
         .mockRejectedValueOnce(new Error("network timeout"))
         .mockRejectedValueOnce(new Error("connection reset"))
         .mockResolvedValueOnce('"1.2.3"');
 
-      const version = await (pm as any).getLatestNpmVersion("test-pkg");
+      const version = await (any(pm)).getLatestNpmVersion("test-pkg");
       expect(version).toBe("1.2.3");
       expect(runCommandCaptureSpy).toHaveBeenCalledTimes(3);
     });
 
     it("should fail after 3 retry attempts if network errors persist", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const runCommandCaptureSpy = vi.spyOn(pm as any, 'runCommandCapture')
+      const runCommandCaptureSpy = vi.spyOn(any(pm), 'runCommandCapture')
         .mockRejectedValueOnce(new Error("network timeout"))
         .mockRejectedValueOnce(new Error("connection refused"))
         .mockRejectedValueOnce(new Error("ETIMEDOUT"));
 
-      await expect((pm as any).getLatestNpmVersion("test-pkg")).rejects.toThrow("ETIMEDOUT");
+      await expect(any((pm)).getLatestNpmVersion("test-pkg")).rejects.toThrow("ETIMEDOUT");
       expect(runCommandCaptureSpy).toHaveBeenCalledTimes(3);
     });
   });
@@ -589,7 +591,7 @@ describe("PiclawPackageManager", () => {
   describe("Integration tests with simulated failures", () => {
     it("should propagate install error when installNpm fails", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const installNpmSpy = vi.spyOn(pm as any, 'installNpm').mockRejectedValue(new Error("npm install failed"));
+      const installNpmSpy = vi.spyOn(any(pm), 'installNpm').mockRejectedValue(new Error("npm install failed"));
       await expect(pm.install("npm:test-pkg")).rejects.toThrow("npm install failed");
       installNpmSpy.mockRestore();
     });
@@ -597,7 +599,7 @@ describe("PiclawPackageManager", () => {
     it("should propagate update error when updateNpm fails", async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       pm.addSourceToSettings("npm:test-pkg", { local: true });
-      const updateNpmSpy = vi.spyOn(pm as any, 'updateNpm').mockRejectedValue(new Error("npm update failed"));
+      const updateNpmSpy = vi.spyOn(any(pm), 'updateNpm').mockRejectedValue(new Error("npm update failed"));
       await expect(pm.update(undefined, { local: true })).rejects.toThrow("npm update failed");
       updateNpmSpy.mockRestore();
     });
@@ -606,23 +608,23 @@ describe("PiclawPackageManager", () => {
   describe("Additional unit tests for coverage", () => {
     it("should compute git install path correctly", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const path = (pm as any).getGitInstallPath({ type: "git", host: "gh", path: "user/repo" }, "project");
+      const path = (any(pm)).getGitInstallPath({ type: "git", host: "gh", path: "user/repo" }, "project");
       expect(path).toContain(".piclaw/git/gh/user/repo");
     });
 
     it("should return undefined installedPath for unknown source", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const path = (pm as any).getInstalledPath("unknown:foo", "user");
+      const path = (any(pm)).getInstalledPath("unknown:foo", "user");
       expect(path).toBeUndefined();
     });
 
     it("should skip null entries in getConfiguredEntries", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const globalSettingsPath = (pm as any).getGlobalSettingsPath();
-      const corrupt = { packages: [null, "npm:good"] as any };
+      const globalSettingsPath = (any(pm)).getGlobalSettingsPath();
+      const corrupt = any({ packages: [null, "npm:good"] });
       mkdirSync(dirname(globalSettingsPath), { recursive: true });
       writeFileSync(globalSettingsPath, JSON.stringify(corrupt));
-      const entries = (pm as any).getConfiguredEntries();
+      const entries = (any(pm)).getConfiguredEntries();
       const sources = entries.map((e: any) => e.source);
       expect(sources).toContain("npm:good");
       expect(sources.filter((s: any) => s === null)).toHaveLength(0);
