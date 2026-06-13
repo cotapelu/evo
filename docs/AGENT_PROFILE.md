@@ -66,6 +66,9 @@ Last Updated: 2026-06-13
 - **custom-commands.ts** Eliminated 1 `as any` cast by replacing p.source cast with `// @ts-ignore`. File now type-clean.
 - **subtool-loader.ts** Fixed type errors by correcting options objects for tool factories. Removed unnecessary @ts-ignore annotations. Production code now fully type-safe.
 - **mock-factory.ts** Improved type safety in test mocks by returning `any` from createMockExtensionAPI, allowing `.mock` usage without type errors. Simplified tui property and removed unnecessary casts.
+- **branch-summary-renderer.test.ts, todos-renderer.test.ts, team-ops-renderer.test.ts**: Cast renderer results to `any` to access `.content` property on Text mocks.
+- **skill-reader.test.ts, tool-template.test.ts**: Replaced `as ToolResult` casts with `as any` to avoid conversion errors.
+- **read-skill.test.ts**: Typed `mockFs` as `any` to enable mockResolvedValue/mockRejectedValue in vitest.
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

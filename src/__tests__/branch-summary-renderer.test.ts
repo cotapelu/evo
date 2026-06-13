@@ -43,7 +43,7 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({}, {}, mockTheme);
+      const result: any = renderer({}, {}, mockTheme);
 
       expect(result).toBeInstanceOf(Text);
       expect(result.content).toBe("🌿 Branch point");
@@ -69,7 +69,7 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
 
@@ -98,7 +98,7 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Additional context:");
@@ -117,7 +117,7 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("From entry: entry-789");
@@ -136,7 +136,7 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Only summary, no fromId");
@@ -162,7 +162,7 @@ describe("Branch Summary Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("entry-999");

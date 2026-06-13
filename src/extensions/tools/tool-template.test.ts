@@ -61,7 +61,7 @@ describe('tool-template (basic)', () => {
 
   it('execute should return error for unknown command', async () => {
     const tool = createYourTool();
-    const result = (await tool.execute('id', { command: 'unknown', args: {} }, undefined, undefined)) as ToolResult;
+    const result = (await tool.execute('id', { command: 'unknown', args: {} }, undefined, undefined)) as any;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Unknown command');
     expect(result.content[0].text).toContain('example_command, another_command');
@@ -69,7 +69,7 @@ describe('tool-template (basic)', () => {
 
   it('execute with empty args should return discovery help', async () => {
     const tool = createYourTool();
-    const result = (await tool.execute('id', { command: 'example_command', args: {} }, undefined, undefined)) as ToolResult;
+    const result = (await tool.execute('id', { command: 'example_command', args: {} }, undefined, undefined)) as any;
     expect(result.isError).toBe(false);
     const text = result.content[0].text;
     expect(text).toContain('example_command');

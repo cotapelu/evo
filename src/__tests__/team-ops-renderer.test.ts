@@ -33,7 +33,7 @@ describe("Team Ops Renderer", () => {
 
       const mockTheme = { fg: (c: string, t: string) => t };
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({}, {}, mockTheme);
+      const result: any = renderer({}, {}, mockTheme);
 
       expect(result).toBeInstanceOf(Text);
       expect(result.content).toBe("👥 Team operation");
@@ -57,7 +57,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("Team: team-123");
@@ -81,7 +81,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("Messages (2):");
@@ -105,7 +105,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("Messages (15):");
@@ -123,7 +123,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("Workspace key: config.json");
@@ -140,7 +140,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("✓ Wrote to workspace");
@@ -157,7 +157,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("✓ Message sent");
@@ -174,7 +174,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("✓ Claimed task #3");
@@ -189,7 +189,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("No tasks available");
@@ -205,7 +205,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("✓ Completed task #5");
@@ -221,7 +221,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("↩ Released task #2");
@@ -237,7 +237,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("● Status updated");
@@ -253,7 +253,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("❌ Connection failed");
@@ -269,7 +269,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer(msg, {}, mockTheme);
+      const result: any = renderer(msg, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("❌ Error occurred");
@@ -285,7 +285,7 @@ describe("Team Ops Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer(msg, {}, mockTheme);
+      const result: any = renderer(msg, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("Operation successful");
@@ -298,7 +298,7 @@ describe("Team Ops Renderer", () => {
       const details = { action: "unknown_action" };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
       const content = result.content;
 
       expect(content).toContain("Unknown action: unknown_action");

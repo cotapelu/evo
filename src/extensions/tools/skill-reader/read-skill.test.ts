@@ -6,8 +6,7 @@ import { schema, executeLoadSkill } from './read-skill.js';
 
 // Mock fs/promises
 vi.mock('fs/promises');
-// @ts-ignore - fs mock replaces module with arbitrary methods
-const mockFs = fs;
+const mockFs = fs as any;
 
 // Helper to compute __dirname for tests
 const __filename = fileURLToPath(import.meta.url);

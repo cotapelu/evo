@@ -33,7 +33,7 @@ describe("Todos Renderer", () => {
 
       const mockTheme = { fg: (c: string, t: string) => t };
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({}, {}, mockTheme);
+      const result: any = renderer({}, {}, mockTheme);
 
       expect(result).toBeInstanceOf(Text);
       expect(result.content).toBe("📋 Todo operation completed");
@@ -50,7 +50,7 @@ describe("Todos Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Progress: 5/10 (50%)");
@@ -76,7 +76,7 @@ describe("Todos Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Phase 1");
@@ -98,7 +98,7 @@ describe("Todos Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Progress: 0/0 (0%)");
@@ -114,7 +114,7 @@ describe("Todos Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Todo list retrieved");
@@ -131,7 +131,7 @@ describe("Todos Renderer", () => {
       };
 
       const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
-      const result = renderer({ details }, {}, mockTheme);
+      const result: any = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("0%");
