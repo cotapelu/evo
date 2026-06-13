@@ -13,7 +13,7 @@ describe('cli.ts side effects', () => {
     vi.restoreAllMocks();
     // Reset state
     process.title = 'cli';
-    delete (process.env as any).PI_CODING_AGENT;
+    delete process.env.PI_CODING_AGENT;
   });
 
   it('should set process title', () => {
