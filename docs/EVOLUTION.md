@@ -220,6 +220,10 @@ Last Updated: 2026-06-12
 - Replaced three ` as any` casts with `// @ts-ignore` before `execute` calls with invalid inputs (testing rejection cases).
 - Maintained type safety while allowing negative test scenarios.
 
+### Thirty-Eighth Round (Reduce `as any` in piclaw-header-coverage.test.ts)
+- Replaced `(existsSync as any).mockReturnValue` and `(readFileSync as any).mockClear` with direct method calls on mocked functions.
+- Eliminated both `as any` occurrences.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
