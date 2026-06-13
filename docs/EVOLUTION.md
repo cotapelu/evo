@@ -294,6 +294,10 @@ Last Updated: 2026-06-12
 - Reduced 27 to 4 ` as any` casts: replaced fs/promises mocks with `vi.mocked()`, typed phase arrays with `TodoPhase[]`, added `ExtensionContext` import, and used `as unknown as ExtensionContext` for context mock.
 - Remaining 4 casts are intentional negative test inputs (unknown op type, invalid JSON params) that require ` as any` to bypass type checking.
 
+### Fifty-Fifth Round (Reduce `as any` in team-tool.test.ts)
+- Reduced 35 to 3 ` as any` casts: replaced `(bootPiclawTeam as any).mock*` and `(executeTeamTasks as any).mock*` with `vi.mocked()`, removed `as any` from context mocks, result casts, and team mock objects.
+- Remaining 3 casts are intentional negative test params (empty object, invalid tasks type, JSON string).
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
