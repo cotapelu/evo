@@ -38,7 +38,7 @@ function asMockRuntime(obj: any): MockRuntime {
 
 function createMockTeamRegistry(): TeamRegistry {
   const teams = new Map<string, AgentTeam>();
-  const mock: Partial<TeamRegistry> = {
+  const mock = {
     has: (id: string) => teams.has(id),
     register: (id: string, team: AgentTeam) => { teams.set(id, team); },
     unregister: (id: string) => { teams.delete(id); },
@@ -48,8 +48,8 @@ function createMockTeamRegistry(): TeamRegistry {
       await new Promise(resolve => setTimeout(resolve, timeoutMs || 0));
       return false;
     }),
-  } as any; // Cast to any to bypass missing private fields
-  return mock as unknown as TeamRegistry;
+  } as unknown as TeamRegistry;
+  return mock;
 }
 
 function useMockTeamRegistry(mockRegistry: TeamRegistry) {
@@ -439,7 +439,7 @@ describe('AgentTeam Additional Coverage', () => {
         pendingTasks: 0,
         failedTasks: 0,
         agents: []
-      } as any);
+      });
 
       vi.spyOn(team, 'initialize').mockResolvedValue(undefined);
       vi.spyOn(team, 'setupChildRuntimes').mockResolvedValue(undefined);
@@ -479,14 +479,14 @@ describe('AgentTeam Additional Coverage', () => {
         pendingTasks: 1,
         failedTasks: 0,
         agents: []
-      } as any).mockResolvedValueOnce({
+      }).mockResolvedValueOnce({
         isComplete: true,
         totalTasks: 1,
         completedTasks: 1,
         pendingTasks: 0,
         failedTasks: 0,
         agents: []
-      } as any);
+      });
       const onUpdate = vi.fn();
       await executeTeamTasks(team, ['Task'], onUpdate, { wait: true });
       expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({

@@ -367,6 +367,12 @@ Last Updated: 2026-06-13
 - Added `PiclawPackageManagerInternal` interface and helper function to enable safe access to private methods.
 - 28 remaining; continuing incremental reduction.
 
+### Seventy-First Round (Finalize elimination in team-manager-additional.test.ts)
+- Eliminated remaining 4 `as any` casts by replacing mock casts with `as unknown as TeamRegistry` and removing unnecessary `as any` in getTeamStatus mocks.
+- File now fully type-clean (0 `as any`).
+- Tests pass (16 passed, 3 skipped).
+- **Impact**: Completed type-clean status for another complex test file, maintaining coverage and type safety.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
