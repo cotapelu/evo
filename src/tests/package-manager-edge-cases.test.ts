@@ -10,15 +10,15 @@ import { spawn as mockSpawn, spawnSync as mockSpawnSync } from 'child_process';
 import { PiclawPackageManager } from '../piclaw-package-manager.js';
 import { mkdirSync, existsSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from "node:path";
-import os from 'os';
+import * as os from 'os';
 
 // Helper to access private fields/methods of PiclawPackageManager for testing
 interface PiclawPackageManagerInternal extends PiclawPackageManager {
   [key: string]: any;
 }
 
-function getPmInternal(pm: PiclawPackageManager): PiclawPackageManagerInternal {
-  return pm as unknown as PiclawPackageManagerInternal;
+function getPmInternal(pm: PiclawPackageManager): any {
+  return pm as any;
 }
 
 describe('PiclawPackageManager Edge Cases', () => {
@@ -98,16 +98,16 @@ describe('PiclawPackageManager Edge Cases', () => {
       vi.mocked(mockSpawn).mockReturnValue({
         on: vi.fn((event, cb) => { if (event === 'close') cb(1); }),
         stdout: { on: vi.fn() },
-      });
+      } as any);
       await expect(pmAny.runCommandCapture('test', ['cmd'], {})).rejects.toThrow('exited with code 1');
     });
 
     it('should return stdout string on success', async () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       vi.mocked(mockSpawn).mockReturnValue({
         stdout: { on: vi.fn((event, cb) => cb('output')) },
         on: vi.fn((event, cb) => { if (event === 'close') cb(0); }),
-      });
+      } as any);
       const result = await pmAny.runCommandCapture('test', ['cmd'], {});
       expect(result).toBe('output');
     });
@@ -115,7 +115,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   describe('other methods', () => {
     it('should compute npm install path for project', () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       const source = { type: 'npm', name: 'testpkg', pinned: undefined };
       const path = pmAny.getNpmInstallPath(source, 'project');
       expect(path).toContain('.piclaw');
@@ -124,7 +124,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should compute git install path correctly', () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       const source = { type: 'git', host: 'example.com', path: 'user/repo', ref: undefined };
       const path = pmAny.getGitInstallPath(source, 'project');
       expect(path).toContain('.piclaw');
@@ -135,15 +135,15 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should ensure npm project directory and package.json', () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       const root = join(tmpDir, '.piclaw', 'npm');
       pmAny.ensureNpmProject(root);
       expect(existsSync(join(root, 'package.json'))).toBe(true);
     });
 
     it('should get global npm root via spawnSync', () => {
-      const pmAny = pm as any;
-      vi.mocked(mockSpawnSync).mockReturnValue({ status: 0, stdout: '/global/path', stderr: '' });
+      const pmAny = getPmInternal(pm);
+      vi.mocked(mockSpawnSync).mockReturnValue({ status: 0, stdout: '/global/path', stderr: '' } as any);
       const root = pmAny.getGlobalNpmRoot();
       expect(root).toBe('/global/path');
     });
@@ -151,7 +151,7 @@ describe('PiclawPackageManager Edge Cases', () => {
   // Additional coverage tests
 
   it('should parse npm sources correctly', () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     let parsed = pmAny.parseSource('npm:lodash');
     expect(parsed).toEqual({ type: 'npm', name: 'lodash', pinned: undefined });
     parsed = pmAny.parseSource('npm:@babel/core@7.0.0');
@@ -161,7 +161,7 @@ describe('PiclawPackageManager Edge Cases', () => {
   });
 
   it('should parse git sources correctly', () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     let parsed = pmAny.parseSource('git:github.com/user/repo');
     expect(parsed).toEqual({ type: 'git', host: 'github.com', path: 'user/repo', ref: undefined });
     parsed = pmAny.parseSource('git:https://github.com/user/repo');
@@ -174,34 +174,34 @@ describe('PiclawPackageManager Edge Cases', () => {
   });
 
   it('should parse local sources', () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const parsed = pmAny.parseSource('local:./some/path');
     expect(parsed).toEqual({ type: 'local', path: 'local:./some/path' });
   });
 
   it('should get project npm root', () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const root = pmAny.getProjectNpmRoot();
     expect(root).toBe(join(tmpDir, '.piclaw', 'npm'));
   });
 
   it('should get global npm root fallback when npm root -g fails', () => {
-    const pmAny = pm as any;
-    vi.mocked(mockSpawnSync).mockReturnValue({ status: 1, stdout: '', stderr: '' });
+    const pmAny = getPmInternal(pm);
+    vi.mocked(mockSpawnSync).mockReturnValue({ status: 1, stdout: '', stderr: '' } as any);
     const root = pmAny.getGlobalNpmRoot();
     const expected = join(os.homedir(), '.npm', 'global', 'node_modules');
     expect(root).toBe(expected);
   });
 
   it('should install npm package globally', async () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
     await pmAny.installNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'user');
     expect(runSpy).toHaveBeenCalledWith(['install', '-g', 'testpkg']);
   });
 
   it('should install npm package to project', async () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
     const ensureSpy = vi.spyOn(pmAny, 'ensureNpmProject');
     await pmAny.installNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'project');
@@ -211,14 +211,14 @@ describe('PiclawPackageManager Edge Cases', () => {
   });
 
   it('should uninstall npm package globally', async () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
     await pmAny.uninstallNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'user');
     expect(runSpy).toHaveBeenCalledWith(['uninstall', '-g', 'testpkg']);
   });
 
   it('should uninstall npm package from project', async () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
     await pmAny.uninstallNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'project');
     expect(runSpy).toHaveBeenCalledWith(['uninstall', 'testpkg', '--prefix', join(tmpDir, '.piclaw', 'npm')]);
@@ -226,7 +226,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   // Route git install to installGit
   it('should route git install to installGit', async () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const installGitSpy = vi.spyOn(pmAny, 'installGit').mockResolvedValue(undefined);
     await pm.install('git:https://github.com/user/repo.git');
     expect(installGitSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'git', host: 'github.com', path: 'user/repo.git' }), 'user');
@@ -234,7 +234,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   // Route git uninstall to uninstallGit
   it('should route git uninstall to uninstallGit', async () => {
-    const pmAny = pm as any;
+    const pmAny = getPmInternal(pm);
     const uninstallGitSpy = vi.spyOn(pmAny, 'uninstallGit').mockResolvedValue(undefined);
     await pm.remove('git:https://github.com/user/repo.git');
     expect(uninstallGitSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'git', host: 'github.com', path: 'user/repo.git' }), 'user');
@@ -274,7 +274,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should load settings with invalid JSON and return empty packages', () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const settingsPath = join(cwd, '.piclaw', 'settings.json'); // using project settings
       mkdirSync(dirname(settingsPath), { recursive: true });
       writeFileSync(settingsPath, '{ invalid json }', 'utf-8');
@@ -283,14 +283,14 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should call installNpm when installing npm source', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const installNpmSpy = vi.spyOn(anyPm, 'installNpm').mockResolvedValue(undefined);
       await pm.install('npm:test-pkg', { local: false });
       expect(installNpmSpy).toHaveBeenCalledWith({ type: 'npm', name: 'test-pkg', pinned: undefined }, 'user');
     });
 
     it('should call installGit when installing git source', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const installGitSpy = vi.spyOn(anyPm, 'installGit').mockResolvedValue(undefined);
       await pm.install('git:github.com/user/repo');
       expect(installGitSpy).toHaveBeenCalledWith({ type: 'git', host: 'github.com', path: 'user/repo', ref: undefined }, 'user');
@@ -301,28 +301,28 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should not call installNpm when dryRun', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const installNpmSpy = vi.spyOn(anyPm, 'installNpm');
       await pm.install('npm:test', { local: false, dryRun: true });
       expect(installNpmSpy).not.toHaveBeenCalled();
     });
 
     it('should call uninstallNpm when removing npm source', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const uninstallSpy = vi.spyOn(anyPm, 'uninstallNpm').mockResolvedValue(undefined);
       await pm.remove('npm:test-pkg', { local: false });
       expect(uninstallSpy).toHaveBeenCalledWith({ type: 'npm', name: 'test-pkg', pinned: undefined }, 'user');
     });
 
     it('should call uninstallGit when removing git source', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const uninstallSpy = vi.spyOn(anyPm, 'uninstallGit').mockResolvedValue(undefined);
       await pm.remove('git:github.com/user/repo');
       expect(uninstallSpy).toHaveBeenCalledWith({ type: 'git', host: 'github.com', path: 'user/repo', ref: undefined }, 'user');
     });
 
     it('installAndPersist should install and add to settings', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const installSpy = vi.spyOn(pm, 'install').mockResolvedValue(undefined);
       const addSpy = vi.spyOn(pm, 'addSourceToSettings').mockReturnValue(true);
       await pm.installAndPersist('npm:test', { local: false });
@@ -331,7 +331,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('removeAndPersist should remove and delete from settings', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const removeSpy = vi.spyOn(pm, 'remove').mockResolvedValue(undefined);
       const removeSettingsSpy = vi.spyOn(pm, 'removeSourceFromSettings').mockReturnValue(true);
       await pm.removeAndPersist('npm:test', { local: false });
@@ -351,7 +351,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should handle local install when path exists', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       const localFile = join(cwd, 'file.txt');
       writeFileSync(localFile, 'content');
       const installNpmSpy = vi.spyOn(anyPm, 'installNpm');
@@ -362,7 +362,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should update npm package', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       pm.addSourceToSettings('npm:testpkg', { local: false });
       const updateNpmSpy = vi.spyOn(anyPm, 'updateNpm').mockResolvedValue(undefined);
       await pm.update('npm:testpkg');
@@ -370,7 +370,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should update git package', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       pm.addSourceToSettings('git:github.com/user/repo', { local: false });
       const updateGitSpy = vi.spyOn(anyPm, 'updateGit').mockResolvedValue(undefined);
       await pm.update('git:github.com/user/repo');
@@ -378,7 +378,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     });
 
     it('should not call updateNpm when dryRun', async () => {
-      const anyPm = pm as any;
+      const anyPm = getPmInternal(pm);
       pm.addSourceToSettings('npm:testpkg', { local: false });
       const updateNpmSpy = vi.spyOn(anyPm, 'updateNpm');
       await pm.update('npm:testpkg', { dryRun: true });

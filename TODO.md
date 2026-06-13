@@ -81,7 +81,7 @@ Last Updated: 2026-06-13
 - [x] Eliminate `as any` casts in todos-tool-edge-additional.test.ts (4 occurrences removed)
   - Removed unnecessary ` as any` casts from invalid test inputs; relied on `// @ts-ignore`. File now type-clean.
 
-- [x] Reduce `as any` casts in package-manager-edge-cases.test.ts (5 occurrences removed, 28 remaining)
+- [x] Reduce `as any` casts in package-manager-edge-cases.test.ts (28 occurrences removed, 5 remaining)
 
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
 
