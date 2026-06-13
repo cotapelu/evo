@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, Theme, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { Type, StringEnum } from "@earendil-works/pi-ai";
 import { matchesKey, Text } from "@earendil-works/pi-tui";
 
@@ -159,11 +159,11 @@ export function registerMemoryTool(api: ExtensionAPI): void {
   api.on("session_start", async (_event, ctx) => { await reconstructState(ctx); });
   api.on("session_tree", async (_event, ctx) => { await reconstructState(ctx); });
 
-  const tool: any = {
+  const tool: ToolDefinition = {
     name: "memory",
     label: "Memory",
     description: "Store and retrieve arbitrary text snippets with optional tags. Actions: add, list, get, delete, clear, search",
-    promptSnippet: "Proactively store important facts, decisions, code snippets, URLs with tags. Memories persist across sessions and help track project history.",
+    promptSnippet: "memory({ action: '<action>', ...params })",
     promptGuidelines: [
       "Add: memory({ action: 'add', text: 'Important fact', tags?: ['tag1', 'tag2'] })",
       "List: memory({ action: 'list' })",
@@ -178,7 +178,17 @@ export function registerMemoryTool(api: ExtensionAPI): void {
       "Prefer storing concise, factual statements rather than long conversational exchanges.",
       "When uncertain if something should be remembered, ask the user: 'Should I save this to memory?'",
     ],
-    parameters: {},
+    parameters: {
+      type: "object",
+      properties: {
+        action: { type: "string", enum: ["add","list","get","delete","clear","search"], description: "Action to perform" },
+        text: { type: "string", description: "Text to store (required for add)" },
+        tags: { type: "array", items: { type: "string" }, description: "Optional tags" },
+        id: { type: "number", description: "Memory ID (for get/delete)" },
+        query: { type: "string", description: "Search query (for search)" }
+      },
+      required: ["action"]
+    },
 
     async execute(_toolCallId: string, params: any, _signal: AbortSignal | undefined, _onUpdate: any, ctx: ExtensionContext) {
       const release = await stateMutex.lock();
@@ -280,9 +290,12 @@ export function registerMemoryTool(api: ExtensionAPI): void {
     renderCall(args: any, theme: any, _context: any) {
       const th = theme;
       let text = th.fg("toolTitle", th.bold("memory ")) + th.fg("muted", args.action);
-      if (args.text) text += ` ${th.fg("dim", `"${args.text.substring(0, 30)}${args.text.length > 30 ? "..." : ""}"`)}`;
-      if (args.id !== undefined) text += ` ${th.fg("accent", `#${args.id}`)}`;
-      if (args.tags) text += ` ${th.fg("warning", `[${args.tags.length} tags]`)}`;
+      if (args.text) {
+        const preview = args.text.substring(0, 30) + (args.text.length > 30 ? "..." : "");
+        text += " " + th.fg("dim", '"' + preview + '"');
+      }
+      if (args.id !== undefined) text += " " + th.fg("accent", "#" + args.id);
+      if (args.tags) text += " " + th.fg("warning", "[" + args.tags.length + " tags]");
       return new Text(text, 0, 0);
     },
 

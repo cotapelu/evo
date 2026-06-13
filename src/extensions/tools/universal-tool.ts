@@ -176,7 +176,7 @@ export function registerUniversalTool(api: ExtensionAPI): void {
     description:
       "Multi-purpose tool with registry-based actions. Supports: echo, system_info, date, uuid, random, calc. Easily extensible.",
     promptSnippet:
-      "Use `universal` tool with `action` parameter to perform various tasks.",
+      "universal({ action: '<action>', ...params })",
     promptGuidelines: [
       "Use the universal tool with an `action` parameter.",
       "Available actions:",
@@ -195,7 +195,10 @@ export function registerUniversalTool(api: ExtensionAPI): void {
           enum: ["echo", "system_info", "date", "uuid", "random", "calc"],
           description: "Which action to perform",
         },
-        // Additional properties are dynamic based on action (no strict schema)
+        message: { type: "string", description: "Message to echo (required for echo)" },
+        min: { type: "number", description: "Minimum integer (for random)" },
+        max: { type: "number", description: "Maximum integer (for random)" },
+        expression: { type: "string", description: "Math expression to evaluate (for calc)" }
       },
       required: ["action"],
     },

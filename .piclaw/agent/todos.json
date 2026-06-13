@@ -3,32 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "As any reduction - team-multi-runtime",
+      "name": "Tool Definitions Cleanup",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Insert any<T> helper and apply systematic as any elimination in team-multi-runtime.test.ts",
+          "content": "Refactor memory-tool to use proper factory and complete ToolDefinition",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Run tests and ensure all passing",
+          "content": "Refactor universal-tool to use proper factory and complete parameters schema",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Update docs (AGENT_METRICS, TODO, EVOLUTION)",
+          "content": "Check todos-tool parameters schema (may be acceptable with empty due to guidelines)",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Git commit",
+          "content": "Run tests to ensure no regressions",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Update docs (AGENT_METRICS.md, TODO.md, EVOLUTION.md, AGENT_PROFILE.md)",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Commit changes",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 5,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T13:48:00.450Z"
+  "updatedAt": "2026-06-13T14:15:30.271Z"
 }
