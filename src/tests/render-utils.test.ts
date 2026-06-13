@@ -12,24 +12,24 @@ describe("Render Utils", () => {
   it("renderError returns Text with error color applied", () => {
     const comp = renderError(theme, "failure");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[error]failure");
+    expect((comp as { text: string }).text).toBe("[error]failure");
   });
 
   it("renderSuccess returns Text with success color", () => {
     const comp = renderSuccess(theme, "ok");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[success]ok");
+    expect((comp as { text: string }).text).toBe("[success]ok");
   });
 
   it("renderMuted returns Text with muted color", () => {
     const comp = renderMuted(theme, "dim");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[muted]dim");
+    expect((comp as { text: string }).text).toBe("[muted]dim");
   });
 
   it("renderAccent returns Text with accent color", () => {
     const comp = renderAccent(theme, "highlight");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[accent]highlight");
+    expect((comp as { text: string }).text).toBe("[accent]highlight");
   });
 });

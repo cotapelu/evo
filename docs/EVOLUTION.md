@@ -233,6 +233,10 @@ Last Updated: 2026-06-12
 - Removed subsequent casts on mock methods (`mockReset`, `mockRejectedValue`).
 - Clean typed mock using Vitest's `mocked` helper.
 
+### Forty-First Round (Reduce `as any` in render-utils.test.ts)
+- Replaced `(comp as Text).content` (from a mock) with access to real Text's `text` property via cast `as { text: string }`.
+- Eliminated all `as any` in this file.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
