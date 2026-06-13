@@ -52,38 +52,25 @@ function getOrCreateTool(
 // ==================== FACTORIES ====================
 
 function createHttpTool(cwd: string): ToolDefinition {
-  // @ts-ignore
   return createBashToolDefinition(cwd, {
-    bash: { commandPrefix: "" }
+    commandPrefix: ""
   }) as ToolDefinition;
 }
 
 function createLsToolWrapper(cwd: string): ToolDefinition {
-  // @ts-ignore
-  return createLsToolDefinition(cwd, {
-    ls: { all: true }
-  }) as ToolDefinition;
+  return createLsToolDefinition(cwd) as ToolDefinition;
 }
 
 function createFindToolWrapper(cwd: string): ToolDefinition {
-  // @ts-ignore
-  return createFindToolDefinition(cwd, {
-    find: {}
-  }) as ToolDefinition;
+  return createFindToolDefinition(cwd, {}) as ToolDefinition;
 }
 
 function createGrepToolWrapper(cwd: string): ToolDefinition {
-  // @ts-ignore
-  return createGrepToolDefinition(cwd, {
-    grep: {}
-  }) as ToolDefinition;
+  return createGrepToolDefinition(cwd, {}) as ToolDefinition;
 }
 
 function createReadToolWrapper(cwd: string): ToolDefinition {
-  // @ts-ignore
-  return createReadToolDefinition(cwd, {
-    read: { autoResize: true }
-  }) as ToolDefinition;
+  return createReadToolDefinition(cwd) as ToolDefinition;
 }
 
 // ==================== EXECUTION ====================

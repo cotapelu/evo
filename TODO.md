@@ -189,6 +189,7 @@ Last Updated: 2026-06-13
   - Replaced p source cast with `// @ts-ignore`.
   - File now type-clean.
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
+- [x] Fix subtool-loader type errors: corrected options objects for tool factories.
 
 ## In Progress
 - All `as any` casts eliminated in production code and tests (100% type-clean).
