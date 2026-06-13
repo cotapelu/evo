@@ -46,14 +46,14 @@ Last Updated: 2026-06-12
   - Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`
   - Plugin capability tests (git, dev, security-system) now typed
   - Command tests: provider-command, metrics-command, copy-command, team-command, team-ops-tool
-  - Tool test: memory-tool
+  - Tool tests: memory-tool, universal-tool-execution (with helper cast via common getter)
   - Renderer tests: todos-renderer, branch-summary-renderer (RendererFn type)
   - Techniques: typed mock factories, `vi.mocked()`, custom typed contexts, typed renderer functions, `as unknown as` for intentional unsoundness, `// @ts-ignore` for invalid action tests
-  - Reduced occurrences from ~48 to ~30; 11 files cleaned
+  - Reduced occurrences from ~48 to ~29; 12 files cleaned
 
 
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~30 occurrences left across ~35 files. Progress: 11 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool).
+- Reduce `as any` casts in remaining test files. Estimated ~29 occurrences left across ~33 files. Progress: 12 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution).
 
 ## Upcoming
 - (none)

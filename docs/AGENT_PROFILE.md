@@ -25,7 +25,7 @@ Last Updated: 2026-06-12
 - All tests passing; build green.
 - Zero TypeScript typecheck errors with strict settings.
 - Capability router tool is self-documenting: dynamically lists all registered capabilities in its guidelines, providing immediate discoverability for LLMs.
-- Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool).
+- Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution).
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

@@ -164,6 +164,13 @@ Last Updated: 2026-06-12
 - Removed options `as any` by passing plain `{}` object.
 - Successfully eliminated last 1 `as any` in this file.
 
+### Twenty-Fourth Round (Reduce `any` in universal-tool-execution.test.ts)
+- Typed `mockApi` as `ExtensionAPI` and `mockBashExecute` as function.
+- Replaced `(createBashToolDefinition as any).mockReturnValue` with `vi.mocked(createBashToolDefinition).mockReturnValue`.
+- Introduced `getRegisteredTool(api)` helper to cast registered tool to `ToolDefinition`.
+- Replaced 17 tool retrieval sites with helper.
+- Eliminated all `as any` from this file.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
