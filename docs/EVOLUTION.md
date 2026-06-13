@@ -522,6 +522,10 @@ Last Updated: 2026-06-13
 - **custom-commands.ts**: Replaced `(p as any).source` with `// @ts-ignore`. Cleaned 1.
 - **Impact**: Final batch of `as any` casts removed; all production code now type-clean.
 
+### Ninety-seventh Round (Fix subtool-loader type errors)
+- **subtool-loader.ts**: Corrected options objects for tool factories (BashToolOptions uses `commandPrefix`, LsToolOptions omits `all`, ReadToolOptions uses `autoResizeImages`). Removed unnecessary `@ts-ignore` annotations. Production code fully type-safe.
+- **Impact**: Resolved critical typecheck errors in production code arising from incorrect tool options usage. All factories now correctly typed.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
