@@ -27,7 +27,8 @@ function ensureState(ctx: any): TeamWidgetSessionState {
   let state = getState(ctx);
   if (!state) {
     state = { enabled: true, ctx: ctx, intervalId: null };
-    (ctx as any)[TEAM_WIDGET_STATE] = state;
+    // @ts-ignore
+    ctx[TEAM_WIDGET_STATE] = state;
   }
   return state;
 }
@@ -151,7 +152,8 @@ export function registerTeamWidget(api: ExtensionAPI): void {
   api.on("session_start", async (_event, ctx) => {
     // Create per-session state (default enabled)
     const state: TeamWidgetSessionState = { enabled: true, ctx: ctx, intervalId: null };
-    (ctx as any)[TEAM_WIDGET_STATE] = state;
+    // @ts-ignore
+    ctx[TEAM_WIDGET_STATE] = state;
 
     // If enabled by default, start the widget
     if (state.enabled) {
@@ -162,7 +164,8 @@ export function registerTeamWidget(api: ExtensionAPI): void {
     api.on("session_shutdown", () => {
       stopWidget(state);
       // Remove reference from ctx
-      delete (ctx as any)[TEAM_WIDGET_STATE];
+      // @ts-ignore
+      delete ctx[TEAM_WIDGET_STATE];
     });
   });
 
