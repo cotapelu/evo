@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTeamOpsTool } from '../../extensions/team/team-ops-tool.js';
 import { AgentTeam } from '../../extensions/team/team-manager.js';
+import type { ToolDefinition, AgentSessionRuntime } from "@earendil-works/pi-coding-agent";
 
 function createMockContext(sessionId: string) {
   return { session: { sessionId } };
@@ -10,7 +11,7 @@ function createMockContext(sessionId: string) {
 
 describe('team-ops-tool', () => {
   let team: AgentTeam;
-  let tool: any;
+  let tool: ToolDefinition;
 
   beforeEach(() => {
     team = new AgentTeam();
@@ -104,7 +105,7 @@ describe('team-ops-tool', () => {
 
     it('get_team_status should return status', async () => {
       await team.initialize(['T1']);
-      team.registerRuntime({ session: { id: 'agent-1' } } as any, 'agent-1');
+      team.registerRuntime({ session: { id: 'agent-1' } } as unknown as AgentSessionRuntime, 'agent-1');
       const ctx = createMockContext('agent-1');
       const result = await tool.execute('call', { action: 'get_team_status' }, undefined, undefined, ctx);
       expect(result.isError).toBe(false);
@@ -115,7 +116,8 @@ describe('team-ops-tool', () => {
   describe('error handling', () => {
     it('should handle unknown action', async () => {
       const ctx = createMockContext('agent-1');
-      const result = await tool.execute('call', { action: 'unknown' as any }, undefined, undefined, ctx);
+      // @ts-ignore - testing invalid action
+      const result = await tool.execute('call', { action: 'unknown' }, undefined, undefined, ctx);
       expect(result.isError).toBe(true);
     });
   });
