@@ -29,6 +29,7 @@ import {
 import { existsSync, mkdirSync, rmSync, writeFileSync, promises } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
 
 // Use the captured real functions for cleanup
 const realFs = { realRmSync, realMkdirSync, realExistsSync };
@@ -48,7 +49,7 @@ describe('TodosTool Coverage Gaps', () => {
     realFs.realMkdirSync(cwd, { recursive: true });
     vi.stubEnv('HOME', tempHome);
     vi.clearAllMocks();
-    (existsSync as any).mockReturnValue(false);
+    vi.mocked(existsSync).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -101,7 +102,8 @@ describe('TodosTool Coverage Gaps', () => {
 
     it('update: errors when status is invalid type', () => {
       const phases: any[] = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
-      const result = applyOp(phases, 1, 1, { update: { id: 'task-1', status: 123 as any } });
+      // @ts-ignore
+      const result = applyOp(phases, 1, 1, { update: { id: 'task-1', status: 123 } });
       expect(result.errors).toContain('Invalid status: 123. Must be pending, in_progress, completed, or abandoned.');
     });
 
@@ -137,7 +139,7 @@ describe('TodosTool Coverage Gaps', () => {
     it('ignores entries with null message', () => {
       const entries = [
         { type: 'message', message: null },
-      ] as any;
+      ];
       const phases = getLatestTodoPhasesFromEntries(entries);
       expect(phases).toEqual([]);
     });
@@ -153,8 +155,8 @@ describe('TodosTool Coverage Gaps', () => {
 
   describe('TodoState file operations', () => {
     it('loadFromFile returns false on JSON parse error', async () => {
-      (existsSync as any).mockReturnValue(true);
-      (promises.readFile as any).mockResolvedValue('invalid json');
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(promises.readFile).mockResolvedValue('invalid json');
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
@@ -162,17 +164,17 @@ describe('TodosTool Coverage Gaps', () => {
     });
 
     it('saveToFile propagates write error', async () => {
-      (promises.mkdir as any).mockResolvedValue({});
-      (promises.writeFile as any).mockRejectedValue(new Error('disk full'));
+      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.writeFile).mockRejectedValue(new Error('disk full'));
       const state = new TodoState();
       state.addPhase('P1', [{ content: 'T' }]);
       await expect(state.saveToFile(cwd)).rejects.toThrow('disk full');
     });
 
     it('saveToFile propagates rename error', async () => {
-      (promises.mkdir as any).mockResolvedValue({});
-      (promises.writeFile as any).mockResolvedValue({});
-      (promises.rename as any).mockRejectedValue(new Error('rename failed'));
+      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.writeFile).mockResolvedValue({});
+      vi.mocked(promises.rename).mockRejectedValue(new Error('rename failed'));
       const state = new TodoState();
       state.addPhase('P1', [{ content: 'T' }]);
       await expect(state.saveToFile(cwd)).rejects.toThrow('rename failed');
@@ -190,7 +192,7 @@ describe('TodosTool Coverage Gaps', () => {
         sendMessage: vi.fn(),
         on: vi.fn(),
       };
-      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true, cwd } as any;
+      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true, cwd } as unknown as ExtensionContext;
       registerTodosTool(mockApi);
     });
 
@@ -201,7 +203,7 @@ describe('TodosTool Coverage Gaps', () => {
     });
 
     it('execute: error when add_task content missing', async () => {
-      const result = await capturedTool.execute('err', { add_task: { phase: 'phase-1', content: '' as any } }, undefined, undefined, mockCtx);
+      const result = await capturedTool.execute('err', { add_task: { phase: 'phase-1', content: '' } }, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('add_task.content must be a string');
     });
@@ -210,13 +212,15 @@ describe('TodosTool Coverage Gaps', () => {
       await capturedTool.execute('p1', { add_phase: { name: 'P', tasks: [{ content: 'T' }] } }, undefined, undefined, mockCtx);
       const listResult = await capturedTool.execute('list', { list: {} }, undefined, undefined, mockCtx);
       const taskId = listResult.details.phases[0].tasks[0].id;
-      const result = await capturedTool.execute('upd', { update: { id: taskId, status: 123 as any } }, undefined, undefined, mockCtx);
+      // @ts-ignore
+      const result = await capturedTool.execute('upd', { update: { id: taskId, status: 123 } }, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid status');
     });
 
     it('execute: error when remove_task id missing', async () => {
-      const result = await capturedTool.execute('rem', { remove_task: {} } as any, undefined, undefined, mockCtx);
+      // @ts-ignore
+      const result = await capturedTool.execute('rem', { remove_task: {} }, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('remove_task.id must be a string');
     });
