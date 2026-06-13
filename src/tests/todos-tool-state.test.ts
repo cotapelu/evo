@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { TodoState } from "../extensions/tools/todos-tool";
+import type { TodoPhase } from "../utils/tool-types.js";
 
 describe("TodoState", () => {
   let s: TodoState;
@@ -39,7 +40,7 @@ describe("TodoState", () => {
 
   it("replacePhases resets", () => {
     s.addPhase("Old");
-    const newP = { id: "phase-2", name: "New", description: "", tasks: [] } as any;
+    const newP = { id: "phase-2", name: "New", description: "", tasks: [] } as unknown as TodoPhase;
     s.replacePhases([newP]);
     expect(s.getPhases().length).toBe(1);
     expect(s.getPhases()[0].name).toBe("New");

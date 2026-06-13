@@ -203,6 +203,11 @@ Last Updated: 2026-06-12
 - Replaced `(team as any).onUpdate = ...` with direct assignment plus `// @ts-ignore`.
 - Eliminated sole `as any` in this file.
 
+### Thirty-Fourth Round (Reduce `as any` in todos-tool-state.test.ts)
+- Imported `TodoPhase` type from `tool-types`.
+- Replaced `as any` on phase object with `as unknown as TodoPhase`.
+- Removed final `as any` in this test.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
