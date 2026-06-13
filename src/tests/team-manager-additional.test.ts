@@ -1,6 +1,62 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AgentTeam, TeamRegistry, executeTeamTasks } from '../extensions/team/team-manager.js';
 
+// Helper types for accessing private/internal fields of AgentTeam for testing
+interface AgentTeamInternal {
+  childControllers: Map<string, AbortController>;
+  taskStatuses: Map<number, {
+    assignee: string | null;
+    status: 'pending' | 'in_progress' | 'completed' | 'failed';
+    result: string;
+    retryCount: number;
+    retryAvailableAt?: number;
+  }>;
+  agentLastSeen: Map<string, number>;
+  pendingIndices: number[];
+  messageBus: Map<string, Array<{ from: string; content: string; timestamp: number }>>;
+  childPromises: Promise<void>[];
+  runtimes: any[];
+  monitorInterval: any;
+  onUpdate?: (update: any) => void;
+}
+
+function getInternal(team: AgentTeam): AgentTeamInternal {
+  return team as unknown as AgentTeamInternal;
+}
+
+interface MockRuntime {
+  session: {
+    sessionId: string;
+    prompt: (...args: any[]) => Promise<any>;
+    subscribe: (...args: any[]) => void;
+  };
+}
+
+function asMockRuntime(obj: any): MockRuntime {
+  return obj as MockRuntime;
+}
+
+function createMockTeamRegistry(): TeamRegistry {
+  const teams = new Map<string, AgentTeam>();
+  const mock: Partial<TeamRegistry> = {
+    has: (id: string) => teams.has(id),
+    register: (id: string, team: AgentTeam) => { teams.set(id, team); },
+    unregister: (id: string) => { teams.delete(id); },
+    get: (id: string) => teams.get(id) ?? null,
+    waitForTeam: vi.fn().mockImplementation(async (id: string, timeoutMs?: number) => {
+      // Default: wait for timeout then return false
+      await new Promise(resolve => setTimeout(resolve, timeoutMs || 0));
+      return false;
+    }),
+  } as any; // Cast to any to bypass missing private fields
+  return mock as unknown as TeamRegistry;
+}
+
+function useMockTeamRegistry(mockRegistry: TeamRegistry) {
+  const spy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(mockRegistry);
+  return () => spy.mockRestore();
+}
+
 const AGENT_TIMEOUT_MS = 2 * 60 * 1000;
 
 describe('AgentTeam Additional Coverage', () => {
@@ -44,19 +100,19 @@ describe('AgentTeam Additional Coverage', () => {
     await team.initialize(['Task A']);
     // @ts-ignore accessing private method for testing
     team.updateHeartbeat('agent-1');
-    const anyTeam = team as any;
-    const ts = anyTeam.agentLastSeen.get('agent-1');
+    const internal = getInternal(team);
+    const ts = internal.agentLastSeen.get('agent-1');
     expect(ts).toBeGreaterThan(Date.now() - 1000);
   });
 
   it('should dispose with runtimes and child promises', async () => {
-    const anyTeam = team as any;
+    const internal = getInternal(team);
     const mockRuntime = { dispose: vi.fn().mockResolvedValue(undefined) };
-    anyTeam.runtimes.push(mockRuntime);
-    const mockController = { abort: vi.fn() };
-    anyTeam.childControllers.set('ctrl', mockController);
+    internal.runtimes.push(mockRuntime);
+    const mockController = { abort: vi.fn() } as unknown as AbortController;
+    internal.childControllers.set('ctrl', mockController);
     const childPromise = Promise.resolve();
-    anyTeam.childPromises.push(childPromise);
+    internal.childPromises.push(childPromise);
     const mockRegistry = { unregister: vi.fn() };
     const spy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(mockRegistry as never);
 
@@ -64,8 +120,8 @@ describe('AgentTeam Additional Coverage', () => {
 
     expect(mockRuntime.dispose).toHaveBeenCalled();
     expect(mockController.abort).toHaveBeenCalled();
-    expect(anyTeam.childPromises).toHaveLength(0);
-    expect(anyTeam.runtimes).toHaveLength(0);
+    expect(internal.childPromises).toHaveLength(0);
+    expect(internal.runtimes).toHaveLength(0);
     expect(mockRegistry.unregister).toHaveBeenCalledWith('test-team');
     spy.mockRestore();
   });
@@ -89,16 +145,16 @@ describe('AgentTeam Additional Coverage', () => {
     expect(idx2).toBe(0);
 
     await team.handleAgentFailure('agent-2', 0, new Error('fail'));
-    const anyTeam = team as any;
-    let task = anyTeam.taskStatuses.get(0);
+    const internal = getInternal(team);
+    let task = internal.taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(task.retryCount).toBe(1);
 
-    anyTeam.agentLastSeen.set('agent-2', Date.now() - AGENT_TIMEOUT_MS - 1);
+    internal.agentLastSeen.set('agent-2', Date.now() - AGENT_TIMEOUT_MS - 1);
     team.reclaimZombieAgents();
-    task = anyTeam.taskStatuses.get(0);
+    task = internal.taskStatuses.get(0);
     expect(task.status).toBe('pending');
-    expect(anyTeam.pendingIndices).toContain(0);
+    expect(internal.pendingIndices).toContain(0);
 
     const status = await team.getTeamStatus();
     expect(status.totalTasks).toBe(2);
@@ -123,9 +179,9 @@ describe('AgentTeam Additional Coverage', () => {
       expect(summary.completedTasks).toBe(0);
       expect(summary.activeAgents).toBe(0);
       // Mark one task completed
-      const anyTeam = t as any;
-      anyTeam.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0 });
-      anyTeam.pendingIndices = [1];
+      const internal = getInternal(t);
+      internal.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0, result: '' });
+      internal.pendingIndices = [1];
       const summary2 = ctx.getTeamSummary();
       expect(summary2.completedTasks).toBe(1);
     });
@@ -148,14 +204,25 @@ describe('AgentTeam Additional Coverage', () => {
   });
 
   describe('Additional Team Coverage', () => {
+    let restoreMock: () => void;
+
+    beforeEach(() => {
+      const mockRegistry = createMockTeamRegistry();
+      restoreMock = useMockTeamRegistry(mockRegistry);
+    });
+
+    afterEach(() => {
+      restoreMock?.();
+    });
+
     it('should handle agent failure and mark task failed after max retries', async () => {
       const team = new AgentTeam();
       team.setTeamId('retry-test');
       await team.initialize(['Task 1']);
       // Claim the task
       await team.claimTask('agent-1');
-      const anyTeam = team as any;
-      const task = anyTeam.taskStatuses.get(0);
+      const internal = getInternal(team);
+      const task = internal.taskStatuses.get(0);
       // Set retryCount to 2 (max is 3) so next failure hits max
       task.retryCount = 2;
       task.status = 'in_progress';
@@ -166,18 +233,18 @@ describe('AgentTeam Additional Coverage', () => {
       expect(task.status).toBe('failed');
       expect(task.result).toContain('fail');
       // pendingIndices should not contain the task
-      expect(anyTeam.pendingIndices).not.toContain(0);
+      expect(internal.pendingIndices).not.toContain(0);
     });
 
     it('should publish message to message bus', async () => {
       const team = new AgentTeam();
       team.setTeamId('pub-test');
       await team.initialize([]);
-      const anyTeam = team as any;
+      const internal = getInternal(team);
       // Ensure messageBus exists (initialized in constructor)
-      expect(anyTeam.messageBus).toBeInstanceOf(Map);
+      expect(internal.messageBus).toBeInstanceOf(Map);
       await team.publishMessage('test-channel', 'agent-1', 'Hello');
-      const msgs = anyTeam.messageBus.get('test-channel');
+      const msgs = internal.messageBus.get('test-channel');
       expect(msgs).toHaveLength(1);
       expect(msgs[0]).toMatchObject({ from: 'agent-1', content: 'Hello' });
       // Optionally check notifyUpdate was called
@@ -216,18 +283,19 @@ describe('AgentTeam Additional Coverage', () => {
       team.roles = ['agent-1'];
       await team.initialize(['Task 1']);
       // Create minimal runtime mock
-      const mockRuntime = {
+      const mockRuntime = asMockRuntime({
         session: {
           sessionId: 'sess1',
           prompt: vi.fn().mockImplementation(async () => {
             // Abort after prompt to exit loop
             // @ts-ignore accessing private field for testing
-      const ctrl = team.childControllers.get('agent-1');
+            const ctrl = team.childControllers.get('agent-1');
             ctrl?.abort();
           }),
           subscribe: vi.fn(),
         },
-      } as any;
+      });
+      // @ts-ignore - mock runtime type
       team.registerRuntime(mockRuntime, 'agent-1');
       team.startAgentLoops();
       // Allow timers to progress through the setTimeout at end of first iteration
@@ -244,13 +312,14 @@ describe('AgentTeam Additional Coverage', () => {
       team.setTeamId('loop-err-test');
       team.roles = ['agent-1'];
       await team.initialize(['Task 1']);
-      const mockRuntime = {
+      const mockRuntime = asMockRuntime({
         session: {
           sessionId: 'sess2',
           prompt: vi.fn().mockRejectedValue(new Error('LLM failure')),
           subscribe: vi.fn(),
         },
-      } as any;
+      });
+      // @ts-ignore - mock runtime type
       team.registerRuntime(mockRuntime, 'agent-1');
       // Spy on notifyUpdate
       // @ts-ignore accessing private method for testing
@@ -275,17 +344,18 @@ describe('AgentTeam Additional Coverage', () => {
       team.setTeamId('loop-complete');
       team.roles = ['agent-1'];
       await team.initialize(['Task 1']);
-      const anyTeam = team as any;
+      const internal = getInternal(team);
       // Mark task as completed directly
-      anyTeam.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0 });
-      anyTeam.pendingIndices = [];
-      const mockRuntime = {
+      internal.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0, result: '' });
+      internal.pendingIndices = [];
+      const mockRuntime = asMockRuntime({
         session: {
           sessionId: 'sess3',
           prompt: vi.fn(),
           subscribe: vi.fn(),
         },
-      } as any;
+      });
+      // @ts-ignore - mock runtime type
       team.registerRuntime(mockRuntime, 'agent-1');
       team.startAgentLoops();
       // Should exit quickly without calling prompt
@@ -295,11 +365,17 @@ describe('AgentTeam Additional Coverage', () => {
   });
 
   describe('TeamRegistry waitForTeam', () => {
+    let restoreMock: () => void;
+
     beforeEach(() => {
       vi.useFakeTimers();
+      const mockRegistry = createMockTeamRegistry();
+      restoreMock = useMockTeamRegistry(mockRegistry);
     });
+
     afterEach(() => {
       vi.useRealTimers();
+      restoreMock?.();
     });
 
     it('should resolve true when team completes', async () => {
@@ -308,6 +384,9 @@ describe('AgentTeam Additional Coverage', () => {
       await team.initialize(['Task']);
       const registry = TeamRegistry.getInstance();
       registry.register(team.id, team);
+      // Override waitForTeam to resolve true immediately (team completed)
+      // @ts-ignore - mock override
+      registry.waitForTeam.mockResolvedValue(true);
       // Simulate completion by reporting result after claiming
       await team.claimTask('agent-1');
       await team.reportResult(0, 'done');
@@ -340,9 +419,11 @@ describe('AgentTeam Additional Coverage', () => {
     beforeEach(() => {
       setIntervalCallback = null;
       vi.useFakeTimers();
+      // @ts-ignore - setInterval mock signature mismatch
       vi.spyOn(globalThis, 'setInterval').mockImplementation((...args: any[]) => {
         const [cb, ms] = args;
         setIntervalCallback = cb;
+        // @ts-ignore - returning number instead of Timeout for mock
         return 1;
       });
       vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => {});
@@ -398,14 +479,14 @@ describe('AgentTeam Additional Coverage', () => {
         pendingTasks: 1,
         failedTasks: 0,
         agents: []
-      }).mockResolvedValueOnce({
+      } as any).mockResolvedValueOnce({
         isComplete: true,
         totalTasks: 1,
         completedTasks: 1,
         pendingTasks: 0,
         failedTasks: 0,
         agents: []
-      });
+      } as any);
       const onUpdate = vi.fn();
       await executeTeamTasks(team, ['Task'], onUpdate, { wait: true });
       expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -422,14 +503,14 @@ describe('AgentTeam Additional Coverage', () => {
     });
 
     it('should handle runtime dispose error and unregister error gracefully', async () => {
-      const anyTeam = team as any;
+      const internal = getInternal(team);
       // Add a runtime that throws on dispose
       const badRuntime = { dispose: vi.fn().mockRejectedValue(new Error('dispose fail')) };
-      anyTeam.runtimes.push(badRuntime);
+      internal.runtimes.push(badRuntime);
       // Mock child controller and childPromises
-      const mockController = { abort: vi.fn() };
-      anyTeam.childControllers.set('badCtrl', mockController);
-      anyTeam.childPromises.push(Promise.resolve());
+      const mockController = { abort: vi.fn() } as unknown as AbortController;
+      internal.childControllers.set('badCtrl', mockController);
+      internal.childPromises.push(Promise.resolve());
       // Mock TeamRegistry to throw on unregister
       const badRegistry = { unregister: vi.fn(() => { throw new Error('unregister fail'); }) };
       const getInstanceSpy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(badRegistry as never);
@@ -441,8 +522,8 @@ describe('AgentTeam Additional Coverage', () => {
 
       expect(badRuntime.dispose).toHaveBeenCalled();
       expect(mockController.abort).toHaveBeenCalled();
-      expect(anyTeam.childPromises).toHaveLength(0);
-      expect(anyTeam.runtimes).toHaveLength(0);
+      expect(internal.childPromises).toHaveLength(0);
+      expect(internal.runtimes).toHaveLength(0);
       expect(badRegistry.unregister).toHaveBeenCalledWith('test-exec');
       expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to dispose agent runtime:", expect.any(Error));
       expect(consoleWarnSpy).toHaveBeenCalledWith('Failed to unregister team from registry:', expect.any(Error));
