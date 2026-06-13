@@ -2,6 +2,15 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
+// Helper to access private fields for testing
+interface AgentTeamInternal {
+  taskStatuses: Map<number, any>;
+  agentStatuses: Map<string, any>;
+}
+function getInternal(team: AgentTeam): AgentTeamInternal {
+  return team as unknown as AgentTeamInternal;
+}
+
 describe('AgentTeam Failure Recovery', () => {
   let team: AgentTeam;
 
@@ -12,10 +21,11 @@ describe('AgentTeam Failure Recovery', () => {
 
     // Minimal setup
     team.tasks = [];
-    (team as any).taskStatuses.clear();
-    (team as any).agentStatuses.clear();
-    (team as any).agentStatuses.set('agent-1', { currentTaskIndex: null, status: 'idle' });
-    (team as any).agentStatuses.set('agent-2', { currentTaskIndex: null, status: 'idle' });
+    const internal = getInternal(team);
+    internal.taskStatuses.clear();
+    internal.agentStatuses.clear();
+    internal.agentStatuses.set('agent-1', { currentTaskIndex: null, status: 'idle' });
+    internal.agentStatuses.set('agent-2', { currentTaskIndex: null, status: 'idle' });
   });
 
   afterEach(async () => {
@@ -27,7 +37,8 @@ describe('AgentTeam Failure Recovery', () => {
   test('should track retry count when task fails', async () => {
     // Setup: 1 task, 1 agent
     team.tasks = ['task1'];
-    (team as any).taskStatuses.set(0, {
+    const internal = getInternal(team);
+    internal.taskStatuses.set(0, {
       assignee: 'agent-1',
       status: 'in_progress',
       result: '',
@@ -47,7 +58,8 @@ describe('AgentTeam Failure Recovery', () => {
 
   test('should re-queue task with increased retry count after failure', async () => {
     team.tasks = ['task1'];
-    (team as any).taskStatuses.set(0, {
+    const internal = getInternal(team);
+    internal.taskStatuses.set(0, {
       assignee: 'agent-1',
       status: 'in_progress',
       result: '',
@@ -68,7 +80,8 @@ describe('AgentTeam Failure Recovery', () => {
   test('should mark task as failed after max retries exceeded', async () => {
     const maxRetries = 3;
     team.tasks = ['task1'];
-    (team as any).taskStatuses.set(0, {
+    const internal = getInternal(team);
+    internal.taskStatuses.set(0, {
       assignee: 'agent-1',
       status: 'in_progress',
       result: '',
@@ -88,7 +101,8 @@ describe('AgentTeam Failure Recovery', () => {
 
   test('should respect exponential backoff delay before task becomes claimable again', async () => {
     team.tasks = ['task1'];
-    (team as any).taskStatuses.set(0, {
+    const internal = getInternal(team);
+    internal.taskStatuses.set(0, {
       assignee: 'agent-1',
       status: 'in_progress',
       result: '',
@@ -110,7 +124,7 @@ describe('AgentTeam Failure Recovery', () => {
     // Fast-forward time (we can't really in Jest without fake timers, but we can verify the timestamp)
     // For real test, would use jest.advanceTimersByTime, but relying on real delay is flaky
     // Instead, we'll manually clear retryAvailableAt to simulate time passing
-    (team as any).taskStatuses.get(0)!.retryAvailableAt = Date.now() - 1000;
+    getInternal(team).taskStatuses.get(0)!.retryAvailableAt = Date.now() - 1000;
 
     // Now claiming should work
     const claimResult2 = await team.claimTask('agent-2');
@@ -122,8 +136,9 @@ describe('AgentTeam Failure Recovery', () => {
 
   test('monitorInterval should not dispose team with pending or failed tasks', async () => {
     team.tasks = ['task1', 'task2'];
-    (team as any).taskStatuses.set(0, { assignee: null, status: 'completed', result: 'done', retryCount: 0 });
-    (team as any).taskStatuses.set(1, { assignee: null, status: 'failed', result: 'error', retryCount: 3 });
+    const internal = getInternal(team);
+    internal.taskStatuses.set(0, { assignee: null, status: 'completed', result: 'done', retryCount: 0 });
+    internal.taskStatuses.set(1, { assignee: null, status: 'failed', result: 'error', retryCount: 3 });
 
     // Team should not auto-dispose until all tasks are either completed or failed?
     // Actually: team completes when all tasks are either completed OR failed?
@@ -140,9 +155,10 @@ describe('AgentTeam Failure Recovery', () => {
 
   test('getTeamStatus should include failure metrics', async () => {
     team.tasks = ['task1', 'task2', 'task3'];
-    (team as any).taskStatuses.set(0, { assignee: null, status: 'completed', result: 'done', retryCount: 0 });
-    (team as any).taskStatuses.set(1, { assignee: null, status: 'failed', result: 'error', retryCount: 2 });
-    (team as any).taskStatuses.set(2, { assignee: 'agent-2', status: 'in_progress', result: '', retryCount: 0 });
+    const internal = getInternal(team);
+    internal.taskStatuses.set(0, { assignee: null, status: 'completed', result: 'done', retryCount: 0 });
+    internal.taskStatuses.set(1, { assignee: null, status: 'failed', result: 'error', retryCount: 2 });
+    internal.taskStatuses.set(2, { assignee: 'agent-2', status: 'in_progress', result: '', retryCount: 0 });
 
     const status = await team.getTeamStatus();
     expect(status.failedTasks).toBeDefined();

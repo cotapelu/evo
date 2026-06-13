@@ -88,6 +88,9 @@ Last Updated: 2026-06-13
   - Replaced all `(team as any)` occurrences with `getInternal(team)` or direct method calls (`team.setupChildRuntimes`).
   - Removed unnecessary casts in `createSimpleRuntime` and `createMockAgentSessionEvent`.
   - Tests pass (14 passed); file typecheck clean (with @ts-nocheck).
+- [x] Eliminate `as any` casts in team-failure-recovery.test.ts (14 occurrences removed)
+  - Extended `AgentTeamInternal` pattern; replaced all `(team as any).taskStatuses` and `.agentStatuses` with `getInternal(team)` access.
+  - Removed all 14 casts across 6 test cases; tests pass (6 passed).
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
 
 ## In Progress
