@@ -171,6 +171,10 @@ Last Updated: 2026-06-12
 - Replaced 17 tool retrieval sites with helper.
 - Eliminated all `as any` from this file.
 
+### Twenty-Fifth Round (Reduce `any` in subtool-loader.test.ts)
+- Cast on tool parameters replaced with `as Record<string, unknown>`.
+- This removes the sole `as any` cast in the file, preserving TypeScript's type checking for object properties.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
