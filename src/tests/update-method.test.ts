@@ -46,7 +46,7 @@ describe("PiclawPackageManager.update", () => {
     const [source, scope] = updateNpmSpy.mock.calls[0] as [any, string];
     expect(source.type).toBe("npm");
     expect(source.name).toBe("test");
-    expect(source.pinned).toBe(false);
+    expect(source.pinned).toBeUndefined();
     expect(scope).toBe("user");
   });
 

@@ -37,14 +37,14 @@ describe('PiclawPackageManager Coverage Gaps', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       // @ts-ignore
       const parsed = pm.parseSource('npm:@scope/package');
-      expect(parsed).toEqual({ type: 'npm', name: '@scope/package', pinned: false });
+      expect(parsed).toEqual({ type: 'npm', name: '@scope/package', pinned: undefined });
     });
 
     it('should parse npm with version pin', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       // @ts-ignore
       const parsed = pm.parseSource('npm:package@1.2.3');
-      expect(parsed).toEqual({ type: 'npm', name: 'package', pinned: true });
+      expect(parsed).toEqual({ type: 'npm', name: 'package', pinned: '1.2.3' });
     });
 
     it('should parse git@ SSH URL', () => {
@@ -146,7 +146,7 @@ describe('PiclawPackageManager Coverage Gaps', () => {
       // Mock reinstall to fail (runNpmCommand calls runCommand internally)
       // @ts-ignore
       vi.spyOn(pm, 'runNpmCommand').mockRejectedValue(new Error('npm install error during update'));
-      const source = { type: 'npm', name: 'test', pinned: false };
+      const source = { type: 'npm', name: 'test', pinned: undefined };
       // @ts-ignore
       await expect(pm.updateNpm(source, 'project')).rejects.toThrow('npm install error during update');
     });

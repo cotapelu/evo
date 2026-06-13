@@ -30,7 +30,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   describe('validateParsed', () => {
     it('should throw for npm source with empty name', () => {
-      const parsed = { type: 'npm', name: '', pinned: false };
+      const parsed = { type: 'npm', name: '', pinned: undefined };
       // @ts-ignore intentionally testing invalid npm source
       // @ts-ignore accessing private method for testing
       expect(() => pm.validateParsed(parsed)).toThrow('Invalid npm source: missing package name');
@@ -56,7 +56,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     it('should reject when runNpmCommand fails', async () => {
       const pmAny = pm as any;
       const spy = vi.spyOn(pmAny, 'runNpmCommand').mockRejectedValue(new Error('npm error'));
-      await expect(pmAny.installNpm({ type: 'npm', name: 'test', pinned: false }, 'project')).rejects.toThrow('npm error');
+      await expect(pmAny.installNpm({ type: 'npm', name: 'test', pinned: undefined }, 'project')).rejects.toThrow('npm error');
       expect(spy).toHaveBeenCalled();
     });
   });
@@ -107,7 +107,7 @@ describe('PiclawPackageManager Edge Cases', () => {
   describe('other methods', () => {
     it('should compute npm install path for project', () => {
       const pmAny = pm as any;
-      const source = { type: 'npm', name: 'testpkg', pinned: false };
+      const source = { type: 'npm', name: 'testpkg', pinned: undefined };
       const path = pmAny.getNpmInstallPath(source, 'project');
       expect(path).toContain('.piclaw');
       expect(path).toContain('npm');
@@ -144,11 +144,11 @@ describe('PiclawPackageManager Edge Cases', () => {
   it('should parse npm sources correctly', () => {
     const pmAny = pm as any;
     let parsed = pmAny.parseSource('npm:lodash');
-    expect(parsed).toEqual({ type: 'npm', name: 'lodash', pinned: false });
+    expect(parsed).toEqual({ type: 'npm', name: 'lodash', pinned: undefined });
     parsed = pmAny.parseSource('npm:@babel/core@7.0.0');
-    expect(parsed).toEqual({ type: 'npm', name: '@babel/core', pinned: true });
+    expect(parsed).toEqual({ type: 'npm', name: '@babel/core', pinned: '7.0.0' });
     parsed = pmAny.parseSource('npm:my-pkg@latest');
-    expect(parsed).toEqual({ type: 'npm', name: 'my-pkg', pinned: true });
+    expect(parsed).toEqual({ type: 'npm', name: 'my-pkg', pinned: 'latest' });
   });
 
   it('should parse git sources correctly', () => {
@@ -187,7 +187,7 @@ describe('PiclawPackageManager Edge Cases', () => {
   it('should install npm package globally', async () => {
     const pmAny = pm as any;
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
-    await pmAny.installNpm({ type: 'npm', name: 'testpkg', pinned: false }, 'user');
+    await pmAny.installNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'user');
     expect(runSpy).toHaveBeenCalledWith(['install', '-g', 'testpkg']);
   });
 
@@ -195,7 +195,7 @@ describe('PiclawPackageManager Edge Cases', () => {
     const pmAny = pm as any;
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
     const ensureSpy = vi.spyOn(pmAny, 'ensureNpmProject');
-    await pmAny.installNpm({ type: 'npm', name: 'testpkg', pinned: false }, 'project');
+    await pmAny.installNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'project');
     // ensureNpmProject should be called with the project root
     expect(ensureSpy).toHaveBeenCalledWith(join(tmpDir, '.piclaw', 'npm'));
     expect(runSpy).toHaveBeenCalledWith(['install', 'testpkg', '--prefix', expect.any(String), '--no-audit', '--no-fund']);
@@ -204,14 +204,14 @@ describe('PiclawPackageManager Edge Cases', () => {
   it('should uninstall npm package globally', async () => {
     const pmAny = pm as any;
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
-    await pmAny.uninstallNpm({ type: 'npm', name: 'testpkg', pinned: false }, 'user');
+    await pmAny.uninstallNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'user');
     expect(runSpy).toHaveBeenCalledWith(['uninstall', '-g', 'testpkg']);
   });
 
   it('should uninstall npm package from project', async () => {
     const pmAny = pm as any;
     const runSpy = vi.spyOn(pmAny, 'runNpmCommand').mockResolvedValue(undefined);
-    await pmAny.uninstallNpm({ type: 'npm', name: 'testpkg', pinned: false }, 'project');
+    await pmAny.uninstallNpm({ type: 'npm', name: 'testpkg', pinned: undefined }, 'project');
     expect(runSpy).toHaveBeenCalledWith(['uninstall', 'testpkg', '--prefix', join(tmpDir, '.piclaw', 'npm')]);
   });
 
@@ -277,7 +277,7 @@ describe('PiclawPackageManager Edge Cases', () => {
       const anyPm = pm as any;
       const installNpmSpy = vi.spyOn(anyPm, 'installNpm').mockResolvedValue(undefined);
       await pm.install('npm:test-pkg', { local: false });
-      expect(installNpmSpy).toHaveBeenCalledWith({ type: 'npm', name: 'test-pkg', pinned: false }, 'user');
+      expect(installNpmSpy).toHaveBeenCalledWith({ type: 'npm', name: 'test-pkg', pinned: undefined }, 'user');
     });
 
     it('should call installGit when installing git source', async () => {
@@ -302,7 +302,7 @@ describe('PiclawPackageManager Edge Cases', () => {
       const anyPm = pm as any;
       const uninstallSpy = vi.spyOn(anyPm, 'uninstallNpm').mockResolvedValue(undefined);
       await pm.remove('npm:test-pkg', { local: false });
-      expect(uninstallSpy).toHaveBeenCalledWith({ type: 'npm', name: 'test-pkg', pinned: false }, 'user');
+      expect(uninstallSpy).toHaveBeenCalledWith({ type: 'npm', name: 'test-pkg', pinned: undefined }, 'user');
     });
 
     it('should call uninstallGit when removing git source', async () => {
@@ -357,7 +357,7 @@ describe('PiclawPackageManager Edge Cases', () => {
       pm.addSourceToSettings('npm:testpkg', { local: false });
       const updateNpmSpy = vi.spyOn(anyPm, 'updateNpm').mockResolvedValue(undefined);
       await pm.update('npm:testpkg');
-      expect(updateNpmSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'npm', name: 'testpkg', pinned: false }), 'user');
+      expect(updateNpmSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'npm', name: 'testpkg', pinned: undefined }), 'user');
     });
 
     it('should update git package', async () => {

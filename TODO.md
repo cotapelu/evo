@@ -1,6 +1,6 @@
 # TODO
 
-Last Updated: 2026-06-12
+Last Updated: 2026-06-13
 
 ## Completed
 - [x] Fix failing plugin capability tests (dev, git, security-system)
@@ -52,8 +52,11 @@ Last Updated: 2026-06-12
   - Reduced occurrences from ~48 to ~29; 12 files cleaned
 
 
+- Refactored PiclawPackageManager npm source typing: pinned now string|undefined; updated tests in update-method, package-manager-edge-cases, package-manager-coverage.
+- Eliminated as any in src/__tests__/team-ops-renderer.test.ts (32 occurrences) via typed RendererFn.
+
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~195 occurrences left across ~2 files. Progress: 46 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, integration-flow, keybinding-extension, todos-tool, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases).
+- Reduce `as any` casts in remaining test files. Estimated ~160 occurrences left across ~2 files. Progress: 47 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, integration-flow, keybinding-extension, todos-tool, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases).
 
 ## Upcoming
 - (none)

@@ -3,37 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Chạy test và dọn file test thừa",
+      "name": "Evolution Round 59",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Chạy npm test để xem kết quả",
+          "content": "Add new round entry to EVOLUTION.md",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Liệt kê tất cả file test trong project",
+          "content": "Update Planned Refactors list in EVOLUTION.md",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Xác định file source tương ứng cho mỗi file test",
-          "status": "pending"
+          "content": "Increment iteration and task counts in AGENT_METRICS.md",
+          "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Xóa những file test không có source tương ứng",
-          "status": "pending"
+          "content": "Add new completed bullets to TODO.md",
+          "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Chạy test lại để xác nhận",
+          "content": "Run tests and build (already done)",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Git commit changes",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-12T00:29:35.481Z"
+  "updatedAt": "2026-06-13T13:25:46.038Z"
 }

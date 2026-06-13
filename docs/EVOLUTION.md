@@ -1,6 +1,6 @@
 # Evolution Log
 
-Last Updated: 2026-06-12
+Last Updated: 2026-06-13
 
 ## Current Trajectory
 - Stabilizing the capability system to ensure deterministic test behavior.
@@ -310,6 +310,11 @@ Last Updated: 2026-06-12
 - Reduced 47 to 40 ` as any` casts: replaced `(mockSpawn as any).mock*` with `vi.mocked()`, removed mock object casts, added `// @ts-ignore` for `validateParsed` access, removed `getConfiguredEntries` cast.
 - Remaining 40 casts are `pmAny`/`anyPm` private field access aliases.
 
+### Fifty-Ninth Round (Package Manager Typing and Renderer Cleanup)
+- Refactored `PiclawPackageManager` npm source pinned type from `boolean` to `string | undefined` to preserve version information. Updated `parseSource` to return actual version string when present. Adjusted test expectations across `update-method.test.ts`, `package-manager-edge-cases.test.ts`, and `package-manager-coverage.test.ts`.
+- Eliminated all `as any` casts in `src/__tests__/team-ops-renderer.test.ts` (~32 occurrences) by introducing a `RendererFn` type alias and using typed renderer from the mock API.
+- All tests passing; build successful.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
@@ -321,6 +326,7 @@ Last Updated: 2026-06-12
 - [x] Centralize test mock factories to avoid duplication.
 - [x] Add integration test to verify extension initialization under watch mode.
 - [x] Reduce `as any` casts in tests: typed mock-factory, cleaned plugin capability tests (git, dev, security-system), and refactored provider-command to use mockImplementation.
+- [x] Refine PiclawPackageManager source parsing types (npm pinned string, typed signatures).
 
 ## Anticipated Technical Debt
 

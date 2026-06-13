@@ -1,6 +1,6 @@
 # Agent Profile
 
-Last Updated: 2026-06-12
+Last Updated: 2026-06-13
 
 ## Common Failure Modes
 1. **Relative import path errors**: Tests using incorrect paths like `../../src/...` instead of `../../...` after directory restructuring.
@@ -25,7 +25,7 @@ Last Updated: 2026-06-12
 - All tests passing; build green.
 - Zero TypeScript typecheck errors with strict settings.
 - Capability router tool is self-documenting: dynamically lists all registered capabilities in its guidelines, providing immediate discoverability for LLMs.
-- Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases).
+- Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases, team-ops-renderer).
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

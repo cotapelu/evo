@@ -35,7 +35,7 @@ export interface PackageFilter {
 }
 
 type ParsedSource =
-  | { type: "npm"; name: string; pinned: boolean }
+  | { type: "npm"; name: string; pinned?: string }
   | { type: "git"; host: string; path: string; ref?: string }
   | { type: "local"; path: string };
 
@@ -451,7 +451,7 @@ export class PiclawPackageManager {
     }
   }
 
-  private async updateNpm(source: { type: "npm"; name: string; pinned: boolean }, scope: "user" | "project"): Promise<void> {
+  private async updateNpm(source: { type: "npm"; name: string; pinned?: string }, scope: "user" | "project"): Promise<void> {
     const installedPath = this.getNpmInstallPath(source, scope);
     if (!existsSync(installedPath)) {
       logger.log(chalk.yellow(`Skipping ${source.name}: not installed`));
@@ -561,7 +561,7 @@ export class PiclawPackageManager {
       const spec = source.slice(4);
       const match = spec.match(/^(@?[^@]+(?:\/[^@]+)?)(?:@(.+))?$/);
       const name = match ? match[1] : spec;
-      return { type: "npm", name, pinned: !!match?.[2] };
+      return { type: "npm", name, pinned: match?.[2] };
     }
     if (source.startsWith("git:")) {
       const rest = source.slice(4);
@@ -626,7 +626,7 @@ export class PiclawPackageManager {
     }
   }
 
-  private getNpmInstallPath(source: { type: "npm"; name: string; pinned: boolean }, scope: "user" | "project"): string {
+  private getNpmInstallPath(source: { type: "npm"; name: string; pinned?: string }, scope: "user" | "project"): string {
     if (scope === "project") {
       return join(this.cwd, CONFIG_DIR_NAME, "npm", "node_modules", source.name);
     }
@@ -691,7 +691,7 @@ export class PiclawPackageManager {
     }
   }
 
-  private async installNpm(source: { type: "npm"; name: string; pinned: boolean }, scope: "user" | "project"): Promise<void> {
+  private async installNpm(source: { type: "npm"; name: string; pinned?: string }, scope: "user" | "project"): Promise<void> {
     const spec = source.name + (source.pinned ? `@${source.pinned}` : "");
     if (scope === "user") {
       await this.runNpmCommand(["install", "-g", spec]);
@@ -702,7 +702,7 @@ export class PiclawPackageManager {
     }
   }
 
-  private async uninstallNpm(source: { type: "npm"; name: string; pinned: boolean }, scope: "user" | "project"): Promise<void> {
+  private async uninstallNpm(source: { type: "npm"; name: string; pinned?: string }, scope: "user" | "project"): Promise<void> {
     if (scope === "user") {
       await this.runNpmCommand(["uninstall", "-g", source.name]);
     } else {

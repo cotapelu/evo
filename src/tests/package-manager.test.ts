@@ -127,19 +127,19 @@ describe("PiclawPackageManager", () => {
     it("should parse npm source", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       const parsed = (pm as any).parseSource("npm:chalk");
-      expect(parsed).toEqual({ type: "npm", name: "chalk", pinned: false });
+      expect(parsed).toEqual({ type: "npm", name: "chalk", pinned: undefined });
     });
 
     it("should parse npm source with version", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       const parsed = (pm as any).parseSource("npm:chalk@1.0.0");
-      expect(parsed).toEqual({ type: "npm", name: "chalk", pinned: true });
+      expect(parsed).toEqual({ type: "npm", name: "chalk", pinned: "1.0.0" });
     });
 
     it("should parse scoped npm package", () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       const parsed = (pm as any).parseSource("npm:@myorg/package");
-      expect(parsed).toEqual({ type: "npm", name: "@myorg/package", pinned: false });
+      expect(parsed).toEqual({ type: "npm", name: "@myorg/package", pinned: undefined });
     });
 
     it("should parse local source", () => {
