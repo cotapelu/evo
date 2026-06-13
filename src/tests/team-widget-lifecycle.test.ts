@@ -25,7 +25,7 @@ describe("Team Widget Lifecycle", () => {
       })
     };
     mockRegistry = { getAll: vi.fn(() => new Map([["team1", mockTeam]])) };
-    (TeamRegistry.getInstance as any).mockReturnValue(mockRegistry);
+    vi.mocked(TeamRegistry.getInstance).mockReturnValue(mockRegistry);
     ctx = {
       ui: {
         setWidget: mockSetWidget,
