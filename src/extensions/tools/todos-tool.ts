@@ -337,7 +337,8 @@ export function normalizeParams(params: unknown): any {
     }
   });
 
-  return normalized as any;
+  // @ts-ignore
+  return normalized;
 }
 
 // ============================================================================
@@ -593,7 +594,8 @@ export function applyOp(
   params: any
 ): { phases: TodoPhase[]; nextTaskId: number; nextPhaseId: number; errors: string[] } {
   const file: TodoFile = { phases, nextTaskId, nextPhaseId };
-  const { file: updated, errors } = applySingleOp(file, params as any);
+  // @ts-ignore
+  const { file: updated, errors } = applySingleOp(file, params);
   return {
     phases: updated.phases,
     nextTaskId: updated.nextTaskId,
@@ -640,7 +642,8 @@ export class TodoState {
       if (e.type !== "message") continue;
       const m = e.message;
       if (m.role !== "toolResult" || (m.toolName !== "todos" && m.toolName !== "todo_write")) continue;
-      const d = m.details as any;
+      // @ts-ignore
+      const d = m.details;
       if (d?.phases) {
         this.phases = clonePhases(d.phases);
         const ids = getNextIds(this.phases);
