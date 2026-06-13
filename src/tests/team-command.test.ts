@@ -32,8 +32,8 @@ describe("Team Command", () => {
   });
 
   it("handler toggles widget and notifies hidden status", async () => {
-    (getTeamWidgetEnabled as any).mockReturnValue(true);
-    (toggleTeamWidget as any).mockReturnValue(false);
+    vi.mocked(getTeamWidgetEnabled).mockReturnValue(true);
+    vi.mocked(toggleTeamWidget).mockReturnValue(false);
 
     const handler = mockApi.registerCommand.mock.calls[0][1].handler;
     const ctx = { ui: { notify: mockNotify } };
@@ -45,8 +45,8 @@ describe("Team Command", () => {
   });
 
   it("handler notifies shown status when toggled on", async () => {
-    (getTeamWidgetEnabled as any).mockReturnValue(false);
-    (toggleTeamWidget as any).mockReturnValue(true);
+    vi.mocked(getTeamWidgetEnabled).mockReturnValue(false);
+    vi.mocked(toggleTeamWidget).mockReturnValue(true);
 
     const handler = mockApi.registerCommand.mock.calls[0][1].handler;
     const ctx = { ui: { notify: mockNotify } };
