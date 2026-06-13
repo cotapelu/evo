@@ -228,6 +228,11 @@ Last Updated: 2026-06-12
 - Imported `ExtensionContext` type.
 - Replaced two `{} as any` casts with `{} as unknown as ExtensionContext` for execute call context.
 
+### Fortieth Round (Reduce `as any` in integration/copy-command.integration.test.ts)
+- Replaced `pi.copyToClipboard as any` with `vi.mocked(pi.copyToClipboard)`.
+- Removed subsequent casts on mock methods (`mockReset`, `mockRejectedValue`).
+- Clean typed mock using Vitest's `mocked` helper.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

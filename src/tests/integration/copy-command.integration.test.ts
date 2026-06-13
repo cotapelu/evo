@@ -14,7 +14,7 @@ import { registerCopyCommand } from "../../extensions/commands/copy-command.js";
 import * as pi from "@earendil-works/pi-coding-agent";
 
 // Grab the mocked copyToClipboard for assertions
-const copyToClipboard = pi.copyToClipboard as any;
+const copyToClipboard = vi.mocked(pi.copyToClipboard);
 
 describe("Copy Command Integration", () => {
   let mockApi: any;
@@ -25,7 +25,7 @@ describe("Copy Command Integration", () => {
     mockNotify = vi.fn();
     mockApi = { registerCommand: vi.fn() };
     // Reset copy mock
-    (copyToClipboard as any).mockReset().mockResolvedValue(undefined);
+    copyToClipboard.mockReset().mockResolvedValue(undefined);
   });
 
   it("registers /copy command", () => {
@@ -93,7 +93,7 @@ describe("Copy Command Integration", () => {
   });
 
   it("handles clipboard copy error", async () => {
-    (copyToClipboard as any).mockRejectedValue(new Error("clipboard error"));
+    copyToClipboard.mockRejectedValue(new Error("clipboard error"));
     const mockSessionManager = {
       getTree: () => [
         { entry: { type: "message", message: { role: "assistant", content: [{ type: "text", text: "Test" }] } } },
