@@ -179,6 +179,10 @@ Last Updated: 2026-06-12
 - Removed `as any` cast from `delete (process.env as any).PI_CODING_AGENT` and used plain `delete process.env.PI_CODING_AGENT`.
 - TypeScript allows delete on `ProcessEnv` index signature; no cast needed.
 
+### Twenty-Seventh Round (Reduce `as any` in metrics-widget.test.ts)
+- Removed `as any` cast from mock context object literal. Since widget functions accept `any` context, no cast needed.
+- Single `as any` eliminated.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
