@@ -85,7 +85,8 @@ describe("Integration Flow (Install → Resolve → Remove)", () => {
     const pm = new PiclawPackageManager({ cwd, agentDir });
 
     // Spy on internal runCommand to simulate failure
-    const runCommandSpy = vi.spyOn(pm as any, 'runCommand').mockRejectedValue(new Error("npm command failed with code 1"));
+    // @ts-ignore
+    const runCommandSpy = vi.spyOn(pm, 'runCommand').mockRejectedValue(new Error("npm command failed with code 1"));
 
     // Attempt to install an npm package (not local, as we want to trigger runCommand)
     await expect(pm.install("npm:test-pkg")).rejects.toThrow("npm command failed with code 1");
@@ -107,14 +108,18 @@ describe("Integration Flow (Install → Resolve → Remove)", () => {
     writeFileSync(join(fakeInstallPath, "package.json"), JSON.stringify({ version: "1.0.0" }));
 
     // Spy on getNpmInstallPath to return fake path
-    const getPathSpy = vi.spyOn(pm as any, 'getNpmInstallPath').mockReturnValue(fakeInstallPath);
+    // @ts-ignore
+    const getPathSpy = vi.spyOn(pm, 'getNpmInstallPath').mockReturnValue(fakeInstallPath);
     // Mock getInstalledNpmVersion
-    const getInstalledSpy = vi.spyOn(pm as any, 'getInstalledNpmVersion').mockReturnValue("1.0.0");
+    // @ts-ignore
+    const getInstalledSpy = vi.spyOn(pm, 'getInstalledNpmVersion').mockReturnValue("1.0.0");
     // Mock getLatestNpmVersion to succeed with newer version
-    const getLatestSpy = vi.spyOn(pm as any, 'getLatestNpmVersion').mockResolvedValue("2.0.0");
+    // @ts-ignore
+    const getLatestSpy = vi.spyOn(pm, 'getLatestNpmVersion').mockResolvedValue("2.0.0");
 
     // Mock runCommand (low-level) to simulate transient errors
-    const runCommandSpy = vi.spyOn(pm as any, 'runCommand')
+    // @ts-ignore
+    const runCommandSpy = vi.spyOn(pm, 'runCommand')
       .mockRejectedValueOnce(new Error("network error"))
       .mockRejectedValueOnce(new Error("timeout"))
       .mockResolvedValueOnce(undefined);
