@@ -2,6 +2,9 @@ import { registerBranchSummaryRenderer } from "../extensions/renderers/branch-su
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { Text } from "@earendil-works/pi-tui";
 import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
+type RendererFn = (message: { details?: unknown }, options: unknown, theme: unknown) => Text;
 
 // Mock pi-tui Text class
 vi.mock("@earendil-works/pi-tui", () => ({
@@ -19,8 +22,8 @@ describe("Branch Summary Renderer", () => {
 
   describe("registerBranchSummaryRenderer", () => {
     it("should not register if api.registerMessageRenderer is not a function", () => {
-      const apiWithoutRenderer = { registerMessageRenderer: null as any };
-      registerBranchSummaryRenderer(apiWithoutRenderer as any);
+      const apiWithoutRenderer = { registerMessageRenderer: null };
+      registerBranchSummaryRenderer(apiWithoutRenderer as unknown as ExtensionAPI);
       // Nothing should be called
     });
 
@@ -39,8 +42,8 @@ describe("Branch Summary Renderer", () => {
         fg: (color: string, text: string) => text,
       };
 
-      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({} as any, {}, mockTheme) as any;
+      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
+      const result = renderer({}, {}, mockTheme);
 
       expect(result).toBeInstanceOf(Text);
       expect(result.content).toBe("🌿 Branch point");
@@ -65,8 +68,8 @@ describe("Branch Summary Renderer", () => {
         details: { branches: 3, commits: 5 },
       };
 
-      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme) as any;
+      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
+      const result = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
 
@@ -94,8 +97,8 @@ describe("Branch Summary Renderer", () => {
         details: "Some additional string context",
       };
 
-      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme) as any;
+      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
+      const result = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Additional context:");
@@ -113,8 +116,8 @@ describe("Branch Summary Renderer", () => {
         fromId: "entry-789",
       };
 
-      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme) as any;
+      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
+      const result = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("From entry: entry-789");
@@ -132,8 +135,8 @@ describe("Branch Summary Renderer", () => {
         summary: "Only summary, no fromId",
       };
 
-      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme) as any;
+      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
+      const result = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("Only summary, no fromId");
@@ -158,8 +161,8 @@ describe("Branch Summary Renderer", () => {
         details: { complex: { nested: [1, 2, 3] } },
       };
 
-      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1];
-      const result = renderer({ details } as any, {}, mockTheme) as any;
+      const renderer = mockApi.registerMessageRenderer.mock.calls[0][1] as RendererFn;
+      const result = renderer({ details }, {}, mockTheme);
 
       const content = result.content;
       expect(content).toContain("entry-999");
