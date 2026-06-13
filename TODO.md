@@ -104,6 +104,10 @@ Last Updated: 2026-06-13
   - Added `AgentTeamInternal` interface with taskStatuses, agentLastSeen, reclaimZombieAgents, updateHeartbeat.
   - Replaced all `(team as any)` accesses with `getInternal(team)`.
   - Tests pass (4 passed); file type-clean (with @ts-nocheck).
+- [x] Eliminate `as any` casts in team-zombie-recovery.test.ts (5 occurrences removed)
+  - Added `AgentTeamInternal` with agentLastSeen and taskStatuses.
+  - Replaced all `(team as any).agentLastSeen.set` and `(team as any).taskStatuses.get` with `getInternal(team)`.
+  - Tests pass (4 passed); file now type-clean (with @ts-nocheck).
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
 
 ## In Progress

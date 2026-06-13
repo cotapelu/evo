@@ -2,6 +2,15 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
+// Helper to access private fields for testing
+interface AgentTeamInternal {
+  agentLastSeen: Map<string, number>;
+  taskStatuses: Map<number, any>;
+}
+function getInternal(team: AgentTeam): AgentTeamInternal {
+  return team as unknown as AgentTeamInternal;
+}
+
 describe('AgentTeam Zombie Recovery', () => {
   let team: AgentTeam;
   const AGENT_TIMEOUT_MS = 2 * 60 * 1000; // phải khớp với constant trong code
@@ -33,7 +42,7 @@ describe('AgentTeam Zombie Recovery', () => {
     expect(status.tasks[0].assignee).toBe('agent-1');
 
     // Simulate agent-1 zombie bằng cách set lastSeen cũ
-    (team as any).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
+    getInternal(team).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
 
     // Trigger monitor manually (since it runs every 1s)
     // Directly call the monitor logic or setInterval will run later. For test, we'll call directly.
@@ -52,11 +61,11 @@ describe('AgentTeam Zombie Recovery', () => {
     await team.initialize(team.tasks);
 
     await team.claimTask('agent-1');
-    const taskBefore = (team as any).taskStatuses.get(0);
+    const taskBefore = getInternal(team).taskStatuses.get(0);
     expect(taskBefore.retryCount).toBe(0);
 
     // Simulate zombie
-    (team as any).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
+    getInternal(team).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
 
     // Trigger zombie reclaim
     // Sau implementation, có thể gọi team.checkZombieAgents() hoặc monitorInterval tự làm
@@ -70,8 +79,8 @@ describe('AgentTeam Zombie Recovery', () => {
     await team.claimTask('agent-2'); // task1
 
     // Set both zombies
-    (team as any).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
-    (team as any).agentLastSeen.set('agent-2', Date.now() - AGENT_TIMEOUT_MS - 1000);
+    getInternal(team).agentLastSeen.set('agent-1', Date.now() - AGENT_TIMEOUT_MS - 1000);
+    getInternal(team).agentLastSeen.set('agent-2', Date.now() - AGENT_TIMEOUT_MS - 1000);
 
     // Trigger reclaim
   });
