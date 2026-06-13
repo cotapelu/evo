@@ -53,7 +53,7 @@ Last Updated: 2026-06-12
 
 
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~9 occurrences left across ~15 files. Progress: 29 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command).
+- Reduce `as any` casts in remaining test files. Estimated ~5 occurrences left across ~13 files. Progress: 30 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors).
 
 ## Upcoming
 - (none)

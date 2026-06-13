@@ -241,6 +241,10 @@ Last Updated: 2026-06-12
 - Replaced four `(getTeamWidgetEnabled as any)` and `(toggleTeamWidget as any)` with `vi.mocked(...)` equivalents.
 - Clean static mocks using Vitest's `mocked` helper.
 
+### Forty-Third Round (Reduce `as any` in todos-tool-type-errors.test.ts)
+- Replaced four ` as any` casts on invalid operation payloads with `// @ts-ignore` before `applyOp` calls.
+- Tests intentionally use malformed data; `@ts-ignore` is appropriate.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
