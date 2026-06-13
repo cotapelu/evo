@@ -281,6 +281,11 @@ Last Updated: 2026-06-12
 - Replaced 14 ` as any` casts: used `vi.mocked()` for fs/promises mocks, applied `// @ts-ignore` for invalid test inputs, removed unnecessary casts on literal values, and replaced context cast with `as unknown as ExtensionContext`.
 - All casts eliminated.
 
+### Fifty-Second Round (Reduce `as any` in todos-tool-final-gaps.test.ts)
+- Replaced 11 ` as any` casts: replaced all fs/promises mocks with `vi.mocked()`, converted phase array casts to typed `TodoPhase[]`, and used `as unknown as ExtensionContext` for context mock.
+- Imported `TodoPhase` and `ExtensionContext` types.
+- All casts eliminated.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

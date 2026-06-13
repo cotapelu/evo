@@ -8,7 +8,9 @@ import {
   formatSummary,
   getLatestTodoPhasesFromEntries,
   registerTodosTool,
+  TodoPhase,
 } from '../extensions/tools/todos-tool.js';
+import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
 
 // Mock fs
 vi.mock('node:fs', () => ({
@@ -41,7 +43,7 @@ describe('TodosTool Final Coverage Gaps', () => {
     realFs.realMkdirSync(cwd, { recursive: true });
     vi.stubEnv('HOME', tempHome);
     vi.clearAllMocks();
-    (existsSync as any).mockReturnValue(false);
+    vi.mocked(existsSync).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -55,7 +57,7 @@ describe('TodosTool Final Coverage Gaps', () => {
 
   describe('TodoState file operations - success', () => {
     it('loadFromFile returns true and populates state from valid file', async () => {
-      (existsSync as any).mockReturnValue(true);
+      vi.mocked(existsSync).mockReturnValue(true);
       const persisted = {
         version: 1,
         phases: [
@@ -65,7 +67,7 @@ describe('TodosTool Final Coverage Gaps', () => {
         nextPhaseId: 3,
         updatedAt: new Date().toISOString(),
       };
-      (promises.readFile as any).mockResolvedValue(JSON.stringify(persisted));
+      vi.mocked(promises.readFile).mockResolvedValue(JSON.stringify(persisted));
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(true);
@@ -79,9 +81,9 @@ describe('TodosTool Final Coverage Gaps', () => {
     });
 
     it('saveToFile success writes and renames', async () => {
-      (promises.mkdir as any).mockResolvedValue({});
-      (promises.writeFile as any).mockResolvedValue({});
-      (promises.rename as any).mockResolvedValue({});
+      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.writeFile).mockResolvedValue({});
+      vi.mocked(promises.rename).mockResolvedValue({});
       const state = new TodoState();
       state.addPhase('P1', [{ content: 'T1' }, { content: 'T2' }]);
       expect(state.nextTaskId).toBe(3);
@@ -95,10 +97,10 @@ describe('TodosTool Final Coverage Gaps', () => {
 
   describe('applyOp additional scenarios', () => {
     it('remove_task succeeds and returns empty errors', () => {
-      const phases = [{ id: 'p1', name: 'P1', tasks: [
+      const phases: TodoPhase[] = [{ id: 'p1', name: 'P1', tasks: [
         { id: 't1', content: 'T1', status: 'pending' },
         { id: 't2', content: 'T2', status: 'completed' }
-      ]}] as any;
+      ]}];
       const { phases: result, errors } = applyOp(phases, 1, 1, { remove_task: { id: 't1' } });
       expect(result[0].tasks).toHaveLength(1);
       expect(result[0].tasks[0].id).toBe('t2');
@@ -106,10 +108,10 @@ describe('TodosTool Final Coverage Gaps', () => {
     });
 
     it('list with multiple phases returns unchanged', () => {
-      const phases = [
+      const phases: TodoPhase[] = [
         { id: 'p1', name: 'P1', tasks: [{ id: 't1', content: 'T1', status: 'pending' }] },
         { id: 'p2', name: 'P2', tasks: [{ id: 't2', content: 'T2', status: 'completed' }] }
-      ] as any;
+      ];
       const { phases: result } = applyOp(phases, 1, 1, { list: {} });
       expect(result).toEqual(phases);
     });
@@ -131,19 +133,19 @@ describe('TodosTool Final Coverage Gaps', () => {
 
   describe('formatSummary variations', () => {
     it('shows details for in_progress task multi-line', () => {
-      const phases = [{ id: 'p', name: 'P', tasks: [
+      const phases: TodoPhase[] = [{ id: 'p', name: 'P', tasks: [
         { id: 't', content: 'T', status: 'in_progress', details: 'line1\nline2' }
-      ]}] as any;
+      ]}];
       const summary = formatSummary(phases, []);
       expect(summary).toContain('line1');
       expect(summary).toContain('line2');
     });
 
     it('shows phase progress X/Y format', () => {
-      const phases = [{ id: 'p', name: 'P', tasks: [
+      const phases: TodoPhase[] = [{ id: 'p', name: 'P', tasks: [
         { id: 't1', content: 'T1', status: 'completed' },
         { id: 't2', content: 'T2', status: 'pending' }
-      ]}] as any;
+      ]}];
       const summary = formatSummary(phases, []);
       expect(summary).toMatch(/\d+\/\d+ tasks complete/);
     });
@@ -172,7 +174,7 @@ describe('TodosTool Final Coverage Gaps', () => {
         sendMessage: vi.fn(),
         on: vi.fn(),
       };
-      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true, cwd } as any;
+      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true, cwd } as unknown as ExtensionContext;
       registerTodosTool(mockApi);
     });
 
