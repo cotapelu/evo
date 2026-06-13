@@ -6,6 +6,17 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
+// Helper to access private fields for testing
+interface AgentTeamInternal {
+  taskStatuses: Map<number, any>;
+  agentLastSeen: Map<string, number>;
+  reclaimZombieAgents: () => void;
+  updateHeartbeat: (agentId: string) => void;
+}
+function getInternal(team: AgentTeam): AgentTeamInternal {
+  return team as unknown as AgentTeamInternal;
+}
+
 describe('AgentTeam Backoff & Retry', () => {
   let team: AgentTeam;
 
@@ -45,7 +56,7 @@ describe('AgentTeam Backoff & Retry', () => {
 
     // Fail first time
     await team.handleAgentFailure('agent-1', idx, new Error('fail1'));
-    const task1 = (team as any).taskStatuses.get(idx);
+    const task1 = getInternal(team).taskStatuses.get(idx);
     expect(task1.retryCount).toBe(1);
     expect(task1.status).toBe('pending');
     // Expire backoff to allow immediate reclaim for test
@@ -57,7 +68,7 @@ describe('AgentTeam Backoff & Retry', () => {
 
     // Fail second time
     await team.handleAgentFailure('agent-1', idx2, new Error('fail2'));
-    const task2 = (team as any).taskStatuses.get(idx);
+    const task2 = getInternal(team).taskStatuses.get(idx);
     expect(task2.retryCount).toBe(2);
     expect(task2.status).toBe('pending');
     task2.retryAvailableAt = 0;
@@ -68,7 +79,7 @@ describe('AgentTeam Backoff & Retry', () => {
 
     // Fail third time -> should mark failed
     await team.handleAgentFailure('agent-1', idx3, new Error('fail3'));
-    const task3 = (team as any).taskStatuses.get(idx);
+    const task3 = getInternal(team).taskStatuses.get(idx);
     expect(task3.status).toBe('failed');
     expect(task3.retryCount).toBe(3);
     expect(task3.retryAvailableAt).toBeUndefined();
@@ -80,10 +91,10 @@ describe('AgentTeam Backoff & Retry', () => {
     expect(idx).toBe(0);
 
     // Simulate zombie: set lastSeen in the past
-    (team as any).agentLastSeen.set('agent-1', Date.now() - 2 * 60 * 1000 - 1000);
+    getInternal(team).agentLastSeen.set('agent-1', Date.now() - 2 * 60 * 1000 - 1000);
 
     // Call reclaimZombieAgents directly
-    (team as any).reclaimZombieAgents();
+    getInternal(team).reclaimZombieAgents();
 
     const status = await team.getTeamStatus();
     expect(status.tasks[0].assignee).toBeNull();
@@ -96,10 +107,10 @@ describe('AgentTeam Backoff & Retry', () => {
     const idx = await team.claimTask('agent-1');
 
     // Update heartbeat recently
-    (team as any).updateHeartbeat('agent-1');
+    getInternal(team).updateHeartbeat('agent-1');
 
     // Reclaim should not affect
-    (team as any).reclaimZombieAgents();
+    getInternal(team).reclaimZombieAgents();
 
     const status = await team.getTeamStatus();
     expect(status.tasks[0].status).toBe('in_progress');
