@@ -70,8 +70,10 @@ describe('calc-action', () => {
   });
 
   it('should reject invalid characters', async () => {
-    await expect(calcAction.execute({ expression: '2 + "foo"' } as any)).rejects.toThrow('Invalid expression');
-    await expect(calcAction.execute({ expression: 'alert(1)' } as any)).rejects.toThrow('Invalid expression');
+    // @ts-ignore
+    await expect(calcAction.execute({ expression: '2 + "foo"' })).rejects.toThrow('Invalid expression');
+    // @ts-ignore
+    await expect(calcAction.execute({ expression: 'alert(1)' })).rejects.toThrow('Invalid expression');
   });
 
   it('should have correct schema', () => {
@@ -105,7 +107,8 @@ describe('echo-action', () => {
   });
 
   it('should throw if message missing', async () => {
-    await expect(echoAction.execute({} as any)).rejects.toThrow("Missing required parameter 'message' for echo action");
+    // @ts-ignore - testing missing required param
+    await expect(echoAction.execute({})).rejects.toThrow("Missing required parameter 'message' for echo action");
   });
 
   it('should have correct schema', () => {
