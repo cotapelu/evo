@@ -347,6 +347,13 @@ Last Updated: 2026-06-13
 - All tests still passing (16 passed, 3 skipped); file typecheck clean; no regressions.
 - **Impact**: Improved type safety in a complex test file with many internal state accesses, reducing future maintenance risk.
 
+### Sixty-Seventh Round (Eliminate `as any` in team-manager-edge-cases.test.ts)
+- Created `AgentTeamInternal` interface and `getInternal()` function for safe private field access.
+- Introduced `createMockRuntime()` factory for runtime mocks.
+- Replaced 11 `as any` casts with helper calls and `unknown as` casts; removed unnecessary `// @ts-ignore` tags.
+- All tests still passing (21 passed); file now fully type-clean (no `as any`).
+- **Impact**: Completed type-clean status for `team-manager-edge-cases.test.ts`, which still had 11 `as any` casts from earlier rounds. Improves consistency and maintainability of test suite.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
