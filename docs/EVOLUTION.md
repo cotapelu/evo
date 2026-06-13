@@ -183,6 +183,10 @@ Last Updated: 2026-06-12
 - Removed `as any` cast from mock context object literal. Since widget functions accept `any` context, no cast needed.
 - Single `as any` eliminated.
 
+### Twenty-Eighth Round (Reduce `as any` in renderers.test.ts)
+- Removed `as any` from `createMockTheme` return; returned plain object satisfies `Theme`.
+- No cast required; type inference works.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
