@@ -224,6 +224,10 @@ Last Updated: 2026-06-12
 - Replaced `(existsSync as any).mockReturnValue` and `(readFileSync as any).mockClear` with direct method calls on mocked functions.
 - Eliminated both `as any` occurrences.
 
+### Thirty-Ninth Round (Reduce `as any` in plugin-loader-watch-mode.test.ts)
+- Imported `ExtensionContext` type.
+- Replaced two `{} as any` casts with `{} as unknown as ExtensionContext` for execute call context.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

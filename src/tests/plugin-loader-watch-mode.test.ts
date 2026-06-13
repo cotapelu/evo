@@ -3,6 +3,7 @@ import { join } from 'path';
 import * as fs from 'fs';
 import { PluginLoader } from '@extensions/capability-system/plugin-loader';
 import { getCapabilityRegistry } from '@extensions/capability-system/registry';
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 describe('PluginLoader Watch Mode Integration', () => {
   let tempDir: string;
@@ -81,7 +82,7 @@ describe('PluginLoader Watch Mode Integration', () => {
 
     const registry = getCapabilityRegistry();
     let cap = registry.get(`${pluginId}.get`)!;
-    let result = await cap.execute('t1', {}, null, null, {} as any);
+    let result = await cap.execute('t1', {}, null, null, {} as unknown as ExtensionContext);
     expect(result.content[0].text).toBe('get-v1');
 
     // Change manifest (version and name)
@@ -97,7 +98,7 @@ describe('PluginLoader Watch Mode Integration', () => {
 
     // Verify plugin reloaded (capability still exists)
     cap = registry.get(`${pluginId}.get`)!;
-    result = await cap.execute('t2', {}, null, null, {} as any);
+    result = await cap.execute('t2', {}, null, null, {} as unknown as ExtensionContext);
     expect(result.content[0].text).toBe('get-v1');
   });
 
