@@ -9,6 +9,7 @@ Last Updated: 2026-06-13
 
 ## Key Components
 - **Capability System**: Properly initializes plugins asynchronously and exposes global loader. All built-in plugins (dev, git, security, system) load correctly.
+- **Guideline Generator**: Smart auto-documentation system that generates comprehensive prompt guidelines from TypeBox schemas. Provides parameter descriptions with type hints, context-aware examples (file paths → `src/example.test.ts`, booleans), minimal/full/variation examples, and return format documentation. Fully integrated into plugin-loader.
 - **Extensions Aggregator**: Calls capability system synchronously; loader initializes in background but tests await completion.
 - **PluginLoader Watch Mode**: Robust hot-reload with debounced reloads (200ms), deletion handling, and per-plugin watcher lifecycle. New integration tests added.
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.

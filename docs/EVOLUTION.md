@@ -330,6 +330,15 @@ Last Updated: 2026-06-13
   - Updated `promptSnippet` and `promptGuidelines` for clarity.
 - All tests pass; build stable.
 
+### Sixty-Fifth Round (Smart Guideline Generator)
+- Created `guideline-generator.ts`: automatically generates comprehensive prompt guidelines from TypeBox schemas.
+- Generates: parameter descriptions with type hints and context-aware examples, minimal/full/variation JSON examples, return format documentation.
+- Context-aware examples: file paths → `src/example.test.ts`, watch boolean → `true`, branches → `main`.
+- Integrated into `plugin-loader.ts`: replaces placeholder `params: {...}` with structured, meaningful examples derived from schema.
+- Custom guidelines from manifest preserved and prepended.
+- All existing tests pass; no regressions; build green.
+- **Impact**: LLMs now receive rich, schema-driven documentation for each capability, dramatically improving discoverability and reducing usage errors.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

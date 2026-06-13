@@ -16,6 +16,7 @@ import type {
 } from "./types.js";
 import { getCapabilityRegistry } from "./registry.js";
 import { MANIFEST_FILENAME } from "./types.js";
+import { generateCapabilityGuidelines, extractMinimalParams } from "./guideline-generator.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -181,13 +182,30 @@ export class PluginLoader {
 
     const capabilityId = `${pluginMan.id}.${capMan.id}`;
 
+    const capabilityIdFull = capabilityId;
+
+    // Generate smart guidelines from schema + custom guidelines from manifest
+    const finalGuidelines = generateCapabilityGuidelines(
+      capabilityIdFull,
+      capMan.inputSchema,
+      capMan.outputSchema,
+      capMan.promptGuidelines || []
+    );
+
+    // Generate snippet from minimal example
+    const minimalParams = extractMinimalParams(capMan.inputSchema);
+    const promptSnippet = JSON.stringify({
+      capability: capabilityIdFull,
+      params: minimalParams
+    }, null, 2);
+
     return {
-      id: capabilityId,
+      id: capabilityIdFull,
       name: capMan.name,
       description: capMan.description,
       pluginId,
-      promptSnippet: `{ capability: '${capabilityId}', params: {...} }`,
-      promptGuidelines: [...capMan.promptGuidelines, `Call: { capability: '${capabilityId}', params: {...} }`],
+      promptSnippet,
+      promptGuidelines: finalGuidelines,
       parameters: capMan.inputSchema,
       outputSchema: capMan.outputSchema,
       execute: (toolCallId: string, params: Record<string, any>, signal: AbortSignal | null | undefined, onUpdate: ((data: any) => void) | null | undefined, ctx: any) => {
