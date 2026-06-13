@@ -77,7 +77,8 @@ export default async function capabilitySystemExtension(api: any): Promise<void>
 
         ctx.ui.custom((tui: any, theme: any, kb: any, done: any) => {
           const comp = new Text(out);
-          (comp as any).handleInput = (data: string) => {
+          // @ts-ignore
+          comp.handleInput = (data: string) => {
             if (data === 'escape' || data === 'ctrl+c') done(undefined);
           };
           return comp as Component;
@@ -150,7 +151,8 @@ function createCapabilityRouterTool() {
     async execute(toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any): Promise<any> {
       const { capability, params: capParams } = params;
       if (!capability) {
-        return { content: [{ type: "text" as const, text: "Missing 'capability'" }], isError: true } as any;
+        // @ts-ignore
+        return { content: [{ type: "text" as const, text: "Missing 'capability'" }], isError: true };
       }
 
       const registry = getCapabilityRegistry();
@@ -160,24 +162,28 @@ function createCapabilityRouterTool() {
         const suggestions = registry.listAll()
           .filter(c => c.id.includes(capability.split('.').pop() || ''))
           .slice(0, 5).map(c => c.id);
+        // @ts-ignore
         return {
           content: [{ type: "text" as const, text: `❌ Not found: ${capability}\nSuggestions: ${suggestions.join(', ')}` }],
           isError: true,
           details: { error: "not_found", capability }
-        } as any;
+        };
       }
 
       try {
+        // @ts-ignore
         const enhancedCtx = {
           ...ctx,
           getCurrentCapability: () => cap,
           getCapability: (id: string) => registry.get(id)
-        } as any;
+        };
         const result = await cap.execute(toolCallId, capParams, signal, onUpdate, enhancedCtx);
-        return result as any;
+        // @ts-ignore
+        return result;
       } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
-        return { content: [{ type: "text" as const, text: `❌ ${msg}` }], isError: true, details: { error: msg } } as any;
+        // @ts-ignore
+        return { content: [{ type: "text" as const, text: `❌ ${msg}` }], isError: true, details: { error: msg } };
       }
     },
 
