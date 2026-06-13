@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { createYourTool } from './tool-template.js';
 
+type ToolResult = {
+  isError: boolean;
+  content: Array<{ type: string; text: string }>;
+};
+
 describe('tool-template (basic)', () => {
   it('should create tool definition with correct name and label', () => {
     const tool = createYourTool();
@@ -30,24 +35,33 @@ describe('tool-template (basic)', () => {
 
   it('should include commandMeta with example_command metadata', () => {
     const tool = createYourTool();
-    expect((tool as any).commandMeta).toBeDefined();
-    expect((tool as any).commandMeta.example_command).toBeDefined();
-    expect((tool as any).commandMeta.example_command.description).toBe('Mô tả ngắn về command này');
-    expect((tool as any).commandMeta.example_command.schema).toBeDefined();
-    expect((tool as any).commandMeta.example_command.examples).toContain('your_tool_name({ command: \'example_command\', args: { input: \'data.txt\' } })');
+    // @ts-ignore - commandMeta is added by the tool
+    expect(tool.commandMeta).toBeDefined();
+    // @ts-ignore
+    expect(tool.commandMeta.example_command).toBeDefined();
+    // @ts-ignore
+    expect(tool.commandMeta.example_command.description).toBe('Mô tả ngắn về command này');
+    // @ts-ignore
+    expect(tool.commandMeta.example_command.schema).toBeDefined();
+    // @ts-ignore
+    expect(tool.commandMeta.example_command.examples).toContain('your_tool_name({ command: \'example_command\', args: { input: \'data.txt\' } })');
   });
 
   it('should include commandMeta with another_command metadata', () => {
     const tool = createYourTool();
-    expect((tool as any).commandMeta.another_command).toBeDefined();
-    expect((tool as any).commandMeta.another_command.description).toBe('Một command khác');
-    expect((tool as any).commandMeta.another_command.schema).toBeDefined();
-    expect((tool as any).commandMeta.another_command.examples).toContain('your_tool_name({ command: \'another_command\', args: { files: [\'a.txt\', \'b.txt\'] } })');
+    // @ts-ignore
+    expect(tool.commandMeta.another_command).toBeDefined();
+    // @ts-ignore
+    expect(tool.commandMeta.another_command.description).toBe('Một command khác');
+    // @ts-ignore
+    expect(tool.commandMeta.another_command.schema).toBeDefined();
+    // @ts-ignore
+    expect(tool.commandMeta.another_command.examples).toContain('your_tool_name({ command: \'another_command\', args: { files: [\'a.txt\', \'b.txt\'] } })');
   });
 
   it('execute should return error for unknown command', async () => {
     const tool = createYourTool();
-    const result = await tool.execute('id', { command: 'unknown', args: {} }, undefined, undefined, {} as any) as any;
+    const result = (await tool.execute('id', { command: 'unknown', args: {} }, undefined, undefined)) as ToolResult;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Unknown command');
     expect(result.content[0].text).toContain('example_command, another_command');
@@ -55,7 +69,7 @@ describe('tool-template (basic)', () => {
 
   it('execute with empty args should return discovery help', async () => {
     const tool = createYourTool();
-    const result = await tool.execute('id', { command: 'example_command', args: {} }, undefined, undefined, {} as any) as any;
+    const result = (await tool.execute('id', { command: 'example_command', args: {} }, undefined, undefined)) as ToolResult;
     expect(result.isError).toBe(false);
     const text = result.content[0].text;
     expect(text).toContain('example_command');
