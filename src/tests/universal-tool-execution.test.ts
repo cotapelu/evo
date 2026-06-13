@@ -1,6 +1,11 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { registerUniversalTool } from "@extensions/tools/universal-tool.js";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
+import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
+
+function getRegisteredTool(api: ExtensionAPI): ToolDefinition {
+  return api.registerTool.mock.calls[0][0] as ToolDefinition;
+}
 
 // Mock the entire package to replace createBashToolDefinition
 vi.mock("@earendil-works/pi-coding-agent", () => ({
@@ -10,8 +15,8 @@ vi.mock("@earendil-works/pi-coding-agent", () => ({
 import { createBashToolDefinition } from "@earendil-works/pi-coding-agent";
 
 describe("Universal Tool Execution", () => {
-  let mockBashExecute: any;
-  let mockApi: any;
+  let mockApi: ExtensionAPI;
+  let mockBashExecute: (...args: any[]) => any;
 
   beforeEach(() => {
     vi.clearAllMocks(); // clear all mocks including createBashToolDefinition
@@ -20,7 +25,7 @@ describe("Universal Tool Execution", () => {
       isError: false,
       details: {},
     });
-    (createBashToolDefinition as any).mockReturnValue({ execute: mockBashExecute });
+    vi.mocked(createBashToolDefinition).mockReturnValue({ execute: mockBashExecute });
     mockApi = createMockExtensionAPI();
     registerUniversalTool(mockApi);
   });
