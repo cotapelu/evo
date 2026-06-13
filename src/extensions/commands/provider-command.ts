@@ -18,7 +18,8 @@ function getProviderInfo(ctx: any): Array<{ name: string; displayName: string; m
   for (const m of allModels) {
     const provider = m.provider;
     if (!providers.has(provider)) {
-      providers.set(provider, { name: provider, baseUrl: (m as any).providerBaseUrl, models: [] });
+      // @ts-ignore
+      providers.set(provider, { name: provider, baseUrl: m.providerBaseUrl, models: [] });
     }
     providers.get(provider)!.models.push(m.id);
   }
