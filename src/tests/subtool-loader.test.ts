@@ -35,7 +35,7 @@ describe('subtool_loader', () => {
 
     it('should have valid TypeBox schema', () => {
       const tool = createSubLoaderToolDefinition();
-      const params = tool.parameters as any;
+      const params = tool.parameters as Record<string, unknown>;
       expect(params.type).toBe('object');
       expect(params.properties.subtool).toBeDefined();
       expect(params.properties.args).toBeDefined();
