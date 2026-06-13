@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 import { registerKeybindingExtension } from "../extensions/keybinding/keybinding-extension.js";
 import * as configManager from "../config/config-manager.js";
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 describe("Keybinding Extension", () => {
   let mockApi: any;
@@ -31,7 +32,7 @@ describe("Keybinding Extension", () => {
   it("sets up keybindings from config and executes command via sendUserMessage", async () => {
     vi.spyOn(configManager, "loadConfig").mockReturnValue({
       keybindings: { team: "t", settings: "ctrl+s" },
-    } as any);
+    });
 
     registerKeybindingExtension(mockApi);
     const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
@@ -44,7 +45,7 @@ describe("Keybinding Extension", () => {
       mode: "tui",
       hasUI: true,
       ui: { onTerminalInput: mockOnTerminal },
-    } as any;
+    } as unknown as ExtensionContext;
 
     await handler(null, ctx);
     expect(mockOnTerminal).toHaveBeenCalledTimes(1);
@@ -62,7 +63,7 @@ describe("Keybinding Extension", () => {
   it("does not execute command when agent is not idle", async () => {
     vi.spyOn(configManager, "loadConfig").mockReturnValue({
       keybindings: { team: "t" },
-    } as any);
+    });
 
     registerKeybindingExtension(mockApi);
     const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
@@ -74,7 +75,7 @@ describe("Keybinding Extension", () => {
       mode: "tui",
       hasUI: true,
       ui: { onTerminalInput: mockOnTerminal },
-    } as any;
+    } as unknown as ExtensionContext;
 
     await handler(null, ctx);
     const inputHandler = mockOnTerminal.mock.calls[0][0];
@@ -86,7 +87,7 @@ describe("Keybinding Extension", () => {
   it("ignores keys with no binding", async () => {
     vi.spyOn(configManager, "loadConfig").mockReturnValue({
       keybindings: { team: "t" },
-    } as any);
+    });
 
     registerKeybindingExtension(mockApi);
     const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
@@ -97,7 +98,7 @@ describe("Keybinding Extension", () => {
       isIdle: () => true,
       mode: "tui",
       ui: { onTerminalInput: mockOnTerminal },
-    } as any;
+    } as unknown as ExtensionContext;
 
     await handler(null, ctx);
     const inputHandler = mockOnTerminal.mock.calls[0][0];

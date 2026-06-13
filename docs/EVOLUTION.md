@@ -249,6 +249,11 @@ Last Updated: 2026-06-12
 - Replaced five ` as any` casts on `pm` in vi.spyOn calls with `// @ts-ignore` and direct method access.
 - All internal method spies now typed-cleanly.
 
+### Forty-Fifth Round (Reduce `as any` in keybinding-extension.test.ts)
+- Replaced six ` as any` casts: removed casts on config mock returns and replaced context `as any` with `as unknown as ExtensionContext`.
+- Added import for `ExtensionContext` type.
+- All casts eliminated.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
