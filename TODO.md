@@ -53,7 +53,7 @@ Last Updated: 2026-06-12
 
 
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~330 occurrences left across ~8 files. Progress: 40 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, integration-flow, keybinding-extension, todos-tool, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps).
+- Reduce `as any` casts in remaining test files. Estimated ~305 occurrences left across ~7 files. Progress: 41 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, integration-flow, keybinding-extension, todos-tool, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage).
 
 ## Upcoming
 - (none)
