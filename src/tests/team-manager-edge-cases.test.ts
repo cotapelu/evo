@@ -27,13 +27,13 @@ describe('AgentTeam Edge Cases', () => {
     team.reclaimZombieAgents();
 
     // Task should be pending with backoff
-    const task = anyTeam.taskStatuses.get(0) as any;
+    const task = anyTeam.taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(task.retryCount).toBe(1);
     expect(task.retryAvailableAt).toBeGreaterThan(Date.now());
     expect(anyTeam.pendingIndices).toContain(0);
     // Agent should be idle
-    const agentStat = anyTeam.agentStatuses.get('agent-1') as any;
+    const agentStat = anyTeam.agentStatuses.get('agent-1');
     expect(agentStat.status).toBe('idle');
   });
 
@@ -45,7 +45,7 @@ describe('AgentTeam Edge Cases', () => {
 
     const anyTeam = team as any;
     // Set retryCount to max-1 (since DEFAULTS 3, after failure will become 3)
-    const task = anyTeam.taskStatuses.get(0) as any;
+    const task = anyTeam.taskStatuses.get(0);
     task.retryCount = 2; // one more will reach 3
 
     await team.handleAgentFailure('agent-1', 0, new Error('boom'));
@@ -53,7 +53,7 @@ describe('AgentTeam Edge Cases', () => {
     expect(task.status).toBe('failed');
     expect(task.result).toContain('boom');
     expect(anyTeam.pendingIndices).not.toContain(0);
-    const agentStat = anyTeam.agentStatuses.get('agent-1') as any;
+    const agentStat = anyTeam.agentStatuses.get('agent-1');
     expect(agentStat.status).toBe('idle');
   });
 
@@ -64,7 +64,7 @@ describe('AgentTeam Edge Cases', () => {
     await team.claimTask('agent-1');
 
     const anyTeam = team as any;
-    const task = anyTeam.taskStatuses.get(0) as any;
+    const task = anyTeam.taskStatuses.get(0);
     task.retryCount = 0;
 
     await team.handleAgentFailure('agent-1', 0, new Error('oops'));
@@ -73,7 +73,7 @@ describe('AgentTeam Edge Cases', () => {
     expect(task.retryCount).toBe(1);
     expect(task.retryAvailableAt).toBeGreaterThan(Date.now());
     expect(anyTeam.pendingIndices).toContain(0);
-    const agentStat = anyTeam.agentStatuses.get('agent-1') as any;
+    const agentStat = anyTeam.agentStatuses.get('agent-1');
     expect(agentStat.status).toBe('idle');
   });
 
@@ -84,7 +84,7 @@ describe('AgentTeam Edge Cases', () => {
     const anyTeam = team as any;
     // Simulate a pending task with backoff in future
     const backoffTime = Date.now() + 60 * 60 * 1000;
-    anyTeam.taskStatuses.set(0, { assignee: null, status: 'pending', result: '', retryCount: 1, retryAvailableAt: backoffTime } as any);
+    anyTeam.taskStatuses.set(0, { assignee: null, status: 'pending', result: '', retryCount: 1, retryAvailableAt: backoffTime });
     anyTeam.pendingIndices = [0];
     anyTeam.agentStatuses = new Map();
     anyTeam.roleByAgentId = new Map();
@@ -103,7 +103,7 @@ describe('AgentTeam Edge Cases', () => {
     const released = await team.releaseTask('agent-1', 0);
     expect(released).toBe(true);
     expect(anyTeam.pendingIndices).toContain(0);
-    const task = anyTeam.taskStatuses.get(0) as any;
+    const task = anyTeam.taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(task.assignee).toBeNull();
   });
@@ -176,7 +176,7 @@ describe('AgentTeam Edge Cases', () => {
     await team.initialize(['Task A']);
     await team.handleAgentFailure('agent-1', 0);
     const anyTeam = team as any;
-    const task = anyTeam.taskStatuses.get(0) as any;
+    const task = anyTeam.taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(anyTeam.pendingIndices).toContain(0);
   });
@@ -212,12 +212,12 @@ describe('AgentTeam Edge Cases', () => {
     expect(idx).toBe(0);
     await team.completeTask('agent-1', 0, 'result data');
     const anyTeam = team as any;
-    const task = anyTeam.taskStatuses.get(0) as any;
+    const task = anyTeam.taskStatuses.get(0);
     expect(task.status).toBe('completed');
     expect(task.result).toBe('result data');
     expect(task.assignee).toBeNull();
     expect(anyTeam.pendingIndices).not.toContain(0);
-    const status = anyTeam.agentStatuses.get('agent-1') as any;
+    const status = anyTeam.agentStatuses.get('agent-1');
     expect(status.status).toBe('idle');
     expect(status.currentTaskIndex).toBeNull();
   });
@@ -246,10 +246,13 @@ describe('AgentTeam Edge Cases', () => {
   it('should dispose child controllers and promises', async () => {
     const team = new AgentTeam();
     team.setTeamId('test-team');
-    const fakeController = { abort: vi.fn() } as any;
-    (team as any).childControllers.set('agent-1', fakeController);
-    (team as any).childPromises.push(Promise.resolve());
-    (team as any).runtimes.push({ dispose: vi.fn().mockResolvedValue(undefined) } as any);
+    const fakeController = { abort: vi.fn() };
+    // @ts-ignore accessing private field for testing
+    team.childControllers.set('agent-1', fakeController);
+    // @ts-ignore accessing private field for testing
+    team.childPromises.push(Promise.resolve());
+    // @ts-ignore accessing private field for testing
+    team.runtimes.push({ dispose: vi.fn().mockResolvedValue(undefined) } as never);
     await team.dispose();
     expect(fakeController.abort).toHaveBeenCalled();
   });
@@ -270,7 +273,7 @@ describe('AgentTeam Edge Cases', () => {
     await team.initialize(['Task A']);
     await team.reportResult(1, 'result');
     const anyTeam = team as any;
-    const task0 = anyTeam.taskStatuses.get(0) as any;
+    const task0 = anyTeam.taskStatuses.get(0);
     expect(task0.status).toBe('pending');
   });
 
@@ -279,24 +282,29 @@ describe('AgentTeam Edge Cases', () => {
     team.setTeamId('test-team');
 
     // Mock runtimes with dispose
-    const mockRuntime = { dispose: vi.fn().mockResolvedValue(undefined) } as any;
-    (team as any).runtimes.push(mockRuntime);
+    const mockRuntime = { dispose: vi.fn().mockResolvedValue(undefined) };
+    // @ts-ignore accessing private field for testing
+    team.runtimes.push(mockRuntime as never);
     // Mock childControllers
     const mockController = { abort: vi.fn() };
-    (team as any).childControllers.set('test-controller', mockController);
+    // @ts-ignore accessing private field for testing
+    team.childControllers.set('test-controller', mockController);
     // Mock childPromises
     const childPromise = Promise.resolve();
-    (team as any).childPromises.push(childPromise);
+    // @ts-ignore accessing private field for testing
+    team.childPromises.push(childPromise);
     // Mock TeamRegistry
     const mockRegistry = { unregister: vi.fn() };
-    vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(mockRegistry as any);
+    vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(mockRegistry as never);
 
     await team.dispose();
 
     expect(mockRuntime.dispose).toHaveBeenCalled();
     expect(mockController.abort).toHaveBeenCalled();
-    expect((team as any).childPromises).toHaveLength(0);
-    expect((team as any).runtimes).toHaveLength(0);
+    // @ts-ignore accessing private field for testing
+    expect(team.childPromises).toHaveLength(0);
+    // @ts-ignore accessing private field for testing
+    expect(team.runtimes).toHaveLength(0);
     expect(mockRegistry.unregister).toHaveBeenCalledWith('test-team');
   });
 });
