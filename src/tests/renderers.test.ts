@@ -16,7 +16,7 @@ function createMockTheme(): Theme {
     fg: (color: string, text?: string) => (text ?? color),
     bg: (color: string, text?: string) => (text ?? color),
     bold: (text: string) => text,
-  } as any;
+  };
 }
 
 // Import renderers (we'll test them via direct function calls if exported)
