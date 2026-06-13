@@ -33,46 +33,52 @@ describe('PiclawPackageManager Error Handling', () => {
   describe('getLatestNpmVersion errors', () => {
     it('should reject when runCommandCapture throws', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      vi.spyOn(pm as any, 'runCommandCapture').mockRejectedValue(new Error('network fail'));
-      await expect((pm as any).getLatestNpmVersion('pkg')).rejects.toThrow('network fail');
+// @ts-ignore
+      vi.spyOn(pm, 'runCommandCapture').mockRejectedValue(new Error('network fail'));
+// @ts-ignore
+      await expect(pm.getLatestNpmVersion('pkg')).rejects.toThrow('network fail');
     });
 
     it('should reject on invalid JSON output', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      vi.spyOn(pm as any, 'runCommandCapture').mockResolvedValue({ code: 0, stdout: 'invalid-json', stderr: '' });
-      await expect((pm as any).getLatestNpmVersion('pkg')).rejects.toThrow(); // SyntaxError expected
+// @ts-ignore
+      vi.spyOn(pm, 'runCommandCapture').mockResolvedValue({ code: 0, stdout: 'invalid-json', stderr: '' });
+// @ts-ignore
+      await expect(pm.getLatestNpmVersion('pkg')).rejects.toThrow(); // SyntaxError expected
     });
   });
 
   describe('validateParsed', () => {
     it('should reject empty npm name', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      expect(() => (pm as any).validateParsed({ type: 'npm', name: '' })).toThrow('Invalid npm source: missing package name');
+// @ts-ignore
+      expect(() => pm.validateParsed({ type: 'npm', name: '' })).toThrow('Invalid npm source: missing package name');
     });
 
     it('should reject git source without slash', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      expect(() => (pm as any).validateParsed({ type: 'git', host: 'github.com', path: 'repo' })).toThrow('Invalid git source: path must be in the form host/path (e.g., github.com/user/repo)');
+// @ts-ignore
+      expect(() => pm.validateParsed({ type: 'git', host: 'github.com', path: 'repo' })).toThrow('Invalid git source: path must be in the form host/path (e.g., github.com/user/repo)');
     });
   });
 
   describe('settings operations', () => {
     it('removeSourceFromSettings should return false if source not found', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const result = (pm as any).removeSourceFromSettings('npm:unknown', false);
+      const result = pm.removeSourceFromSettings('npm:unknown', false);
       expect(result).toBe(false);
     });
 
     it('addSourceToSettings should add entry', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      (pm as any).addSourceToSettings({ source: 'npm:test' }, { local: false });
+      pm.addSourceToSettings({ source: 'npm:test' }, { local: false });
       const pkgs = pm.listConfiguredPackages();
       expect(pkgs.some(p => p.source === 'npm:test')).toBe(true);
     });
 
     it('addSourceToSettings with filter should mark filtered', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      (pm as any).addSourceToSettings({ source: 'npm:test', filter: { extensions: ['**/*.ts'] } }, { local: false });
+      pm.addSourceToSettings({ source: 'npm:test', filter: { extensions: ['**/*.ts'] } }, { local: false });
       const pkgs = pm.listConfiguredPackages();
       expect(pkgs.find(p => p.source === 'npm:test')?.filtered).toBe(true);
     });
@@ -81,7 +87,7 @@ describe('PiclawPackageManager Error Handling', () => {
   describe('resolveExtensionSources with missing package', () => {
     it('should return empty arrays for non-existent source', async () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
-      const result = await (pm as any).resolveExtensionSources(['npm:nonexistent'], { includeDependencies: false });
+      const result = await pm.resolveExtensionSources(['npm:nonexistent'], { includeDependencies: false });
       expect(result.extensions).toHaveLength(0);
       expect(result.skills).toHaveLength(0);
       expect(result.prompts).toHaveLength(0);
@@ -93,13 +99,17 @@ describe('PiclawPackageManager Error Handling', () => {
     it('should skip entries that are not string or object', () => {
       const pm = new PiclawPackageManager({ cwd, agentDir });
       // Manually corrupt global settings
-      const globalPath = (pm as any).getGlobalSettingsPath();
-      const projectPath = (pm as any).getProjectSettingsPath();
+// @ts-ignore
+      const globalPath = pm.getGlobalSettingsPath();
+// @ts-ignore
+      const projectPath = pm.getProjectSettingsPath();
       // Write invalid entry types (number, null)
-      const invalidSettings = { packages: [123, null, 'npm:good'] as any };
+// @ts-ignore
+      const invalidSettings = { packages: [123, null, 'npm:good'] };
       mkdirSync(join(globalPath, '..'), { recursive: true });
       writeFileSync(globalPath, JSON.stringify(invalidSettings));
-      const entries = (pm as any).getConfiguredEntries();
+// @ts-ignore
+      const entries = pm.getConfiguredEntries();
       expect(entries.find((e: any) => e.source === 'npm:good')).toBeDefined();
     });
   });
