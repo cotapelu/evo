@@ -42,17 +42,18 @@ Last Updated: 2026-06-12
   - Allow injection of custom loader via `api.pluginLoader` in extension
   - Backward compatible: production uses default loader and sets global
   - Enables parallel test execution by avoiding singleton global state
-- [x] Reduce `any` casts in tests
+- [x] Reduce `any` casts in tests (ongoing multi-iteration effort)
   - Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`
-  - Updated plugin capability tests (git, dev, security-system) to use typed mocks
-  - Refactored command tests: provider-command, metrics-command, copy-command, team-command
-  - Refactored renderer test: todos-renderer (introduced RendererFn type)
-  - Pattern: typed mocks, vi.mocked(), custom typed contexts, typed renderer function
-  - Reduced total `as any` occurrences from ~48 to ~33
+  - Plugin capability tests (git, dev, security-system) now typed
+  - Command tests: provider-command, metrics-command, copy-command, team-command, team-ops-tool
+  - Tool test: memory-tool
+  - Renderer tests: todos-renderer, branch-summary-renderer (RendererFn type)
+  - Techniques: typed mock factories, `vi.mocked()`, custom typed contexts, typed renderer functions, `as unknown as` for intentional unsoundness, `// @ts-ignore` for invalid action tests
+  - Reduced occurrences from ~48 to ~30; 11 files cleaned
 
 
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~25 occurrences left across ~38 files. Progress: 9 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer).
+- Reduce `as any` casts in remaining test files. Estimated ~30 occurrences left across ~35 files. Progress: 11 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool).
 
 ## Upcoming
 - (none)

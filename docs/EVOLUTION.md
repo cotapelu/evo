@@ -157,6 +157,13 @@ Last Updated: 2026-06-12
 - Used `// @ts-ignore` for invalid action test case to avoid cast (cleaner).
 - Eliminated remaining 2 `as any` occurrences in this file.
 
+### Twenty-Third Round (Reduce `any` in memory-tool.test.ts)
+- Typed `createMockApi` to return `ExtensionAPI`.
+- Typed `tool` as `ToolDefinition` using `ReturnType<typeof createMockApi>` for `api`.
+- Replaced `theme: any` with inline mock (no cast needed).
+- Removed options `as any` by passing plain `{}` object.
+- Successfully eliminated last 1 `as any` in this file.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
