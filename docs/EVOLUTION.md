@@ -259,6 +259,11 @@ Last Updated: 2026-06-12
 - Imported `ExtensionContext` and `Theme` types.
 - All casts eliminated.
 
+### Forty-Seventh Round (Reduce `as any` in session-tree-command.test.ts)
+- Replaced 18 ` as any` casts: replaced `EntryDetailView` context casts with `as unknown as SessionEntry`, replaced entry object casts with `as unknown as SessionEntry`, and added `// @ts-ignore` for invalid entry type test.
+- Imported `SessionEntry` type.
+- All casts eliminated.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

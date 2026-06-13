@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EntryDetailView } from "@extensions/commands/session-tree-command";
+import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 
 function fakeTheme() {
   return { fg: (color: string, text: string) => text };
@@ -7,7 +8,7 @@ function fakeTheme() {
 
 describe("EntryDetailView", () => {
   it("renders message entry with role and text content", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
       type: "message",
       id: "m1",
@@ -17,7 +18,7 @@ describe("EntryDetailView", () => {
         role: "assistant",
         content: [{ type: "text", text: "Test message content" }],
       },
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const lines = view.render(80);
     const text = lines.join("\n");
@@ -28,7 +29,7 @@ describe("EntryDetailView", () => {
   });
 
   it("renders branch_summary entry", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
       type: "branch_summary",
       id: "b1",
@@ -36,7 +37,7 @@ describe("EntryDetailView", () => {
       timestamp: Date.now(),
       fromId: "abc123",
       summary: "This is a branch summary",
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const lines = view.render(80);
     const text = lines.join("\n");
@@ -47,7 +48,7 @@ describe("EntryDetailView", () => {
   });
 
   it("renders compaction entry", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
       type: "compaction",
       id: "c1",
@@ -56,7 +57,7 @@ describe("EntryDetailView", () => {
       tokensBefore: 1234,
       firstKeptEntryId: "e1",
       summary: "Compaction summary text",
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const text = view.render(80).join("\n");
     expect(text).toContain("Type: compaction");
@@ -66,7 +67,7 @@ describe("EntryDetailView", () => {
   });
 
   it("renders custom_message entry", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
       type: "custom_message",
       id: "cm1",
@@ -75,7 +76,7 @@ describe("EntryDetailView", () => {
       customType: "info",
       display: "Info message",
       content: "Custom content string",
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const text = view.render(80).join("\n");
     expect(text).toContain("Type: custom_message");
@@ -85,7 +86,7 @@ describe("EntryDetailView", () => {
   });
 
   it("renders label entry", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
       type: "label",
       id: "l1",
@@ -93,7 +94,7 @@ describe("EntryDetailView", () => {
       timestamp: Date.now(),
       targetId: "target1",
       label: "important",
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const text = view.render(80).join("\n");
     expect(text).toContain("Type: label");
@@ -102,20 +103,21 @@ describe("EntryDetailView", () => {
   });
 
   it("renders unknown entry type", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
-      type: "unknown_type" as any,
+// @ts-ignore
+      type: "unknown_type",
       id: "x1",
       parentId: null,
       timestamp: Date.now(),
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const text = view.render(80).join("\n");
     expect(text).toContain("Unknown entry type: unknown_type");
   });
 
   it("caches render result when width unchanged", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry = {
       type: "message",
       id: "m1",
@@ -125,7 +127,7 @@ describe("EntryDetailView", () => {
         role: "user",
         content: [{ type: "text", text: "Hello" }],
       },
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry);
     const lines1 = view.render(80);
     const lines2 = view.render(80);
@@ -133,7 +135,7 @@ describe("EntryDetailView", () => {
   });
 
   it("invalidates cache on setEntry", () => {
-    const view = new EntryDetailView({} as any);
+    const view = new EntryDetailView({} as unknown as SessionEntry);
     const entry1 = {
       type: "message",
       id: "m1",
@@ -143,7 +145,7 @@ describe("EntryDetailView", () => {
         role: "user",
         content: [{ type: "text", text: "First" }],
       },
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry1);
     const lines1 = view.render(80);
     const entry2 = {
@@ -155,7 +157,7 @@ describe("EntryDetailView", () => {
         role: "assistant",
         content: [{ type: "text", text: "Second" }],
       },
-    } as any;
+    } as unknown as SessionEntry;
     view.setEntry(entry2);
     const lines2 = view.render(80);
     expect(lines1).not.toBe(lines2);
