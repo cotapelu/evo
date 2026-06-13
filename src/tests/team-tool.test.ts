@@ -31,7 +31,7 @@ describe('team_run tool', () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent };
     // @ts-ignore intentionally testing empty params
-    const result = (await tool.execute('id', {} as any, undefined, undefined, ctx));
+    const result = (await tool.execute('id', {}, undefined, undefined, ctx));
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('tasks must be a non-empty array');
   });
@@ -40,7 +40,7 @@ describe('team_run tool', () => {
     const parent = createMockParentRuntime();
     const ctx = { runtime: parent };
     // @ts-ignore intentionally testing invalid tasks type
-    const result = (await tool.execute('id', { tasks: 'not array' } as any, undefined, undefined, ctx));
+    const result = (await tool.execute('id', { tasks: 'not array' }, undefined, undefined, ctx));
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('tasks must be a non-empty array');
   });
@@ -61,7 +61,7 @@ describe('team_run tool', () => {
     vi.mocked(executeTeamTasks).mockResolvedValue(undefined);
 
     // @ts-ignore intentionally testing JSON string params
-    const result = (await tool.execute('id', '{"tasks":["t1"]}' as any, undefined, undefined, ctx));
+    const result = (await tool.execute('id', '{"tasks":["t1"]}', undefined, undefined, ctx));
     expect(result.isError).toBe(false);
     expect(bootPiclawTeam).toHaveBeenCalledWith(parent, { teamSize: undefined, teamRoles: undefined });
     expect(executeTeamTasks).toHaveBeenCalledWith(mockTeam, ['t1'], undefined, {});
