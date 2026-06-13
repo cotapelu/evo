@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createYourTool } from '../extensions/tools/tool-template.js';
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 describe('tool-template', () => {
   it('should create tool definition with required fields', () => {
@@ -22,7 +23,7 @@ describe('tool-template', () => {
   it('should handle command execution error (module not found)', async () => {
     const tool = createYourTool();
     // Pass non-empty args to trigger module load
-    const result: any = await tool.execute('test-call', { command: 'example_command', args: { input: 'test.txt' } }, undefined, undefined, { session: { cwd: process.cwd() } } as any);
+    const result: any = await tool.execute('test-call', { command: 'example_command', args: { input: 'test.txt' } }, undefined, undefined, { session: { cwd: process.cwd() } } as unknown as ExtensionContext);
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Failed to load command');
   });
