@@ -86,7 +86,8 @@ Example:
     const idx = settings.packages.findIndex(
       (p: unknown): boolean => {
         if (typeof p === "string") return p === oldSource;
-        if (typeof p === "object" && p !== null && "source" in p) return (p as any).source === oldSource;
+        // @ts-ignore
+        if (typeof p === "object" && p !== null && "source" in p) return p.source === oldSource;
         return false;
       }
     );

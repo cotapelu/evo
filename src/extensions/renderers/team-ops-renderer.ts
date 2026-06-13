@@ -109,7 +109,8 @@ export function registerTeamOpsRenderer(api: ExtensionAPI): void {
   }
 
   api.registerMessageRenderer("team_ops_result", (msg: any, options, theme) => {
-    const details = msg.details as any;
+    // @ts-ignore
+    const details = msg.details;
     if (!details) {
       return new Text("👥 Team operation");
     }

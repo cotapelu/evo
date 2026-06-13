@@ -49,7 +49,7 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			// Cast payload to expected shape (model, context, options)
-			const payload = event.payload as any;
+			const payload = event.payload as { model: unknown; context: unknown; options: unknown };
 			const logEntry = JSON.stringify({
 				timestamp: new Date().toISOString(),
 				model: payload.model,
