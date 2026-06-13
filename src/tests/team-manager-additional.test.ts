@@ -35,13 +35,15 @@ describe('AgentTeam Additional Coverage', () => {
   it('should get current task for agent', async () => {
     await team.initialize(['Task A']);
     await team.claimTask('agent-1');
-    const taskIdx = await (team as any).getMyCurrentTask('agent-1');
+    // @ts-ignore accessing private method for testing
+    const taskIdx = await team.getMyCurrentTask('agent-1');
     expect(taskIdx).toBe(0);
   });
 
   it('should update heartbeat', async () => {
     await team.initialize(['Task A']);
-    (team as any).updateHeartbeat('agent-1');
+    // @ts-ignore accessing private method for testing
+    team.updateHeartbeat('agent-1');
     const anyTeam = team as any;
     const ts = anyTeam.agentLastSeen.get('agent-1');
     expect(ts).toBeGreaterThan(Date.now() - 1000);
@@ -49,14 +51,14 @@ describe('AgentTeam Additional Coverage', () => {
 
   it('should dispose with runtimes and child promises', async () => {
     const anyTeam = team as any;
-    const mockRuntime = { dispose: vi.fn().mockResolvedValue(undefined) } as any;
+    const mockRuntime = { dispose: vi.fn().mockResolvedValue(undefined) };
     anyTeam.runtimes.push(mockRuntime);
     const mockController = { abort: vi.fn() };
     anyTeam.childControllers.set('ctrl', mockController);
     const childPromise = Promise.resolve();
     anyTeam.childPromises.push(childPromise);
     const mockRegistry = { unregister: vi.fn() };
-    const spy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(mockRegistry as any);
+    const spy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(mockRegistry as never);
 
     await team.dispose();
 
@@ -76,7 +78,8 @@ describe('AgentTeam Additional Coverage', () => {
     const idx1 = await team.claimTask('agent-1');
     expect(idx1).toBe(0);
 
-    const current = await (team as any).getMyCurrentTask('agent-1');
+    // @ts-ignore accessing private method for testing
+    const current = await team.getMyCurrentTask('agent-1');
     expect(current).toBe(0);
 
     const released = await team.releaseTask('agent-1', 0);
@@ -87,13 +90,13 @@ describe('AgentTeam Additional Coverage', () => {
 
     await team.handleAgentFailure('agent-2', 0, new Error('fail'));
     const anyTeam = team as any;
-    let task = anyTeam.taskStatuses.get(0) as any;
+    let task = anyTeam.taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(task.retryCount).toBe(1);
 
     anyTeam.agentLastSeen.set('agent-2', Date.now() - AGENT_TIMEOUT_MS - 1);
     team.reclaimZombieAgents();
-    task = anyTeam.taskStatuses.get(0) as any;
+    task = anyTeam.taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(anyTeam.pendingIndices).toContain(0);
 
@@ -101,9 +104,11 @@ describe('AgentTeam Additional Coverage', () => {
     expect(status.totalTasks).toBe(2);
     expect(status.pendingTasks).toBeGreaterThanOrEqual(1);
 
-    (team as any).monitorInterval = setInterval(() => {}, 1000);
+    // @ts-ignore accessing private property for testing
+    team.monitorInterval = setInterval(() => {}, 1000);
     await team.dispose();
-    expect((team as any).monitorInterval).toBeNull();
+    // @ts-ignore accessing private property for testing
+    expect(team.monitorInterval).toBeNull();
   });
 
   describe('getContext and workspace', () => {
@@ -119,7 +124,7 @@ describe('AgentTeam Additional Coverage', () => {
       expect(summary.activeAgents).toBe(0);
       // Mark one task completed
       const anyTeam = t as any;
-      anyTeam.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0 } as any);
+      anyTeam.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0 });
       anyTeam.pendingIndices = [1];
       const summary2 = ctx.getTeamSummary();
       expect(summary2.completedTasks).toBe(1);
@@ -131,10 +136,12 @@ describe('AgentTeam Additional Coverage', () => {
       await t.initialize([]);
       t.getWorkspace().set('key1', 'value1', 'agent-1');
       t.getWorkspace().set('key2', { obj: true }, 'agent-2');
-      const entry1 = await (t as any).workspaceGetEntry('key1');
+      // @ts-ignore accessing private method for testing
+      const entry1 = await t.workspaceGetEntry('key1');
       expect(entry1).toBeDefined();
       expect(entry1.value).toBe('value1');
-      const list = await (t as any).workspaceListByPrefix('key');
+      // @ts-ignore accessing private method for testing
+      const list = await t.workspaceListByPrefix('key');
       expect(list).toContain('key1');
       expect(list).toContain('key2');
     });
@@ -148,7 +155,7 @@ describe('AgentTeam Additional Coverage', () => {
       // Claim the task
       await team.claimTask('agent-1');
       const anyTeam = team as any;
-      const task = anyTeam.taskStatuses.get(0) as any;
+      const task = anyTeam.taskStatuses.get(0);
       // Set retryCount to 2 (max is 3) so next failure hits max
       task.retryCount = 2;
       task.status = 'in_progress';
@@ -174,7 +181,8 @@ describe('AgentTeam Additional Coverage', () => {
       expect(msgs).toHaveLength(1);
       expect(msgs[0]).toMatchObject({ from: 'agent-1', content: 'Hello' });
       // Optionally check notifyUpdate was called
-      const notifySpy = vi.spyOn(team as any, 'notifyUpdate');
+      // @ts-ignore accessing private method for testing
+      const notifySpy = vi.spyOn(team, 'notifyUpdate');
       await team.publishMessage('chan2', 'agent-2', 'World');
       expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({
         content: expect.arrayContaining([expect.objectContaining({ text: expect.stringContaining('[chan2]') })]),
@@ -213,7 +221,8 @@ describe('AgentTeam Additional Coverage', () => {
           sessionId: 'sess1',
           prompt: vi.fn().mockImplementation(async () => {
             // Abort after prompt to exit loop
-            const ctrl = (team as any).childControllers.get('agent-1');
+            // @ts-ignore accessing private field for testing
+      const ctrl = team.childControllers.get('agent-1');
             ctrl?.abort();
           }),
           subscribe: vi.fn(),
@@ -244,12 +253,14 @@ describe('AgentTeam Additional Coverage', () => {
       } as any;
       team.registerRuntime(mockRuntime, 'agent-1');
       // Spy on notifyUpdate
-      const notifySpy = vi.spyOn(team as any, 'notifyUpdate');
+      // @ts-ignore accessing private method for testing
+      const notifySpy = vi.spyOn(team, 'notifyUpdate');
       team.startAgentLoops();
       // Advance timers to complete one iteration (which will hit error)
       await vi.advanceTimersByTimeAsync(1000);
       // Abort to stop further loops
-      const ctrl = (team as any).childControllers.get('agent-1');
+      // @ts-ignore accessing private field for testing
+      const ctrl = team.childControllers.get('agent-1');
       ctrl?.abort();
       await Promise.all(team.childPromises);
       // Should have error update
@@ -266,7 +277,7 @@ describe('AgentTeam Additional Coverage', () => {
       await team.initialize(['Task 1']);
       const anyTeam = team as any;
       // Mark task as completed directly
-      anyTeam.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0 } as any);
+      anyTeam.taskStatuses.set(0, { status: 'completed', assignee: 'agent-1', retryCount: 0 });
       anyTeam.pendingIndices = [];
       const mockRuntime = {
         session: {
@@ -332,7 +343,7 @@ describe('AgentTeam Additional Coverage', () => {
       vi.spyOn(globalThis, 'setInterval').mockImplementation((...args: any[]) => {
         const [cb, ms] = args;
         setIntervalCallback = cb;
-        return 1 as any;
+        return 1;
       });
       vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => {});
       team = new AgentTeam();
@@ -362,7 +373,8 @@ describe('AgentTeam Additional Coverage', () => {
     it('should set monitor and execute callback (wait false)', async () => {
       const onUpdate = vi.fn();
       await executeTeamTasks(team, ['Task'], onUpdate, { wait: false });
-      expect((team as any).onUpdate).toBe(onUpdate);
+      // @ts-ignore accessing private field for testing
+      expect(team.onUpdate).toBe(onUpdate);
       expect(team.initialize).toHaveBeenCalledWith(['Task']);
       expect(team.startAgentLoops).toHaveBeenCalled();
       expect(setIntervalCallback).toBeTruthy();
@@ -370,12 +382,15 @@ describe('AgentTeam Additional Coverage', () => {
       expect(team.reclaimZombieAgents).toHaveBeenCalled();
       expect(team.getTeamStatus).toHaveBeenCalled();
       expect(globalThis.clearInterval).toHaveBeenCalledWith(1);
-      expect((team as any).monitorInterval).toBeNull();
+      // @ts-ignore accessing private property for testing
+      expect(team.monitorInterval).toBeNull();
     });
 
     it('should wait for childPromises and clear monitor (wait true)', async () => {
-      (team as any).childPromises = [Promise.resolve()];
-      const getStatusSpy = vi.mocked(team.getTeamStatus as any);
+      // @ts-ignore accessing private field for testing
+      team.childPromises = [Promise.resolve()];
+      // @ts-ignore accessing private method for testing
+      const getStatusSpy = vi.mocked(team.getTeamStatus);
       getStatusSpy.mockResolvedValueOnce({
         isComplete: false,
         totalTasks: 1,
@@ -402,7 +417,8 @@ describe('AgentTeam Additional Coverage', () => {
           total: 1
         })
       }));
-      expect((team as any).monitorInterval).toBeNull();
+      // @ts-ignore accessing private property for testing
+      expect(team.monitorInterval).toBeNull();
     });
 
     it('should handle runtime dispose error and unregister error gracefully', async () => {
@@ -416,7 +432,7 @@ describe('AgentTeam Additional Coverage', () => {
       anyTeam.childPromises.push(Promise.resolve());
       // Mock TeamRegistry to throw on unregister
       const badRegistry = { unregister: vi.fn(() => { throw new Error('unregister fail'); }) };
-      const getInstanceSpy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(badRegistry as any);
+      const getInstanceSpy = vi.spyOn(TeamRegistry, 'getInstance').mockReturnValue(badRegistry as never);
       // Spy on console.error and console.warn
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
