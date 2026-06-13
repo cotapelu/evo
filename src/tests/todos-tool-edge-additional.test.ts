@@ -155,7 +155,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
 
     it('unknown operation returns error', () => {
       // @ts-ignore intentionally testing invalid op type
-      const { errors } = applyOp([], 1, 1, { unknown: {} } as any);
+      const { errors } = applyOp([], 1, 1, { unknown: {} });
       expect(errors).toContain('No operation specified');
     });
 
@@ -405,21 +405,21 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
 
     it('handles add_phase JSON parse error', async () => {
       // @ts-ignore intentionally testing invalid JSON input
-      const result = await capturedTool.execute('test', { add_phase: '{"invalid":}' } as any, undefined, undefined, mockCtx);
+      const result = await capturedTool.execute('test', { add_phase: '{"invalid":}' }, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Error parsing');
     });
 
     it('handles add_task JSON parse error', async () => {
       // @ts-ignore intentionally testing invalid JSON input
-      const result = await capturedTool.execute('test', { add_task: '{"bad":}' } as any, undefined, undefined, mockCtx);
+      const result = await capturedTool.execute('test', { add_task: '{"bad":}' }, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('must be an object');
     });
 
     it('handles update JSON parse error', async () => {
       // @ts-ignore intentionally testing invalid JSON input
-      const result = await capturedTool.execute('test', { update: '{"oops":}' } as any, undefined, undefined, mockCtx);
+      const result = await capturedTool.execute('test', { update: '{"oops":}' }, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
     });
 

@@ -12,6 +12,15 @@ import { mkdirSync, existsSync, rmSync, writeFileSync, readFileSync } from 'node
 import { join, dirname } from "node:path";
 import os from 'os';
 
+// Helper to access private fields/methods of PiclawPackageManager for testing
+interface PiclawPackageManagerInternal extends PiclawPackageManager {
+  [key: string]: any;
+}
+
+function getPmInternal(pm: PiclawPackageManager): PiclawPackageManagerInternal {
+  return pm as unknown as PiclawPackageManagerInternal;
+}
+
 describe('PiclawPackageManager Edge Cases', () => {
   let pm: PiclawPackageManager;
   let tmpDir: string;
