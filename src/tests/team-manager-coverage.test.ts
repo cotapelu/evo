@@ -20,7 +20,10 @@ describe('TeamManager coverage gaps', () => {
       // Simulate failure
       await team.handleAgentFailure('agent1', 0);
       // Verify task requeued
-      const anyTeam = team as any;
+      const anyTeam = team as unknown as {
+        taskStatuses: Map<number, { status: string; retryCount: number; retryAvailableAt: number }>;
+        agentLastSeen: Map<string, number>;
+      };
       const task = anyTeam.taskStatuses.get(0);
       expect(task.status).toBe('pending');
       expect(task.retryCount).toBe(1);
@@ -38,7 +41,10 @@ describe('TeamManager coverage gaps', () => {
       const idx = await team.claimTask('agent2');
       expect(idx).toBe(0);
       // Set agent last seen far in the past to trigger zombie detection
-      const anyTeam = team as any;
+      const anyTeam = team as unknown as {
+        taskStatuses: Map<number, { status: string; retryCount: number; retryAvailableAt: number }>;
+        agentLastSeen: Map<string, number>;
+      };
       anyTeam.agentLastSeen.set('agent2', Date.now() - 10 * 60 * 1000); // 10 minutes ago
       // Call reclaimZombieAgents
       team.reclaimZombieAgents();

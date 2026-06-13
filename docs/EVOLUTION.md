@@ -208,6 +208,10 @@ Last Updated: 2026-06-12
 - Replaced `as any` on phase object with `as unknown as TodoPhase`.
 - Removed final `as any` in this test.
 
+### Thirty-Fifth Round (Reduce `as any` in team-manager-coverage.test.ts)
+- Replaced `team as any` with a more specific `as unknown as { taskStatuses: Map<number, { status: string; retryCount: number; retryAvailableAt: number }>; agentLastSeen: Map<string, number> }`.
+- Used in two places for internal state access.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
