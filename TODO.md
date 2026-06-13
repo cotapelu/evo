@@ -53,7 +53,7 @@ Last Updated: 2026-06-12
 
 
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~25 occurrences left across ~29 files. Progress: 16 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers).
+- Reduce `as any` casts in remaining test files. Estimated ~24 occurrences left across ~28 files. Progress: 17 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template).
 
 ## Upcoming
 - (none)

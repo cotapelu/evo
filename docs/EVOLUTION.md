@@ -187,6 +187,10 @@ Last Updated: 2026-06-12
 - Removed `as any` from `createMockTheme` return; returned plain object satisfies `Theme`.
 - No cast required; type inference works.
 
+### Twenty-Ninth Round (Reduce `as any` in tool-template.test.ts)
+- Replaced `as any` on execute context with `as unknown as ExtensionContext`.
+- Now using proper type from pi-coding-agent for minimal context.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
