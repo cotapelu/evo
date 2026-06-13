@@ -6,6 +6,17 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
+// Helper to access private fields/methods for testing
+interface AgentTeamInternal {
+  agentLastSeen: Map<string, number>;
+  workspaceClear: () => void;
+  getBootstrapPrompt: (role: string) => Promise<string>;
+  getContinuationPrompt: (turn: number) => Promise<string>;
+}
+function getInternal(team: AgentTeam): AgentTeamInternal {
+  return team as unknown as AgentTeamInternal;
+}
+
 describe('AgentTeam Behaviors', () => {
   let team: AgentTeam;
 
@@ -37,7 +48,7 @@ describe('AgentTeam Behaviors', () => {
     it('should update last seen timestamp for role', async () => {
       await team.initialize([]);
       team.updateHeartbeat('agent-1');
-      const seen = (team as any).agentLastSeen.get('agent-1');
+      const seen = getInternal(team).agentLastSeen.get('agent-1');
       expect(seen).toBeGreaterThanOrEqual(Date.now() - 100);
     });
   });
@@ -86,7 +97,7 @@ describe('AgentTeam Behaviors', () => {
       team.getWorkspace().set('k1', 'v1', 'agent-1');
       team.getWorkspace().set('k2', 'v2', 'agent-2');
       expect(team.getWorkspace().list()).toHaveLength(2);
-      await (team as any).workspaceClear();
+      await getInternal(team).workspaceClear();
       expect(team.getWorkspace().list()).toHaveLength(0);
     });
 
@@ -103,7 +114,7 @@ describe('AgentTeam Behaviors', () => {
     it('should track last seen for registered agents', () => {
       team.agentStatuses.set('agent-1', { currentTaskIndex: null, status: 'idle' });
       team.updateHeartbeat('agent-1');
-      const seen = (team as any).agentLastSeen.get('agent-1');
+      const seen = getInternal(team).agentLastSeen.get('agent-1');
       expect(seen).toBeDefined();
     });
   });
@@ -111,7 +122,7 @@ describe('AgentTeam Behaviors', () => {
   describe('prompt generation', () => {
     it('should generate bootstrap prompt with tasks', async () => {
       await team.initialize(['Do X', 'Do Y']);
-      const prompt = await (team as any).getBootstrapPrompt('coder');
+      const prompt = await getInternal(team).getBootstrapPrompt('coder');
       expect(prompt).toContain('Do X');
       expect(prompt).toContain('Do Y');
       expect(prompt).toContain('coder');
@@ -120,7 +131,7 @@ describe('AgentTeam Behaviors', () => {
     it('should generate continuation prompt with recent messages', async () => {
       await team.initialize(['Task']);
       await team.publishMessage('team.chat', 'agent-1', 'First message');
-      const prompt = await (team as any).getContinuationPrompt(1);
+      const prompt = await getInternal(team).getContinuationPrompt(1);
       expect(prompt).toContain('Turn 2');
       expect(prompt).toContain('First message');
     });

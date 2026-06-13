@@ -40,6 +40,7 @@ Last Updated: 2026-06-13
 - **team-manager.backoff.test.ts**: Eliminated 7 `as any` casts by adding `AgentTeamInternal` interface and using `getInternal(team)` for private field/method access. Tests pass (4 passed); file type-clean (with @ts-nocheck).
 - **team-zombie-recovery.test.ts**: Eliminated 5 `as any` casts by adding `AgentTeamInternal` covering agentLastSeen and taskStatuses, and using `getInternal(team)`. Tests pass (4 passed); file now type-clean (with @ts-nocheck).
 - **team-manager.test.ts**: Eliminated 4 `as any` casts by replacing manual runtime objects with `createMockRuntime` and session ID overrides, removing `(team as any)` casts, and refactoring mock runtime definition. Tests pass (7 passed); file now type-clean.
+- **team-manager.behaviors.test.ts**: Eliminated 5 `as any` casts by adding `AgentTeamInternal` (agentLastSeen, workspaceClear, getBootstrapPrompt, getContinuationPrompt) and using `getInternal(team)`. Tests pass (8 passed); file now type-clean.
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.
