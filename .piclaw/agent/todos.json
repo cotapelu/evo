@@ -3,42 +3,32 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Evolution Round 59",
+      "name": "As any reduction - package-manager-edge-cases",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add new round entry to EVOLUTION.md",
+          "content": "Add any<T> helper and replace as any in package-manager-edge-cases.test.ts (33 occurrences)",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Update Planned Refactors list in EVOLUTION.md",
+          "content": "Run tests and ensure all passing",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Increment iteration and task counts in AGENT_METRICS.md",
-          "status": "completed"
+          "content": "Update docs (AGENT_METRICS, TODO, EVOLUTION)",
+          "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Add new completed bullets to TODO.md",
-          "status": "completed"
-        },
-        {
-          "id": "task-5",
-          "content": "Run tests and build (already done)",
-          "status": "completed"
-        },
-        {
-          "id": "task-6",
-          "content": "Git commit changes",
+          "content": "Git commit",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T13:25:46.038Z"
+  "updatedAt": "2026-06-13T13:40:39.057Z"
 }
