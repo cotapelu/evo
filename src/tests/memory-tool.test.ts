@@ -3,14 +3,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { registerMemoryTool } from "@extensions/tools/memory-tool";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
+import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
 
-function createMockApi(): any {
+function createMockApi(): ExtensionAPI {
   return createMockExtensionAPI({ appendEntry: vi.fn() });
 }
 
 describe("Memory Tool", () => {
-  let api: any;
-  let tool: any;
+  let api: ReturnType<typeof createMockApi>;
+  let tool: ToolDefinition;
 
   beforeEach(() => {
     api = createMockApi();
@@ -31,8 +32,8 @@ describe("Memory Tool", () => {
   });
 
   it("renderCall formats action", () => {
-    const theme: any = { fg: (c: string, t?: string) => (t ?? c), bold: (t: any) => t };
-    const comp = tool.renderCall({ action: "add", text: "note", tags: ["a"] }, theme, {} as any);
+    const theme = { fg: (c: string, t?: string) => (t ?? c), bold: (t: string) => t };
+    const comp = tool.renderCall({ action: "add", text: "note", tags: ["a"] }, theme, {});
     expect(comp.text).toContain("memory");
     expect(comp.text).toContain("add");
   });

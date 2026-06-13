@@ -151,6 +151,12 @@ Last Updated: 2026-06-12
 - Refactored error case for missing `registerMessageRenderer` to use `as unknown as ExtensionAPI` cast instead of `as any`.
 - Eliminated 8 `as any` occurrences.
 
+### Twenty-Second Round (Reduce `any` in team-ops-tool.test.ts)
+- Typed `tool` variable as `ToolDefinition` instead of `any`.
+- Replaced `as any` cast for `registerRuntime` with `as unknown as AgentSessionRuntime`.
+- Used `// @ts-ignore` for invalid action test case to avoid cast (cleaner).
+- Eliminated remaining 2 `as any` occurrences in this file.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
