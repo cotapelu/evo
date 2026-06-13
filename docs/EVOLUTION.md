@@ -191,9 +191,13 @@ Last Updated: 2026-06-12
 - Replaced `as any` on execute context with `as unknown as ExtensionContext`.
 - Now using proper type from pi-coding-agent for minimal context.
 
-### Thirtieth Round (Reduce `as any` in team-widget-lifecycle.test.ts)
+### Thirty-First Round (Reduce `as any` in team-widget-lifecycle.test.ts)
 - Replaced `(TeamRegistry.getInstance as any).mockReturnValue` with `vi.mocked(TeamRegistry.getInstance).mockReturnValue`.
 - Clean static mock without unsound cast.
+
+### Thirty-Second Round (Reduce `as any` in extensions-index.test.ts)
+- Removed unnecessary `as any` cast from `createMockApi` return; `createMockExtensionAPI` already returns typed `ExtensionAPI`.
+- File any-free.
 
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
