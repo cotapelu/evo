@@ -362,6 +362,11 @@ Last Updated: 2026-06-13
 - Tests pass (42 passed).
 - **Impact**: Further reduces reliance on `as any` in edge-case tests, improving type safety without altering test logic.
 
+### Seventieth Round (Reduce `as any` in package-manager-edge-cases.test.ts)
+- Replaced 5 ` as any` casts with `getPmInternal(pm)` helper, removing unnecessary casts on test mocks.
+- Added `PiclawPackageManagerInternal` interface and helper function to enable safe access to private methods.
+- 28 remaining; continuing incremental reduction.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

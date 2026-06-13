@@ -63,7 +63,7 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   describe('installNpm', () => {
     it('should reject when runNpmCommand fails', async () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       const spy = vi.spyOn(pmAny, 'runNpmCommand').mockRejectedValue(new Error('npm error'));
       await expect(pmAny.installNpm({ type: 'npm', name: 'test', pinned: undefined }, 'project')).rejects.toThrow('npm error');
       expect(spy).toHaveBeenCalled();
@@ -72,13 +72,13 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   describe('getLatestNpmVersion', () => {
     it('should reject when runCommandCapture fails', async () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       vi.spyOn(pmAny, 'runCommandCapture').mockRejectedValue(new Error('cmd failed'));
       await expect(pmAny.getLatestNpmVersion('test')).rejects.toThrow('cmd failed');
     });
 
     it('should return version string from npm view output', async () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       // npm view returns version as JSON string literal, e.g., "1.2.3"
       vi.spyOn(pmAny, 'runCommandCapture').mockResolvedValue('"1.2.3"');
       const version = await pmAny.getLatestNpmVersion('test');
@@ -88,13 +88,13 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   describe('runCommandCapture', () => {
     it('should reject when spawn throws', async () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       vi.mocked(mockSpawn).mockImplementation(() => { throw new Error('spawn error'); });
       await expect(pmAny.runCommandCapture('test', ['cmd'], {})).rejects.toThrow('spawn error');
     });
 
     it('should reject when child exits with non-zero code', async () => {
-      const pmAny = pm as any;
+      const pmAny = getPmInternal(pm);
       vi.mocked(mockSpawn).mockReturnValue({
         on: vi.fn((event, cb) => { if (event === 'close') cb(1); }),
         stdout: { on: vi.fn() },
