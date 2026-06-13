@@ -53,7 +53,7 @@ describe('extensions/index', () => {
     registerMessageRenderer: vi.fn(),
     registerFlag: vi.fn(),
     getFlag: vi.fn()
-  }) as any;
+  });
 
   it('should register kilo provider', async () => {
     const mockApi = createMockApi();
