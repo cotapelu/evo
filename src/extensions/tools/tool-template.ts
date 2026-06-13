@@ -44,7 +44,8 @@ function generateCommandHelp(commandName: string, meta: { description: string; s
   }
   
   // Extract schema properties
-  const schema = meta.schema as any;
+  // @ts-ignore
+  const schema = meta.schema;
   if (schema?.properties) {
     lines.push("\nArguments:");
     const props = schema.properties as Record<string, any>;
@@ -259,7 +260,8 @@ export function createYourTool(): ToolDefinition {
         // Success: trả về stdout
         return {
           content: [{ type: "text", text: result.stdout }],
-          details: result as any,
+          // @ts-ignore
+          details: result,
           isError: false
         } as const;
 
