@@ -24,7 +24,8 @@ function ensureState(ctx: any): MetricsWidgetSessionState {
   let state = getState(ctx);
   if (!state) {
     state = { enabled: true, ctx: ctx, intervalId: null };
-    (ctx as any)[METRICS_WIDGET_STATE] = state;
+    // @ts-ignore
+    ctx[METRICS_WIDGET_STATE] = state;
   }
   return state;
 }
@@ -127,12 +128,14 @@ export function registerMetricsWidget(api: ExtensionAPI): void {
   api.on("session_start", async (_event, ctx: any) => {
     // Create per-session state, default enabled
     const state: MetricsWidgetSessionState = { enabled: true, ctx: ctx, intervalId: null };
-    (ctx as any)[METRICS_WIDGET_STATE] = state;
+    // @ts-ignore
+    ctx[METRICS_WIDGET_STATE] = state;
     startWidget(ctx);
 
     api.on("session_shutdown", () => {
       stopWidget(state);
-      delete (ctx as any)[METRICS_WIDGET_STATE];
+      // @ts-ignore
+      delete ctx[METRICS_WIDGET_STATE];
     });
   });
 }
