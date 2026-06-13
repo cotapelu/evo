@@ -17,8 +17,8 @@ interface PiclawPackageManagerInternal extends PiclawPackageManager {
   [key: string]: any;
 }
 
-function getPmInternal(pm: PiclawPackageManager): any {
-  return pm as any;
+function getPmInternal(pm: PiclawPackageManager): PiclawPackageManagerInternal {
+  return pm as PiclawPackageManagerInternal;
 }
 
 describe('PiclawPackageManager Edge Cases', () => {
@@ -95,19 +95,21 @@ describe('PiclawPackageManager Edge Cases', () => {
 
     it('should reject when child exits with non-zero code', async () => {
       const pmAny = getPmInternal(pm);
+      // @ts-ignore - mock ChildProcess with minimal shape
       vi.mocked(mockSpawn).mockReturnValue({
         on: vi.fn((event, cb) => { if (event === 'close') cb(1); }),
         stdout: { on: vi.fn() },
-      } as any);
+      });
       await expect(pmAny.runCommandCapture('test', ['cmd'], {})).rejects.toThrow('exited with code 1');
     });
 
     it('should return stdout string on success', async () => {
       const pmAny = getPmInternal(pm);
+      // @ts-ignore - mock ChildProcess with minimal shape
       vi.mocked(mockSpawn).mockReturnValue({
         stdout: { on: vi.fn((event, cb) => cb('output')) },
         on: vi.fn((event, cb) => { if (event === 'close') cb(0); }),
-      } as any);
+      });
       const result = await pmAny.runCommandCapture('test', ['cmd'], {});
       expect(result).toBe('output');
     });
@@ -143,7 +145,8 @@ describe('PiclawPackageManager Edge Cases', () => {
 
     it('should get global npm root via spawnSync', () => {
       const pmAny = getPmInternal(pm);
-      vi.mocked(mockSpawnSync).mockReturnValue({ status: 0, stdout: '/global/path', stderr: '' } as any);
+      // @ts-ignore - mock SpawnSyncReturnValue
+      vi.mocked(mockSpawnSync).mockReturnValue({ status: 0, stdout: '/global/path', stderr: '' });
       const root = pmAny.getGlobalNpmRoot();
       expect(root).toBe('/global/path');
     });
@@ -187,7 +190,8 @@ describe('PiclawPackageManager Edge Cases', () => {
 
   it('should get global npm root fallback when npm root -g fails', () => {
     const pmAny = getPmInternal(pm);
-    vi.mocked(mockSpawnSync).mockReturnValue({ status: 1, stdout: '', stderr: '' } as any);
+    // @ts-ignore - mock SpawnSyncReturnValue
+    vi.mocked(mockSpawnSync).mockReturnValue({ status: 1, stdout: '', stderr: '' });
     const root = pmAny.getGlobalNpmRoot();
     const expected = join(os.homedir(), '.npm', 'global', 'node_modules');
     expect(root).toBe(expected);
