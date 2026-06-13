@@ -268,6 +268,11 @@ Last Updated: 2026-06-12
 - Replaced 9 ` as any` casts: replaced `{} as any` context parameter with plain `{}` since renderResult accepts `any`.
 - All casts eliminated.
 
+### Forty-Ninth Round (Reduce `as any` in todos-tool-edge-cases.test.ts)
+- Replaced 11 ` as any` casts: changed context casts to `as unknown as ExtensionContext`, removed `as any` from `undefined`, replaced phases array casts with `as TodoPhase[]` or type annotations, added missing `status` on tasks to satisfy type.
+- Imported `TodoPhase` and `ExtensionContext` types.
+- All casts eliminated.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
