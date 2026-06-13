@@ -3,8 +3,8 @@
 Last Updated: 2026-06-12
 
 ## Session Summary
-- Iterations: 21
-- Tasks Completed: 21 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias; add waitForInitialization helper; fix residual typecheck errors after import migration; final typecheck polish; improve PluginLoader watch mode with debounced reload, deletion handling, and integration tests; **enhance capability router tool with dynamic capabilities list**; **enable hot-reload for execute files by clearing ES module cache**; **improve new plugin detection with debounced load**; **implement scoped PluginLoader support**; **reduce `any` casts in tests (completed: git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer)**)
+- Iterations: 22
+- Tasks Completed: 22 (fix failing capability tests; add waitForLoad; fix test regressions; typecheck cleanup; centralize test mock factories; migrate test imports to path alias; add waitForInitialization helper; fix residual typecheck errors after import migration; final typecheck polish; improve PluginLoader watch mode with debounced reload, deletion handling, and integration tests; **enhance capability router tool with dynamic capabilities list**; **enable hot-reload for execute files by clearing ES module cache**; **improve new plugin detection with debounced load**; **implement scoped PluginLoader support**; **reduce `any` casts in tests (completed: git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer)**)
 
 ## Test Metrics
 - Total Test Suites: 99
@@ -27,7 +27,7 @@ Last Updated: 2026-06-12
 - **Hot-reload for execute files**: Cleared Node ES module cache in `dynamicImport` to enable instant reload of capability code during development; watch mode now covers all file types.
 - **New plugin detection**: Added 500ms debounce to root watcher to avoid race conditions when creating new plugins; manifest is guaranteed to be present before load attempt.
 - **Scoped PluginLoader**: Modified `capabilitySystemExtension` to accept optional custom loader via `api.pluginLoader`. Backward compatible; enables parallel test execution by avoiding global singleton state.
-- **Test Typing**: Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`. Plugin capability tests (git, dev, security-system) now typed. Command tests (provider-command, metrics-command, copy-command, team-command) use `vi.mocked()`. Renderer test (todos-renderer) introduced typed RendererFn. Systematic elimination of `as any` casts continues.
+- **Test Typing**: Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`. Plugin capability tests (git, dev, security-system) now typed. Command tests (provider-command, metrics-command, copy-command, team-command) use `vi.mocked()`. Renderer tests (todos-renderer, branch-summary-renderer) use typed RendererFn. Systematic elimination of `as any` casts continues.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627

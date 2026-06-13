@@ -145,6 +145,12 @@ Last Updated: 2026-06-12
 - Result casting removed: `result.content` used directly.
 - Successfully eliminated 12 `as any` occurrences.
 
+### Twenty-First Round (Reduce `any` in branch-summary-renderer.test.ts)
+- Applied same `RendererFn` pattern to branch summary renderer tests.
+- Replaced all `renderer(... as any)` calls with typed renderer.
+- Refactored error case for missing `registerMessageRenderer` to use `as unknown as ExtensionAPI` cast instead of `as any`.
+- Eliminated 8 `as any` occurrences.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

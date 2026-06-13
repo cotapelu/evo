@@ -52,7 +52,7 @@ Last Updated: 2026-06-12
 
 
 ## In Progress
-- Reduce `as any` casts in remaining test files. Estimated ~33 occurrences left across ~40 files. Progress: 8 files cleaned, ~48→~33 occurrences.
+- Reduce `as any` casts in remaining test files. Estimated ~25 occurrences left across ~38 files. Progress: 9 files cleaned (git, dev, security-system, provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer).
 
 ## Upcoming
 - (none)
