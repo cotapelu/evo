@@ -18,8 +18,10 @@ vi.mock('node:fs', () => ({
 }));
 
 // Now import all modules
+import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
 import {
   TodoState,
+  TodoPhase,
   applyOp,
   formatSummary,
   getLatestTodoPhasesFromEntries,
@@ -47,7 +49,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     realFs.realMkdirSync(cwd, { recursive: true });
     vi.stubEnv('HOME', tempHome);
     vi.clearAllMocks();
-    (existsSync as any).mockReturnValue(false);
+    vi.mocked(existsSync).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -105,13 +107,13 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
       expect(state.nextPhaseId).toBe(2);
       expect(state.nextTaskId).toBe(1);
 
-      const newPhases = [
+      const newPhases: TodoPhase[] = [
         { id: 'phase-5', name: 'P5', tasks: [
           { id: 'task-10', content: 'T10', status: 'pending' },
           { id: 'task-20', content: 'T20', status: 'pending' }
         ]},
         { id: 'phase-100', name: 'P100', tasks: [] }
-      ] as any;
+      ];
       state.replacePhases(newPhases);
       const phases = state.getPhases();
       expect(phases).toHaveLength(2);
@@ -152,6 +154,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     });
 
     it('unknown operation returns error', () => {
+      // @ts-ignore intentionally testing invalid op type
       const { errors } = applyOp([], 1, 1, { unknown: {} } as any);
       expect(errors).toContain('No operation specified');
     });
@@ -187,14 +190,14 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     });
 
     it('update empty ids is no-op', () => {
-      const start = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }] as any;
+      const start: TodoPhase[] = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
       const { phases, errors } = applyOp(start, 1, 1, { update: { ids: [] } });
       expect(phases[0].tasks[0].content).toBe('T');
       expect(errors).toEqual([]);
     });
 
     it('update unknown task id records error but continues', () => {
-      const start = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }] as any;
+      const start: TodoPhase[] = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
       const { phases, errors } = applyOp(start, 1, 1, { update: { ids: ['missing'] } });
       expect(errors).toContain('Task "missing" not found');
       expect(phases[0].tasks).toHaveLength(1);
@@ -212,27 +215,27 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
         { id: 't1', content: 'T1', status: 'pending' },
         { id: 't2', content: 'T2', status: 'in_progress' },
         { id: 't3', content: 'T3', status: 'completed' }
-      ]}] as any;
+      ]}];
       const summary = formatSummary(phases, []);
       expect(summary).toContain('2 remaining');
       expect(summary).toContain('1 completed');
     });
 
     it('shows completed count correctly (abandoned not counted)', () => {
-      const phases = [{ id: 'p', name: 'P', tasks: [
+      const phases: TodoPhase[] = [{ id: 'p', name: 'P', tasks: [
         { id: 't1', content: 'T1', status: 'completed' },
         { id: 't2', content: 'T2', status: 'abandoned' }
-      ]}] as any;
+      ]}];
       const summary = formatSummary(phases, []);
       expect(summary).toContain('0 remaining');
       expect(summary).toContain('1 completed'); // only status === 'completed'
     });
 
     it('filters empty phases from remaining list', () => {
-      const phases = [
+      const phases: TodoPhase[] = [
         { id: 'p1', name: 'P1', tasks: [] },
         { id: 'p2', name: 'P2', tasks: [{ id: 't', content: 'T', status: 'pending' }] }
-      ] as any;
+      ];
       const summary = formatSummary(phases, []);
       expect(summary).toContain('Remaining items (1)');
       expect(summary).not.toContain('P1');
@@ -241,7 +244,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     it('shows details for in_progress task', () => {
       const phases = [{ id: 'p', name: 'P', tasks: [
         { id: 't', content: 'T', status: 'in_progress', details: 'line1\nline2' }
-      ]}] as any;
+      ]}];
       const summary = formatSummary(phases, []);
       expect(summary).toContain('line1');
       expect(summary).toContain('line2');
@@ -286,7 +289,7 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     });
 
     it('ignores entry with null message', () => {
-      const entries = [{ type: 'message', message: null }] as any;
+      const entries = [{ type: 'message', message: null }];
       const phases = getLatestTodoPhasesFromEntries(entries);
       expect(phases).toEqual([]);
     });
@@ -330,31 +333,31 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
 
   describe('File operations failures', () => {
     it('loadFromFile returns false when file missing', async () => {
-      (existsSync as any).mockReturnValue(false);
+      vi.mocked(existsSync).mockReturnValue(false);
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
     });
 
     it('loadFromFile returns false on JSON parse error', async () => {
-      (existsSync as any).mockReturnValue(true);
-      (promises.readFile as any).mockResolvedValue('invalid json');
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(promises.readFile).mockResolvedValue('invalid json');
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
     });
 
     it('loadFromFile returns false on invalid version', async () => {
-      (existsSync as any).mockReturnValue(true);
-      (promises.readFile as any).mockResolvedValue(JSON.stringify({ version: 2, phases: [] }));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(promises.readFile).mockResolvedValue(JSON.stringify({ version: 2, phases: [] }));
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
     });
 
     it('loadFromFile returns false on read exception', async () => {
-      (existsSync as any).mockReturnValue(true);
-      (promises.readFile as any).mockRejectedValue(new Error('read failed'));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(promises.readFile).mockRejectedValue(new Error('read failed'));
       const state = new TodoState();
       const loaded = await state.loadFromFile(cwd);
       expect(loaded).toBe(false);
@@ -363,24 +366,24 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
     it('saveToFile propagates mkdir error', async () => {
       const state = new TodoState();
       state.addPhase('P', [{ content: 'T' }]);
-      (promises.mkdir as any).mockRejectedValue(new Error('no perms'));
+      vi.mocked(promises.mkdir).mockRejectedValue(new Error('no perms'));
       await expect(state.saveToFile(cwd)).rejects.toThrow('no perms');
     });
 
     it('saveToFile propagates writeFile error', async () => {
       const state = new TodoState();
       state.addPhase('P', [{ content: 'T' }]);
-      (promises.mkdir as any).mockResolvedValue({});
-      (promises.writeFile as any).mockRejectedValue(new Error('disk full'));
+      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.writeFile).mockRejectedValue(new Error('disk full'));
       await expect(state.saveToFile(cwd)).rejects.toThrow('disk full');
     });
 
     it('saveToFile propagates rename error', async () => {
       const state = new TodoState();
       state.addPhase('P', [{ content: 'T' }]);
-      (promises.mkdir as any).mockResolvedValue({});
-      (promises.writeFile as any).mockResolvedValue({});
-      (promises.rename as any).mockRejectedValue(new Error('rename failed'));
+      vi.mocked(promises.mkdir).mockResolvedValue({});
+      vi.mocked(promises.writeFile).mockResolvedValue({});
+      vi.mocked(promises.rename).mockRejectedValue(new Error('rename failed'));
       await expect(state.saveToFile(cwd)).rejects.toThrow('rename failed');
     });
   });
@@ -396,23 +399,26 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
         sendMessage: vi.fn(),
         on: vi.fn(),
       };
-      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true, cwd } as any;
+      mockCtx = { sessionManager: { getBranch: vi.fn().mockReturnValue([]) }, hasUI: true, cwd } as unknown as ExtensionContext;
       registerTodosTool(mockApi);
     });
 
     it('handles add_phase JSON parse error', async () => {
+      // @ts-ignore intentionally testing invalid JSON input
       const result = await capturedTool.execute('test', { add_phase: '{"invalid":}' } as any, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Error parsing');
     });
 
     it('handles add_task JSON parse error', async () => {
+      // @ts-ignore intentionally testing invalid JSON input
       const result = await capturedTool.execute('test', { add_task: '{"bad":}' } as any, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('must be an object');
     });
 
     it('handles update JSON parse error', async () => {
+      // @ts-ignore intentionally testing invalid JSON input
       const result = await capturedTool.execute('test', { update: '{"oops":}' } as any, undefined, undefined, mockCtx);
       expect(result.isError).toBe(true);
     });
