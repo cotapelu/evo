@@ -128,6 +128,9 @@ Last Updated: 2026-06-13
 - [x] Eliminate `as any` casts in team-manager.edge-cases.test.ts (3 occurrences removed)
   - Replaced inline mock runtime objects with `createMockRuntime()` calls; no casts needed.
   - Tests pass (5 passed); file now type-clean.
+- [x] Eliminate `as any` casts in team-manager.performance.test.ts (1 occurrence removed)
+  - Replaced constant mock runtime with `createMockRuntime()` in beforeEach.
+  - Tests pass (2 passed); file now type-clean.
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
 
 ## In Progress

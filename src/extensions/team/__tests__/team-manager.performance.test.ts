@@ -1,15 +1,13 @@
 import { AgentTeam } from '../team-manager.js';
+import { createMockRuntime } from './test-utils.js';
 import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
-
-// Mock runtime (minimal)
-const mockRuntime = { session: { sessionId: 'agent' } } as any;
 
 describe('AgentTeam Performance', () => {
   let team: AgentTeam;
 
   beforeEach(() => {
     team = new AgentTeam();
-    team.registerRuntime(mockRuntime, 'agent-1');
+    team.registerRuntime(createMockRuntime(), 'agent-1');
   });
 
   afterEach(async () => {

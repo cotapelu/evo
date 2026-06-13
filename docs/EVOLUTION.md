@@ -455,6 +455,11 @@ Last Updated: 2026-06-13
 - Cleaned 3 `as any` occurrences; tests pass (5 passed). File now type-clean.
 - **Impact**: Simplified edge case test setup, removed unsafe casts, improved maintainability.
 
+### Eighty-Fifth Round (Eliminate `as any` in team-manager.performance.test.ts)
+- Replaced inline mock runtime constant with `createMockRuntime()` in beforeEach.
+- Cleaned 1 `as any` occurrence; tests pass (2 passed). File now type-clean.
+- **Impact**: Completed cleanup of all team-manager* test files; ensures performance benchmarks are type-safe and ready for scaling tests.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

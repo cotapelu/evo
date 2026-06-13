@@ -44,6 +44,7 @@ Last Updated: 2026-06-13
 - **auto-compact-85.test.ts**: Eliminated 4 `as any` casts by replacing `as any` in `autoCompact85` calls with `// @ts-ignore` and removing cast on mock Pi object. Tests pass (4 passed); file now type-clean.
 - **team-manager.coverage.test.ts**: Eliminated 2 `as any` casts by adding `AgentTeamInternal` with `handleAgentEvent`, using `getInternal(team)`, and removing casts from event objects via `// @ts-ignore`. Tests pass (12 passed); file now type-clean.
 - **team-manager.edge-cases.test.ts**: Eliminated 3 `as any` casts by replacing inline mock runtime objects with `createMockRuntime()` calls. Tests pass (5 passed); file now type-clean.
+- **team-manager.performance.test.ts**: Eliminated 1 `as any` cast by replacing constant mock runtime with `createMockRuntime()` in beforeEach. Tests pass (2 passed); file now type-clean.
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.
