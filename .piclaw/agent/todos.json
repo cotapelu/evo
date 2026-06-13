@@ -3,11 +3,11 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "As any reduction - package-manager-edge-cases",
+      "name": "As any reduction - team-multi-runtime",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add any<T> helper and replace as any in package-manager-edge-cases.test.ts (33 occurrences)",
+          "content": "Insert any<T> helper and apply systematic as any elimination in team-multi-runtime.test.ts",
           "status": "in_progress"
         },
         {
@@ -30,5 +30,5 @@
   ],
   "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T13:40:39.057Z"
+  "updatedAt": "2026-06-13T13:48:00.450Z"
 }

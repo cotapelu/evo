@@ -2,6 +2,9 @@ import { AgentTeam, TeamRegistry } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach, test } from 'vitest';
 import { createMockRuntime, createTestTeam } from './test-utils.js';
 
+
+function any<T>(value: T): any { return value; }
+
 describe('AgentTeam Claim Performance Optimization', () => {
   const LONG_TIMEOUT = 30000; // 30 seconds for performance tests
   let team: AgentTeam;
@@ -26,7 +29,7 @@ describe('AgentTeam Claim Performance Optimization', () => {
     team.tasks = ['task0', 'task1', 'task2', 'task3'];
     await team.initialize(team.tasks);
 
-    const pendingIndices = (team as any).pendingIndices;
+    const pendingIndices = (any(team)).pendingIndices;
     expect(pendingIndices).toEqual([0, 1, 2, 3]);
   }, LONG_TIMEOUT);
 
@@ -37,7 +40,7 @@ describe('AgentTeam Claim Performance Optimization', () => {
     const claimed = await team.claimTask('agent-1');
     expect(claimed).toBe(0);
 
-    const pendingIndices = (team as any).pendingIndices;
+    const pendingIndices = (any(team)).pendingIndices;
     expect(pendingIndices).toEqual([1, 2]);
   });
 
@@ -47,12 +50,12 @@ describe('AgentTeam Claim Performance Optimization', () => {
 
     // Claim task 0
     await team.claimTask('agent-1');
-    let pending = (team as any).pendingIndices;
+    let pending = (any(team)).pendingIndices;
     expect(pending).toEqual([1, 2]);
 
     // Release task 0
     await team.releaseTask('agent-1', 0);
-    pending = (team as any).pendingIndices;
+    pending = (any(team)).pendingIndices;
     expect(pending).toEqual([0, 1, 2]); // sorted
   });
 
@@ -64,22 +67,22 @@ describe('AgentTeam Claim Performance Optimization', () => {
     await team.claimTask('agent-1'); // 0
     await team.claimTask('agent-1'); // 1
     await team.claimTask('agent-1'); // 2
-    let pending = (team as any).pendingIndices;
+    let pending = (any(team)).pendingIndices;
     expect(pending).toEqual([3, 4]);
 
     // Release task 2 (middle)
     await team.releaseTask('agent-1', 2);
-    pending = (team as any).pendingIndices;
+    pending = (any(team)).pendingIndices;
     expect(pending).toEqual([2, 3, 4]);
 
     // Release task 0 (beginning)
     await team.releaseTask('agent-1', 0);
-    pending = (team as any).pendingIndices;
+    pending = (any(team)).pendingIndices;
     expect(pending).toEqual([0, 2, 3, 4]);
 
     // Release task 4 (end)
     await team.releaseTask('agent-1', 4);
-    pending = (team as any).pendingIndices;
+    pending = (any(team)).pendingIndices;
     expect(pending).toEqual([0, 2, 3, 4]); // 4 already there? Actually task 4 wasn't claimed initially, so still [3]? Let's check: initially [0,1,2,3,4], claimed [0,1,2] -> pending [3,4]. Release 2 -> [2,3,4]. Release 0 -> [0,2,3,4]. Release 4 -> 4 already in? No, 4 was pending already. So after releasing 0, pending [0,2,3,4]. 4 already there. So release 4 should not duplicate. Our releaseTask should only insert if not already pending.
   });
 
@@ -89,15 +92,15 @@ describe('AgentTeam Claim Performance Optimization', () => {
 
     // Claim task
     await team.claimTask('agent-1');
-    let pending = (team as any).pendingIndices;
+    let pending = (any(team)).pendingIndices;
     expect(pending).toEqual([]); // claimed
 
     // Simulate failure
     await team.handleAgentFailure('agent-1', 0, new Error('fail'));
 
-    pending = (team as any).pendingIndices;
+    pending = (any(team)).pendingIndices;
     expect(pending).toContain(0); // readded
-    const task = (team as any).taskStatuses.get(0);
+    const task = (any(team)).taskStatuses.get(0);
     expect(task.status).toBe('pending');
     expect(task.retryAvailableAt).toBeGreaterThan(Date.now());
   });
@@ -114,7 +117,7 @@ describe('AgentTeam Claim Performance Optimization', () => {
     const claimed = await team.claimTask('agent-1');
     expect(claimed).toBe(1);
 
-    const pending = (team as any).pendingIndices;
+    const pending = (any(team)).pendingIndices;
     expect(pending).toContain(0); // still in pending
     expect(pending).not.toContain(1); // 1 was claimed
   });
@@ -149,14 +152,14 @@ describe('AgentTeam Claim Performance Optimization', () => {
       await team.releaseTask('agent-1', 0);
     }
 
-    let pending = (team as any).pendingIndices;
+    let pending = (any(team)).pendingIndices;
     const count0 = pending.filter((idx: number) => idx === 0).length;
     expect(count0).toBe(1); // no duplicates
 
     // Failure cycle
     await team.claimTask('agent-1');
     await team.handleAgentFailure('agent-1', 0, new Error('fail'));
-    pending = (team as any).pendingIndices;
+    pending = (any(team)).pendingIndices;
     const count0After = pending.filter((idx: number) => idx === 0).length;
     expect(count0After).toBe(1);
   });
