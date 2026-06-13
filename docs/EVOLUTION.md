@@ -420,6 +420,13 @@ Last Updated: 2026-06-13
 - Cleaned 5 `as any` occurrences; tests pass (4 passed). File now type-clean (with @ts-nocheck).
 - **Impact**: Improved type safety for zombie recovery tests, ensuring correct handling of agent timeouts and task reclamation without unsafe casts.
 
+### Seventy-Ninth Round (Eliminate `as any` in team-manager.test.ts)
+- Refactored runtime registration: replaced manual objects with `createMockRuntime` and session ID overrides.
+- Eliminated `(team as any)` casts by using `team.registerRuntime` directly.
+- Simplified mock runtime definition using `createMockRuntime` and override of `prompt`.
+- Cleaned 4 `as any` occurrences; tests pass (7 passed). File now type-clean.
+- **Impact**: Cleaner team initialization and isolated agent testing without any casts, improving test readability and type safety.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

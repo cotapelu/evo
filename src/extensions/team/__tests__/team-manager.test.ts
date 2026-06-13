@@ -1,5 +1,6 @@
 import { AgentTeam } from '../team-manager.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createMockRuntime } from './test-utils.js';
 
 describe('AgentTeam', () => {
   let team: AgentTeam;
@@ -8,8 +9,13 @@ describe('AgentTeam', () => {
     team = new AgentTeam();
     team.setTeamId('test-team');
     // Register fake runtimes with distinct session IDs
-    team.registerRuntime({ session: { sessionId: 'parent-session-123' } } as any, 'parent');
-    team.registerRuntime({ session: { sessionId: 'agent1-session-456' } } as any, 'agent-1');
+    const parentRuntime = createMockRuntime();
+    parentRuntime.session.sessionId = 'parent-session-123';
+    team.registerRuntime(parentRuntime, 'parent');
+
+    const agent1Runtime = createMockRuntime();
+    agent1Runtime.session.sessionId = 'agent1-session-456';
+    team.registerRuntime(agent1Runtime, 'agent-1');
   });
 
   afterEach(async () => {
@@ -88,7 +94,9 @@ describe('AgentTeam', () => {
 
     it('should isolate agents: agent-1 cannot complete agent-2 task', async () => {
       // Need agent-2 registered for role mapping
-      (team as any).registerRuntime({ session: { sessionId: 'agent2-session-789' } } as any, 'agent-2');
+      const agent2Runtime = createMockRuntime();
+      agent2Runtime.session.sessionId = 'agent2-session-789';
+      team.registerRuntime(agent2Runtime, 'agent-2');
       await team.initialize(['taskX', 'taskY']);
 
       // agent-1 claims task 0
@@ -104,14 +112,13 @@ describe('AgentTeam', () => {
 
     it('should respect maxTurnsPerAgent option', async () => {
       // Create a mock runtime that never completes tasks
-      const mockRuntime = {
-        session: { sessionId: 'agent-test-session' },
-        async prompt() {
-          // Simulate agent that never calls team_ops to complete
-          // Should hit maxTurnsPerAgent and exit
-          throw new Error('Simulated agent error to exit loop');
-        }
-      } as any;
+      const mockRuntime = createMockRuntime();
+      mockRuntime.session.sessionId = 'agent-test-session';
+      mockRuntime.prompt = async () => {
+        // Simulate agent that never calls team_ops to complete
+        // Should hit maxTurnsPerAgent and exit
+        throw new Error('Simulated agent error to exit loop');
+      };
 
       team.registerRuntime(mockRuntime, 'test-agent');
       await team.initialize(['task1', 'task2']);

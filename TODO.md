@@ -108,6 +108,11 @@ Last Updated: 2026-06-13
   - Added `AgentTeamInternal` with agentLastSeen and taskStatuses.
   - Replaced all `(team as any).agentLastSeen.set` and `(team as any).taskStatuses.get` with `getInternal(team)`.
   - Tests pass (4 passed); file now type-clean (with @ts-nocheck).
+- [x] Eliminate `as any` casts in team-manager.test.ts (4 occurrences removed)
+  - Replaced manual runtime objects with `createMockRuntime` and session ID overrides.
+  - Used `team.registerRuntime` directly; eliminated `(team as any)` casts.
+  - Refactored mock runtime definition to use `createMockRuntime` and override `prompt`.
+  - Tests pass (7 passed); file now type-clean.
 - [x] Finalize elimination of remaining `as any` in team-manager-additional.test.ts (4 remaining removed)
 
 ## In Progress
