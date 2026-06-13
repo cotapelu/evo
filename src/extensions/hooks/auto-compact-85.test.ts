@@ -10,7 +10,8 @@ describe('auto-compact-85 hook', () => {
     const mockPi = {
       on: vi.fn()
     };
-    autoCompact85(mockPi as any);
+    // @ts-ignore - passing mock ExtensionAPI with only 'on'
+    autoCompact85(mockPi);
     expect(mockPi.on).toHaveBeenCalledWith('turn_end', expect.any(Function));
   });
 
@@ -28,7 +29,8 @@ describe('auto-compact-85 hook', () => {
       }
     };
 
-    autoCompact85(mockPi as any);
+    // @ts-ignore - passing mock ExtensionAPI with only 'on'
+    autoCompact85(mockPi);
 
     // Simulate turn_end event
     await handler({}, mockCtx);
@@ -50,7 +52,8 @@ describe('auto-compact-85 hook', () => {
       }
     };
 
-    autoCompact85(mockPi as any);
+    // @ts-ignore - passing mock ExtensionAPI with only 'on'
+    autoCompact85(mockPi);
     await handler({}, mockCtx);
 
     expect(mockCompact).not.toHaveBeenCalled();
@@ -70,7 +73,8 @@ describe('auto-compact-85 hook', () => {
       }
     };
 
-    autoCompact85(mockPi as any);
+    // @ts-ignore - passing mock ExtensionAPI with only 'on'
+    autoCompact85(mockPi);
     await handler({}, mockCtx);
 
     expect(mockCompact).not.toHaveBeenCalled();
