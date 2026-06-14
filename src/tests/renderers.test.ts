@@ -11,7 +11,7 @@ import { Text } from "@earendil-works/pi-tui";
 import type { Theme } from "@earendil-works/pi-coding-agent";
 
 // Mock theme
-function createMockTheme(): Theme {
+function createMockTheme(): any {
   return {
     fg: (color: string, text?: string) => (text ?? color),
     bg: (color: string, text?: string) => (text ?? color),

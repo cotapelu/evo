@@ -142,8 +142,7 @@ describe('read-skill command module', () => {
     it('should handle signal parameter (cancellation)', async () => {
       mockFs.stat.mockResolvedValue({ isDirectory: () => true });
       mockFs.readdir.mockResolvedValue([]);
-      // @ts-ignore - minimal AbortSignal mock for cancellation test
-      const mockSignal = { aborted: false };
+      const mockSignal = { aborted: false } as any; // minimal AbortSignal mock
 
       const result = await executeLoadSkill({}, mockCwd, mockSignal, {});
 

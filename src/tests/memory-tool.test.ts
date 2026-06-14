@@ -10,8 +10,8 @@ function createMockApi(): ExtensionAPI {
 }
 
 describe("Memory Tool", () => {
-  let api: ReturnType<typeof createMockApi>;
-  let tool: ToolDefinition;
+  let api: any;
+  let tool: any;
 
   beforeEach(() => {
     api = createMockApi();

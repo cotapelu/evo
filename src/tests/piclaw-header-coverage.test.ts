@@ -20,8 +20,8 @@ describe('piclaw-header coverage gaps', () => {
   let mockSetHeader: any;
 
   beforeEach(() => {
-    existsSync.mockReturnValue(false);
-    readFileSync.mockClear();
+    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFileSync).mockClear();
     mockSetHeader = vi.fn();
     mockCtx = { hasUI: true, ui: { setHeader: mockSetHeader } };
     mockApi = { on: vi.fn() };

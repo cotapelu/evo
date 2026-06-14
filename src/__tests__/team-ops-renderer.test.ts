@@ -13,7 +13,7 @@ vi.mock("@earendil-works/pi-tui", () => ({
 }));
 
 describe("Team Ops Renderer", () => {
-  let mockApi: ExtensionAPI;
+  let mockApi: any;
 
   beforeEach(() => {
     mockApi = createMockExtensionAPI({ registerMessageRenderer: vi.fn() });

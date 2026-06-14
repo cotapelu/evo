@@ -44,16 +44,15 @@ export function createMockTeamRegistry(overrides?: any): any {
 /**
  * Creates a mock ExtensionContext with optional overrides.
  */
-export function createMockContext(overrides: Partial<ExtensionContext> = {}): ExtensionContext {
-  const base: ExtensionContext = {
+export function createMockContext(overrides: any = {}): any {
+  const base: any = {
     cwd: process.cwd(),
     ui: {
       setWidget: vi.fn(),
-      // @ts-ignore
       theme: { fg: () => "", bg: () => "", bold: () => "" },
     },
     getContext: vi.fn(() => base),
     registerCommand: vi.fn(),
-  } as ExtensionContext;
+  };
   return { ...base, ...overrides };
 }
