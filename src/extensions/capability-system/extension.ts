@@ -170,6 +170,11 @@ function createCapabilityRouterTool(api: any) {
         };
       }
 
+      // Notify immediate: show capability name
+      if (onUpdate) {
+        onUpdate({ content: [{ type: 'text', text: cap.name || capability }] });
+      }
+
       try {
         const enhancedCtx = {
           ...ctx,
