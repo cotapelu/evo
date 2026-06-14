@@ -90,6 +90,9 @@ export interface CapabilityContext extends ExtensionContext {
 
   /** Working directory for this capability execution (inherits from session) */
   cwd: string;
+
+  /** Execute a shell command safely */
+  exec(command: string, args: string[], options?: { cwd?: string; env?: Record<string, string> }): Promise<{ code: number; stdout: string; stderr: string }>;
 }
 
 // ============================================================================

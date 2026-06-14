@@ -54,7 +54,7 @@ export default async function capabilitySystemExtension(api: any): Promise<void>
   } else {
     console.log('[CapabilitySystem] Discovery capability already registered, skipping');
   }
-  api.registerTool(createCapabilityRouterTool());
+  api.registerTool(createCapabilityRouterTool(api));
 
   if (isDevMode() && typeof api.registerCommand === 'function') {
     api.registerCommand('plugins', {
@@ -92,7 +92,7 @@ export default async function capabilitySystemExtension(api: any): Promise<void>
 // Router Tool
 // ============================================================================
 
-function createCapabilityRouterTool() {
+function createCapabilityRouterTool(api: any) {
   const registry = getCapabilityRegistry();
   const allCaps = registry.listAll();
 
@@ -171,12 +171,16 @@ function createCapabilityRouterTool() {
       }
 
       try {
-        // @ts-ignore
         const enhancedCtx = {
           ...ctx,
+          exec: async (command: string, args: string[], options: any = {}): Promise<any> => {
+            const cwd = options.cwd || ctx.cwd || process.cwd();
+            const result = await api.exec(command, args, { ...options, cwd, signal });
+            return { code: result.code, stdout: result.stdout, stderr: result.stderr };
+          },
           getCurrentCapability: () => cap,
           getCapability: (id: string) => registry.get(id)
-        };
+        } as any;
         const result = await cap.execute(toolCallId, capParams, signal, onUpdate, enhancedCtx);
         // @ts-ignore
         return result;
