@@ -16,7 +16,10 @@ import type { ToolDefinition, ExtensionAPI, ExtensionContext } from "@earendil-w
 import { Text } from "@earendil-works/pi-tui";
 import { Mutex } from "../utils/mutex.js";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
-import { CONFIG_DIR_NAME } from "../../config/config-manager.js";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
+
+const AGENT_DIR = getAgentDir();
+const CONFIG_DIR_NAME = dirname(AGENT_DIR).split(/[/\\]/).pop() || ".pi";
 // --- Types (migrated from tool-types.ts) ---
 export type TodoStatus = "pending" | "in_progress" | "completed" | "abandoned";
 

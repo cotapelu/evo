@@ -2,7 +2,10 @@
 import { existsSync, mkdirSync, appendFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { ExtensionAPI, BeforeProviderRequestEvent } from "@earendil-works/pi-coding-agent";
-import { CONFIG_DIR_NAME } from "../config/config-manager.js";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
+
+const AGENT_DIR = getAgentDir();
+const CONFIG_DIR_NAME = dirname(AGENT_DIR).split(/[/\\]/).pop() || ".pi";
 
 /**
  * Context Logger Extension

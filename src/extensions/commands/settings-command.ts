@@ -1,16 +1,8 @@
 #!/usr/bin/env node
 
-/**
- * Settings Command
- *
- * Interactive UI to configure Piclaw settings.
- * Edits ~/.piclaw/config.json via loadConfig/saveConfig.
- */
-
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Container, Text, Spacer, SettingsList } from "@earendil-works/pi-tui";
-import { getSettingsListTheme } from "@earendil-works/pi-coding-agent";
-import { loadConfig, saveConfig, type PiclawConfig } from "../../config/config-manager.js";
+import { getSettingsListTheme, SettingsManager, getAgentDir } from "@earendil-works/pi-coding-agent";
 
 interface SettingItem {
   id: string;
@@ -19,79 +11,49 @@ interface SettingItem {
   values: string[];
 }
 
-function configToItems(config: PiclawConfig): SettingItem[] {
+function settingsToItems(settingsManager: SettingsManager): SettingItem[] {
   const items: SettingItem[] = [];
 
-  // Model (free text - but we validate it's non-empty)
+  const model = settingsManager.getDefaultModel() || "<unset>";
   items.push({
     id: "model",
     label: "Default Model",
-    currentValue: config.model || "<unset>",
+    currentValue: model,
     values: ["<unset>", "anthropic:claude-opus-4-5", "openai:gpt-4o", "kilo:gpt-4o"],
   });
 
-  // Thinking level
+  const thinking = settingsManager.getDefaultThinkingLevel() || "medium";
   items.push({
     id: "thinking",
     label: "Thinking Level",
-    currentValue: config.thinking || "medium",
+    currentValue: thinking,
     values: ["off", "minimal", "low", "medium", "high", "xhigh"],
-  });
-
-  // Verbose
-  items.push({
-    id: "verbose",
-    label: "Verbose Logs",
-    currentValue: config.verbose ? "on" : "off",
-    values: ["on", "off"],
-  });
-
-  // Session dir
-  items.push({
-    id: "sessionDir",
-    label: "Session Directory",
-    currentValue: config.sessionDir || "<default>",
-    values: ["<default>", "<unset>"],
   });
 
   return items;
 }
 
-function itemsToConfig(config: PiclawConfig, items: SettingItem[]): PiclawConfig {
-  const newConfig = { ...config };
-
-  for (const item of items) {
-    const value = item.currentValue;
-    switch (item.id) {
-      case "model":
-        newConfig.model = value === "<unset>" ? undefined : value;
-        break;
-      case "thinking":
-        newConfig.thinking = value as "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
-        break;
-      case "verbose":
-        newConfig.verbose = value === "on";
-        break;
-      case "sessionDir":
-        newConfig.sessionDir = (value === "<default>" || value === "<unset>") ? undefined : value;
-        break;
-    }
+function applySettingChange(settingsManager: SettingsManager, id: string, newValue: string): void {
+  switch (id) {
+    case "model":
+      settingsManager.setDefaultModel(newValue === "<unset>" ? "" : newValue);
+      break;
+    case "thinking":
+      settingsManager.setDefaultThinkingLevel(newValue as any);
+      break;
   }
-
-  return newConfig;
 }
 
 export function registerSettingsCommand(api: ExtensionAPI): void {
   api.registerCommand("settings", {
-    description: "Configure Piclaw settings (model, thinking, logs, etc.)",
-    handler: async (_args: string, ctx) => {
+    description: "Configure Piclaw settings (model, thinking)",
+    handler: async (_args: string, ctx: ExtensionContext) => {
       if (!ctx.hasUI) {
         ctx.ui.notify("/settings requires TUI mode", "error");
         return;
       }
 
-      // Load current config
-      let currentConfig = loadConfig();
+      const settingsManager = SettingsManager.create(ctx.cwd, getAgentDir());
 
       await ctx.ui.custom((_tui, theme, _kb, done) => {
         const container = new Container();
@@ -99,33 +61,37 @@ export function registerSettingsCommand(api: ExtensionAPI): void {
         container.addChild(new Text(theme.fg("accent", theme.bold("⚙️ Piclaw Settings")), 1, 0));
         container.addChild(new Spacer(1));
 
-        const items = configToItems(currentConfig);
+        let settingsList: SettingsList | null = null;
 
-        const settingsList = new SettingsList(
-          items,
-          Math.min(items.length + 2, 15),
-          getSettingsListTheme(),
-          (id, newValue) => {
-            // Update in-memory config
-            const updatedItems = items.map(item => item.id === id ? { ...item, currentValue: newValue } : item);
-            currentConfig = itemsToConfig(currentConfig, updatedItems);
-            // Async save with error handling
-            (async () => {
+        function createSettingsList(): SettingsList {
+          const items = settingsToItems(settingsManager);
+          return new SettingsList(
+            items,
+            Math.min(items.length + 2, 15),
+            getSettingsListTheme(),
+            (id, newValue) => {
               try {
-                await saveConfig(currentConfig);
+                applySettingChange(settingsManager, id, newValue);
+                // Recreate list to show updated values
+                if (settingsList) {
+                  container.removeChild(settingsList);
+                }
+                settingsList = createSettingsList();
+                container.addChild(settingsList);
+                _tui.requestRender();
                 ctx.ui.notify(`Saved ${id} = ${newValue}`, "info");
               } catch (err: any) {
                 ctx.ui.notify(`Failed to save ${id}: ${err.message}`, "error");
               }
-            })();
-          },
-          () => {
-            // Close
-            done(undefined);
-          },
-          { enableSearch: true }
-        );
+            },
+            () => {
+              done(undefined);
+            },
+            { enableSearch: true }
+          );
+        }
 
+        settingsList = createSettingsList();
         container.addChild(settingsList);
 
         const component = {
@@ -136,7 +102,7 @@ export function registerSettingsCommand(api: ExtensionAPI): void {
             container.invalidate();
           },
           handleInput(data: string) {
-            settingsList.handleInput?.(data);
+            settingsList?.handleInput?.(data);
             _tui.requestRender();
           },
         };
@@ -146,15 +112,5 @@ export function registerSettingsCommand(api: ExtensionAPI): void {
 
       ctx.ui.notify("Settings configuration complete", "info");
     },
-  });
-}
-
-// Helper to update a single item in array
-function updateItemValue(items: SettingItem[], id: string, newValue: string): SettingItem[] {
-  return items.map(item => {
-    if (item.id === id) {
-      return { ...item, currentValue: newValue };
-    }
-    return item;
   });
 }

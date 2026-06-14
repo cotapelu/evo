@@ -19,13 +19,33 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { loadConfig } from "../../config/config-manager.js";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
+import { existsSync, readFileSync } from "fs";
+import { join, dirname } from "path";
+import { homedir } from "os";
+
+const AGENT_DIR = getAgentDir();
+const CONFIG_DIR_NAME = dirname(AGENT_DIR).split(/[/\\]/).pop() || ".pi";
+
+function loadKeybindings(): Record<string, string> {
+  const configPath = join(homedir(), CONFIG_DIR_NAME, "config.json");
+  if (!existsSync(configPath)) {
+    return {};
+  }
+  try {
+    const content = readFileSync(configPath, "utf-8");
+    const config = JSON.parse(content);
+    return config.keybindings || {};
+  } catch (e) {
+    console.error("[KeybindingExtension] Failed to load config:", e);
+    return {};
+  }
+}
 
 export function registerKeybindingExtension(api: ExtensionAPI): void {
   // Listen for session start to set up keybindings
   api.on("session_start", async (_event, ctx: ExtensionContext) => {
-    const config = loadConfig();
-    const bindings = config.keybindings || {};
+    const bindings = loadKeybindings();
 
     // Build inverse map: key string -> command name
     // Support simple keys (single char) or combos like "ctrl+r", "alt+s", "ctrl+shift+t"
