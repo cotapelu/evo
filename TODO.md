@@ -1,6 +1,6 @@
 # TODO
 
-Last Updated: 2026-06-13
+Last Updated: 2026-06-14
 
 ## Completed
 - [x] Fix failing plugin capability tests (dev, git, security-system)
@@ -192,6 +192,7 @@ Last Updated: 2026-06-13
 - [x] Fix subtool-loader type errors: corrected options objects for tool factories.
 - [x] Improve test mock factories: changed createMockExtensionAPI to return any and simplified tui property.
 - [x] Resolve remaining test type errors: cast renderer results to any, fix ToolResult casts, and adjust mockFs typing.
+- [x] Fix test suite regressions: standardized config dir (`.piclaw`), added missing mocks (SettingsManager, getAgentDir), rewrote keybinding-extension tests to use fs/os mocks, removed orphaned empty test files. All tests now passing (792 tests, 90 suites).
 
 ## In Progress
 - (none)

@@ -25,6 +25,15 @@ vi.mock("@earendil-works/pi-tui", () => ({
 
 vi.mock("@earendil-works/pi-coding-agent", () => ({
   getSettingsListTheme: () => ({}),
+  getAgentDir: vi.fn().mockReturnValue("/tmp/agent"),
+  SettingsManager: {
+    create: () => ({
+      getDefaultModel: vi.fn().mockReturnValue(undefined),
+      getDefaultThinkingLevel: vi.fn().mockReturnValue("medium"),
+      setDefaultModel: vi.fn(),
+      setDefaultThinkingLevel: vi.fn(),
+    }),
+  },
 }));
 
 const mockNotify = vi.fn();

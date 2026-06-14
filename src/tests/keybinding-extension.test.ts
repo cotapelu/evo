@@ -1,7 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import type { Mock } from "vitest";
+
+// Mock fs and os before importing keybinding-extension
+vi.mock('fs', () => ({
+  existsSync: vi.fn(() => true),
+  readFileSync: vi.fn(() => JSON.stringify({ keybindings: { team: 't', settings: 'ctrl+s' }})),
+}));
+
+vi.mock('os', () => ({
+  homedir: vi.fn(() => '/home/test'),
+}));
+
 import { registerKeybindingExtension } from "../extensions/keybinding/keybinding-extension.js";
-import * as configManager from "../config/config-manager.js";
+import * as fs from 'fs'; // access to the mocked readFileSync
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 describe("Keybinding Extension", () => {
@@ -13,6 +24,8 @@ describe("Keybinding Extension", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset readFileSync to default configuration for each test
+    (fs.readFileSync as Mock).mockReturnValue(JSON.stringify({ keybindings: { team: 't', settings: 'ctrl+s' }}));
     mockOn = vi.fn();
     mockOnTerminalInput = vi.fn(() => unsubscribe);
     unsubscribe = vi.fn();
@@ -30,10 +43,7 @@ describe("Keybinding Extension", () => {
   });
 
   it("sets up keybindings from config and executes command via sendUserMessage", async () => {
-    vi.spyOn(configManager, "loadConfig").mockReturnValue({
-      keybindings: { team: "t", settings: "ctrl+s" },
-    });
-
+    // Config already mocked to include both bindings via beforeEach
     registerKeybindingExtension(mockApi);
     const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
     expect(sessionStartCall).toBeDefined();
@@ -61,9 +71,8 @@ describe("Keybinding Extension", () => {
   });
 
   it("does not execute command when agent is not idle", async () => {
-    vi.spyOn(configManager, "loadConfig").mockReturnValue({
-      keybindings: { team: "t" },
-    });
+    // Override config to only have team binding
+    (fs.readFileSync as Mock).mockReturnValue(JSON.stringify({ keybindings: { team: "t" }}));
 
     registerKeybindingExtension(mockApi);
     const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");
@@ -85,9 +94,8 @@ describe("Keybinding Extension", () => {
   });
 
   it("ignores keys with no binding", async () => {
-    vi.spyOn(configManager, "loadConfig").mockReturnValue({
-      keybindings: { team: "t" },
-    });
+    // Override config to only have team binding
+    (fs.readFileSync as Mock).mockReturnValue(JSON.stringify({ keybindings: { team: "t" }}));
 
     registerKeybindingExtension(mockApi);
     const sessionStartCall = mockOn.mock.calls.find((c: any) => c[0] === "session_start");

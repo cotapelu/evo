@@ -20,7 +20,7 @@ describe("Settings Command Integration", () => {
     expect(mockApi.registerCommand).toHaveBeenCalledWith(
       "settings",
       expect.objectContaining({
-        description: "Configure Piclaw settings (model, thinking, logs, etc.)",
+        description: "Configure Piclaw settings (model, thinking)",
         handler: expect.any(Function),
       })
     );

@@ -18,8 +18,7 @@ import { Mutex } from "../utils/mutex.js";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
-const AGENT_DIR = getAgentDir();
-const CONFIG_DIR_NAME = dirname(AGENT_DIR).split(/[/\\]/).pop() || ".pi";
+const CONFIG_DIR_NAME = ".piclaw";
 // --- Types (migrated from tool-types.ts) ---
 export type TodoStatus = "pending" | "in_progress" | "completed" | "abandoned";
 
