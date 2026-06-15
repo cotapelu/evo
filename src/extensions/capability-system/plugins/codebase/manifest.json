@@ -1,0 +1,59 @@
+{
+  "id": "codebase",
+  "name": "Codebase Intelligence",
+  "description": "Smart code editing and analysis capabilities for LLM agents",
+  "version": "0.1.0",
+  "tags": ["code", "edit", "analysis", "llm"],
+  "capabilities": [
+    {
+      "id": "safe_edit",
+      "name": "Safe Code Edit",
+      "description": "Edit code with automatic import updates, syntax/type checking, and rollback on failure",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": { "type": "string" },
+                "editType": { "type": "string", "enum": ["replace", "insert", "delete"] },
+                "range": {
+                  "type": "object",
+                  "properties": {
+                    "start": { "type": "integer" },
+                    "end": { "type": "integer" }
+                  },
+                  "required": ["start", "end"]
+                },
+                "newCode": { "type": "string" }
+              },
+              "required": ["file", "editType"]
+            }
+          },
+          "format": {
+            "type": "boolean",
+            "description": "Run Prettier after edit (default true)"
+          },
+          "fixImports": {
+            "type": "boolean",
+            "description": "Auto-fix imports (default true)"
+          }
+        },
+        "additionalProperties": false
+      },
+      "execute": "capabilities/safe_edit.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.safe_edit to modify code safely.",
+        "Provide file path and range (0-indexed line numbers, end exclusive).",
+        "Example: { capability: 'codebase.safe_edit', params: { operations: [{ file: 'src/foo.ts', editType: 'replace', range: {start: 10, end: 15}, newCode: 'export const x = 1;' }] } }"
+      ],
+      "dependencies": ["dev.format"]
+    }
+  ],
+  "settings": {
+    "enabledByDefault": true
+  }
+}
