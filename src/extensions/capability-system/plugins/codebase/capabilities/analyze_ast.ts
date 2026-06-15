@@ -66,190 +66,178 @@ function walk(node: any, visitor: (n: any, parent?: any) => void, parent?: any) 
   }
 }
 
-export async function execute(params: { file: string }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-  const filePath = join(cwd, params.file);
+// Helper: add symbol if not duplicate
+function addSymbol(result: AnalysisResult, symbol: SymbolDef) {
+  const exists = result.symbols.some(s => s.name === symbol.name && s.kind === symbol.kind && s.line === symbol.line);
+  if (!exists) result.symbols.push(symbol);
+}
 
-  try {
-    try {
-      await fs.access(filePath);
-    } catch {
-      return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
+// Collector: Handle ImportDeclaration
+function handleImport(node: any, result: AnalysisResult) {
+  const specifier = node.source.value;
+  const importInfo: ImportInfo = { moduleSpecifier: specifier };
+  const named: string[] = [];
+  let defaultImport: string | null = null;
+  let namespace: string | null = null;
+  node.specifiers.forEach((sp: any) => {
+    if (sp.type === 'ImportSpecifier') {
+      named.push(sp.local.name);
+    } else if (sp.type === 'ImportDefaultSpecifier') {
+      defaultImport = sp.local.name;
+    } else if (sp.type === 'ImportNamespaceSpecifier') {
+      namespace = sp.local.name;
     }
+  });
+  if (defaultImport) importInfo.importClause = defaultImport;
+  if (namespace) importInfo.importClause = `* as ${namespace}`;
+  if (named.length) importInfo.namedImports = named;
+  if (node.importKind === 'type') importInfo.typeOnly = true;
+  result.imports.push(importInfo);
+}
 
-    const content = await fs.readFile(filePath, "utf-8");
-    const lines = content.split('\n').length;
-
-    const ext = params.file.split('.').pop()?.toLowerCase();
-    const language = (ext === 'ts' || ext === 'tsx' || ext === 'js' || ext === 'jsx') ? (ext as any) : "unknown";
-
-    const result: AnalysisResult = {
-      file: params.file,
-      exists: true,
-      language,
-      lines,
-      imports: [],
-      exports: [],
-      symbols: []
-    };
-
-    // @ts-ignore - dynamic import for parser
-    const parser = await import("@typescript-eslint/parser");
-    const { parse } = parser as any;
-    let ast;
-    try {
-      ast = parse(content, {
-        sourceType: "module",
-        ecmaVersion: "latest",
-        ts: true,
-        jsx: true,
-        range: false,
-        loc: true
+// Collector: Handle ExportNamedDeclaration
+function handleExportNamed(node: any, result: AnalysisResult) {
+  if (node.declaration) {
+    if (node.declaration.type === 'VariableDeclaration') {
+      node.declaration.declarations.forEach((decl: any) => {
+        result.exports.push({ type: "named", name: decl.id.name });
+        addSymbol(result, { name: decl.id.name, kind: "variable", line: decl.loc.start.line });
       });
-    } catch (err: any) {
-      return { content: [{ type: "text" as const, text: `Parse error: ${err.message}` }], isError: true, details: { file: params.file, error: err.message } };
+    } else if (node.declaration.type === 'FunctionDeclaration') {
+      const name = node.declaration.id?.name || '<anonymous>';
+      result.exports.push({ type: "named", name });
+      addSymbol(result, { name, kind: "function", line: node.declaration.loc.start.line });
+    } else if (node.declaration.type === 'ClassDeclaration') {
+      const name = node.declaration.id?.name || '<anonymous>';
+      result.exports.push({ type: "named", name });
+      addSymbol(result, { name, kind: "class", line: node.declaration.loc.start.line });
+    } else if (node.declaration.type === 'TSTypeAliasDeclaration') {
+      const name = node.declaration.id.name;
+      result.exports.push({ type: "named", name });
+      addSymbol(result, { name, kind: "type", line: node.declaration.loc.start.line });
+    } else if (node.declaration.type === 'TSInterfaceDeclaration') {
+      const name = node.declaration.id.name;
+      result.exports.push({ type: "named", name });
+      addSymbol(result, { name, kind: "interface", line: node.declaration.loc.start.line });
     }
-
-    // Walk AST
-    walk(ast, (node: any, parent?: any) => {
-      // Imports
-      if (node.type === 'ImportDeclaration') {
-        const specifier = node.source.value;
-        const importInfo: ImportInfo = { moduleSpecifier: specifier };
-        const named: string[] = [];
-        let defaultImport: string | null = null;
-        let namespace: string | null = null;
-        node.specifiers.forEach((sp: any) => {
-          if (sp.type === 'ImportSpecifier') {
-            named.push(sp.local.name);
-          } else if (sp.type === 'ImportDefaultSpecifier') {
-            defaultImport = sp.local.name;
-          } else if (sp.type === 'ImportNamespaceSpecifier') {
-            namespace = sp.local.name;
-          }
-        });
-        if (defaultImport) importInfo.importClause = defaultImport;
-        if (namespace) importInfo.importClause = `* as ${namespace}`;
-        if (named.length) importInfo.namedImports = named;
-        if (node.importKind === 'type') importInfo.typeOnly = true;
-        result.imports.push(importInfo);
-      }
-
-      // Exports
-      if (node.type === 'ExportNamedDeclaration') {
-        if (node.declaration) {
-          // export const x = ...
-          // The declaration node will be handled separately in symbols
-          // But we record the export
-          if (node.declaration.type === 'VariableDeclaration') {
-            node.declaration.declarations.forEach((decl: any) => {
-              result.exports.push({ type: "named", name: decl.id.name });
-              result.symbols.push({ name: decl.id.name, kind: "variable", line: decl.loc.start.line });
-            });
-          } else if (node.declaration.type === 'FunctionDeclaration') {
-            result.exports.push({ type: "named", name: node.declaration.id?.name || '<anonymous>' });
-            result.symbols.push({ name: node.declaration.id?.name || '<anonymous>', kind: "function", line: node.declaration.loc.start.line });
-          } else if (node.declaration.type === 'ClassDeclaration') {
-            result.exports.push({ type: "named", name: node.declaration.id?.name || '<anonymous>' });
-            result.symbols.push({ name: node.declaration.id?.name || '<anonymous>', kind: "class", line: node.declaration.loc.start.line });
-          } else if (node.declaration.type === 'TSTypeAliasDeclaration') {
-            result.exports.push({ type: "named", name: node.declaration.id.name });
-            result.symbols.push({ name: node.declaration.id.name, kind: "type", line: node.declaration.loc.start.line });
-          } else if (node.declaration.type === 'TSInterfaceDeclaration') {
-            result.exports.push({ type: "named", name: node.declaration.id.name });
-            result.symbols.push({ name: node.declaration.id.name, kind: "interface", line: node.declaration.loc.start.line });
-          }
-        } else if (node.specifiers) {
-          // export { a, b as c }
-          node.specifiers.forEach((sp: any) => {
-            if (sp.type === 'ExportSpecifier') {
-              result.exports.push({ type: "named", name: sp.exported.name, aliases: sp.local.name !== sp.exported.name ? [sp.local.name] : undefined });
-            }
-          });
-        }
-      }
-
-      if (node.type === 'ExportDefaultDeclaration') {
-        if (node.declaration) {
-          const dec = node.declaration;
-          let kind: SymbolDef['kind'] = 'variable';
-          let name: string = '<anonymous>';
-          if (dec.type === 'FunctionDeclaration') {
-            kind = 'function';
-            name = dec.id?.name || '<anonymous>';
-          } else if (dec.type === 'ClassDeclaration') {
-            kind = 'class';
-            name = dec.id?.name || '<anonymous>';
-          } else if (dec.type === 'Identifier') {
-            name = dec.name;
-          } else if (dec.type === 'CallExpression' || dec.type === 'ArrowFunctionExpression') {
-            // default export anonymous function, no name
-            name = '<default function>';
-            kind = 'function';
-          }
-          result.exports.push({ type: "default", name });
-          if (name !== '<anonymous>' && name !== '<default function>') {
-            result.symbols.push({ name, kind, line: dec.loc.start.line });
-          }
-        } else {
-          result.exports.push({ type: "default", name: '<<unknown>>' });
-        }
-      }
-
-      if (node.type === 'ExportAllDeclaration') {
-        result.exports.push({ type: "all" });
-      }
-
-      // Functions (declarations)
-      if (node.type === 'FunctionDeclaration' && node.id) {
-        // Already handled by export? But could be non-exported function
-        // Check if not already added
-        const exists = result.symbols.some(s => s.name === node.id.name && s.kind === 'function' && s.line === node.loc.start.line);
-        if (!exists) {
-          result.symbols.push({ name: node.id.name, kind: "function", line: node.loc.start.line });
-        }
-      }
-
-      // Classes
-      if (node.type === 'ClassDeclaration' && node.id) {
-        const exists = result.symbols.some(s => s.name === node.id.name && s.kind === 'class' && s.line === node.loc.start.line);
-        if (!exists) {
-          result.symbols.push({ name: node.id.name, kind: "class", line: node.loc.start.line });
-        }
-      }
-
-      // Variable declarations (const/let/var)
-      if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier') {
-        const parentKind = parent?.kind as 'const' | 'let' | 'var' | undefined;
-        let kind: SymbolDef['kind'] = 'variable';
-        if (parentKind === 'const') kind = 'const';
-        else if (parentKind === 'let') kind = 'let';
-        else if (parentKind === 'var') kind = 'variable';
-        // Check duplicates
-        const exists = result.symbols.some(s => s.name === node.id.name && s.kind === kind && s.line === node.loc.start.line);
-        if (!exists) {
-          result.symbols.push({ name: node.id.name, kind: kind as SymbolDef['kind'], line: node.loc.start.line, column: node.loc.start.column });
-        }
-      }
-
-      // TS Interface and TypeAlias: use ESTree? Parser adds extra types.
-      // For TS, node.type could be 'TSTypeAliasDeclaration', 'TSInterfaceDeclaration'
-      if (node.type === 'TSTypeAliasDeclaration' && node.id) {
-        result.symbols.push({ name: node.id.name, kind: "type", line: node.loc.start.line });
-        // Exports handled separately; but if exported, it'll appear in ExportNamedDeclaration with declarand?
-        // We'll also add export if parent is ExportNamedDeclaration? Actually our walk captures ExportNamedDeclaration earlier.
-        // We can also push to exports if we see it's exported via the node's parent? Simpler: if a ExportNamedDeclaration with this symbol was already recorded, we are fine. But we may miss marking it as export if not captured. For now, rely on ExportNamedDeclaration handling.
-      }
-      if (node.type === 'TSInterfaceDeclaration' && node.id) {
-        result.symbols.push({ name: node.id.name, kind: "interface", line: node.loc.start.line });
-      }
-      if (node.type === 'TSEnumDeclaration' && node.id) {
-        result.symbols.push({ name: node.id.name, kind: "enum", line: node.loc.start.line });
+  } else if (node.specifiers) {
+    node.specifiers.forEach((sp: any) => {
+      if (sp.type === 'ExportSpecifier') {
+        result.exports.push({ type: "named", name: sp.exported.name, aliases: sp.local.name !== sp.exported.name ? [sp.local.name] : undefined });
       }
     });
+  }
+}
 
-    // Build result summary text
-    const summary = `
+// Collector: Handle ExportDefaultDeclaration
+function handleExportDefault(node: any, result: AnalysisResult) {
+  if (node.declaration) {
+    const dec = node.declaration;
+    let kind: SymbolDef['kind'] = 'variable';
+    let name: string = '<anonymous>';
+    if (dec.type === 'FunctionDeclaration') {
+      kind = 'function';
+      name = dec.id?.name || '<anonymous>';
+    } else if (dec.type === 'ClassDeclaration') {
+      kind = 'class';
+      name = dec.id?.name || '<anonymous>';
+    } else if (dec.type === 'Identifier') {
+      name = dec.name;
+    } else if (dec.type === 'CallExpression' || dec.type === 'ArrowFunctionExpression') {
+      name = '<default function>';
+      kind = 'function';
+    }
+    result.exports.push({ type: "default", name });
+    if (name !== '<anonymous>' && name !== '<default function>') {
+      addSymbol(result, { name, kind, line: dec.loc.start.line });
+    }
+  } else {
+    result.exports.push({ type: "default", name: '<<unknown>>' });
+  }
+}
+
+// Collector: Handle ExportAllDeclaration
+function handleExportAll(_node: any, result: AnalysisResult) {
+  result.exports.push({ type: "all" });
+}
+
+// Collector: Handle variable declarators (const/let/var)
+function handleVariableDeclarator(node: any, parent: any, result: AnalysisResult) {
+  if (node.id.type === 'Identifier') {
+    const parentKind = parent?.kind as 'const' | 'let' | 'var' | undefined;
+    let kind: SymbolDef['kind'] = 'variable';
+    if (parentKind === 'const') kind = 'const';
+    else if (parentKind === 'let') kind = 'let';
+    else if (parentKind === 'var') kind = 'variable';
+    addSymbol(result, { name: node.id.name, kind, line: node.loc.start.line, column: node.loc.start.column });
+  }
+}
+
+// Main AST walk visitor
+function createVisitor(result: AnalysisResult) {
+  return (node: any, parent?: any) => {
+    // Imports
+    if (node.type === 'ImportDeclaration') {
+      handleImport(node, result);
+      return;
+    }
+
+    // Exports
+    if (node.type === 'ExportNamedDeclaration') {
+      handleExportNamed(node, result);
+      return;
+    }
+    if (node.type === 'ExportDefaultDeclaration') {
+      handleExportDefault(node, result);
+      return;
+    }
+    if (node.type === 'ExportAllDeclaration') {
+      handleExportAll(node, result);
+      return;
+    }
+
+    // Functions (declarations)
+    if (node.type === 'FunctionDeclaration' && node.id) {
+      addSymbol(result, { name: node.id.name, kind: "function", line: node.loc.start.line });
+      return;
+    }
+
+    // Classes
+    if (node.type === 'ClassDeclaration' && node.id) {
+      addSymbol(result, { name: node.id.name, kind: "class", line: node.loc.start.line });
+      return;
+    }
+
+    // Variable declarations (const/let/var)
+    if (node.type === 'VariableDeclarator') {
+      handleVariableDeclarator(node, parent, result);
+      return;
+    }
+
+    // TS Interface and TypeAlias
+    if (node.type === 'TSTypeAliasDeclaration' && node.id) {
+      addSymbol(result, { name: node.id.name, kind: "type", line: node.loc.start.line });
+      return;
+    }
+    if (node.type === 'TSInterfaceDeclaration' && node.id) {
+      addSymbol(result, { name: node.id.name, kind: "interface", line: node.loc.start.line });
+      return;
+    }
+    if (node.type === 'TSEnumDeclaration' && node.id) {
+      addSymbol(result, { name: node.id.name, kind: "enum", line: node.loc.start.line });
+      return;
+    }
+  };
+}
+
+function detectLanguage(fileName: string): "ts" | "tsx" | "js" | "jsx" | "unknown" {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  if (ext === 'ts' || ext === 'tsx' || ext === 'js' || ext === 'jsx') return ext as any;
+  return "unknown";
+}
+
+function buildSummary(params: { file: string }, lines: number, language: string, result: AnalysisResult): string {
+  return `
 📄 File: ${params.file}
 📏 Lines: ${lines}
 🔤 Language: ${language}
@@ -263,16 +251,60 @@ ${result.exports.map((exp, i) => `  ${i+1}. ${exp.type} ${exp.name || ''}${exp.a
 🔧 Symbols (${result.symbols.length}):
 ${result.symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.line})`).join('\n')}
 `.trim();
+}
 
-    return {
-      content: [{ type: "text" as const, text: summary }],
-      details: result,
-      isError: false
-    };
-  } catch (err: any) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { content: [{ type: "text" as const, text: `❌ Error: ${msg}` }], isError: true, details: { file: params.file, error: msg } };
+async function parseAST(content: string): Promise<any> {
+  const parser = await import("@typescript-eslint/parser");
+  const { parse } = parser as any;
+  return parse(content, {
+    sourceType: "module",
+    ecmaVersion: "latest",
+    ts: true,
+    jsx: true,
+    range: false,
+    loc: true
+  });
+}
+
+export async function execute(params: { file: string }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+  const filePath = join(cwd, params.file);
+
+  try {
+    await fs.access(filePath);
+  } catch {
+    return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
   }
+
+  const content = await fs.readFile(filePath, "utf-8");
+  const lines = content.split('\n').length;
+  const language = detectLanguage(params.file);
+
+  const result: AnalysisResult = {
+    file: params.file,
+    exists: true,
+    language,
+    lines,
+    imports: [],
+    exports: [],
+    symbols: []
+  };
+
+  let ast;
+  try {
+    ast = await parseAST(content);
+  } catch (err: any) {
+    return { content: [{ type: "text" as const, text: `Parse error: ${err.message}` }], isError: true, details: { file: params.file, error: err.message } };
+  }
+
+  walk(ast, createVisitor(result));
+  const summary = buildSummary(params, lines, language, result);
+
+  return {
+    content: [{ type: "text" as const, text: summary }],
+    details: result,
+    isError: false
+  };
 }
 
 export default { execute, schema };
