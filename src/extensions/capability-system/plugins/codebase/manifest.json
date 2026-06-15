@@ -105,6 +105,39 @@
       "dependencies": []
     },
     {
+      "id": "call_graph",
+      "name": "Call Graph",
+      "description": "Build a call graph for functions, optionally following imports across files",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string", "description": "Entry file path (relative to cwd)" },
+          "query": {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["call"], "description": "Node kind; currently only 'call' supported" },
+              "name": { "type": "string", "description": "Filter calls by callee name (exact or regex)" },
+              "depth": { "type": "integer", "description": "Max traversal depth (0 = unlimited, default 1)" },
+              "includeCrossFile": { "type": "boolean", "description": "Follow imports to include cross-file calls (default false)" },
+              "limit": { "type": "integer", "description": "Max edges to return (default 50)" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["file"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/call_graph.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.call_graph to understand call relationships and potential impact of changes.",
+        "Cross-file analysis can be slow; use with limit and shallow depth.",
+        "Example: { capability: 'codebase.call_graph', params: { file: 'src/api.ts', query: { depth: 2, includeCrossFile: true, limit: 20 } } }"
+      ],
+      "dependencies": [],
+      "experimental": true
+    },
+    {
       "id": "safe_edit",
       "name": "Safe Code Edit",
       "description": "Edit code with automatic import updates, syntax/type checking, and rollback on failure",

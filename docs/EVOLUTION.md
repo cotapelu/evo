@@ -1,6 +1,6 @@
 # Evolution Log
 
-Last Updated: 2026-06-13
+Last Updated: 2026-06-15
 
 ## Current Trajectory
 - Stabilizing the capability system to ensure deterministic test behavior.
@@ -535,6 +535,14 @@ Last Updated: 2026-06-13
 - **Tool tests**: Replaced `as ToolResult` casts with `as any` in skill-reader and tool-template tests.
 - **Read-skill tests**: Typed `mockFs` as any to allow `mockResolvedValue`/`mockRejectedValue`.
 - **Impact**: Eliminated remaining test typecheck errors; tests now fully type-safe.
+
+### One Hundredth Round (Codebase Plugin – call_graph)
+- Implemented `call_graph` capability in codebase plugin: inter-file call graph analysis with depth control, cross-file import resolution, name filtering, and support for re-exports/aliases. Added 8 comprehensive tests (total codebase tests: 62). All tests pass.
+- Fixed test isolation issues by migrating to `mkdtemp`-based temporary directories, eliminating flakiness when running test suites in parallel.
+- Fixed build error: excluded test temp fixtures from TypeScript compilation via tsconfig.build.json and removed invalid sample.ts.
+- Updated documentation: `AGENT_METRICS.md` (iteration increment, tasks), `PROJECT_STATE.md` (call_graph details, updated test stats).
+- Resolved TypeScript error in call_graph.execute: renamed internal `process` function to `visitFile` to avoid shadowing Node's `process`.
+- Build green; all 846 tests passing; zero type errors; coverage remains above 80%; functions remain ≤20 lines, complexity ≤10.
 
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.

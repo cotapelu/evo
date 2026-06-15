@@ -3,9 +3,9 @@
 Last Updated: 2026-06-15
 
 ## Session Summary
-- Iterations: 105
-- Tasks Completed: 110 (added `codebase.ast_query` capability with 11 comprehensive tests)
-- High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query) with improved code quality (refactored to smaller functions, avg length ~15 lines)
+- Iterations: 106
+- Tasks Completed: 111 (added `codebase.call_graph` capability with 8 comprehensive tests)
+- High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph) with improved code quality (refactored to smaller functions, avg length ~15 lines)
 
 ## Test Metrics
 - Total Test Suites: 103 (+1)

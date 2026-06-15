@@ -12,7 +12,7 @@ Last Updated: 2026-06-15
 - **Guideline Generator**: Smart auto-documentation system that generates comprehensive prompt guidelines from TypeBox schemas. Provides parameter descriptions with type hints, context-aware examples (file paths → `src/example.test.ts`, booleans), minimal/full/variation examples, and return format documentation. Fully integrated into plugin-loader.
 - **Extensions Aggregator**: Calls capability system synchronously; loader initializes in background but tests await completion.
 - **PluginLoader Watch Mode**: Robust hot-reload with debounced reloads (200ms), deletion handling, and per-plugin watcher lifecycle. New integration tests added.
-- **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis: `analyze` (regex-based), `search` (text), `analyze_ast` (full AST extraction with imports/exports/symbols), `safe_edit` (atomic, validated edits with rollback), and `ast_query` (selective AST query with filtering by kind, name pattern, parent, limit). Comprehensive tests (54) all passing; functions ≤20 lines, complexity ≤10.
+- **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis: `analyze` (regex-based), `search` (text), `analyze_ast` (full AST extraction with imports/exports/symbols), `safe_edit` (atomic, validated edits with rollback), `ast_query` (selective AST query with filtering by kind, name pattern, parent, limit), and `call_graph` (inter-file call graph analysis with depth control and cross-file resolution). Comprehensive tests (62) all passing; functions ≤20 lines, complexity ≤10.
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
 
 ## Known Issues

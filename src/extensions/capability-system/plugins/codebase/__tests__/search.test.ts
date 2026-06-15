@@ -4,10 +4,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdir, writeFile, unlink, readdir } from "fs/promises";
+import { mkdir, writeFile, unlink, readdir, rm, mkdtemp } from "fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { relative, join } from "path";
+import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,16 +28,12 @@ describe("codebase.search", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = path.join(__dirname, "temp");
-    await mkdir(tempDir, { recursive: true });
+    tempDir = await mkdtemp(path.join(os.tmpdir(), "codebase-search-"));
   });
 
   afterEach(async () => {
     try {
-      const files = await readdir(tempDir);
-      for (const f of files) {
-        await unlink(join(tempDir, f));
-      }
+      await rm(tempDir, { recursive: true, force: true });
     } catch {}
   });
 

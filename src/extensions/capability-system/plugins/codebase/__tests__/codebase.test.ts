@@ -4,9 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mkdir, writeFile, readFile, unlink, readdir } from "fs/promises";
+import { mkdir, writeFile, readFile, unlink, readdir, rm, mkdtemp } from "fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,17 +105,12 @@ function myFunc() {}
 describe("codebase.safe_edit", () => {
   let tempDir: string;
   beforeEach(async () => {
-    tempDir = path.join(__dirname, "temp");
-    await mkdir(tempDir, { recursive: true });
+    tempDir = await mkdtemp(path.join(os.tmpdir(), "codebase-safe-"));
   });
 
   afterEach(async () => {
-    // Cleanup temp dir
     try {
-      const files = await readdir(tempDir);
-      for (const f of files) {
-        await unlink(path.join(tempDir, f));
-      }
+      await rm(tempDir, { recursive: true, force: true });
     } catch { /* ignore */ }
   });
 

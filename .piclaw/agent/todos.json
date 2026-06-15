@@ -3,44 +3,17 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Test Capability Output Enhancement",
+      "name": "Evolution",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Review the changes made to extension.ts",
+          "content": "Add codebase.call_graph capability for inter-file call analysis",
           "status": "in_progress"
-        },
-        {
-          "id": "task-2",
-          "content": "Check if notification appears when capability starts",
-          "status": "pending"
-        },
-        {
-          "id": "task-3",
-          "content": "Check if result shows capability name in header",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Verify completion notification with duration",
-          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 11,
+  "nextTaskId": 2,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-15T14:07:00.000Z"
-},
-{
-  "id": "phase-2",
-  "name": "Codebase Plugin Development",
-  "tasks": [
-    { "id": "task-5", "content": "Implement codebase.safe_edit with backup, syntax check, rollback", "status": "completed" },
-    { "id": "task-6", "content": "Implement codebase.analyze for file structure parsing", "status": "completed" },
-    { "id": "task-7", "content": "Write comprehensive tests (15 tests)", "status": "completed" },
-    { "id": "task-8", "content": "Update metrics and docs (AGENT_METRICS.md, PROJECT_STATE.md)", "status": "completed" },
-    { "id": "task-9", "content": "Follow-up: add semantic code search capability", "status": "completed" },
-    { "id": "task-10", "content": "Follow-up: enhance analyzer with AST parsing", "status": "completed" }
-  ]
+  "updatedAt": "2026-06-15T15:58:06.385Z"
 }
