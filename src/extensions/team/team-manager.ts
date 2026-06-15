@@ -10,6 +10,7 @@ import {
   createAgentSessionServices,
   createAgentSessionFromServices,
   SessionManager,
+  type AgentToolResult,
   type CreateAgentSessionRuntimeFactory,
   type CreateAgentSessionRuntimeResult,
   type SessionStartEvent,
@@ -75,8 +76,8 @@ export class AgentTeam implements AgentTeamRuntime {
   private messageBus: Map<string, Array<{ from: string; content: string; timestamp: number }>> = new Map();
   private lockQueue: (() => void)[] = [];
   private locked = false;
-  monitorInterval: any = null;
-  private onUpdate?: (update: any) => void;
+  monitorInterval: NodeJS.Timeout | null = null;
+  private onUpdate?: (update: AgentToolResult<any>) => void;
 
   public notifyUpdate(update: any): void {
     if (this.onUpdate) {
@@ -90,7 +91,7 @@ export class AgentTeam implements AgentTeamRuntime {
   }
 
   // Helper to create consistent update format
-  public createUpdate(content: string, details?: any, isError?: boolean): any {
+  public createUpdate(content: string, details?: any, isError?: boolean): AgentToolResult<any> {
     return {
       content: [{ type: "text", text: content }],
       details,
@@ -143,7 +144,7 @@ export class AgentTeam implements AgentTeamRuntime {
     this.id = id;
   }
 
-  setOnUpdate(fn: ((update: any) => void) | undefined): void {
+  setOnUpdate(fn: ((update: AgentToolResult<any>) => void) | undefined): void {
     this.onUpdate = fn;
   }
 
@@ -971,7 +972,7 @@ export async function bootPiclawTeam(
 export async function executeTeamTasks(
   team: AgentTeam,
   tasks: string[],
-  onUpdate?: (update: any) => void,
+  onUpdate?: (update: AgentToolResult<any>) => void,
   _options?: { wait?: boolean; maxTurnsPerAgent?: number }
 ): Promise<AgentTeam> {
   team.setOnUpdate(onUpdate);
