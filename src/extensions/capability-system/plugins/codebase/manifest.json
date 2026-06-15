@@ -6,6 +6,28 @@
   "tags": ["code", "edit", "analysis", "llm"],
   "capabilities": [
     {
+      "id": "analyze_ast",
+      "name": "Codebase Analyze AST",
+      "description": "Deep analysis using ESTree parser for accurate symbol and import/export extraction",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string", "description": "File path to analyze (relative to cwd)" }
+        },
+        "required": ["file"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/analyze_ast.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.analyze_ast for precise code structure analysis (uses AST parsing).",
+        "More accurate than regex-based analyze but slower.",
+        "Example: { capability: 'codebase.analyze_ast', params: { file: 'src/index.ts' } }"
+      ],
+      "dependencies": [],
+      "experimental": true
+    },
+    {
       "id": "analyze",
       "name": "Codebase Analyze",
       "description": "Analyze TypeScript/JavaScript file to extract symbols, imports, exports, and structure",

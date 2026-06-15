@@ -41,6 +41,6 @@
     { "id": "task-7", "content": "Write comprehensive tests (15 tests)", "status": "completed" },
     { "id": "task-8", "content": "Update metrics and docs (AGENT_METRICS.md, PROJECT_STATE.md)", "status": "completed" },
     { "id": "task-9", "content": "Follow-up: add semantic code search capability", "status": "completed" },
-    { "id": "task-10", "content": "Follow-up: enhance analyzer with AST parsing", "status": "pending" }
+    { "id": "task-10", "content": "Follow-up: enhance analyzer with AST parsing", "status": "completed" }
   ]
 }
