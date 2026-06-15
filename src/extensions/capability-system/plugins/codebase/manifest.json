@@ -208,6 +208,61 @@
         "Example: { capability: 'codebase.metrics', params: { files: ['src/index.ts', 'src/utils.ts'] } }"
       ],
       "dependencies": []
+    },
+    {
+      "id": "complexity",
+      "name": "Code Complexity",
+      "description": "Analyze code complexity: cyclomatic complexity, Halstead metrics, maintainability index",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string", "description": "File path to analyze (relative to cwd)" }
+        },
+        "required": ["file"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/complexity.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.complexity to assess code quality and technical debt.",
+        "Returns cyclomatic complexity, Halstead metrics (volume, difficulty, effort, bugs), and maintainability index.",
+        "Example: { capability: 'codebase.complexity', params: { file: 'src/index.ts' } }"
+      ],
+      "dependencies": [],
+      "experimental": true
+    },
+    {
+      "id": "dependency_tree",
+      "name": "Dependency Tree",
+      "description": "Build a module dependency graph, detect cycles, and analyze import/export relationships",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of file paths to analyze (relative to cwd)"
+          },
+          "entryPoints": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional subset of files to treat as entry points for reachability analysis",
+            "optional": true
+          }
+        },
+        "required": ["files"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/dependency_tree.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.dependency_tree to understand module relationships and detect cycles.",
+        "Provide an array of file paths; optionally specify entry points to limit analysis to reachable modules.",
+        "Returns a graph with nodes (exports/imports), edges (with imported symbols), cycles, and summary.",
+        "Example: { capability: 'codebase.dependency_tree', params: { files: ['src/index.ts', 'src/utils.ts'], entryPoints: ['src/index.ts'] } }"
+      ],
+      "dependencies": [],
+      "experimental": true
     }
   ],
   "settings": {

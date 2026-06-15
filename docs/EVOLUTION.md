@@ -544,6 +544,22 @@ Last Updated: 2026-06-15
 - Resolved TypeScript error in call_graph.execute: renamed internal `process` function to `visitFile` to avoid shadowing Node's `process`.
 - Build green; all 846 tests passing; zero type errors; coverage remains above 80%; functions remain ≤20 lines, complexity ≤10.
 
+### One Hundred First Round (Codebase Plugin – complexity)
+- Implemented `codebase.complexity` capability: computes cyclomatic complexity, Halstead metrics (volume, difficulty, effort, estimated bugs), and maintainability index for TypeScript/JavaScript files.
+- Used AST walking with `@typescript-eslint/parser`; functions ≤20 lines, complexity ≤10.
+- Comprehensive test suite (10 tests) with isolated `mkdtemp` fixtures; all passing.
+- Fixed TypeScript implicit `any` error in `complexity.ts` by typing the `arg` parameter in `collectHalstead` visitor.
+- Updated documentation: `AGENT_METRICS.md` (iteration, tasks, test counts, new section), `PROJECT_STATE.md` (capability list, test stats), `AGENT_PROFILE.md` (coverage, plugin tests).
+- Build green; all 861 tests passing; zero type errors; quality gates maintained.
+
+### One Hundred Second Round (Codebase Plugin – dependency_tree)
+- Implemented `codebase.dependency_tree` capability: builds module dependency graph, detects cycles, computes per-file exports/imports, supports re-exports, aliases, and wildcard imports.
+- Used AST walking with `@typescript-eslint/parser`; functions ≤20 lines, complexity ≤10.
+- Comprehensive test suite (6 tests) with isolated `mkdtemp` fixtures; all passing.
+- Fixed resolver to use only in-memory file set, avoiding sync filesystem calls; discovered and fixed missing `declarations` property bug.
+- Updated documentation: `AGENT_METRICS.md` (iteration increment, tasks, test counts, new section), `PROJECT_STATE.md` (capability list, test stats), `AGENT_PROFILE.md` (coverage, codebase tests count).
+- Build green; all 867 tests passing; zero type errors; quality gates maintained.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

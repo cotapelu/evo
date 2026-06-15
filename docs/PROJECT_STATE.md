@@ -4,7 +4,7 @@ Last Updated: 2026-06-15
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (95 suites, 851 tests, 3 skipped)
+✅ Tests: All passing (97 suites, 867 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -12,14 +12,14 @@ Last Updated: 2026-06-15
 - **Guideline Generator**: Smart auto-documentation system that generates comprehensive prompt guidelines from TypeBox schemas. Provides parameter descriptions with type hints, context-aware examples (file paths → `src/example.test.ts`, booleans), minimal/full/variation examples, and return format documentation. Fully integrated into plugin-loader.
 - **Extensions Aggregator**: Calls capability system synchronously; loader initializes in background but tests await completion.
 - **PluginLoader Watch Mode**: Robust hot-reload with debounced reloads (200ms), deletion handling, and per-plugin watcher lifecycle. New integration tests added.
-- **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis capabilities (`analyze`, `search`, `safe_edit`, `analyze_ast`, `ast_query`, `call_graph`, `metrics`). Comprehensive test suite (67 tests) all passing; functions ≤20 lines, complexity ≤10; includes robust test isolation using `mkdtemp`.
+- **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis capabilities (`analyze`, `search`, `safe_edit`, `analyze_ast`, `ast_query`, `call_graph`, `metrics`, `complexity`, `dependency_tree`). Comprehensive test suite (83 tests) all passing; functions ≤20 lines, complexity ≤10; includes robust test isolation using `mkdtemp`.
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
 
 ## Known Issues
 - None currently; all recent issues resolved.
 
 ## Next Steps (High Impact)
-- `analyze_ast` and `ast_query` implemented and refactored for quality. `call_graph` and `metrics` capabilities delivered. Consider additional codebase capabilities (dependency tree, code complexity analysis) or improving safe_edit with smarter merge conflict handling.
+- `analyze_ast` and `ast_query` implemented and refactored for quality. `call_graph`, `metrics`, `complexity`, and `dependency_tree` capabilities delivered. Consider additional codebase capabilities (dependency tree enhancements, circular dependency visualization) or improving safe_edit with smarter merge conflict handling.
 - Continuous monitoring for edge cases and performance.
 
 ## Environment

@@ -3,22 +3,47 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Evolution",
+      "name": "Dependency Tree Capability",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add codebase.call_graph capability for inter-file call analysis",
-          "status": "completed"
+          "content": "Design dependency tree capability input schema (files list, entryPoints) and output structure (module graph, cycles, exports/imports per file)",
+          "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Add codebase.metrics capability for code metrics analysis",
+          "content": "Implement AST-based import/export collector with cross-file resolution using existing parser and file indexing",
+          "status": "pending"
+        },
+        {
+          "id": "task-3",
+          "content": "Write comprehensive tests with mkdtemp isolation covering various import patterns, cycles, and re-exports",
+          "status": "pending"
+        },
+        {
+          "id": "task-4",
+          "content": "Register capability in manifest.json and integrate into codebase plugin",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Run tests and build; fix any TypeScript/runtime issues",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Update documentation (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with new capability description and metrics",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Commit and push: 'chore: evolution round - added codebase.dependency_tree capability'",
           "status": "pending"
         }
-      ],
-      "nextTaskId": 3,
-      "nextPhaseId": 2,
-      "updatedAt": "2026-06-15T16:55:00.000Z"
+      ]
     }
-  ]
+  ],
+  "nextTaskId": 8,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-06-15T17:30:40.128Z"
 }
