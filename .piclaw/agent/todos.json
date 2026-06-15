@@ -8,12 +8,17 @@
         {
           "id": "task-1",
           "content": "Add codebase.call_graph capability for inter-file call analysis",
-          "status": "in_progress"
+          "status": "completed"
+        },
+        {
+          "id": "task-2",
+          "content": "Add codebase.metrics capability for code metrics analysis",
+          "status": "pending"
         }
-      ]
+      ],
+      "nextTaskId": 3,
+      "nextPhaseId": 2,
+      "updatedAt": "2026-06-15T16:55:00.000Z"
     }
-  ],
-  "nextTaskId": 2,
-  "nextPhaseId": 2,
-  "updatedAt": "2026-06-15T15:58:06.385Z"
+  ]
 }

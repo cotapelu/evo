@@ -183,6 +183,31 @@
         "Example: { capability: 'codebase.safe_edit', params: { operations: [{ file: 'src/foo.ts', editType: 'replace', range: {start: 10, end: 15}, newCode: 'export const x = 1;' }] } }"
       ],
       "dependencies": ["dev.format"]
+    },
+    {
+      "id": "metrics",
+      "name": "Code Metrics",
+      "description": "Compute basic code metrics (lines, functions, classes, imports, exports) for files",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of file paths (relative to cwd)"
+          }
+        },
+        "required": ["files"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/metrics.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.metrics to get quantitative insights about code files (lines, functions, classes, imports, exports).",
+        "Provide an array of file paths relative to cwd.",
+        "Example: { capability: 'codebase.metrics', params: { files: ['src/index.ts', 'src/utils.ts'] } }"
+      ],
+      "dependencies": []
     }
   ],
   "settings": {

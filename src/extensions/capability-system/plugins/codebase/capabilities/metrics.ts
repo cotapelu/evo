@@ -1,0 +1,119 @@
+#!/usr/bin/env node
+/**
+ * codebase.metrics capability
+ *
+ * Computes basic code metrics (lines, functions, classes, imports, exports) for TypeScript/JavaScript files.
+ */
+
+import { Type } from "typebox";
+import { promises as fs } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export const schema = Type.Object({
+  files: Type.Array(Type.String(), { description: "List of file paths (relative to cwd)" })
+}, { required: ["files"], additionalProperties: false });
+
+interface MetricResult {
+  file: string;
+  lines: number;
+  functions: number;
+  classes: number;
+  imports: number;
+  exports: number;
+  error?: string;
+}
+
+interface Result {
+  results: MetricResult[];
+  stats: {
+    totalFiles: number;
+    totalLines: number;
+    totalFunctions: number;
+    totalClasses: number;
+    totalImports: number;
+    totalExports: number;
+  };
+}
+
+// Generic AST walker
+function walk(node: any, visitor: (n: any, parent?: any) => void, parent?: any) {
+  if (!node || typeof node !== "object") return;
+  visitor(node, parent);
+  for (const key in node) {
+    if (node[key] && typeof node[key] === "object") {
+      if (Array.isArray(node[key])) {
+        for (const child of node[key]) walk(child, visitor, node);
+      } else {
+        walk(node[key], visitor, node);
+      }
+    }
+  }
+}
+
+async function parseFile(cwd: string, fileRel: string): Promise<any> {
+  const fileAbs = join(cwd, fileRel);
+  try {
+    const source = await fs.readFile(fileAbs, "utf8");
+    // @ts-ignore - dynamic import of parser with types not resolvable under current moduleResolution
+    const { parse } = await import("@typescript-eslint/parser");
+    const ast = parse(source, { sourceType: "module", ecmaVersion: "latest", ts: true, jsx: true });
+    return { source, ast };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+async function analyzeFile(cwd: string, fileRel: string): Promise<MetricResult> {
+  const parsed = await parseFile(cwd, fileRel);
+  if (!parsed || (parsed as any).error) {
+    return { file: fileRel, lines: 0, functions: 0, classes: 0, imports: 0, exports: 0, error: (parsed as any).error };
+  }
+  const { source, ast } = parsed as { source: string; ast: any };
+  const lines = source.split('\n').length;
+  let functions = 0, classes = 0, imports = 0, exports = 0;
+  walk(ast, (node: any) => {
+    switch (node.type) {
+      case 'FunctionDeclaration': functions++; break;
+      case 'ClassDeclaration': classes++; break;
+      case 'ImportDeclaration': imports++; break;
+      case 'ExportNamedDeclaration':
+      case 'ExportDefaultDeclaration':
+      case 'ExportAllDeclaration': exports++; break;
+    }
+  });
+  return { file: fileRel, lines, functions, classes, imports, exports };
+}
+
+export async function execute(params: { files: string[] }, ctx: any): Promise<Result> {
+  const cwd = ctx.cwd || process.cwd();
+  const results: MetricResult[] = [];
+  let totalLines = 0, totalFunctions = 0, totalClasses = 0, totalImports = 0, totalExports = 0;
+
+  for (const fileRel of params.files) {
+    const res = await analyzeFile(cwd, fileRel);
+    results.push(res);
+    if (!res.error) {
+      totalLines += res.lines;
+      totalFunctions += res.functions;
+      totalClasses += res.classes;
+      totalImports += res.imports;
+      totalExports += res.exports;
+    }
+  }
+
+  return {
+    results,
+    stats: {
+      totalFiles: results.length,
+      totalLines,
+      totalFunctions,
+      totalClasses,
+      totalImports,
+      totalExports
+    }
+  };
+}
