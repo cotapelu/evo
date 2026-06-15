@@ -6,7 +6,7 @@
  * Toggle with /metrics command.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, ExtensionUIContext, Theme } from "@earendil-works/pi-coding-agent";
 
 const METRICS_WIDGET_STATE = Symbol('metricsWidgetState');
 
@@ -16,11 +16,16 @@ interface MetricsWidgetSessionState {
   intervalId: NodeJS.Timeout | null;
 }
 
-function getState(ctx: any): MetricsWidgetSessionState | undefined {
+interface MetricsWidgetContext extends ExtensionContext {
+  // symbol-keyed property
+}
+
+function getState(ctx: MetricsWidgetContext): MetricsWidgetSessionState | undefined {
+  // @ts-ignore - symbol access
   return ctx[METRICS_WIDGET_STATE];
 }
 
-function ensureState(ctx: any): MetricsWidgetSessionState {
+function ensureState(ctx: MetricsWidgetContext): MetricsWidgetSessionState {
   let state = getState(ctx);
   if (!state) {
     state = { enabled: true, ctx: ctx, intervalId: null };
@@ -30,14 +35,14 @@ function ensureState(ctx: any): MetricsWidgetSessionState {
   return state;
 }
 
-function buildHeaderLines(theme: any): string[] {
+function buildHeaderLines(theme: Theme): string[] {
   return [
     theme.fg("accent", "📊 Metrics").bold(),
     ""
   ];
 }
 
-function buildMetricsLines(ctx: ExtensionContext, theme: any): string[] {
+function buildMetricsLines(ctx: ExtensionContext, theme: Theme): string[] {
   const lines: string[] = [];
 
   // Context usage (tokens)
@@ -75,7 +80,7 @@ async function refreshWidget(ctx: ExtensionContext): Promise<void> {
   ui.setWidget("metrics", lines);
 }
 
-function startWidget(ctx: ExtensionContext): void {
+function startWidget(ctx: MetricsWidgetContext): void {
   const state = ensureState(ctx);
   if (state.intervalId) return;
   state.ctx = ctx;
@@ -105,7 +110,7 @@ function stopWidget(state: MetricsWidgetSessionState): void {
 /**
  * Toggle metrics widget visibility.
  */
-export function toggleMetricsWidget(ctx: any): boolean {
+export function toggleMetricsWidget(ctx: MetricsWidgetContext): boolean {
   const state = ensureState(ctx);
   state.enabled = !state.enabled;
   if (state.enabled) {
@@ -119,13 +124,13 @@ export function toggleMetricsWidget(ctx: any): boolean {
 /**
  * Get enabled state for current session.
  */
-export function getMetricsWidgetEnabled(ctx: any): boolean {
+export function getMetricsWidgetEnabled(ctx: MetricsWidgetContext): boolean {
   const state = getState(ctx);
   return state?.enabled ?? true;
 }
 
 export function registerMetricsWidget(api: ExtensionAPI): void {
-  api.on("session_start", async (_event, ctx: any) => {
+  api.on("session_start", async (_event, ctx: MetricsWidgetContext) => {
     // Create per-session state, default enabled
     const state: MetricsWidgetSessionState = { enabled: true, ctx: ctx, intervalId: null };
     // @ts-ignore
