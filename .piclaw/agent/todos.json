@@ -3,42 +3,32 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Tool Definitions Cleanup",
+      "name": "Test Capability Output Enhancement",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Refactor memory-tool to use proper factory and complete ToolDefinition",
+          "content": "Review the changes made to extension.ts",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Refactor universal-tool to use proper factory and complete parameters schema",
+          "content": "Check if notification appears when capability starts",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Check todos-tool parameters schema (may be acceptable with empty due to guidelines)",
+          "content": "Check if result shows capability name in header",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Run tests to ensure no regressions",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Update docs (AGENT_METRICS.md, TODO.md, EVOLUTION.md, AGENT_PROFILE.md)",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Commit changes",
+          "content": "Verify completion notification with duration",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-13T14:15:30.271Z"
+  "updatedAt": "2026-06-15T11:53:04.814Z"
 }
