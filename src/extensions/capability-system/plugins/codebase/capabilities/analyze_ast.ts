@@ -52,15 +52,15 @@ interface AnalysisResult {
 }
 
 // Simple AST walker
-function walk(node: any, visitor: (n: any) => void) {
+function walk(node: any, visitor: (n: any, parent?: any) => void, parent?: any) {
   if (!node || typeof node !== 'object') return;
-  visitor(node);
+  visitor(node, parent);
   for (const key in node) {
     if (node[key] && typeof node[key] === 'object') {
       if (Array.isArray(node[key])) {
-        node[key].forEach((child: any) => walk(child, visitor));
+        node[key].forEach((child: any) => walk(child, visitor, node));
       } else {
-        walk(node[key], visitor);
+        walk(node[key], visitor, node);
       }
     }
   }
@@ -111,7 +111,7 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
     }
 
     // Walk AST
-    walk(ast, (node: any) => {
+    walk(ast, (node: any, parent?: any) => {
       // Imports
       if (node.type === 'ImportDeclaration') {
         const specifier = node.source.value;
@@ -121,7 +121,7 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
         let namespace: string | null = null;
         node.specifiers.forEach((sp: any) => {
           if (sp.type === 'ImportSpecifier') {
-            named.push(sp.imported.name);
+            named.push(sp.local.name);
           } else if (sp.type === 'ImportDefaultSpecifier') {
             defaultImport = sp.local.name;
           } else if (sp.type === 'ImportNamespaceSpecifier') {
@@ -131,6 +131,7 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
         if (defaultImport) importInfo.importClause = defaultImport;
         if (namespace) importInfo.importClause = `* as ${namespace}`;
         if (named.length) importInfo.namedImports = named;
+        if (node.importKind === 'type') importInfo.typeOnly = true;
         result.imports.push(importInfo);
       }
 
@@ -151,6 +152,12 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
           } else if (node.declaration.type === 'ClassDeclaration') {
             result.exports.push({ type: "named", name: node.declaration.id?.name || '<anonymous>' });
             result.symbols.push({ name: node.declaration.id?.name || '<anonymous>', kind: "class", line: node.declaration.loc.start.line });
+          } else if (node.declaration.type === 'TSTypeAliasDeclaration') {
+            result.exports.push({ type: "named", name: node.declaration.id.name });
+            result.symbols.push({ name: node.declaration.id.name, kind: "type", line: node.declaration.loc.start.line });
+          } else if (node.declaration.type === 'TSInterfaceDeclaration') {
+            result.exports.push({ type: "named", name: node.declaration.id.name });
+            result.symbols.push({ name: node.declaration.id.name, kind: "interface", line: node.declaration.loc.start.line });
           }
         } else if (node.specifiers) {
           // export { a, b as c }
@@ -213,7 +220,7 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
 
       // Variable declarations (const/let/var)
       if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier') {
-        const parentKind = node.parent?.kind as 'const' | 'let' | 'var' | undefined;
+        const parentKind = parent?.kind as 'const' | 'let' | 'var' | undefined;
         let kind: SymbolDef['kind'] = 'variable';
         if (parentKind === 'const') kind = 'const';
         else if (parentKind === 'let') kind = 'let';
@@ -235,6 +242,9 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
       }
       if (node.type === 'TSInterfaceDeclaration' && node.id) {
         result.symbols.push({ name: node.id.name, kind: "interface", line: node.loc.start.line });
+      }
+      if (node.type === 'TSEnumDeclaration' && node.id) {
+        result.symbols.push({ name: node.id.name, kind: "enum", line: node.loc.start.line });
       }
     });
 
