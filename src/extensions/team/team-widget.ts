@@ -7,53 +7,75 @@
  * Supports toggle via /team command.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { TeamRegistry } from "./team-manager.js";
+import type { ExtensionAPI, ExtensionContext, ExtensionUIContext, Theme } from "@earendil-works/pi-coding-agent";
+import { TeamRegistry, AgentTeam } from "./team-manager.js";
 
 // Unique symbol for per-session state attachment
 const TEAM_WIDGET_STATE = Symbol('teamWidgetState');
 
 interface TeamWidgetSessionState {
   enabled: boolean;
-  ctx: any;
+  ctx: ExtensionContext | null;
   intervalId: NodeJS.Timeout | null;
 }
 
-function getState(ctx: any): TeamWidgetSessionState | undefined {
+// Extend ExtensionContext to carry our state via symbol
+interface TeamWidgetContext extends ExtensionContext {
+  // Symbol-keyed property; we'll access via any cast with ts-ignore
+}
+
+interface AgentStatus {
+  id: string;
+  currentTaskIndex: number | null;
+  status: string;
+}
+
+interface TeamStatus {
+  agents: AgentStatus[];
+  tasks: Array<{ index: number; assignee: string | null; status: 'pending' | 'in_progress' | 'completed' | 'failed'; result: string; retryCount: number; retryAvailableAt?: number }>;
+  completedTasks: number;
+  failedTasks: number;
+  pendingTasks: number;
+  totalTasks: number;
+  isComplete: boolean;
+}
+
+function getState(ctx: TeamWidgetContext): TeamWidgetSessionState | undefined {
+  // @ts-ignore - accessing symbol property
   return ctx[TEAM_WIDGET_STATE];
 }
 
-function ensureState(ctx: any): TeamWidgetSessionState {
+function ensureState(ctx: TeamWidgetContext): TeamWidgetSessionState {
   let state = getState(ctx);
   if (!state) {
     state = { enabled: true, ctx: ctx, intervalId: null };
-    // @ts-ignore
+    // @ts-ignore - symbol-keyed property
     ctx[TEAM_WIDGET_STATE] = state;
   }
   return state;
 }
 
-function buildHeaderLines(theme: any): string[] {
+function buildHeaderLines(theme: Theme): string[] {
   return [
     theme.fg("accent", "👥 Team").bold(),
     ""
   ];
 }
 
-function buildTeamLines(ui: any, teamId: string, status: any): string[] {
+function buildTeamLines(ui: ExtensionUIContext, teamId: string, status: TeamStatus): string[] {
   const shortId = teamId.slice(-6);
   const lines: string[] = [];
   lines.push(ui.theme.fg("accent", `Team ${shortId}`));
   lines.push(`  Tasks: ${status.completedTasks}/${status.totalTasks} (pending: ${status.pendingTasks}, failed: ${status.failedTasks})`);
   const agentCount = status.agents.length;
-  const idleAgents = status.agents.filter((a: any) => a.status === 'idle').length;
-  const workingAgents = status.agents.filter((a: any) => a.status === 'working' || a.status === 'in_progress').length;
+  const idleAgents = status.agents.filter((a: AgentStatus) => a.status === 'idle').length;
+  const workingAgents = status.agents.filter((a: AgentStatus) => a.status === 'working' || a.status === 'in_progress').length;
   lines.push(`  Agents: ${agentCount} (idle: ${idleAgents}, working: ${workingAgents})`);
   lines.push(""); // spacer
   return lines;
 }
 
-function refreshWidget(ui: any): Promise<void> {
+function refreshWidget(ui: ExtensionUIContext): Promise<void> {
   return new Promise((resolve) => {
     try {
       const registry = TeamRegistry.getInstance();
@@ -71,8 +93,8 @@ function refreshWidget(ui: any): Promise<void> {
 
       // Collect promises for all teams
       let pending = teams.size;
-      teams.forEach((team: any, teamId: string) => {
-        team.getTeamStatus().then((status: any) => {
+      teams.forEach((team, teamId) => {
+        team.getTeamStatus().then((status: TeamStatus) => {
           lines.push(...buildTeamLines(ui, teamId, status));
           // Only set widget after all teams processed
           if (--pending === 0) {
@@ -93,7 +115,7 @@ function refreshWidget(ui: any): Promise<void> {
   });
 }
 
-function startWidget(ctx: any) {
+function startWidget(ctx: TeamWidgetContext) {
   const state = ensureState(ctx);
   // Prevent double start
   if (state.intervalId) return;
@@ -128,7 +150,7 @@ function stopWidget(state: TeamWidgetSessionState) {
  * Toggle team widget visibility.
  * @returns new enabled state (true = visible)
  */
-export function toggleTeamWidget(ctx: any): boolean {
+export function toggleTeamWidget(ctx: TeamWidgetContext): boolean {
   const state = ensureState(ctx);
   state.enabled = !state.enabled;
   if (state.enabled) {
@@ -142,17 +164,17 @@ export function toggleTeamWidget(ctx: any): boolean {
 /**
  * Get current team widget enabled state for a given session context.
  */
-export function getTeamWidgetEnabled(ctx: any): boolean {
+export function getTeamWidgetEnabled(ctx: TeamWidgetContext): boolean {
   const state = getState(ctx);
   return state?.enabled ?? true;
 }
 
 export function registerTeamWidget(api: ExtensionAPI): void {
   // Set up widget on session start
-  api.on("session_start", async (_event, ctx) => {
+  api.on("session_start", async (_event, ctx: TeamWidgetContext) => {
     // Create per-session state (default enabled)
     const state: TeamWidgetSessionState = { enabled: true, ctx: ctx, intervalId: null };
-    // @ts-ignore
+    // @ts-ignore - symbol-keyed property not in type
     ctx[TEAM_WIDGET_STATE] = state;
 
     // If enabled by default, start the widget
