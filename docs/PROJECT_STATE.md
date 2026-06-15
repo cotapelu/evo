@@ -4,7 +4,7 @@ Last Updated: 2026-06-15
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (97 suites, 867 tests, 3 skipped)
+✅ Tests: All passing (97 suites, 870 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -19,7 +19,8 @@ Last Updated: 2026-06-15
 - None currently; all recent issues resolved.
 
 ## Next Steps (High Impact)
-- `analyze_ast` and `ast_query` implemented and refactored for quality. `call_graph`, `metrics`, `complexity`, and `dependency_tree` capabilities delivered. Consider additional codebase capabilities (dependency tree enhancements, circular dependency visualization) or improving safe_edit with smarter merge conflict handling.
+- Completed `dependency_tree` enhancement: added `entryPoints` filtering for reachable subgraph analysis.
+- Next: Fix `safe_edit` atomicity bug to ensure all-or-nothing semantics across multiple operations; refactor into smaller functions; update tests.
 - Continuous monitoring for edge cases and performance.
 
 ## Environment

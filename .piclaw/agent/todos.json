@@ -8,42 +8,83 @@
         {
           "id": "task-1",
           "content": "Design enhancement: use entryPoints to filter reachable module subgraph; update output to include reachableOnly flag and possibly pruned nodes",
-          "status": "in_progress"
+          "status": "completed"
         },
         {
           "id": "task-2",
           "content": "Implement reachable filtering in dependency_tree: BFS from entryPoints over imports graph; if no entryPoints, use all nodes with indegree 0",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-3",
           "content": "Add comprehensive tests for entryPoints filtering (isolated subgraph, unreachable nodes excluded)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-4",
           "content": "Update capability manifest if needed; ensure schema documentation reflects entryPoints effect",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-5",
           "content": "Run tests and build; fix any type/runtime issues",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-6",
           "content": "Update docs (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with enhancement details",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-7",
           "content": "Commit and push: 'chore: evolution round - enhanced dependency_tree with entryPoints filtering'",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Safe Edit Atomicity Fix",
+      "tasks": [
+        {
+          "id": "task-8",
+          "content": "Analyze safe_edit current implementation and identify atomicity bug (partial rollback)",
+          "status": "pending"
+        },
+        {
+          "id": "task-9",
+          "content": "Refactor safe_edit: backup all files upfront, then apply edits with rollback on any failure",
+          "status": "pending"
+        },
+        {
+          "id": "task-10",
+          "content": "Split execute function into smaller helper functions (≤20 lines, complexity ≤10)",
+          "status": "pending"
+        },
+        {
+          "id": "task-11",
+          "content": "Update tests: fix rollback test to expect full atomic rollback across files, add test for successful multi-file edit",
+          "status": "pending"
+        },
+        {
+          "id": "task-12",
+          "content": "Run tests and build; ensure all pass and meet quality gates",
+          "status": "pending"
+        },
+        {
+          "id": "task-13",
+          "content": "Update documentation if needed (e.g., manifest prompt guidelines about atomicity)",
+          "status": "pending"
+        },
+        {
+          "id": "task-14",
+          "content": "Commit and push: 'chore: evolution round - fixed safe_edit atomic rollback'",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 8,
-  "nextPhaseId": 2,
-  "updatedAt": "2026-06-15T18:08:29.960Z"
+  "nextTaskId": 15,
+  "nextPhaseId": 3,
+  "updatedAt": "2026-06-15T19:00:00.000Z"
 }
