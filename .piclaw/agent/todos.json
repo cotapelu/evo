@@ -49,42 +49,83 @@
         {
           "id": "task-8",
           "content": "Analyze safe_edit current implementation and identify atomicity bug (partial rollback)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-9",
           "content": "Refactor safe_edit: backup all files upfront, then apply edits with rollback on any failure",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-10",
           "content": "Split execute function into smaller helper functions (≤20 lines, complexity ≤10)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-11",
           "content": "Update tests: fix rollback test to expect full atomic rollback across files, add test for successful multi-file edit",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-12",
           "content": "Run tests and build; ensure all pass and meet quality gates",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-13",
           "content": "Update documentation if needed (e.g., manifest prompt guidelines about atomicity)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-14",
           "content": "Commit and push: 'chore: evolution round - fixed safe_edit atomic rollback'",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Call Graph Enhancements",
+      "tasks": [
+        {
+          "id": "task-15",
+          "content": "Design enhancement: add entryPoints param to call_graph for reachable subgraph filtering; update schema and output",
+          "status": "pending"
+        },
+        {
+          "id": "task-16",
+          "content": "Implement reachable filtering in call_graph: BFS from entryPoints over call graph; support cross-file resolution",
+          "status": "pending"
+        },
+        {
+          "id": "task-17",
+          "content": "Add comprehensive tests for entryPoints filtering (isolated subgraph, unreachable nodes excluded)",
+          "status": "pending"
+        },
+        {
+          "id": "task-18",
+          "content": "Update capability manifest: schema and prompt guidelines for entryPoints",
+          "status": "pending"
+        },
+        {
+          "id": "task-19",
+          "content": "Run tests and build; fix any type/runtime issues",
+          "status": "pending"
+        },
+        {
+          "id": "task-20",
+          "content": "Update docs (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with enhancement details",
+          "status": "pending"
+        },
+        {
+          "id": "task-21",
+          "content": "Commit and push: 'chore: evolution round - enhanced call_graph with entryPoints filtering'",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 15,
-  "nextPhaseId": 3,
+  "nextTaskId": 22,
+  "nextPhaseId": 4,
   "updatedAt": "2026-06-15T19:00:00.000Z"
 }

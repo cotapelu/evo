@@ -4,7 +4,7 @@ Last Updated: 2026-06-15
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (97 suites, 870 tests, 3 skipped)
+✅ Tests: All passing (97 suites, 871 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -19,8 +19,8 @@ Last Updated: 2026-06-15
 - None currently; all recent issues resolved.
 
 ## Next Steps (High Impact)
-- Completed `dependency_tree` enhancement: added `entryPoints` filtering for reachable subgraph analysis.
-- Next: Fix `safe_edit` atomicity bug to ensure all-or-nothing semantics across multiple operations; refactor into smaller functions; update tests.
+- Completed `safe_edit` atomicity fix: now fully atomic across multiple operations and files; added tests; functions meet quality gates.
+- Next: Enhance `call_graph` with `entryPoints` filtering for reachable subgraph analysis; implement BFS-based pruning, add tests, update manifest.
 - Continuous monitoring for edge cases and performance.
 
 ## Environment

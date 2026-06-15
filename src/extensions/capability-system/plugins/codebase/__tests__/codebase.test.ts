@@ -300,6 +300,33 @@ describe("codebase.safe_edit", () => {
     expect(content).toBe("A\nB\nc\nd");
   });
 
+  it("should apply multiple operations on different files atomically", async () => {
+    const file1 = path.join(tempDir, "a.ts");
+    const file2 = path.join(tempDir, "b.ts");
+    await writeFile(file1, "orig1", "utf-8");
+    await writeFile(file2, "orig2", "utf-8");
+    const ctx = createMockCtx(tempDir);
+
+    const params = {
+      operations: [
+        { file: "a.ts", editType: "replace" as const, range: { start: 0, end: 1 }, newCode: "changed1" },
+        { file: "b.ts", editType: "replace" as const, range: { start: 0, end: 1 }, newCode: "changed2" }
+      ],
+      format: false,
+      fixImports: false
+    };
+
+    const result = await safeEditModule.execute(params, ctx as any);
+    expect(result.success).toBe(true);
+    expect(result.results).toHaveLength(2);
+    expect(result.results[0].success).toBe(true);
+    expect(result.results[1].success).toBe(true);
+    const content1 = await readFile(file1, "utf-8");
+    const content2 = await readFile(file2, "utf-8");
+    expect(content1).toBe("changed1");
+    expect(content2).toBe("changed2");
+  });
+
   it("should rollback all files if one fails (atomic across files)", async () => {
     const file1 = path.join(tempDir, "a.ts");
     const file2 = path.join(tempDir, "b.ts");
@@ -327,16 +354,16 @@ describe("codebase.safe_edit", () => {
       fixImports: false
     };
 
-    // Note: current implementation does NOT rollback previous files if later file fails.
-    // That's acceptable per-file atomic, but not all-or-nothing across files.
-    // We'll test current behavior: partial success.
     const result = await safeEditModule.execute(params, ctx as any);
     expect(result.success).toBe(false);
-    // file1 may have changed (not rolled back), but file2 rolled back
-    // This is okay for now.
+    // Both files should be rolled back to original
     const content1 = await readFile(file1, "utf-8");
     const content2 = await readFile(file2, "utf-8");
-    expect(content2).toBe("original2"); // rolled back
+    expect(content1).toBe("original1");
+    expect(content2).toBe("original2");
+    // Results should indicate all operations failed and were rolled back
+    expect(result.results).toHaveLength(2);
+    expect(result.results.every(r => !r.success && r.backupRestored)).toBe(true);
   });
 
   it("should skip format when format=false", async () => {

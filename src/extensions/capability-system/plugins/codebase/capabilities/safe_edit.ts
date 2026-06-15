@@ -4,6 +4,7 @@
  *
  * Edits code with validation: syntax check, optional import fixing, formatting.
  * Rolls back on any failure to preserve working tree.
+ * Supports atomic multi-file and multi-operation edits.
  */
 
 import { Type } from "typebox";
@@ -43,146 +44,157 @@ interface EditResult {
   diff?: string;
 }
 
+function computeDiff(original: string, modified: string, file: string): string {
+  const origLines = original.split('\n');
+  const modLines = modified.split('\n');
+  const max = Math.max(origLines.length, modLines.length);
+  let diff = `diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n`;
+  for (let i = 0; i < max; i++) {
+    const orig = origLines[i] ?? '';
+    const mod = modLines[i] ?? '';
+    if (orig !== mod) {
+      if (orig) diff += `- ${orig}\n`;
+      if (mod) diff += `+ ${mod}\n`;
+    } else if (orig) {
+      diff += `  ${orig}\n`;
+    }
+  }
+  return diff;
+}
+
+function applyEditInMemory(op: EditOperation, content: string): string {
+  const lines = content.split('\n');
+  if (op.range.start < 0 || op.range.end < op.range.start || op.range.end > lines.length) {
+    throw new Error(`Invalid range ${JSON.stringify(op.range)} for file with ${lines.length} lines`);
+  }
+  if (op.editType !== 'delete' && op.newCode === undefined) {
+    throw new Error(`newCode is required for editType '${op.editType}'`);
+  }
+  const newLines = op.editType !== 'delete' ? op.newCode!.split('\n') : [];
+  const edited = lines.slice();
+  if (op.editType === 'replace') {
+    edited.splice(op.range.start, op.range.end - op.range.start, ...newLines);
+  } else if (op.editType === 'insert') {
+    edited.splice(op.range.start, 0, ...newLines);
+  } else if (op.editType === 'delete') {
+    edited.splice(op.range.start, op.range.end - op.range.start);
+  } else {
+    throw new Error(`Unknown editType: ${op.editType}`);
+  }
+  return edited.join('\n');
+}
+
+async function validateFile(file: string, cwd: string, format: boolean, fixImports: boolean, ctx: any): Promise<void> {
+  // Type check
+  const tsc = await ctx.exec('npx', ['tsc', '--noEmit', file], { cwd });
+  if (tsc.code !== 0 && tsc.code !== 2) {
+    throw new Error(`TypeScript check failed: exit code ${tsc.code}, stderr: ${tsc.stderr || 'none'}`);
+  }
+  // Fix imports
+  if (fixImports) {
+    try { await ctx.exec('npx', ['eslint', '--fix', file], { cwd }); } catch {}
+  }
+  // Format
+  if (format) {
+    const fmt = await ctx.exec('npx', ['prettier', '--write', file], { cwd });
+    if (fmt.code !== 0) throw new Error(`Prettier formatting failed: exit ${fmt.code}, stderr: ${fmt.stderr || 'none'}`);
+  }
+}
+
 export async function execute(params: { operations: EditOperation[]; format?: boolean; fixImports?: boolean }, ctx: any): Promise<any> {
   const cwd = ctx.cwd || process.cwd();
-  const format = params.format !== false; // default true
-  const fixImports = params.fixImports !== false; // default true
+  const format = params.format !== false;
+  const fixImports = params.fixImports !== false;
+  const { operations } = params;
 
-  const results: EditResult[] = [];
-  const backups: Map<string, string> = new Map();
-
-  // Helper: create backup of file
-  const backupFile = async (file: string) => {
-    const absPath = join(cwd, file);
-    try {
-      const content = await fs.readFile(absPath, "utf-8");
-      backups.set(file, content);
-      return content;
-    } catch (err) {
-      throw new Error(`Cannot read file ${file}: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  };
-
-  // Helper: restore backup
-  const restoreBackup = async (file: string) => {
-    const backup = backups.get(file);
-    if (backup) {
-      const absPath = join(cwd, file);
-      await fs.writeFile(absPath, backup, "utf-8");
-    }
-  };
-
-  // Helper: compute simple diff
-  const computeDiff = (original: string, modified: string, file: string): string => {
-    const origLines = original.split('\n');
-    const modLines = modified.split('\n');
-    const max = Math.max(origLines.length, modLines.length);
-    let diff = `diff --git a/${file} b/${file}\n`;
-    diff += `--- a/${file}\n`;
-    diff += `+++ b/${file}\n`;
-
-    for (let i = 0; i < max; i++) {
-      const orig = origLines[i] ?? '';
-      const mod = modLines[i] ?? '';
-      if (orig !== mod) {
-        if (orig) diff += `- ${orig}\n`;
-        if (mod) diff += `+ ${mod}\n`;
-      } else if (orig) {
-        diff += `  ${orig}\n`;
+  // 1. Backup all files upfront
+  const backups = new Map<string, string>();
+  for (const op of operations) {
+    if (!backups.has(op.file)) {
+      try {
+        backups.set(op.file, await fs.readFile(join(cwd, op.file), 'utf-8'));
+      } catch (err) {
+        return {
+          success: false,
+          results: [{
+            file: op.file,
+            success: false,
+            error: `Cannot read file ${op.file}: ${err instanceof Error ? err.message : String(err)}`
+          }]
+        };
       }
     }
-    return diff;
-  };
-
-  // Inline: syntax check, fix imports, format using ctx.exec
-
-  // Apply edits sequentially, with rollback on any failure
-  for (const op of params.operations) {
-    const { file, editType, range, newCode } = op;
-    let result: EditResult = { file, success: false };
-
-    try {
-      // 1. Backup original before any changes
-      const original = await backupFile(file);
-      const absPath = join(cwd, file);
-
-      // 2. Read and modify lines
-      let lines = original.split('\n');
-
-      // Validate range
-      if (range.start < 0 || range.end < range.start || range.end > lines.length) {
-        throw new Error(`Invalid range ${JSON.stringify(range)} for file with ${lines.length} lines`);
-      }
-
-      // Validate newCode for replace/insert
-      if (editType !== "delete" && !newCode) {
-        throw new Error(`newCode is required for editType '${editType}'`);
-      }
-
-      // Apply edit
-      const newLines = newCode ? newCode.split('\n') : [];
-      if (editType === "replace") {
-        lines.splice(range.start, range.end - range.start, ...newLines);
-      } else if (editType === "insert") {
-        lines.splice(range.start, 0, ...newLines);
-      } else if (editType === "delete") {
-        lines.splice(range.start, range.end - range.start);
-      } else {
-        throw new Error(`Unknown editType: ${editType}`);
-      }
-
-      // 3. Write modified content
-      const modified = lines.join('\n');
-      await fs.writeFile(absPath, modified, "utf-8");
-
-      // 4. Syntax check (run tsc --noEmit on the file)
-      {
-        const tscResult = await ctx.exec("npx", ["tsc", "--noEmit", file], { cwd });
-        // tsc returns 0 for no errors, 2 for type errors (still syntactically valid)
-        // Any other exit code is considered a failure and will trigger rollback
-        if (tscResult.code !== 0 && tscResult.code !== 2) {
-          throw new Error(`TypeScript check failed: exit code ${tscResult.code}, stderr: ${tscResult.stderr || 'none'}`);
-        }
-      }
-
-      // 5. Fix imports (if enabled) - try eslint --fix
-      if (fixImports) {
-        try {
-          await ctx.exec("npx", ["eslint", "--fix", file], { cwd });
-        } catch (err) {
-          // eslint not available, ignore
-        }
-      }
-
-      // 6. Format (if enabled)
-      if (format) {
-        const fmtResult = await ctx.exec("npx", ["prettier", "--write", file], { cwd });
-        if (fmtResult.code !== 0) {
-          throw new Error(`Prettier formatting failed: exit ${fmtResult.code}, stderr: ${fmtResult.stderr || 'none'}`);
-        }
-      }
-
-      // 7. Success - record diff
-      result.success = true;
-      result.diff = computeDiff(original, modified, file);
-    } catch (err) {
-      // Rollback this file if backup exists
-      if (backups.has(file)) {
-        await restoreBackup(file);
-        result.backupRestored = true;
-      }
-      result.error = err instanceof Error ? err.message : String(err);
-    }
-
-    results.push(result);
   }
 
-  const allSucceeded = results.every(r => r.success);
-  return {
-    success: allSucceeded,
-    results,
-    summary: `${results.filter(r => r.success).length}/${results.length} operations succeeded`
-  };
+  // 2. Group operations by file (preserve order)
+  const opsByFile = new Map<string, EditOperation[]>();
+  for (const op of operations) {
+    const list = opsByFile.get(op.file) || [];
+    list.push(op);
+    opsByFile.set(op.file, list);
+  }
+
+  // 3. Compute final content per file by applying all ops in-memory sequentially.
+  //    If any op fails, return immediately with error (no files written).
+  const finalContents = new Map<string, string>();
+  for (const [file, fileOps] of opsByFile) {
+    const original = backups.get(file)!;
+    try {
+      let content = original;
+      for (const op of fileOps) {
+        content = applyEditInMemory(op, content);
+      }
+      finalContents.set(file, content);
+    } catch (err) {
+      return {
+        success: false,
+        results: [{
+          file,
+          success: false,
+          error: err instanceof Error ? err.message : String(err)
+        }]
+      };
+    }
+  }
+
+  // 4. Write all final contents to disk
+  for (const [file, content] of finalContents) {
+    await fs.writeFile(join(cwd, file), content, 'utf-8');
+  }
+
+  // 5. Validate each file; on any failure, rollback all and mark previous results as rolled back
+  const results: EditResult[] = [];
+  for (const [file] of finalContents) {
+    try {
+      await validateFile(file, cwd, format, fixImports, ctx);
+      // After validation (and formatting), re-read to get final on-disk content for diff
+      const final = await fs.readFile(join(cwd, file), 'utf-8');
+      results.push({
+        file,
+        success: true,
+        diff: computeDiff(backups.get(file)!, final, file)
+      });
+    } catch (err) {
+      // Rollback all files
+      for (const [f, backup] of backups) {
+        try { await fs.writeFile(join(cwd, f), backup, 'utf-8'); } catch {}
+      }
+      // Mark previous results as rolled back
+      for (const r of results) {
+        r.success = false;
+        r.backupRestored = true;
+      }
+      results.push({
+        file,
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
+        backupRestored: true
+      });
+      return { success: false, results };
+    }
+  }
+
+  return { success: true, results };
 }
 
 export default { execute, schema };
