@@ -19,6 +19,11 @@ export const schema = Type.Object({
   file: Type.String({ description: "File path to analyze (relative to cwd)" })
 }, { required: ["file"], additionalProperties: false });
 
+// Type guard for valid file extensions
+function isCodeExtension(ext: string): ext is 'ts' | 'tsx' | 'js' | 'jsx' | 'json' {
+  return ['ts', 'tsx', 'js', 'jsx', 'json'].includes(ext);
+}
+
 interface ImportInfo {
   moduleSpecifier: string;
   importClause?: string; // default, * as ns, { named }
@@ -251,10 +256,8 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
     const lines = content.split('\n').length;
 
     // Determine language from extension
-    const ext = params.file.split('.').pop()?.toLowerCase();
-    const language = (ext === 'ts' || ext === 'tsx' || ext === 'js' || ext === 'jsx' || ext === 'json')
-      ? (ext as any)
-      : "unknown";
+    const ext = params.file.split('.').pop()?.toLowerCase() ?? '';
+    const language = isCodeExtension(ext) ? ext : 'unknown';
 
     // Analyze
     const { imports, exports, symbols } = analyzeContent(content);

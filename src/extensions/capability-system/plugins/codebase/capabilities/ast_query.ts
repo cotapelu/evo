@@ -10,6 +10,10 @@ import { promises as fs } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
+interface ParserModule {
+  parse: (source: string, options?: any) => any;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -246,9 +250,8 @@ export async function execute(params: { file: string; query: any }, ctx: any): P
 
   let ast;
   try {
-    // @ts-ignore - dynamic import of parser with types not resolvable under current moduleResolution
-    const parser = await import("@typescript-eslint/parser");
-    const { parse } = parser as any;
+    const parser = await import("@typescript-eslint/parser") as ParserModule;
+    const { parse } = parser;
     ast = parse(content, {
       sourceType: "module",
       ecmaVersion: "latest",

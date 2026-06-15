@@ -11,6 +11,10 @@ import { promises as fs } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
+interface ParserModule {
+  parse: (source: string, options?: any) => any;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -91,9 +95,8 @@ async function parseFile(cwd: string, fileRel: string): Promise<ParsedFile | nul
 
   let ast;
   try {
-    // @ts-ignore
-    const parser = await import("@typescript-eslint/parser");
-    const { parse } = parser as any;
+    const parser = await import("@typescript-eslint/parser") as ParserModule;
+    const { parse } = parser;
     ast = parse(content, {
       sourceType: "module",
       ecmaVersion: "latest",

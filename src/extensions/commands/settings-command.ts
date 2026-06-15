@@ -11,6 +11,10 @@ interface SettingItem {
   values: string[];
 }
 
+function isValidThinkingLevel(value: string): value is "off" | "minimal" | "low" | "medium" | "high" | "xhigh" {
+  return ["off", "minimal", "low", "medium", "high", "xhigh"].includes(value);
+}
+
 function settingsToItems(settingsManager: SettingsManager): SettingItem[] {
   const items: SettingItem[] = [];
 
@@ -39,7 +43,11 @@ function applySettingChange(settingsManager: SettingsManager, id: string, newVal
       settingsManager.setDefaultModel(newValue === "<unset>" ? "" : newValue);
       break;
     case "thinking":
-      settingsManager.setDefaultThinkingLevel(newValue as any);
+      if (isValidThinkingLevel(newValue)) {
+        settingsManager.setDefaultThinkingLevel(newValue);
+      } else {
+        settingsManager.setDefaultThinkingLevel("medium");
+      }
       break;
   }
 }

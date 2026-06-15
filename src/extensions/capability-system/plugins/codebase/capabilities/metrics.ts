@@ -39,6 +39,16 @@ interface Result {
   };
 }
 
+// ParseResult type
+interface ParseSuccess {
+  source: string;
+  ast: any; // AST type could be refined later
+}
+interface ParseFailure {
+  error: string;
+}
+type ParseResult = ParseSuccess | ParseFailure;
+
 // Generic AST walker
 function walk(node: any, visitor: (n: any, parent?: any) => void, parent?: any) {
   if (!node || typeof node !== "object") return;
@@ -54,7 +64,7 @@ function walk(node: any, visitor: (n: any, parent?: any) => void, parent?: any) 
   }
 }
 
-async function parseFile(cwd: string, fileRel: string): Promise<any> {
+async function parseFile(cwd: string, fileRel: string): Promise<ParseResult> {
   const fileAbs = join(cwd, fileRel);
   try {
     const source = await fs.readFile(fileAbs, "utf8");
@@ -69,10 +79,10 @@ async function parseFile(cwd: string, fileRel: string): Promise<any> {
 
 async function analyzeFile(cwd: string, fileRel: string): Promise<MetricResult> {
   const parsed = await parseFile(cwd, fileRel);
-  if (!parsed || (parsed as any).error) {
-    return { file: fileRel, lines: 0, functions: 0, classes: 0, imports: 0, exports: 0, error: (parsed as any).error };
+  if ('error' in parsed) {
+    return { file: fileRel, lines: 0, functions: 0, classes: 0, imports: 0, exports: 0, error: parsed.error };
   }
-  const { source, ast } = parsed as { source: string; ast: any };
+  const { source, ast } = parsed; // parsed is ParseSuccess here
   const lines = source.split('\n').length;
   let functions = 0, classes = 0, imports = 0, exports = 0;
   walk(ast, (node: any) => {

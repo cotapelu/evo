@@ -10,6 +10,8 @@ import { fileURLToPath } from "url";
 import { PluginLoader, getGlobalLoader, setGlobalLoader, createPluginLoader } from "./plugin-loader.js";
 import { getCapabilityRegistry } from "./registry.js";
 import type { Capability } from "./types.js";
+import type { CapabilityContext } from "./types.js";
+import type { AgentToolResult } from "@earendil-works/pi-coding-agent";
 import { createCapabilityDiscoveryCapability } from "./prompt-integration.js";
 
 // Simple truncateToVisualLines implementation (matches pi-tui internal)
@@ -120,6 +122,11 @@ export default async function capabilitySystemExtension(api: any): Promise<void>
 // ============================================================================
 
 function createCapabilityRouterTool(api: any) {
+  interface RouterRendererState {
+    startedAt?: number;
+    endedAt?: number;
+    interval?: NodeJS.Timeout;
+  }
   const registry = getCapabilityRegistry();
   const allCaps = registry.listAll();
 
@@ -283,7 +290,7 @@ function createCapabilityRouterTool(api: any) {
 
       let startTime = 0;
       let result: any = null;
-      let enhancedCtx: any = null;
+      let enhancedCtx: CapabilityContext;
 
       try {
         startTime = Date.now();
@@ -292,14 +299,35 @@ function createCapabilityRouterTool(api: any) {
 
         enhancedCtx = {
           ...ctx,
-          exec: async (command: string, args: string[], options: any = {}): Promise<any> => {
+          cwd: ctx.cwd || process.cwd(),
+          exec: async (command: string, args: string[], options: { cwd?: string; env?: Record<string, string> } = {}): Promise<{ code: number; stdout: string; stderr: string }> => {
             const cwd = options.cwd || ctx.cwd || process.cwd();
             const execResult = await api.exec(command, args, { ...options, cwd, signal });
             return { code: execResult.code, stdout: execResult.stdout, stderr: execResult.stderr };
           },
           getCurrentCapability: () => cap,
-          getCapability: (id: string) => registry.get(id)
-        } as any;
+          getCapability: (id: string) => registry.get(id),
+          listCapabilitiesByTag: (tag: string) => registry.listAll().filter(c => c.tags.includes(tag)),
+          callCapability: async (id: string, params: Record<string, any>): Promise<AgentToolResult<any>> => {
+            const innerCap = registry.get(id);
+            if (!innerCap) {
+              throw new Error(`Capability not found: ${id}`);
+            }
+            const innerCtx: CapabilityContext = {
+              ...ctx,
+              cwd: ctx.cwd || process.cwd(),
+              exec: (cmd, args, opts = {}) => {
+                const cwd = opts.cwd || ctx.cwd || process.cwd();
+                return api.exec(cmd, args, { ...opts, cwd, signal }) as Promise<{ code: number; stdout: string; stderr: string }>;
+              },
+              getCurrentCapability: () => innerCap,
+              getCapability: (id2) => registry.get(id2),
+              listCapabilitiesByTag: (tag) => registry.listAll().filter(c => c.tags.includes(tag)),
+              callCapability: () => Promise.reject(new Error("Nested callCapability not supported"))
+            };
+            return innerCap.execute(toolCallId, params, signal, onUpdate, innerCtx);
+          }
+        };
         result = await cap.execute(toolCallId, capParams, signal, onUpdate, enhancedCtx);
         // Ensure result has capabilityId in details for renderer
         if (result && typeof result === 'object') {
@@ -324,7 +352,7 @@ function createCapabilityRouterTool(api: any) {
 
     // Display the command line when starting
     renderCall(args: any, theme: any, context: any) {
-      const state = context.state as any;
+      const state = (context.state ?? {}) as RouterRendererState;
       if (context.executionStarted && state.startedAt === undefined) {
         state.startedAt = Date.now();
         state.endedAt = undefined;
@@ -374,7 +402,7 @@ function createCapabilityRouterTool(api: any) {
         }
       }
 
-      const state = context.state as any;
+      const state = (context.state ?? {}) as RouterRendererState;
 
       // If running and no interval yet, start it for elapsed updates
       if (state.startedAt !== undefined && options.isPartial && !state.interval) {

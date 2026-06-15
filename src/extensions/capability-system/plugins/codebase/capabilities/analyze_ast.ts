@@ -13,6 +13,10 @@ import { promises as fs } from "fs";
 import { join, relative, dirname } from "path";
 import { fileURLToPath } from "url";
 
+interface ParserModule {
+  parse: (source: string, options?: any) => any;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -232,7 +236,10 @@ function createVisitor(result: AnalysisResult) {
 
 function detectLanguage(fileName: string): "ts" | "tsx" | "js" | "jsx" | "unknown" {
   const ext = fileName.split('.').pop()?.toLowerCase();
-  if (ext === 'ts' || ext === 'tsx' || ext === 'js' || ext === 'jsx') return ext as any;
+  if (ext === 'ts') return 'ts';
+  if (ext === 'tsx') return 'tsx';
+  if (ext === 'js') return 'js';
+  if (ext === 'jsx') return 'jsx';
   return "unknown";
 }
 
@@ -254,9 +261,8 @@ ${result.symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.
 }
 
 async function parseAST(content: string): Promise<any> {
-  // @ts-ignore - dynamic import of parser with types not resolvable under current moduleResolution
-  const parser = await import("@typescript-eslint/parser");
-  const { parse } = parser as any;
+  const parser = await import("@typescript-eslint/parser") as ParserModule;
+  const { parse } = parser;
   return parse(content, {
     sourceType: "module",
     ecmaVersion: "latest",

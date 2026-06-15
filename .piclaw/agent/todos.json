@@ -3,129 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Dependency Tree Enhancements",
+      "name": "Type Safety Cleanup",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Design enhancement: use entryPoints to filter reachable module subgraph; update output to include reachableOnly flag and possibly pruned nodes",
+          "content": "Inventory all `as any` casts in src/ (excluding tests)",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Implement reachable filtering in dependency_tree: BFS from entryPoints over imports graph; if no entryPoints, use all nodes with indegree 0",
+          "content": "Refactor extension.ts casts: improve types for context.state access",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Add comprehensive tests for entryPoints filtering (isolated subgraph, unreachable nodes excluded)",
+          "content": "Remove casts in codebase capabilities (metrics, complexity, ast_query, dependency_tree, call_graph, analyze, analyze_ast)",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Update capability manifest if needed; ensure schema documentation reflects entryPoints effect",
+          "content": "Remove cast in settings-command.ts",
           "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Run tests and build; fix any type/runtime issues",
+          "content": "Run tests and verify no regressions",
           "status": "completed"
         },
         {
           "id": "task-6",
-          "content": "Update docs (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with enhancement details",
-          "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Commit and push: 'chore: evolution round - enhanced dependency_tree with entryPoints filtering'",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-2",
-      "name": "Safe Edit Atomicity Fix",
-      "tasks": [
-        {
-          "id": "task-8",
-          "content": "Analyze safe_edit current implementation and identify atomicity bug (partial rollback)",
-          "status": "completed"
-        },
-        {
-          "id": "task-9",
-          "content": "Refactor safe_edit: backup all files upfront, then apply edits with rollback on any failure",
-          "status": "completed"
-        },
-        {
-          "id": "task-10",
-          "content": "Split execute function into smaller helper functions (≤20 lines, complexity ≤10)",
-          "status": "completed"
-        },
-        {
-          "id": "task-11",
-          "content": "Update tests: fix rollback test to expect full atomic rollback across files, add test for successful multi-file edit",
-          "status": "completed"
-        },
-        {
-          "id": "task-12",
-          "content": "Run tests and build; ensure all pass and meet quality gates",
-          "status": "completed"
-        },
-        {
-          "id": "task-13",
-          "content": "Update documentation if needed (e.g., manifest prompt guidelines about atomicity)",
-          "status": "completed"
-        },
-        {
-          "id": "task-14",
-          "content": "Commit and push: 'chore: evolution round - fixed safe_edit atomic rollback'",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-3",
-      "name": "Call Graph Enhancements",
-      "tasks": [
-        {
-          "id": "task-15",
-          "content": "Design enhancement: add entryPoints param to call_graph for reachable subgraph filtering; update schema and output",
-          "status": "completed"
-        },
-        {
-          "id": "task-16",
-          "content": "Implement reachable filtering in call_graph: BFS from entryPoints over call graph; support cross-file resolution",
-          "status": "completed"
-        },
-        {
-          "id": "task-17",
-          "content": "Add comprehensive tests for entryPoints filtering (isolated subgraph, unreachable nodes excluded)",
-          "status": "completed"
-        },
-        {
-          "id": "task-18",
-          "content": "Update capability manifest: schema and prompt guidelines for entryPoints",
-          "status": "completed"
-        },
-        {
-          "id": "task-19",
-          "content": "Run tests and build; fix any type/runtime issues",
-          "status": "completed"
-        },
-        {
-          "id": "task-20",
-          "content": "Update docs (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with enhancement details",
-          "status": "completed"
-        },
-        {
-          "id": "task-21",
-          "content": "Commit and push: 'chore: evolution round - enhanced call_graph with entryPoints filtering'",
+          "content": "Commit and push: 'chore: evolution round - type safety cleanup: removed remaining as any casts'",
           "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 22,
-  "nextPhaseId": 4,
-  "updatedAt": "2026-06-15T19:00:00.000Z"
+  "nextTaskId": 7,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-06-15T19:35:05.849Z"
 }

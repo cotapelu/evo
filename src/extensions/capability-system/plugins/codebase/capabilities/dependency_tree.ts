@@ -11,6 +11,10 @@ import { promises as fs } from "fs";
 import { join, dirname, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 
+interface ParserModule {
+  parse: (source: string, options?: any) => any;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -38,9 +42,8 @@ interface FileModuleInfo {
 
 async function parseModule(filePath: string, source: string): Promise<FileModuleInfo> {
   // Dynamic import of parser
-  // @ts-ignore
-  const parser = await import("@typescript-eslint/parser");
-  const { parse } = parser as any;
+  const parser = await import("@typescript-eslint/parser") as ParserModule;
+  const { parse } = parser;
 
   let ast;
   try {
