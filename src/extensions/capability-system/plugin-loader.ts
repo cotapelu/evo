@@ -12,7 +12,10 @@ import type {
   LoadedPlugin,
   Capability,
   PluginLoaderStats,
-  CapabilityManifest
+  CapabilityManifest,
+  ExtensionContext,
+  CapabilityExecute,
+  AgentToolResult
 } from "./types.js";
 import { getCapabilityRegistry } from "./registry.js";
 import { MANIFEST_FILENAME } from "./types.js";
@@ -25,7 +28,7 @@ export class PluginLoader {
   private options: Required<PluginLoaderOptions>;
   private registry = getCapabilityRegistry();
   private loadedPlugins: Map<string, LoadedPlugin> = new Map();
-  private resolveCache: Map<string, { module: any; timestamp: number }> = new Map();
+  private resolveCache: Map<string, { module: unknown; timestamp: number }> = new Map();
   private watchHandles: Map<string, { close: () => void }> = new Map();
   private reloadTimers: Map<string, NodeJS.Timeout> = new Map();
   private newPluginTimers: Map<string, NodeJS.Timeout> = new Map();
@@ -79,8 +82,9 @@ export class PluginLoader {
     for (const folder of pluginFolders) {
       try {
         await this.loadPlugin(folder);
-      } catch (err: any) {
-        errors.push({ pluginId: folder, error: err.message });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ pluginId: folder, error: message });
       }
     }
 
@@ -129,8 +133,9 @@ export class PluginLoader {
       try {
         const capability = await this.createCapability(pluginFolder, pluginPath, capMan, manifest);
         capabilities.push(capability);
-      } catch (err: any) {
-        throw new Error(`Capability '${capMan.id}' failed: ${err.message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`Capability '${capMan.id}' failed: ${message}`);
       }
     }
 
@@ -169,8 +174,9 @@ export class PluginLoader {
     const rendererPath = capMan.renderer ? join(pluginPath, capMan.renderer) : null;
 
     const executeModule = await this.dynamicImport(executePath);
-    const executeFn: any = executeModule.execute || executeModule.default;
-    if (typeof executeFn !== "function") throw new Error("Missing execute function");
+    const rawExecuteFn = executeModule.execute || executeModule.default;
+    if (typeof rawExecuteFn !== "function") throw new Error("Missing execute function");
+    const executeFn = rawExecuteFn as (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>;
 
     let renderResultFn: Capability["renderResult"] = undefined;
     if (rendererPath && existsSync(rendererPath)) {
@@ -208,9 +214,14 @@ export class PluginLoader {
       promptGuidelines: finalGuidelines,
       parameters: capMan.inputSchema,
       outputSchema: capMan.outputSchema,
-      execute: (toolCallId: string, params: Record<string, any>, signal: AbortSignal | null | undefined, onUpdate: ((data: any) => void) | null | undefined, ctx: any) => {
-        // @ts-ignore
-        return executeFn(params, ctx).then((result: any) => ({
+      execute: (
+        toolCallId: string,
+        params: Record<string, unknown>,
+        signal: AbortSignal | null | undefined,
+        onUpdate: ((data: unknown) => void) | null | undefined,
+        ctx: ExtensionContext
+      ): Promise<AgentToolResult<unknown>> => {
+        return executeFn(params, ctx).then((result: AgentToolResult<unknown>) => ({
           ...result,
           details: { ...result.details, capabilityId }
         })).catch((error: unknown) => ({
@@ -226,7 +237,7 @@ export class PluginLoader {
     };
   }
 
-  private async dynamicImport(filePath: string): Promise<any> {
+  private async dynamicImport(filePath: string): Promise<unknown> {
     const fileUrl = `file://${filePath}`;
 
     // Clear own cache first
@@ -311,7 +322,7 @@ export class PluginLoader {
     this.watchHandles.set(pluginFolder, { close: () => watcher.close() });
   }
 
-  private validateManifest(manifest: any, pluginFolder: string): void {
+  private validateManifest(manifest: PluginManifest, pluginFolder: string): void {
     const required = ["id", "name", "description", "version", "capabilities"];
     for (const field of required) {
       if (!manifest[field]) throw new Error(`Missing '${field}'`);

@@ -8,8 +8,23 @@
  * - Status: update_status
  */
 
-import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import type { ToolDefinition, ExtensionContext, AgentToolResult, AgentToolUpdateCallback } from "@earendil-works/pi-coding-agent";
 import type { AgentTeam } from "./team-manager.js";
+
+interface TeamOpsParams {
+  action: string;
+  taskIndex?: number;
+  result?: string;
+  key?: string;
+  value?: string;
+  channel?: string;
+  content?: string;
+  status?: string;
+}
+
+interface TeamContext extends ExtensionContext {
+  session: { sessionId: string };
+}
 
 /**
  * Create team_ops tool for child agents
@@ -64,21 +79,37 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
       },
       required: ["action"]
     },
-    async execute(toolCallId: string, params: any, signal?: AbortSignal, onUpdate?: any, ctx?: any) {
+    async execute(
+      toolCallId: string,
+      params: unknown,
+      signal?: AbortSignal,
+      onUpdate?: AgentToolUpdateCallback<unknown>,
+      ctx: TeamContext
+    ) {
       // Support LLM outputting JSON string
+      let parsedParams: TeamOpsParams;
       if (typeof params === "string") {
         try {
-          params = JSON.parse(params);
-        } catch (e: any) {
+          parsedParams = JSON.parse(params);
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : String(e);
           return {
-            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${e.message}` }],
+            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${message}` }],
             isError: true,
             details: { error: "Invalid JSON" }
           };
         }
+      } else if (typeof params === "object" && params !== null && "action" in params) {
+        parsedParams = params as TeamOpsParams;
+      } else {
+        return {
+          content: [{ type: "text", text: "Invalid parameters" }],
+          isError: true,
+          details: { error: "Invalid parameters" }
+        };
       }
 
-      const { action } = params as { action: string };
+      const { action } = parsedParams;
 
       try {
         switch (action) {
@@ -234,9 +265,10 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
               isError: true,
             } as const;
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text", text: `Error: ${error.message}` }],
+          content: [{ type: "text", text: `Error: ${message}` }],
           details: undefined,
           isError: true,
         } as const;

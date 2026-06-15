@@ -75,17 +75,17 @@
         {
           "id": "task-12",
           "content": "Refactor team-ops-tool.ts to eliminate any types and improve parameter typing",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-13",
           "content": "Refactor team-tool.ts to eliminate any types and improve parameter typing",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-14",
           "content": "Refactor workspace.ts to eliminate any in value storage and returns",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-15",
@@ -95,12 +95,12 @@
         {
           "id": "task-16",
           "content": "Run tests and verify no regressions",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-17",
           "content": "Update docs and commit: 'chore: evolution round - final any reduction'",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }

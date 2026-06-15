@@ -7,7 +7,18 @@
  */
 
 import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
-import type { ToolDefinition, ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ToolDefinition, ExtensionAPI, AgentToolUpdateCallback, AgentSessionRuntime, AgentToolResult } from "@earendil-works/pi-coding-agent";
+
+interface TeamToolParams {
+  teamId?: string;
+  tasks?: string[];
+  teamSize?: number;
+  teamRoles?: string[];
+}
+
+interface TeamToolContext extends ExtensionAPI {
+  runtime?: AgentSessionRuntime;
+}
 
 
 export function registerTeamTool(api: ExtensionAPI): void {
@@ -67,8 +78,15 @@ export function createTeamTool(): ToolDefinition {
      * @param ctx - Extension context
      * @returns Promise resolving to tool result
      */
-    async execute(toolCallId: string, params: any, signal: any, onUpdate: any, ctx: any) {
+    async execute(
+      toolCallId: string,
+      params: unknown,
+      signal?: AbortSignal,
+      onUpdate?: AgentToolUpdateCallback<unknown>,
+      ctx: TeamToolContext
+    ) {
       // Support LLM outputting JSON string or handle call references
+      let parsedParams: TeamToolParams;
       if (typeof params === "string") {
         // Detect call reference pattern (e.g., "call_abc123") which indicates unresolved reference
         if (params.startsWith('call_')) {
@@ -79,29 +97,33 @@ export function createTeamTool(): ToolDefinition {
           };
         }
         try {
-          params = JSON.parse(params);
-        } catch (e: any) {
+          parsedParams = JSON.parse(params);
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : String(e);
           return {
-            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${e.message}` }],
+            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${message}` }],
             isError: true,
             details: { error: "Invalid JSON" }
           };
         }
+      } else if (typeof params === "object" && params !== null) {
+        parsedParams = params as TeamToolParams;
+      } else {
+        return {
+          content: [{ type: "text", text: "Invalid parameters: expected object or JSON string" }],
+          isError: true,
+          details: { error: "Invalid parameters" }
+        };
       }
 
-      const { teamId, tasks, teamSize, teamRoles } = params as {
-        teamId?: string;
-        tasks?: any;
-        teamSize?: number;
-        teamRoles?: string[];
-      };
+      const { teamId, tasks, teamSize, teamRoles } = parsedParams;
 
       // Prepare onUpdate wrapper for message accumulation (used for both new team and query)
-      let wrappedOnUpdate: ((update: any) => void) | undefined;
+      let wrappedOnUpdate: ((update: AgentToolResult<unknown>) => void) | undefined;
       if (onUpdate) {
         // Accumulate all text messages across updates for complete history
         const messageHistory: Array<{ type: string; text: string }> = [];
-        wrappedOnUpdate = (update: any) => {
+        wrappedOnUpdate = (update: AgentToolResult<unknown>) => {
           if (update.content && Array.isArray(update.content)) {
             for (const block of update.content) {
               if (block.type === 'text') {
@@ -158,11 +180,11 @@ export function createTeamTool(): ToolDefinition {
           throw new Error("No runtime context available. team_run must be called from an active agent session.");
         }
 
-
         // Send initial update (will be accumulated)
         wrappedOnUpdate?.({
           content: [{ type: "text", text: `🚀 Starting team with ${teamSize || 2} agents for ${tasks.length} tasks` }],
-          details: { teamSize, teamRoles, taskCount: tasks.length }
+          details: { teamSize, teamRoles, taskCount: tasks.length },
+          isError: false
         });
 
         // Boot team
@@ -173,7 +195,8 @@ export function createTeamTool(): ToolDefinition {
 
         wrappedOnUpdate?.({
           content: [{ type: "text", text: `✅ Team booted: ${team.roles.join(", ")}` }],
-          details: { roles: team.roles, teamId: team.id }
+          details: { roles: team.roles, teamId: team.id },
+          isError: false
         });
 
         // Execute tasks in background (non-blocking)
@@ -181,7 +204,7 @@ export function createTeamTool(): ToolDefinition {
 
         // Return immediately with teamId (non-blocking)
         return {
-          content: [{ type: "text", text: `✅ Team started: ${team.id}\nAgents: ${team.roles.join(", ")}\nTasks: ${tasks.length}\n\nProgress updates will be shown automatically.\nTo check status, call team_run({teamId: "${team.id}").` }],
+          content: [{ type: "text", text: `✅ Team started: ${team.id}\\nAgents: ${team.roles.join(", ")}\\nTasks: ${tasks.length}\\n\\nProgress updates will be shown automatically.\\nTo check status, call team_run({teamId: \"${team.id}\")` }],
           details: {
             teamId: team.id,
             agentCount: team.roles.length,
@@ -190,17 +213,19 @@ export function createTeamTool(): ToolDefinition {
           },
           isError: false
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : undefined;
         // Send error update before returning (use wrappedOnUpdate if available to preserve history)
         const notify = wrappedOnUpdate || onUpdate;
         notify?.({
-          content: [{ type: "text", text: `❌ Team execution failed: ${error.message}` }],
-          details: { error: error.message, stack: error.stack },
+          content: [{ type: "text", text: `❌ Team execution failed: ${message}` }],
+          details: { error: message, stack },
           isError: true
         });
         return {
-          content: [{ type: "text", text: `❌ Team execution failed: ${error.message}` }],
-          details: { error: error.message, stack: error.stack },
+          content: [{ type: "text", text: `❌ Team execution failed: ${message}` }],
+          details: { error: message, stack },
           isError: true
         };
       }

@@ -3,7 +3,7 @@
  * In-memory key-value store accessible by all team members
  */
 export interface WorkspaceEntry {
-  value: any;
+  value: unknown;
   owner: string;
   timestamp: number;
 }
@@ -14,7 +14,7 @@ export class SharedWorkspace {
   /**
    * Write a key-value pair to workspace
    */
-  set(key: string, value: any, owner: string): void {
+  set(key: string, value: unknown, owner: string): void {
     this.data.set(key, {
       value,
       owner,
@@ -25,7 +25,7 @@ export class SharedWorkspace {
   /**
    * Read a value from workspace
    */
-  get(key: string): any {
+  get(key: string): unknown {
     const entry = this.data.get(key);
     return entry?.value;
   }
@@ -68,8 +68,8 @@ export class SharedWorkspace {
   /**
    * Get all entries as plain object
    */
-  toObject(): Record<string, any> {
-    const obj: Record<string, any> = {};
+  toObject(): Record<string, unknown> {
+    const obj: Record<string, unknown> = {};
     for (const [key, entry] of this.data) {
       obj[key] = entry.value;
     }
