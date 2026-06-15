@@ -254,6 +254,7 @@ ${result.symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.
 }
 
 async function parseAST(content: string): Promise<any> {
+  // @ts-ignore - dynamic import of parser with types not resolvable under current moduleResolution
   const parser = await import("@typescript-eslint/parser");
   const { parse } = parser as any;
   return parse(content, {

@@ -3,16 +3,16 @@
 Last Updated: 2026-06-15
 
 ## Session Summary
-- Iterations: 104
-- Tasks Completed: 109 (previous 108 + refactor: codebase.analyze_ast)
-- High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search) with improved code quality (refactored to smaller functions, avg length ~15 lines)
+- Iterations: 105
+- Tasks Completed: 110 (added `codebase.ast_query` capability with 11 comprehensive tests)
+- High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query) with improved code quality (refactored to smaller functions, avg length ~15 lines)
 
 ## Test Metrics
-- Total Test Suites: 102 (+1)
+- Total Test Suites: 103 (+1)
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 827 (previous 804 + 23 analyze_ast tests)
+- Tests Passed: 838 (previous 827 + 11 ast_query tests)
 - Tests Skipped: 3
 
 ## Reliability

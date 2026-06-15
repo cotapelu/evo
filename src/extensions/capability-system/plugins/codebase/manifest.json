@@ -72,6 +72,39 @@
       "dependencies": []
     },
     {
+      "id": "ast_query",
+      "name": "AST Query",
+      "description": "Query AST for specific nodes (functions, classes, calls, symbols) with filtering",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string", "description": "File path to query (relative to cwd)" },
+          "query": {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["function", "class", "call", "symbol", "import", "export"], "description": "Node kind to find" },
+              "name": { "type": "string", "description": "Name filter (exact or regex pattern)" },
+              "parent": { "type": "string", "description": "Parent container name (e.g., class name)" },
+              "limit": { "type": "integer", "description": "Max results (default 50)" }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["file", "query"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/ast_query.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.ast_query to locate specific code elements in a file.",
+        "Supports kinds: function, class, call, symbol, import, export.",
+        "Name can be exact string or regex pattern.",
+        "Example: { capability: 'codebase.ast_query', params: { file: 'src/index.ts', query: { kind: 'function', name: 'use*', limit: 10 } } }"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "safe_edit",
       "name": "Safe Code Edit",
       "description": "Edit code with automatic import updates, syntax/type checking, and rollback on failure",
