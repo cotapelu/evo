@@ -36,6 +36,37 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Reduce any Types",
+      "tasks": [
+        {
+          "id": "task-7",
+          "content": "Inventory remaining `any` types in production code (excluding tests)",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Refactor high-impact modules: team-manager.ts, team-widget.ts, metrics-widget.ts to reduce any usage",
+          "status": "pending"
+        },
+        {
+          "id": "task-9",
+          "content": "Improve type safety in other modules (extension.ts residual any, codebase caps any parameters)",
+          "status": "pending"
+        },
+        {
+          "id": "task-10",
+          "content": "Run tests and ensure no regressions",
+          "status": "pending"
+        },
+        {
+          "id": "task-11",
+          "content": "Update docs and commit: 'chore: evolution round - reduced any types'",
+          "status": "pending"
+        }
+      ]
     }
   ],
   "nextTaskId": 7,
