@@ -27,6 +27,29 @@
       "dependencies": []
     },
     {
+      "id": "search",
+      "name": "Codebase Search",
+      "description": "Search code files for a text query, returning matches with file, line, column, and snippet",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search query (plain text)" },
+          "filePattern": { "type": "string", "description": "Optional file extension or partial path filter (e.g., '.ts', 'utils')" },
+          "maxResults": { "type": "integer", "description": "Maximum results to return (default 50)" },
+          "caseSensitive": { "type": "boolean", "description": "Case-sensitive search (default false)" }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/search.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.search to find occurrences of a symbol or text in the codebase.",
+        "Example: { capability: 'codebase.search', params: { query: 'useAuth', maxResults: 20 } }"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "safe_edit",
       "name": "Safe Code Edit",
       "description": "Edit code with automatic import updates, syntax/type checking, and rollback on failure",
