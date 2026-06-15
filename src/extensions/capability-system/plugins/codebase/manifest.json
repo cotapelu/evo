@@ -112,6 +112,11 @@
         "type": "object",
         "properties": {
           "file": { "type": "string", "description": "Entry file path (relative to cwd)" },
+          "entryPoints": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional list of additional entry files to treat as graph roots. When omitted, uses the main file as sole entry."
+          },
           "query": {
             "type": "object",
             "properties": {
@@ -132,7 +137,8 @@
       "promptGuidelines": [
         "Use codebase.call_graph to understand call relationships and potential impact of changes.",
         "Cross-file analysis can be slow; use with limit and shallow depth.",
-        "Example: { capability: 'codebase.call_graph', params: { file: 'src/api.ts', query: { depth: 2, includeCrossFile: true, limit: 20 } } }"
+        "Use 'entryPoints' to analyze a subgraph reachable from specific functions (e.g., only impact of changed modules).",
+        "Example: { capability: 'codebase.call_graph', params: { file: 'src/api.ts', entryPoints: ['src/api.ts','src/utils.ts'], query: { depth: 2, includeCrossFile: true, limit: 20 } } }"
       ],
       "dependencies": [],
       "experimental": true

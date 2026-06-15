@@ -133,6 +133,56 @@ function baz() {}
     await rm(dir, { recursive: true, force: true });
   });
 
+  it('filters reachable subgraph with entryPoints', async () => {
+    // Graph: a->b->c ->d
+    const codeA = `export function a() {}`;
+    const codeB = `import { a } from './a'; export function b() { a(); }`;
+    const codeC = `import { b } from './b'; export function c() { b(); }`;
+    const codeD = `import { c } from './c'; export function d() { c(); }`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'callgraph-ep-'));
+    await writeFile(path.join(dir, 'a.ts'), codeA);
+    await writeFile(path.join(dir, 'b.ts'), codeB);
+    await writeFile(path.join(dir, 'c.ts'), codeC);
+    await writeFile(path.join(dir, 'd.ts'), codeD);
+
+    // Without entryPoints, only the file itself is visited (no imports)
+    const full = await callGraphModule.execute({ file: 'a.ts', query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as any);
+    expect(full.isError).toBe(false);
+    expect(full.details.result.nodes.map(n => n.name).sort()).toEqual(['a']);
+
+    // With entryPoints=['b.ts'], both a.ts (file) and b.ts (entryPoints) are visited; b imports a, so both appear.
+    const sub = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['b.ts'], query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as any);
+    expect(sub.isError).toBe(false);
+    const subNames = sub.details.result.nodes.map(n => n.name).sort();
+    expect(subNames).toEqual(['a','b']);
+
+    // With entryPoints=['a.ts','c.ts'], visited files: a, c; c imports b, which imports a (already visited). So {a,b,c}.
+    const multi = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['a.ts','c.ts'], query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as any);
+    expect(multi.isError).toBe(false);
+    const multiNames = multi.details.result.nodes.map(n => n.name).sort();
+    expect(multiNames).toEqual(['a','b','c']);
+
+    // Cleanup
+    for (const f of ['a.ts','b.ts','c.ts','d.ts']) {
+      try { await unlink(path.join(dir, f)); } catch {}
+    }
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('handles entryPoints that do not exist', async () => {
+    const code = `export function x() {}`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'callgraph-missing-'));
+    await writeFile(path.join(dir, 'a.ts'), code);
+
+    const result = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['missing.ts'], query: { includeCrossFile: false, depth: 1 } }, { cwd: dir } as any);
+    expect(result.isError).toBe(false);
+    // Should still include a from main file
+    expect(result.details.result.nodes.map(n => n.name)).toContain('x');
+
+    await unlink(path.join(dir, 'a.ts'));
+    await rm(dir, { recursive: true, force: true });
+  });
+
   it("should handle depth limit", async () => {
     // chain: a -> b -> c -> d
     const libC = `export function c() {}`;

@@ -90,37 +90,37 @@
         {
           "id": "task-15",
           "content": "Design enhancement: add entryPoints param to call_graph for reachable subgraph filtering; update schema and output",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-16",
           "content": "Implement reachable filtering in call_graph: BFS from entryPoints over call graph; support cross-file resolution",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-17",
           "content": "Add comprehensive tests for entryPoints filtering (isolated subgraph, unreachable nodes excluded)",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-18",
           "content": "Update capability manifest: schema and prompt guidelines for entryPoints",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-19",
           "content": "Run tests and build; fix any type/runtime issues",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-20",
           "content": "Update docs (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with enhancement details",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "task-21",
           "content": "Commit and push: 'chore: evolution round - enhanced call_graph with entryPoints filtering'",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }

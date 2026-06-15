@@ -3,9 +3,9 @@
 Last Updated: 2026-06-15
 
 ## Session Summary
-- Iterations: 110
-- Tasks Completed: 121 (fixed `codebase.safe_edit` atomic rollback and added multi-file edit tests)
-- High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph, metrics, complexity) with improved code quality (functions ≤20 lines, complexity ≤10)
+- Iterations: 111
+- Tasks Completed: 128 (completed `call_graph` entryPoints enhancement: BFS reachable subgraph, multi-root, missing entry point handling, tests fixed, manifest updated)
+- High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph, metrics, complexity, dependency_tree) with consistent quality gates (≤20 lines, ≤10 complexity)
 
 ## Test Metrics
 - Total Test Suites: 97 (+0)

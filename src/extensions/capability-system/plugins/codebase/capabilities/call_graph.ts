@@ -1,24 +1,28 @@
 #!/usr/bin/env node
 /**
  * codebase.call_graph capability
+ *
+ * Build call graph from one or more entry files, optionally following imports.
+ * Supports filtering by callee name, depth limit, and result limit.
  */
 
 import { Type } from "typebox";
 import { promises as fs } from "fs";
-import { resolve, dirname, basename } from "path";
+import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export const schema = Type.Object({
-  file: Type.String({ description: "Entry file path (relative to cwd)" }),
+  file: Type.String({ description: "Primary entry file path (relative to cwd)" }),
+  entryPoints: Type.Optional(Type.Array(Type.String(), { description: "Additional entry file paths for combined call graph" })),
   query: Type.Object({
     kind: Type.Optional(Type.Union(["call"], { description: "Node kind; currently only 'call' supported" })),
     name: Type.Optional(Type.String({ description: "Filter calls by callee name (exact or regex)" })),
-    depth: Type.Optional(Type.Number({ description: "Max traversal depth (0 = unlimited, default 1)" })),
+    depth: Type.Optional(Type.Integer({ description: "Max traversal depth (0 = unlimited, default 1)" })),
     includeCrossFile: Type.Optional(Type.Boolean({ description: "Follow imports to include cross-file calls (default false)" })),
-    limit: Type.Optional(Type.Number({ description: "Max edges to return (default 50)" }))
+    limit: Type.Optional(Type.Integer({ description: "Max edges to return (default 50)" }))
   }, { additionalProperties: false })
 }, { required: ["file"], additionalProperties: false });
 
@@ -179,7 +183,6 @@ function resolveCallee(
     for (const cand of candidates) {
       const funcs = absToFuncs.get(cand);
       if (funcs) {
-        // The map's keys are composite (fileRel:name), so scan by name.
         for (const node of funcs.values()) {
           if (node.name === imp.original) return node;
         }
@@ -187,13 +190,12 @@ function resolveCallee(
     }
     return null;
   } else {
-    // Local in same file
     const localKey = `${callerPF.fileRel}:${call.calleeLocal}`;
     return callerPF.funcs.get(localKey) || null;
   }
 }
 
-export async function execute(params: { file: string; query: any }, ctx: any): Promise<any> {
+export async function execute(params: { file: string; entryPoints?: string[]; query: any }, ctx: any): Promise<any> {
   const cwd = ctx.cwd || process.cwd();
   const { query = {} } = params;
   const { depth = 1, includeCrossFile = false, limit = 50 } = query;
@@ -244,7 +246,18 @@ export async function execute(params: { file: string; query: any }, ctx: any): P
     }
   }
 
-  await visitFile(params.file, depth);
+  // Determine all root entry points
+  const roots: string[] = [params.file];
+  if (params.entryPoints && Array.isArray(params.entryPoints)) {
+    for (const ep of params.entryPoints) {
+      if (!roots.includes(ep)) roots.push(ep);
+    }
+  }
+
+  // Visit each root
+  for (const root of roots) {
+    await visitFile(root, depth);
+  }
 
   // Build absolute path to Map<funcName, node>
   const absToFuncs = new Map<string, Map<string, CallGraphNode>>();
@@ -279,7 +292,6 @@ export async function execute(params: { file: string; query: any }, ctx: any): P
       if (!nodeSet.has(key)) nodeSet.set(key, node);
     }
   }
-  // Ensure all referenced nodes are included
   edges.forEach(e => {
     const k1 = `${e.from.file}:${e.from.name}`;
     const k2 = `${e.to.file}:${e.to.name}`;
@@ -294,8 +306,8 @@ export async function execute(params: { file: string; query: any }, ctx: any): P
   };
 
   const summary = `
-📊 Call Graph: ${params.file}
-🔍 Query: ${query.name ? `name="${query.name}"` : ''} ${query.depth !== undefined ? `depth=${query.depth}` : ''} ${query.includeCrossFile ? '+cross-file' : ''}
+📊 Call Graph: ${params.file}${params.entryPoints?.length ? ` + ${params.entryPoints.length} entryPoints` : ''}
+🔍 Query: ${query.name ? `name="${query.name}"` : ''} ${depth !== undefined ? `depth=${depth}` : ''} ${includeCrossFile ? '+cross-file' : ''}
 📈 Stats: ${result.stats.nodeCount} nodes, ${result.stats.edgeCount} edges
 
 Edges (${edges.length}):
@@ -304,7 +316,7 @@ ${edges.map((e, i) => `  ${i+1}. ${e.from.name} (${e.from.file}) → ${e.to.name
 
   return {
     content: [{ type: "text" as const, text: summary }],
-    details: { file: params.file, query, result },
+    details: { file: params.file, entryPoints: params.entryPoints, query, result },
     isError: false
   };
 }
