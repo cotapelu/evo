@@ -136,16 +136,13 @@ export async function execute(params: { operations: EditOperation[]; format?: bo
       await fs.writeFile(absPath, modified, "utf-8");
 
       // 4. Syntax check (run tsc --noEmit on the file)
-      try {
+      {
         const tscResult = await ctx.exec("npx", ["tsc", "--noEmit", file], { cwd });
         // tsc returns 0 for no errors, 2 for type errors (still syntactically valid)
+        // Any other exit code is considered a failure and will trigger rollback
         if (tscResult.code !== 0 && tscResult.code !== 2) {
-          throw new Error(`TypeScript check failed: ${tscResult.stderr || 'unknown error'}`);
+          throw new Error(`TypeScript check failed: exit code ${tscResult.code}, stderr: ${tscResult.stderr || 'none'}`);
         }
-      } catch (err) {
-        // If tsc command fails (not installed, etc.), we'll still try to continue but log
-        // Don't throw here, just warn
-        console.warn(`Warning: TypeScript check skipped for ${file}:`, err);
       }
 
       // 5. Fix imports (if enabled) - try eslint --fix
@@ -159,10 +156,9 @@ export async function execute(params: { operations: EditOperation[]; format?: bo
 
       // 6. Format (if enabled)
       if (format) {
-        try {
-          await ctx.exec("npx", ["prettier", "--write", file], { cwd });
-        } catch (err) {
-          throw new Error("Prettier formatting failed");
+        const fmtResult = await ctx.exec("npx", ["prettier", "--write", file], { cwd });
+        if (fmtResult.code !== 0) {
+          throw new Error(`Prettier formatting failed: exit ${fmtResult.code}, stderr: ${fmtResult.stderr || 'none'}`);
         }
       }
 

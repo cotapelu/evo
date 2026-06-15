@@ -6,6 +6,27 @@
   "tags": ["code", "edit", "analysis", "llm"],
   "capabilities": [
     {
+      "id": "analyze",
+      "name": "Codebase Analyze",
+      "description": "Analyze TypeScript/JavaScript file to extract symbols, imports, exports, and structure",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string", "description": "File path to analyze (relative to cwd)" }
+        },
+        "required": ["file"],
+        "additionalProperties": false
+      },
+      "execute": "capabilities/analyze.ts",
+      "renderer": null,
+      "promptGuidelines": [
+        "Use codebase.analyze to understand a file's structure before editing.",
+        "Returns symbols, imports, exports, and line count.",
+        "Example: { capability: 'codebase.analyze', params: { file: 'src/index.ts' } }"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "safe_edit",
       "name": "Safe Code Edit",
       "description": "Edit code with automatic import updates, syntax/type checking, and rollback on failure",
