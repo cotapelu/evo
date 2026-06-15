@@ -148,4 +148,64 @@ describe('codebase.dependency_tree', () => {
     expect(nodeB?.exports).toContain('y');
     expect(nodeB?.imports).toHaveLength(0);
   });
+
+  it('filters by entry points to reachable subgraph', async () => {
+    // Graph: a -> b -> c
+    await fs.writeFile('a.ts', `import { x } from './b';
+export const a = 1;`);
+    await fs.writeFile('b.ts', `import { y } from './c';
+export const x = 2;
+export const z = 3;`);
+    await fs.writeFile('c.ts', `export const y = 3;`);
+
+    // With entry point a, all nodes reachable
+    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'], entryPoints: ['a.ts'] }, { cwd: tmpDir } as any);
+    expect(result.isError).toBe(false);
+    const details = result.details as any;
+    expect(details.nodes.length).toBe(3);
+    const ids = details.nodes.map((n: any) => n.id);
+    expect(ids).toContain('a.ts');
+    expect(ids).toContain('b.ts');
+    expect(ids).toContain('c.ts');
+
+    // With entry point b only, a is unreachable, b and c reachable
+    const resultB = await execute({ files: ['a.ts', 'b.ts', 'c.ts'], entryPoints: ['b.ts'] }, { cwd: tmpDir } as any);
+    expect(resultB.isError).toBe(false);
+    const detailsB = resultB.details as any;
+    expect(detailsB.nodes.length).toBe(2);
+    const idsB = detailsB.nodes.map((n: any) => n.id);
+    expect(idsB).not.toContain('a.ts');
+    expect(idsB).toContain('b.ts');
+    expect(idsB).toContain('c.ts');
+  });
+
+  it('ignores entry points not in provided files', async () => {
+    await fs.writeFile('a.ts', `export const a = 1;`);
+    await fs.writeFile('b.ts', `import { a } from './a';
+export const b = 2;`);
+
+    const result = await execute({ files: ['a.ts', 'b.ts'], entryPoints: ['missing.ts', 'b.ts'] }, { cwd: tmpDir } as any);
+    expect(result.isError).toBe(false);
+    const details = result.details as any;
+    // Only b.ts is valid entry; b imports a => both included
+    expect(details.nodes.length).toBe(2);
+    const ids = details.nodes.map((n: any) => n.id);
+    expect(ids).toContain('a.ts');
+    expect(ids).toContain('b.ts');
+  });
+
+  it('multiple entry points combine reachable sets', async () => {
+    // Two independent graphs: a->b and c->d
+    await fs.writeFile('a.ts', `import { x } from './b';
+export const a = 1;`);
+    await fs.writeFile('b.ts', `export const x = 2;`);
+    await fs.writeFile('c.ts', `import { y } from './d';
+export const c = 3;`);
+    await fs.writeFile('d.ts', `export const y = 4;`);
+
+    const result = await execute({ files: ['a.ts','b.ts','c.ts','d.ts'], entryPoints: ['a.ts','c.ts'] }, { cwd: tmpDir } as any);
+    expect(result.isError).toBe(false);
+    const details = result.details as any;
+    expect(details.nodes.length).toBe(4);
+  });
 });

@@ -55,20 +55,12 @@ async function parseModule(filePath: string, source: string): Promise<FileModule
   walk(ast, (node: any) => {
     // Export declarations
     if (node.type === 'ExportNamedDeclaration') {
-      // eslint-disable-next-line no-console
-      console.error(`ExportNamedDeclaration: node.declaration?.type=${node.declaration?.type}`);
       if (node.declaration) {
         // export const foo = ...; export function foo() ...; export class Foo ...
         if (node.declaration.type === 'VariableDeclaration') {
           const decls = node.declaration.declarations || [];
-          // eslint-disable-next-line no-console
-          console.error(`    VariableDeclarations count: ${decls.length}`);
           decls.forEach((d: any) => {
-            // eslint-disable-next-line no-console
-            console.error(`    processing declaration, d.id?`, d.id);
             if (d.id && d.id.type === 'Identifier') {
-              // eslint-disable-next-line no-console
-              console.error(`      pushing name: ${d.id.name}`);
               exports.push(d.id.name);
             }
           });
@@ -181,7 +173,7 @@ interface GraphResult {
   };
 }
 
-function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>): GraphResult {
+function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>, entryPoints?: string[]): GraphResult {
   const nodes = new Map<string, NodeInfo>();
   // First, create nodes
   for (const info of fileInfos) {
@@ -201,8 +193,6 @@ function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>): GraphRe
     const fromNode = nodes.get(fromId);
     if (!fromNode) continue;
 
-    // eslint-disable-next-line no-console
-    console.error(`DEBUG: processing ${fromId} imports:`, Array.from(info.imports.entries()));
     for (const [srcSpecifier, symbols] of info.imports) {
       let targetId: string | null = null;
       // Try resolve specifier to an internal file
@@ -217,11 +207,8 @@ function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>): GraphRe
         continue;
       }
 
-      // eslint-disable-next-line no-console
       const hasNode = nodes.has(targetId || '');
-      console.error(`  resolved specifier ${srcSpecifier} => targetId=${targetId}, hasNode=${hasNode}`);
       if (targetId && hasNode) {
-        console.error(`  adding edge: ${fromId} -> ${targetId}`);
         fromNode.imports.set(targetId, symbols);
         const toNode = nodes.get(targetId)!;
         toNode.incoming.add(fromId);
@@ -281,28 +268,56 @@ function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>): GraphRe
       uniqueCycles.push(cycle);
     }
   }
-  // eslint-disable-next-line no-console
-  console.error(`Cycle detection: raw=${cycles.length}, unique=${uniqueCycles.length}`);
-  if (uniqueCycles.length > 0) {
-    uniqueCycles.forEach((c, i) => console.error(`Cycle ${i}: ${c.join(' -> ')}`));
+
+
+  // Determine reachable set based on entryPoints (if provided)
+  let reachable: Set<string>;
+  if (entryPoints && entryPoints.length > 0) {
+    // Only consider entry points that exist in the graph (absolute paths expected)
+    const entrySet = new Set(entryPoints.filter(p => nodes.has(p)));
+    reachable = new Set<string>();
+    const queue: string[] = Array.from(entrySet);
+    for (const ep of entrySet) reachable.add(ep);
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      const curNode = nodes.get(cur)!;
+      if (!curNode) continue;
+      for (const [next] of curNode.imports) {
+        if (!reachable.has(next)) {
+          reachable.add(next);
+          queue.push(next);
+        }
+      }
+    }
+  } else {
+    // No filtering: include all nodes
+    reachable = new Set(nodes.keys());
   }
+
+  // Filter nodes, edges, cycles to reachable set
+  const filteredNodes = new Map<string, NodeInfo>();
+  for (const [id, node] of nodes) {
+    if (reachable.has(id)) filteredNodes.set(id, node);
+  }
+  const filteredEdges = edges.filter(e => reachable.has(e.from) && reachable.has(e.to));
+  const filteredCycles = uniqueCycles.filter(cycle => cycle.slice(0, -1).every(n => reachable.has(n)));
 
   // Summary
   const summary = {
-    totalFiles: nodes.size,
-    totalEdges: edges.length,
-    cycleCount: uniqueCycles.length
+    totalFiles: filteredNodes.size,
+    totalEdges: filteredEdges.length,
+    cycleCount: filteredCycles.length
   };
 
   // Convert nodes to arrays
-  const nodeArray = Array.from(nodes.values()).map(n => ({
+  const nodeArray = Array.from(filteredNodes.values()).map(n => ({
     id: n.id,
     file: n.file,
     exports: Array.from(n.exports),
     imports: Array.from(n.imports.keys())
   }));
 
-  return { nodes: nodeArray, edges, cycles: uniqueCycles, summary };
+  return { nodes: nodeArray, edges: filteredEdges, cycles: filteredCycles, summary };
 }
 
 export const schema = Type.Object({
@@ -323,8 +338,7 @@ export async function execute(params: { files: string[]; entryPoints?: string[] 
 
   for (const relPath of params.files) {
     const absPath = join(cwd, relPath);
-    // eslint-disable-next-line no-console
-    console.error(`[dependency_tree] read attempt: cwd=${cwd}, relPath=${relPath} => absPath=${absPath}`);
+    // (removed debug)
     allFiles.add(absPath);
     try {
       const source = await fs.readFile(absPath, "utf-8");
@@ -335,7 +349,8 @@ export async function execute(params: { files: string[]; entryPoints?: string[] 
     }
   }
 
-  const absResult = buildGraph(fileInfos, allFiles);
+  const absEntryPoints = params.entryPoints?.map(p => join(cwd, p));
+  const absResult = buildGraph(fileInfos, allFiles, absEntryPoints);
   // Convert to relative paths for output
   const relResult = {
     nodes: absResult.nodes.map(n => ({
@@ -352,13 +367,6 @@ export async function execute(params: { files: string[]; entryPoints?: string[] 
     cycles: absResult.cycles.map(cycle => cycle.map(p => relative(cwd, p))),
     summary: absResult.summary
   };
-  // eslint-disable-next-line no-console
-  console.error('RESULT cycles:', JSON.stringify(relResult.cycles));
-  console.error('RESULT summary cycleCount:', relResult.summary.cycleCount);
-  // Debug: find node for a.ts
-  const debugNodeA = relResult.nodes.find((n: any) => n.file === 'a.ts' || n.file.endsWith('a.ts'));
-  console.error('DEBUG nodeA:', JSON.stringify(debugNodeA));
-  console.error('RETURN relResult.nodes:', JSON.stringify(relResult.nodes));
   // Format output as readable text and include structured details
   const output = formatOutput(relResult, params.entryPoints || []);
   return { content: [{ type: "text" as const, text: output }], isError: false, details: relResult };

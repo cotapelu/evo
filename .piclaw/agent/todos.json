@@ -3,41 +3,41 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Dependency Tree Capability",
+      "name": "Dependency Tree Enhancements",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Design dependency tree capability input schema (files list, entryPoints) and output structure (module graph, cycles, exports/imports per file)",
+          "content": "Design enhancement: use entryPoints to filter reachable module subgraph; update output to include reachableOnly flag and possibly pruned nodes",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Implement AST-based import/export collector with cross-file resolution using existing parser and file indexing",
+          "content": "Implement reachable filtering in dependency_tree: BFS from entryPoints over imports graph; if no entryPoints, use all nodes with indegree 0",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Write comprehensive tests with mkdtemp isolation covering various import patterns, cycles, and re-exports",
+          "content": "Add comprehensive tests for entryPoints filtering (isolated subgraph, unreachable nodes excluded)",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Register capability in manifest.json and integrate into codebase plugin",
+          "content": "Update capability manifest if needed; ensure schema documentation reflects entryPoints effect",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Run tests and build; fix any TypeScript/runtime issues",
+          "content": "Run tests and build; fix any type/runtime issues",
           "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Update documentation (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with new capability description and metrics",
+          "content": "Update docs (PROJECT_STATE.md, AGENT_METRICS.md, AGENT_PROFILE.md) with enhancement details",
           "status": "pending"
         },
         {
           "id": "task-7",
-          "content": "Commit and push: 'chore: evolution round - added codebase.dependency_tree capability'",
+          "content": "Commit and push: 'chore: evolution round - enhanced dependency_tree with entryPoints filtering'",
           "status": "pending"
         }
       ]
@@ -45,5 +45,5 @@
   ],
   "nextTaskId": 8,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-15T17:30:40.128Z"
+  "updatedAt": "2026-06-15T18:08:29.960Z"
 }
