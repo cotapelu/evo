@@ -103,9 +103,45 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Deep Type Safety in Core Modules",
+      "tasks": [
+        {
+          "id": "task-18",
+          "content": "Refactor team-manager.ts remaining any types (notifyUpdate, createUpdate, workspaceWrite value, handleAgentFailure error, etc.)",
+          "status": "pending"
+        },
+        {
+          "id": "task-19",
+          "content": "Refactor guideline-generator.ts to eliminate any in schema handling and example generation",
+          "status": "pending"
+        },
+        {
+          "id": "task-20",
+          "content": "Refactor capability-system registry.ts any types",
+          "status": "pending"
+        },
+        {
+          "id": "task-21",
+          "content": "Refactor capability-system extension.ts any types (api, ctx, etc.)",
+          "status": "pending"
+        },
+        {
+          "id": "task-22",
+          "content": "Run tests and ensure no regressions",
+          "status": "pending"
+        },
+        {
+          "id": "task-23",
+          "content": "Update docs and commit: 'chore: evolution round - deep type safety'",
+          "status": "pending"
+        }
+      ]
     }
   ],
-  "nextTaskId": 18,
-  "nextPhaseId": 3,
+  "nextTaskId": 24,
+  "nextPhaseId": 4,
   "updatedAt": "2026-06-15T23:35:05.849Z"
 }
