@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 135 (latest) — refactored analyze_ast.createVisitor: extracted handler functions for each node type; createVisitor now ~10 lines, all helpers ≤20 lines. All tests passing.
+✅ Iteration 136 (latest) — refactored complexity.collectHalstead: extracted helper functions (addOperator, addOperand, handleCallExpression, etc.) and introduced visitHalstead; collectHalstead now 2 lines, all helpers ≤20 lines. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

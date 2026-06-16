@@ -695,6 +695,12 @@ Last Updated: 2026-06-15
 - All 23 analyze_ast tests continue to pass.
 - Maintains consistency with function size quality gate.
 
+### One Hundred Thirty-Sixth Round (Complexity CollectHalstead Refactor)
+- Refactored `complexity.collectHalstead` by extracting specialized helpers: `addOperator`, `addOperand`, `handleCallExpression`, `handleVariableDeclarator`, `handleMemberExpression`, `handleLiteral`, and `visitHalstead`.
+- `collectHalstead` now a one-liner wrapper; `visitHalstead` ~18 lines; all helpers ≤20 lines.
+- All 10 complexity tests continue to pass.
+- Maintains function size compliance across all codebase plugin capabilities.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
