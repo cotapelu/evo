@@ -733,6 +733,11 @@ Last Updated: 2026-06-15
 - p-loader tests (edge cases, watch mode) continue to pass.
 - Maintains consistency with overall function size quality gate.
 
+### One Hundred Forty-First Round (Plugin Loader DynamicImport Refactor)
+- Refactored `plugin-loader.dynamicImport` to be concise by extracting cache clearing logic into `clearModuleCache`.
+- `dynamicImport` now a simple wrapper (~5 lines) that ensures fresh imports; `clearModuleCache` handles both in-memory and Node.js ESM cache invalidation.
+- Maintains hot-reload reliability while adhering to function size limits.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

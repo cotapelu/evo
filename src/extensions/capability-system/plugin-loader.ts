@@ -290,14 +290,16 @@ export class PluginLoader {
 
   private async dynamicImport(filePath: string): Promise<unknown> {
     const fileUrl = `file://${filePath}`;
+    await this.clearModuleCache(fileUrl);
+    const module = await import(fileUrl);
+    this.resolveCache.set(fileUrl, { module, timestamp: Date.now() });
+    return module;
+  }
 
-    // Clear own cache first
+  private async clearModuleCache(fileUrl: string): Promise<void> {
     if (this.resolveCache.has(fileUrl)) {
       this.resolveCache.delete(fileUrl);
     }
-
-    // Clear Node.js ESM module cache to enable hot-reload of execute files
-    // This uses internal API (module._cache) but is necessary for development
     try {
       const mod = await import('module');
       // @ts-ignore - accessing internal ESM cache
@@ -308,10 +310,6 @@ export class PluginLoader {
     } catch {
       // Ignore if internal cache not accessible
     }
-
-    const module = await import(fileUrl);
-    this.resolveCache.set(fileUrl, { module, timestamp: Date.now() });
-    return module;
   }
 
   private startWatchMode(pluginsDir: string): void {
