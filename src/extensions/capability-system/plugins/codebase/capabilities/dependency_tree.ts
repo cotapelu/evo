@@ -39,21 +39,23 @@ interface FileModuleInfo {
   imports: Map<string, string[]>; // source file path -> array of imported binding names
 }
 
-function handleExportNamedDeclaration(node: any, exports: string[], imports: Map<string, string[]>): void {
-  if (node.declaration) {
-    if (node.declaration.type === 'VariableDeclaration') {
-      const decls = node.declaration.declarations || [];
-      decls.forEach((d: any) => {
-        if (d.id && d.id.type === 'Identifier') {
-          exports.push(d.id.name);
-        }
-      });
-    } else if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
-      exports.push(node.declaration.id.name);
-    } else if (node.declaration.type === 'ClassDeclaration' && node.declaration.id) {
-      exports.push(node.declaration.id.name);
-    }
+function processDeclaration(node: any, exports: string[]): void {
+  if (!node.declaration) return;
+  if (node.declaration.type === 'VariableDeclaration') {
+    const decls = node.declaration.declarations || [];
+    decls.forEach((d: any) => {
+      if (d.id && d.id.type === 'Identifier') {
+        exports.push(d.id.name);
+      }
+    });
+  } else if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
+    exports.push(node.declaration.id.name);
+  } else if (node.declaration.type === 'ClassDeclaration' && node.declaration.id) {
+    exports.push(node.declaration.id.name);
   }
+}
+
+function processExportSpecifiers(node: any, exports: string[]): void {
   if (node.specifiers) {
     node.specifiers.forEach((spec: any) => {
       if (spec.exported) {
@@ -62,20 +64,30 @@ function handleExportNamedDeclaration(node: any, exports: string[], imports: Map
       }
     });
   }
+}
+
+function processReimport(node: any, imports: Map<string, string[]>): void {
+  if (!node.source) return;
+  const src = node.source.value;
+  const importedSymbols: string[] = [];
+  if (node.specifiers) {
+    node.specifiers.forEach((spec: any) => {
+      if (spec.local) {
+        const name = spec.local.type === 'Identifier' ? spec.local.name : spec.local.name;
+        importedSymbols.push(name);
+      }
+    });
+  } else {
+    importedSymbols.push('*'); // wildcard re-export
+  }
+  imports.set(src, (imports.get(src) || []).concat(importedSymbols));
+}
+
+function handleExportNamedDeclaration(node: any, exports: string[], imports: Map<string, string[]>): void {
+  processDeclaration(node, exports);
+  processExportSpecifiers(node, exports);
   if (node.source) {
-    const src = node.source.value;
-    const importedSymbols: string[] = [];
-    if (node.specifiers) {
-      node.specifiers.forEach((spec: any) => {
-        if (spec.local) {
-          const name = spec.local.type === 'Identifier' ? spec.local.name : spec.local.name;
-          importedSymbols.push(name);
-        }
-      });
-    } else {
-      importedSymbols.push('*'); // wildcard re-export
-    }
-    imports.set(src, (imports.get(src) || []).concat(importedSymbols));
+    processReimport(node, imports);
   }
 }
 
@@ -194,26 +206,30 @@ function createNodes(fileInfos: FileModuleInfo[]): Map<string, NodeInfo> {
   return nodes;
 }
 
+function processFileImports(info: FileModuleInfo, nodes: Map<string, NodeInfo>, allFiles: Set<string>): void {
+  const fromId = info.file;
+  const fromNode = nodes.get(fromId);
+  if (!fromNode) return;
+
+  for (const [srcSpecifier, symbols] of info.imports) {
+    let targetId: string | null = null;
+    if (srcSpecifier.startsWith('.') || srcSpecifier.startsWith('/')) {
+      const resolved = resolveInAllFiles(srcSpecifier, info.file, allFiles);
+      if (resolved) targetId = resolved;
+    } else {
+      continue;
+    }
+    if (targetId && nodes.has(targetId)) {
+      fromNode.imports.set(targetId, symbols);
+      const toNode = nodes.get(targetId)!;
+      toNode.incoming.add(fromId);
+    }
+  }
+}
+
 function resolveImports(nodes: Map<string, NodeInfo>, fileInfos: FileModuleInfo[], allFiles: Set<string>): void {
   for (const info of fileInfos) {
-    const fromId = info.file;
-    const fromNode = nodes.get(fromId);
-    if (!fromNode) continue;
-
-    for (const [srcSpecifier, symbols] of info.imports) {
-      let targetId: string | null = null;
-      if (srcSpecifier.startsWith('.') || srcSpecifier.startsWith('/')) {
-        const resolved = resolveInAllFiles(srcSpecifier, info.file, allFiles);
-        if (resolved) targetId = resolved;
-      } else {
-        continue;
-      }
-      if (targetId && nodes.has(targetId)) {
-        fromNode.imports.set(targetId, symbols);
-        const toNode = nodes.get(targetId)!;
-        toNode.incoming.add(fromId);
-      }
-    }
+    processFileImports(info, nodes, allFiles);
   }
 }
 
@@ -277,28 +293,31 @@ function deduplicateCycles(cycles: string[][]): string[][] {
   return uniqueCycles;
 }
 
-function computeReachable(nodes: Map<string, NodeInfo>, entryPoints?: string[]): Set<string> {
-  if (entryPoints && entryPoints.length > 0) {
-    const entrySet = new Set(entryPoints.filter(p => nodes.has(p)));
-    const reachable = new Set<string>();
-    const queue: string[] = Array.from(entrySet);
-    for (const ep of entrySet) reachable.add(ep);
-    while (queue.length > 0) {
-      const cur = queue.shift()!;
-      const curNode = nodes.get(cur);
-      if (curNode) {
-        for (const [next] of curNode.imports) {
-          if (!reachable.has(next)) {
-            reachable.add(next);
-            queue.push(next);
-          }
+function bfs(startNodes: Set<string>, nodes: Map<string, NodeInfo>): Set<string> {
+  const reachable = new Set<string>();
+  const queue: string[] = Array.from(startNodes);
+  for (const node of startNodes) reachable.add(node);
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    const curNode = nodes.get(cur);
+    if (curNode) {
+      for (const [next] of curNode.imports) {
+        if (!reachable.has(next)) {
+          reachable.add(next);
+          queue.push(next);
         }
       }
     }
-    return reachable;
-  } else {
-    return new Set(nodes.keys());
   }
+  return reachable;
+}
+
+function computeReachable(nodes: Map<string, NodeInfo>, entryPoints?: string[]): Set<string> {
+  if (entryPoints && entryPoints.length > 0) {
+    const entrySet = new Set(entryPoints.filter(p => nodes.has(p)));
+    return bfs(entrySet, nodes);
+  }
+  return new Set(nodes.keys());
 }
 
 function filterNodes(nodes: Map<string, NodeInfo>, reachable: Set<string>): Map<string, NodeInfo> {

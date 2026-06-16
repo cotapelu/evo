@@ -215,6 +215,7 @@ Last Updated: 2026-06-14
 - [x] Refactored search.execute: extracted shouldProcess, scanAndCollect, handleFile, formatSearchOutput; execute ~15 lines, all helpers ≤20 lines.
 - [x] Refactored analyze_ast.createVisitor: extracted per-node handlers; createVisitor ~10 lines, all handlers ≤20 lines.
 - [x] Refactored complexity.collectHalstead: extracted helpers (addOperator, addOperand, handle*); collectHalstead 2 lines, all ≤20 lines.
+- [x] Refactored dependency_tree: split handleExportNamedDeclaration, resolveImports, computeReachable into small helpers; all functions ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress
