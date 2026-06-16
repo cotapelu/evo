@@ -22,14 +22,16 @@ describe('skill-reader tool', () => {
 
   it('execute with unknown command returns error', async () => {
     const tool = createSkillLoaderTool();
-    const result = (await tool.execute('test-call', { command: 'unknown', args: {} }, undefined, undefined, {} as any)) as any;
+    // @ts-ignore - testing invalid command
+    const result = (await tool.execute('test-call', { command: 'unknown', args: {} }, undefined, undefined, {})) as ToolResult;
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Unknown command');
   });
 
   it('execute with empty args returns discovery help for read_skill', async () => {
     const tool = createSkillLoaderTool();
-    const result = (await tool.execute('test-call', { command: 'read_skill', args: {} }, undefined, undefined, {} as any)) as any;
+    // @ts-ignore - testing with empty args
+    const result = (await tool.execute('test-call', { command: 'read_skill', args: {} }, undefined, undefined, {})) as ToolResult;
     expect(result.isError).toBe(false);
     const text = result.content[0].text;
     expect(text).toContain('read_skill');
@@ -48,7 +50,8 @@ describe('skill-reader tool', () => {
   it('execute with real command loads skill content (integration)', async () => {
     const tool = createSkillLoaderTool();
     // Use the real command module (no mocking)
-    const result = (await tool.execute('test-call', { command: 'read_skill', args: { skill: 'audit' } }, undefined, undefined, {} as any)) as any;
+    // @ts-ignore - integration test needs proper context but works with empty
+    const result = (await tool.execute('test-call', { command: 'read_skill', args: { skill: 'audit' } }, undefined, undefined, {})) as ToolResult;
 
     // If there's an error, print for debugging
     if (result.isError) {

@@ -6,7 +6,7 @@ import { schema, executeLoadSkill } from './read-skill.js';
 
 // Mock fs/promises
 vi.mock('fs/promises');
-const mockFs = fs as any;
+const mockFs = vi.mocked(fs, true);
 
 // Helper to compute __dirname for tests
 const __filename = fileURLToPath(import.meta.url);
@@ -142,7 +142,8 @@ describe('read-skill command module', () => {
     it('should handle signal parameter (cancellation)', async () => {
       mockFs.stat.mockResolvedValue({ isDirectory: () => true });
       mockFs.readdir.mockResolvedValue([]);
-      const mockSignal = { aborted: false } as any; // minimal AbortSignal mock
+      // Minimal AbortSignal mock for test
+      const mockSignal = { aborted: false } as unknown as AbortSignal;
 
       const result = await executeLoadSkill({}, mockCwd, mockSignal, {});
 

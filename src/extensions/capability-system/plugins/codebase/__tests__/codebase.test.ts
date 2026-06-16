@@ -293,7 +293,8 @@ describe("codebase.safe_edit", () => {
         file: "sample.ts",
         editType: "replace" as const,
         range: { start: 0, end: 1 },
-        newCode: undefined as any // missing
+        // @ts-ignore - intentionally missing newCode for error test
+        newCode: undefined
       }]
     };
 
