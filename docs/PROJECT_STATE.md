@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 124 (latest) — refactored dependency_tree buildGraph: extracted createNodes, resolveImports, buildEdgesArray, detectCycles, deduplicateCycles, computeReachable, filterNodes, filterEdges, filterCycles, and dfsDetectCycle. BuildGraph orchestrator now 15 lines, all helpers ≤20 lines. All tests passing (9 dependency_tree tests green).
+✅ Iteration 125 (latest) — refactored dependency_tree parseModule: extracted handler functions (handleExportNamedDeclaration, handleExportDefaultDeclaration, handleExportAllDeclaration, handleImportDeclaration). parseModule now ~20 lines; all handlers ≤20 lines. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

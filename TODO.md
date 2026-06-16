@@ -203,6 +203,7 @@ Last Updated: 2026-06-14
 - [x] Refactored call_graph.execute: extracted collectAllFiles, buildAbsToFuncs, buildEdges, collectUniqueNodes, formatSummary.
 - [x] Refactored analyze analyzeContent: extracted tryParseImport, tryParseExport, tryParseSymbol; moved regexes to module constants; reduced to ~15 lines.
 - [x] Refactored dependency_tree buildGraph: extracted createNodes, resolveImports, buildEdgesArray, detectCycles, deduplicateCycles, computeReachable, filterNodes, filterEdges, filterCycles, and dfsDetectCycle; orchestrator now 15 lines.
+- [x] Refactored dependency_tree parseModule: extracted handler functions (handleExportNamedDeclaration, handleExportDefaultDeclaration, handleExportAllDeclaration, handleImportDeclaration); main parseModule ~20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress

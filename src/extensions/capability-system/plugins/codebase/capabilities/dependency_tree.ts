@@ -39,8 +39,78 @@ interface FileModuleInfo {
   imports: Map<string, string[]>; // source file path -> array of imported binding names
 }
 
+function handleExportNamedDeclaration(node: any, exports: string[], imports: Map<string, string[]>): void {
+  if (node.declaration) {
+    if (node.declaration.type === 'VariableDeclaration') {
+      const decls = node.declaration.declarations || [];
+      decls.forEach((d: any) => {
+        if (d.id && d.id.type === 'Identifier') {
+          exports.push(d.id.name);
+        }
+      });
+    } else if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
+      exports.push(node.declaration.id.name);
+    } else if (node.declaration.type === 'ClassDeclaration' && node.declaration.id) {
+      exports.push(node.declaration.id.name);
+    }
+  }
+  if (node.specifiers) {
+    node.specifiers.forEach((spec: any) => {
+      if (spec.exported) {
+        const name = spec.exported.type === 'Identifier' ? spec.exported.name : spec.exported.name;
+        exports.push(name);
+      }
+    });
+  }
+  if (node.source) {
+    const src = node.source.value;
+    const importedSymbols: string[] = [];
+    if (node.specifiers) {
+      node.specifiers.forEach((spec: any) => {
+        if (spec.local) {
+          const name = spec.local.type === 'Identifier' ? spec.local.name : spec.local.name;
+          importedSymbols.push(name);
+        }
+      });
+    } else {
+      importedSymbols.push('*'); // wildcard re-export
+    }
+    imports.set(src, (imports.get(src) || []).concat(importedSymbols));
+  }
+}
+
+function handleExportDefaultDeclaration(_node: any, exports: string[]): void {
+  exports.push('default');
+}
+
+function handleExportAllDeclaration(node: any, imports: Map<string, string[]>): void {
+  if (node.source) {
+    const src = node.source.value;
+    imports.set(src, (imports.get(src) || []).concat(['*']));
+  }
+}
+
+function handleImportDeclaration(node: any, imports: Map<string, string[]>): void {
+  const src = node.source.value;
+  const imported: string[] = [];
+  if (node.specifiers) {
+    node.specifiers.forEach((spec: any) => {
+      if (spec.type === 'ImportSpecifier' || spec.type === 'ImportDefaultSpecifier' || spec.type === 'ImportNamespaceSpecifier') {
+        if (spec.imported) {
+          const name = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.name;
+          imported.push(name);
+        } else if (spec.type === 'ImportDefaultSpecifier') {
+          imported.push('default');
+        } else if (spec.type === 'ImportNamespaceSpecifier') {
+          imported.push('*');
+        }
+      }
+    });
+  }
+  imports.set(src, (imports.get(src) || []).concat(imported));
+}
+
 async function parseModule(filePath: string, source: string): Promise<FileModuleInfo> {
-  // Dynamic import of parser
   const parser = require('@typescript-eslint/parser');
   const { parse } = parser;
 
@@ -55,80 +125,14 @@ async function parseModule(filePath: string, source: string): Promise<FileModule
   const imports: Map<string, string[]> = new Map();
 
   walk(ast, (node: any) => {
-    // Export declarations
     if (node.type === 'ExportNamedDeclaration') {
-      if (node.declaration) {
-        // export const foo = ...; export function foo() ...; export class Foo ...
-        if (node.declaration.type === 'VariableDeclaration') {
-          const decls = node.declaration.declarations || [];
-          decls.forEach((d: any) => {
-            if (d.id && d.id.type === 'Identifier') {
-              exports.push(d.id.name);
-            }
-          });
-        } else if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
-          exports.push(node.declaration.id.name);
-        } else if (node.declaration.type === 'ClassDeclaration' && node.declaration.id) {
-          exports.push(node.declaration.id.name);
-        }
-      }
-      if (node.specifiers) {
-        // export { foo, bar } or export { foo as bar }
-        node.specifiers.forEach((spec: any) => {
-          if (spec.exported) {
-            const name = spec.exported.type === 'Identifier' ? spec.exported.name : spec.exported.name;
-            exports.push(name);
-          }
-        });
-      }
-      // export from 'module' (re-export)
-      if (node.source) {
-        const src = node.source.value;
-        const importedSymbols: string[] = [];
-        if (node.specifiers) {
-          node.specifiers.forEach((spec: any) => {
-            if (spec.local) {
-              const name = spec.local.type === 'Identifier' ? spec.local.name : spec.local.name;
-              importedSymbols.push(name);
-            }
-          });
-        } else {
-          // export * from 'module' or export { everything } from 'module'
-          importedSymbols.push('*'); // wildcard re-export
-        }
-        imports.set(src, (imports.get(src) || []).concat(importedSymbols));
-      }
-    }
-    else if (node.type === 'ExportDefaultDeclaration') {
-      exports.push('default');
-      // If it also has a source? Not possible; default export only.
-    }
-    else if (node.type === 'ExportAllDeclaration') {
-      // export * from 'module'
-      if (node.source) {
-        const src = node.source.value;
-        imports.set(src, (imports.get(src) || []).concat(['*']));
-      }
-    }
-    // Import declarations
-    else if (node.type === 'ImportDeclaration') {
-      const src = node.source.value;
-      const imported: string[] = [];
-      if (node.specifiers) {
-        node.specifiers.forEach((spec: any) => {
-          if (spec.type === 'ImportSpecifier' || spec.type === 'ImportDefaultSpecifier' || spec.type === 'ImportNamespaceSpecifier') {
-            if (spec.imported) {
-              const name = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.name;
-              imported.push(name);
-            } else if (spec.type === 'ImportDefaultSpecifier') {
-              imported.push('default');
-            } else if (spec.type === 'ImportNamespaceSpecifier') {
-              imported.push('*');
-            }
-          }
-        });
-      }
-      imports.set(src, (imports.get(src) || []).concat(imported));
+      handleExportNamedDeclaration(node, exports, imports);
+    } else if (node.type === 'ExportDefaultDeclaration') {
+      handleExportDefaultDeclaration(node, exports);
+    } else if (node.type === 'ExportAllDeclaration') {
+      handleExportAllDeclaration(node, imports);
+    } else if (node.type === 'ImportDeclaration') {
+      handleImportDeclaration(node, imports);
     }
   });
 

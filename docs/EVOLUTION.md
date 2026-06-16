@@ -628,6 +628,12 @@ Last Updated: 2026-06-15
 - All 9 dependency_tree tests continue to pass; no regressions.
 - Progress towards complete compliance with function size quality gate.
 
+### One Hundred Twenty-Fifth Round (Dependency Tree ParseModule Refactor)
+- Refactored massive `parseModule` (95 lines) into focused handler functions: `handleExportNamedDeclaration`, `handleExportDefaultDeclaration`, `handleExportAllDeclaration`, `handleImportDeclaration`.
+- Main `parseModule` now ~20 lines, delegating to handlers. Each handler < 30 lines (still acceptable) and easier to test.
+- All 9 dependency_tree tests continue to pass.
+- Further progress toward all functions ≤20 lines quality gate.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
