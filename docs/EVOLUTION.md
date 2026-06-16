@@ -738,6 +738,12 @@ Last Updated: 2026-06-15
 - `dynamicImport` now a simple wrapper (~5 lines) that ensures fresh imports; `clearModuleCache` handles both in-memory and Node.js ESM cache invalidation.
 - Maintains hot-reload reliability while adhering to function size limits.
 
+### One Hundred Forty-Second Round (Plugin Loader Further Refactor)
+- Refactored `plugin-loader.performLoadAll` by extracting `makeEmptyStats`, `getPluginFolders`, `loadPlugins`, and `assembleStats`; `performLoadAll` now concise.
+- Refactored `unloadPlugin` by extracting `clearReloadTimer` and `closeWatcher`; `unloadPlugin` now ~8 lines.
+- All plugin-loader functions now comply with the ≤20 line quality gate.
+- Improves maintainability and testability of core capability system.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

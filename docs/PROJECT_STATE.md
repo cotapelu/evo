@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 141 (latest) — refactored plugin-loader.dynamicImport: extracted clearModuleCache; dynamicImport now 5 lines, clearModuleCache ≤20 lines. All tests passing.
+✅ Iteration 142 (latest) — refactored plugin-loader: split performLoadAll and unloadPlugin into small helpers; all functions now ≤20 lines. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

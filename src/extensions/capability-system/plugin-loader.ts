@@ -71,14 +71,29 @@ export class PluginLoader {
     const pluginsDir = resolve(this.options.pluginsDir);
 
     if (!existsSync(pluginsDir)) {
-      return { totalPlugins: 0, totalCapabilities: 0, loadTimeMs: 0, errors: [] };
+      return this.makeEmptyStats();
     }
 
-    const pluginFolders = readdirSync(pluginsDir, { withFileTypes: true })
+    const pluginFolders = this.getPluginFolders(pluginsDir);
+    await this.loadPlugins(pluginFolders, errors);
+
+    if (this.options.watchMode) this.startWatchMode(pluginsDir);
+
+    return this.assembleStats(errors);
+  }
+
+  private makeEmptyStats(): PluginLoaderStats {
+    return { totalPlugins: 0, totalCapabilities: 0, loadTimeMs: 0, errors: [] };
+  }
+
+  private getPluginFolders(pluginsDir: string): string[] {
+    return readdirSync(pluginsDir, { withFileTypes: true })
       .filter(d => d.isDirectory())
       .map(d => d.name);
+  }
 
-    for (const folder of pluginFolders) {
+  private async loadPlugins(folders: string[], errors: Array<{ pluginId: string; error: string }>): Promise<void> {
+    for (const folder of folders) {
       try {
         await this.loadPlugin(folder);
       } catch (err: unknown) {
@@ -86,11 +101,10 @@ export class PluginLoader {
         errors.push({ pluginId: folder, error: message });
       }
     }
+  }
 
-    if (this.options.watchMode) this.startWatchMode(pluginsDir);
-
+  private assembleStats(errors: Array<{ pluginId: string; error: string }>): PluginLoaderStats {
     const totalCapabilities = Array.from(this.loadedPlugins.values()).reduce((s, p) => s + p.capabilities.length, 0);
-
     return {
       totalPlugins: this.loadedPlugins.size,
       totalCapabilities,
@@ -435,24 +449,27 @@ export class PluginLoader {
     this.reloadTimers.set(pluginId, timer);
   }
 
-  private unloadPlugin(pluginId: string): void {
-    // Clear any pending reload timer
+  private clearReloadTimer(pluginId: string): void {
     const timer = this.reloadTimers.get(pluginId);
     if (timer) {
       clearTimeout(timer);
       this.reloadTimers.delete(pluginId);
     }
+  }
 
-    const plugin = this.loadedPlugins.get(pluginId);
-    if (!plugin) return;
-
-    // Close its file watcher
+  private closeWatcher(pluginId: string): void {
     const handle = this.watchHandles.get(pluginId);
     if (handle) {
       handle.close();
       this.watchHandles.delete(pluginId);
     }
+  }
 
+  private unloadPlugin(pluginId: string): void {
+    this.clearReloadTimer(pluginId);
+    this.closeWatcher(pluginId);
+    const plugin = this.loadedPlugins.get(pluginId);
+    if (!plugin) return;
     for (const cap of plugin.capabilities) {
       this.registry.unregister(cap.id);
     }

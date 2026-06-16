@@ -220,6 +220,7 @@ Last Updated: 2026-06-14
 - [x] Refactored plugin-loader: extracted loadCapabilities and finalizePlugin from loadPlugin; all functions ≤20 lines.
 - [x] Refactored plugin-loader.createCapability: extracted loadExecuteModule, loadRendererModule, buildCapability, createExecuteHandler; all functions ≤20 lines.
 - [x] Refactored plugin-loader.dynamicImport: extracted clearModuleCache; dynamicImport now 5 lines.
+- [x] Refactored plugin-loader: split performLoadAll and unloadPlugin into small helpers; all functions ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress
