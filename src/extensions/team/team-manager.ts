@@ -779,29 +779,44 @@ export class AgentTeam implements AgentTeamRuntime {
     return texts.join('');
   }
 
-  async initialize(tasks: string[]): Promise<void> {
-    await this.withLock(async () => {
-      this.tasks = tasks;
-      this.taskStatuses.clear();
-      this.pendingIndices = [];
-      for (let i = 0; i < tasks.length; i++) {
-        this.taskStatuses.set(i, { assignee: null, status: 'pending', result: '', retryCount: 0 });
-        this.pendingIndices.push(i);
-      }
-      this.messageBus.clear();
-      await this.workspaceClear();
-      this.agentStatuses.clear();
-      for (const role of this.roles) {
-        this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
-      }
-      // Clear heartbeat tracking
-      this.agentLastSeen.clear();
-    });
-    // Notify team initialized
+  // --- Team initialization helpers (refactored) ---
+  private resetTaskState(tasks: string[]): void {
+    this.tasks = tasks;
+    this.taskStatuses.clear();
+    this.pendingIndices = [];
+    for (let i = 0; i < tasks.length; i++) {
+      this.taskStatuses.set(i, { assignee: null, status: 'pending', result: '', retryCount: 0 });
+      this.pendingIndices.push(i);
+    }
+  }
+
+  private async clearTransientState(): Promise<void> {
+    this.messageBus.clear();
+    await this.workspaceClear();
+    this.agentLastSeen.clear();
+  }
+
+  private resetAgentStatuses(): void {
+    this.agentStatuses.clear();
+    for (const role of this.roles) {
+      this.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
+    }
+  }
+
+  private sendInitializationUpdate(tasks: string[]): void {
     this.notifyUpdate(this.createUpdate(
       `📋 Team initialized with ${tasks.length} tasks`,
       { totalTasks: tasks.length, agents: this.roles }
     ));
+  }
+
+  async initialize(tasks: string[]): Promise<void> {
+    await this.withLock(async () => {
+      this.resetTaskState(tasks);
+      await this.clearTransientState();
+      this.resetAgentStatuses();
+    });
+    this.sendInitializationUpdate(tasks);
   }
 
 
