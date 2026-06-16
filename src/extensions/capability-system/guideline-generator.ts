@@ -79,25 +79,23 @@ function generateParametersSection(schema: any): string[] {
   const required = schema.required || [];
 
   for (const [key, prop] of Object.entries(props)) {
-    const type = prop.type || "any";
-    const description = prop.description || "";
-    const isRequired = required.includes(key);
-    const reqTag = isRequired ? "[Required]" : "[Optional]";
-    
-    // Get type display string
-    const typeStr = formatType(type);
-    
-    // Get example value
-    const example = getExampleValue(prop);
-    const exampleStr = example !== undefined ? `Example: \`${JSON.stringify(example)}\`` : "";
-    
-    lines.push(`  • \`${key}\` (${typeStr}) ${reqTag} ${description}`);
-    if (exampleStr) {
-      lines.push(`    ${exampleStr}`);
-    }
+    lines.push(...processProperty(key, prop, required));
   }
 
   return lines;
+}
+
+function processProperty(key: string, prop: any, required: string[]): string[] {
+  const type = prop.type || "any";
+  const description = prop.description || "";
+  const isRequired = required.includes(key);
+  const reqTag = isRequired ? "[Required]" : "[Optional]";
+  const typeStr = formatType(type);
+  const example = getExampleValue(prop);
+  const exampleStr = example !== undefined ? `Example: \`${JSON.stringify(example)}\`` : "";
+  const result: string[] = [`  • \`${key}\` (${typeStr}) ${reqTag} ${description}`];
+  if (exampleStr) result.push(`    ${exampleStr}`);
+  return result;
 }
 
 function generateExamples(capabilityId: string, schema: any): string[] {
