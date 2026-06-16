@@ -327,34 +327,26 @@ export const schema = Type.Object({
   entryPoints: Type.Array(Type.String(), { description: "Optional subset of files to treat as entry points. If omitted, files with no incoming imports are considered entries.", optional: true })
 });
 
-export async function execute(params: { files: string[]; entryPoints?: string[] }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-
-  if (!params.files || params.files.length === 0) {
-    return { content: [{ type: "text" as const, text: "No files provided" }], isError: true, details: { error: "files required" } };
-  }
-
-  // Read all files and parse AST
+async function readAndParseFiles(cwd: string, files: string[]): Promise<{ fileInfos: FileModuleInfo[]; allFiles: Set<string> }> {
   const fileInfos: FileModuleInfo[] = [];
   const allFiles = new Set<string>();
 
-  for (const relPath of params.files) {
+  for (const relPath of files) {
     const absPath = join(cwd, relPath);
-    // (removed debug)
     allFiles.add(absPath);
     try {
       const source = await fs.readFile(absPath, "utf-8");
       const info = await parseModule(absPath, source);
       fileInfos.push(info);
     } catch (err: any) {
-      return { content: [{ type: "text" as const, text: `Error processing file ${relPath}: ${err.message}` }], isError: true, details: { file: relPath, error: err.message } };
+      throw new Error(`Error processing file ${relPath}: ${err.message}`);
     }
   }
+  return { fileInfos, allFiles };
+}
 
-  const absEntryPoints = params.entryPoints?.map(p => join(cwd, p));
-  const absResult = buildGraph(fileInfos, allFiles, absEntryPoints);
-  // Convert to relative paths for output
-  const relResult = {
+function convertToRelative(cwd: string, absResult: GraphResult): GraphResult {
+  return {
     nodes: absResult.nodes.map(n => ({
       id: relative(cwd, n.id),
       file: relative(cwd, n.file),
@@ -369,7 +361,30 @@ export async function execute(params: { files: string[]; entryPoints?: string[] 
     cycles: absResult.cycles.map(cycle => cycle.map(p => relative(cwd, p))),
     summary: absResult.summary
   };
-  // Format output as readable text and include structured details
+}
+
+export async function execute(params: { files: string[]; entryPoints?: string[] }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+
+  if (!params.files || params.files.length === 0) {
+    return { content: [{ type: "text" as const, text: "No files provided" }], isError: true, details: { error: "files required" } };
+  }
+
+  let parseResult: { fileInfos: FileModuleInfo[]; allFiles: Set<string> };
+  try {
+    parseResult = await readAndParseFiles(cwd, params.files);
+  } catch (err: any) {
+    const message = err instanceof Error ? err.message : String(err);
+    // Extract file from error message if possible, else use first file
+    const fileMatch = message.match(/processing file (\S+)/);
+    const file = fileMatch ? fileMatch[1] : params.files[0] || '';
+    return { content: [{ type: "text" as const, text: message }], isError: true, details: { file, error: message } };
+  }
+
+  const { fileInfos, allFiles } = parseResult;
+  const absEntryPoints = params.entryPoints?.map(p => join(cwd, p));
+  const absResult = buildGraph(fileInfos, allFiles, absEntryPoints);
+  const relResult = convertToRelative(cwd, absResult);
   const output = formatOutput(relResult, params.entryPoints || []);
   return { content: [{ type: "text" as const, text: output }], isError: false, details: relResult };
 }
