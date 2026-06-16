@@ -6,6 +6,14 @@ import { execute } from '../capabilities/dependency_tree';
 
 const __filename = fileURLToPath(import.meta.url);
 
+// Types for test
+interface DepTreeSuccessDetails {
+  nodes: Array<{ id: string; file: string; exports: string[]; imports: string[] }>;
+  edges: Array<{ from: string; to: string; symbols: string[] }>;
+  cycles: string[][];
+  summary: { totalFiles: number; totalEdges: number; cycleCount: number };
+}
+
 function debugResult(result: any) {
   if (result.isError) {
     // eslint-disable-next-line no-console
@@ -40,9 +48,9 @@ describe('codebase.dependency_tree', () => {
     await fs.writeFile('a.ts', `import { foo } from './b';\nexport const a = 2;`);
     await fs.writeFile('b.ts', `export const foo = 1;`);
 
-    const result = await execute({ files: ['a.ts', 'b.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
 
     // nodes count 2
     expect(details.nodes.length).toBe(2);
@@ -66,9 +74,9 @@ describe('codebase.dependency_tree', () => {
     await fs.writeFile('b.ts', `import y from './c';`);
     await fs.writeFile('c.ts', `import z from './a';`);
 
-    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
 
     expect(details.cycles.length).toBeGreaterThan(0);
     // cycle should contain all three
@@ -85,9 +93,9 @@ describe('codebase.dependency_tree', () => {
     await fs.writeFile('b.ts', `export { foo } from './c';`);
     await fs.writeFile('c.ts', `export const foo = 1; export const bar = 2;`);
 
-    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
 
     // Edges: b->c (from re-export), a->b (from re-export)
     const bToC = details.edges.find(e => e.from.endsWith('b.ts') && e.to.endsWith('c.ts'));
@@ -103,9 +111,9 @@ describe('codebase.dependency_tree', () => {
     await fs.writeFile('a.ts', `import React from 'react';\nimport * as utils from './b';`);
     await fs.writeFile('b.ts', `export function helper() {}`);
 
-    const result = await execute({ files: ['a.ts', 'b.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
 
     // a.ts imports from b.ts via namespace '*'
     const edge = details.edges.find(e => e.from.endsWith('a.ts') && e.to.endsWith('b.ts'));
@@ -117,10 +125,10 @@ describe('codebase.dependency_tree', () => {
     // a.ts imports from non-existent file
     await fs.writeFile('a.ts', `import { foo } from './missing';`);
 
-    const result = await execute({ files: ['a.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts'] }, { cwd: tmpDir } as { cwd: string });
     // Since missing file is not in the file list, it should not create edge, but no error
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
     expect(details.nodes.length).toBe(1);
     expect(details.edges.length).toBe(0);
   });
@@ -129,9 +137,9 @@ describe('codebase.dependency_tree', () => {
     await fs.writeFile('a.ts', `import { x } from './b';\nexport const a = 1;\n`);
     await fs.writeFile('b.ts', `export const x = 2;\nexport const y = 3;\n`);
 
-    const result = await execute({ files: ['a.ts', 'b.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
 
     const nodeA = details.nodes.find(n => n.file.endsWith('a.ts'));
     const nodeB = details.nodes.find(n => n.file.endsWith('b.ts'));
@@ -159,9 +167,9 @@ export const z = 3;`);
     await fs.writeFile('c.ts', `export const y = 3;`);
 
     // With entry point a, all nodes reachable
-    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'], entryPoints: ['a.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts', 'c.ts'], entryPoints: ['a.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
     expect(details.nodes.length).toBe(3);
     const ids = details.nodes.map((n: any) => n.id);
     expect(ids).toContain('a.ts');
@@ -169,9 +177,9 @@ export const z = 3;`);
     expect(ids).toContain('c.ts');
 
     // With entry point b only, a is unreachable, b and c reachable
-    const resultB = await execute({ files: ['a.ts', 'b.ts', 'c.ts'], entryPoints: ['b.ts'] }, { cwd: tmpDir } as any);
+    const resultB = await execute({ files: ['a.ts', 'b.ts', 'c.ts'], entryPoints: ['b.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(resultB.isError).toBe(false);
-    const detailsB = resultB.details as any;
+    const detailsB = resultB.details as DepTreeSuccessDetails;
     expect(detailsB.nodes.length).toBe(2);
     const idsB = detailsB.nodes.map((n: any) => n.id);
     expect(idsB).not.toContain('a.ts');
@@ -184,9 +192,9 @@ export const z = 3;`);
     await fs.writeFile('b.ts', `import { a } from './a';
 export const b = 2;`);
 
-    const result = await execute({ files: ['a.ts', 'b.ts'], entryPoints: ['missing.ts', 'b.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts', 'b.ts'], entryPoints: ['missing.ts', 'b.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
     // Only b.ts is valid entry; b imports a => both included
     expect(details.nodes.length).toBe(2);
     const ids = details.nodes.map((n: any) => n.id);
@@ -203,9 +211,9 @@ export const a = 1;`);
 export const c = 3;`);
     await fs.writeFile('d.ts', `export const y = 4;`);
 
-    const result = await execute({ files: ['a.ts','b.ts','c.ts','d.ts'], entryPoints: ['a.ts','c.ts'] }, { cwd: tmpDir } as any);
+    const result = await execute({ files: ['a.ts','b.ts','c.ts','d.ts'], entryPoints: ['a.ts','c.ts'] }, { cwd: tmpDir } as { cwd: string });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as DepTreeSuccessDetails;
     expect(details.nodes.length).toBe(4);
   });
 });

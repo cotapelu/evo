@@ -24,6 +24,9 @@ async function writeTempFile(content: string, ext = "ts"): Promise<string> {
 // Import analyze_ast capability
 const analyzeAstModule = await import("../capabilities/analyze_ast.ts");
 
+// Type for test context
+interface TestContext { cwd: string }
+
 describe("codebase.analyze_ast", () => {
   afterEach(async () => {
     // Cleanup temp folder after each test
@@ -35,7 +38,7 @@ describe("codebase.analyze_ast", () => {
 
   it("should handle missing file", async () => {
     const ctx = { cwd: __dirname };
-    const result = await analyzeAstModule.execute({ file: "nonexistent.ts" }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: "nonexistent.ts" }, ctx as TestContext);
 
     expect(result.isError).toBe(true);
     expect(result.details?.exists).toBe(false);
@@ -50,7 +53,7 @@ function foo() {
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(true);
     expect(result.details?.error).toBeDefined();
@@ -62,7 +65,7 @@ function foo() {
     const code = "";
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.lines).toBe(1); // split('\n') of "" => [""] length 1
@@ -78,7 +81,7 @@ function foo() {
     const code = `import defaultImport from "module";`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.imports.length).toBe(1);
@@ -93,7 +96,7 @@ function foo() {
     const code = `import * as ns from "namespace";`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.imports.length).toBe(1);
@@ -107,7 +110,7 @@ function foo() {
     const code = `import { foo, bar as baz } from "lib";`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.imports.length).toBe(1);
@@ -122,7 +125,7 @@ function foo() {
     const code = `import type { TypeA, TypeB } from "types";`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.imports.length).toBe(1);
@@ -143,7 +146,7 @@ import type { T1 } from "types";
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.imports.length).toBe(4);
@@ -159,7 +162,7 @@ import type { T1 } from "types";
     const code = `export function exportedFunc() {}`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.exports.length).toBeGreaterThanOrEqual(1);
@@ -175,7 +178,7 @@ import type { T1 } from "types";
     const code = `export class ExportedClass {}`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.exports.some(e => e.name === "ExportedClass" && e.type === "named")).toBe(true);
@@ -188,7 +191,7 @@ import type { T1 } from "types";
     const code = `export type MyType = { a: number };`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.exports.some(e => e.name === "MyType" && e.type === "named")).toBe(true);
@@ -201,7 +204,7 @@ import type { T1 } from "types";
     const code = `export default class DefaultClass {}`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.exports.some(e => e.type === "default" && e.name === "DefaultClass")).toBe(true);
@@ -214,7 +217,7 @@ import type { T1 } from "types";
     const code = `export default function defaultFunc() {}`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.exports.some(e => e.type === "default" && e.name === "defaultFunc")).toBe(true);
@@ -230,7 +233,7 @@ export { original as renamed };
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     // Export specifier should record both names? Our implementation records exported name, and aliases field if local differs.
@@ -246,7 +249,7 @@ export { original as renamed };
     const code = `export * from "./other";`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.exports.some(e => e.type === "all")).toBe(true);
@@ -262,7 +265,7 @@ var v = 3;
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.symbols.some(s => s.name === "c" && s.kind === "const")).toBe(true);
@@ -276,7 +279,7 @@ var v = 3;
     const code = `interface MyInterface {}`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.symbols.some(s => s.name === "MyInterface" && s.kind === "interface")).toBe(true);
@@ -288,7 +291,7 @@ var v = 3;
     const code = `type MyType = string;`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.symbols.some(s => s.name === "MyType" && s.kind === "type")).toBe(true);
@@ -305,7 +308,7 @@ enum MyEnum {
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.symbols.some(s => s.name === "MyEnum" && s.kind === "enum")).toBe(true);
@@ -321,7 +324,7 @@ export default foo;
     `;
     const file = await writeTempFile(code, "js");
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.language).toBe("js");
@@ -336,7 +339,7 @@ export default foo;
     const code = `line1\nline2\n\nline4\n`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     expect(result.details.lines).toBe(5); // 5 lines including blank
@@ -351,7 +354,7 @@ export { x };
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     const xSymbols = result.details.symbols.filter(s => s.name === "x");
@@ -367,7 +370,7 @@ export { x };
     const code = `  const y = 5;`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeAstModule.execute({ file: path.basename(file) }, ctx as TestContext);
 
     expect(result.isError).toBe(false);
     const ySym = result.details.symbols.find(s => s.name === "y");
