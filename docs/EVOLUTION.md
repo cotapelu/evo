@@ -634,6 +634,13 @@ Last Updated: 2026-06-15
 - All 9 dependency_tree tests continue to pass.
 - Further progress toward all functions ≤20 lines quality gate.
 
+### One Hundred Twenty-Sixth Round (Analyze Refactor: TryParse Decomposition)
+- Decomposed `tryParseExport` (50+ lines) into 8 focused handlers (default class/interface/type/function/var, named type/interface, other exports).
+- Decomposed `tryParseSymbol` (30+ lines) into 6 focused symbol handlers (function, class, interface, type, variable, enum).
+- All parsing helpers now ≤20 lines; improved readability and testability.
+- All 5 analyze tests continue to pass.
+- Continuing to systematically enforce ≤20 line function quality gate across the codebase.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

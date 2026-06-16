@@ -96,57 +96,77 @@ function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): b
   return false;
 }
 
-function tryParseExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
-  // export default class
-  const m1 = line.match(/^\s*export\s+default\s+class\s+(\w+)/);
-  if (m1) {
-    symbols.push({ name: m1[1], kind: "class", line: lineNum });
-    exports.push({ type: "default", name: m1[1] });
+function handleDefaultClassExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+default\s+class\s+(\w+)/);
+  if (m) {
+    symbols.push({ name: m[1], kind: "class", line: lineNum });
+    exports.push({ type: "default", name: m[1] });
     return true;
   }
-  // export default interface
-  const m2 = line.match(/^\s*export\s+default\s+interface\s+(\w+)/);
-  if (m2) {
-    symbols.push({ name: m2[1], kind: "interface", line: lineNum });
-    exports.push({ type: "default", name: m2[1] });
+  return false;
+}
+
+function handleDefaultInterfaceExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+default\s+interface\s+(\w+)/);
+  if (m) {
+    symbols.push({ name: m[1], kind: "interface", line: lineNum });
+    exports.push({ type: "default", name: m[1] });
     return true;
   }
-  // export default type
-  const m3 = line.match(/^\s*export\s+default\s+type\s+(\w+)\s*=/);
-  if (m3) {
-    symbols.push({ name: m3[1], kind: "type", line: lineNum });
-    exports.push({ type: "default", name: m3[1] });
+  return false;
+}
+
+function handleDefaultTypeExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+default\s+type\s+(\w+)\s*=/);
+  if (m) {
+    symbols.push({ name: m[1], kind: "type", line: lineNum });
+    exports.push({ type: "default", name: m[1] });
     return true;
   }
-  // export default function
-  const m4 = line.match(/^\s*export\s+default\s+function\s+(\w+)\s*\(/);
-  if (m4) {
-    symbols.push({ name: m4[1], kind: "function", line: lineNum });
-    exports.push({ type: "default", name: m4[1] });
+  return false;
+}
+
+function handleDefaultFunctionExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+default\s+function\s+(\w+)\s*\(/);
+  if (m) {
+    symbols.push({ name: m[1], kind: "function", line: lineNum });
+    exports.push({ type: "default", name: m[1] });
     return true;
   }
-  // export default const/let/var
-  const m5 = line.match(/^\s*export\s+default\s+(const|let|var)\s+(\w+)/);
-  if (m5) {
-    symbols.push({ name: m5[2], kind: "variable", line: lineNum });
-    exports.push({ type: "default", name: m5[2] });
+  return false;
+}
+
+function handleDefaultVarExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+default\s+(const|let|var)\s+(\w+)/);
+  if (m) {
+    symbols.push({ name: m[2], kind: "variable", line: lineNum });
+    exports.push({ type: "default", name: m[2] });
     return true;
   }
-  // export type
-  const m6 = line.match(/^\s*export\s+type\s+(\w+)\s*=/);
-  if (m6) {
-    symbols.push({ name: m6[1], kind: "type", line: lineNum });
-    exports.push({ type: "named", name: m6[1] });
+  return false;
+}
+
+function handleNamedTypeExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+type\s+(\w+)\s*=/);
+  if (m) {
+    symbols.push({ name: m[1], kind: "type", line: lineNum });
+    exports.push({ type: "named", name: m[1] });
     return true;
   }
-  // export interface
-  const m7 = line.match(/^\s*export\s+interface\s+(\w+)/);
-  if (m7) {
-    symbols.push({ name: m7[1], kind: "interface", line: lineNum });
-    exports.push({ type: "named", name: m7[1] });
+  return false;
+}
+
+function handleNamedInterfaceExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  const m = line.match(/^\s*export\s+interface\s+(\w+)/);
+  if (m) {
+    symbols.push({ name: m[1], kind: "interface", line: lineNum });
+    exports.push({ type: "named", name: m[1] });
     return true;
   }
-  // other export forms using EXPORT_DECL_REGEX
+  return false;
+}
+
+function handleOtherExports(line: string, lineNum: number, exports: ExportInfo[], _symbols: SymbolDef[]): boolean {
   const exportMatch = line.match(EXPORT_DECL_REGEX);
   if (exportMatch) {
     const [_1, starFrom, namedGroup, exportName, asAlias1, aliasName, defaultName] = exportMatch;
@@ -171,37 +191,79 @@ function tryParseExport(line: string, lineNum: number, exports: ExportInfo[], sy
   return false;
 }
 
+function tryParseExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  if (handleDefaultClassExport(line, lineNum, exports, symbols)) return true;
+  if (handleDefaultInterfaceExport(line, lineNum, exports, symbols)) return true;
+  if (handleDefaultTypeExport(line, lineNum, exports, symbols)) return true;
+  if (handleDefaultFunctionExport(line, lineNum, exports, symbols)) return true;
+  if (handleDefaultVarExport(line, lineNum, exports, symbols)) return true;
+  if (handleNamedTypeExport(line, lineNum, exports, symbols)) return true;
+  if (handleNamedInterfaceExport(line, lineNum, exports, symbols)) return true;
+  if (handleOtherExports(line, lineNum, exports, symbols)) return true;
+  return false;
+}
+
+function handleFunctionSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const m = line.match(FUNCTION_DECL_REGEX);
+  if (m) {
+    symbols.push({ name: m[1], kind: "function", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
+function handleClassSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const m = line.match(CLASS_DECL_REGEX);
+  if (m) {
+    symbols.push({ name: m[1], kind: "class", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
+function handleInterfaceSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const m = line.match(INTERFACE_DECL_REGEX);
+  if (m) {
+    symbols.push({ name: m[1], kind: "interface", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
+function handleTypeSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const m = line.match(TYPE_DECL_REGEX);
+  if (m) {
+    symbols.push({ name: m[1], kind: "type", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
+function handleVariableSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const m = line.match(VAR_DECL_REGEX);
+  if (m) {
+    symbols.push({ name: m[1], kind: "variable", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
+function handleEnumSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const m = line.match(ENUM_DECL_REGEX);
+  if (m) {
+    symbols.push({ name: m[1], kind: "enum", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
 function tryParseSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
-  const fm = line.match(FUNCTION_DECL_REGEX);
-  if (fm) {
-    symbols.push({ name: fm[1], kind: "function", line: lineNum });
-    return true;
-  }
-  const cm = line.match(CLASS_DECL_REGEX);
-  if (cm) {
-    symbols.push({ name: cm[1], kind: "class", line: lineNum });
-    return true;
-  }
-  const im = line.match(INTERFACE_DECL_REGEX);
-  if (im) {
-    symbols.push({ name: im[1], kind: "interface", line: lineNum });
-    return true;
-  }
-  const tm = line.match(TYPE_DECL_REGEX);
-  if (tm) {
-    symbols.push({ name: tm[1], kind: "type", line: lineNum });
-    return true;
-  }
-  const vm = line.match(VAR_DECL_REGEX);
-  if (vm) {
-    symbols.push({ name: vm[1], kind: "variable", line: lineNum });
-    return true;
-  }
-  const em = line.match(ENUM_DECL_REGEX);
-  if (em) {
-    symbols.push({ name: em[1], kind: "enum", line: lineNum });
-    return true;
-  }
+  if (handleFunctionSymbol(line, lineNum, symbols)) return true;
+  if (handleClassSymbol(line, lineNum, symbols)) return true;
+  if (handleInterfaceSymbol(line, lineNum, symbols)) return true;
+  if (handleTypeSymbol(line, lineNum, symbols)) return true;
+  if (handleVariableSymbol(line, lineNum, symbols)) return true;
+  if (handleEnumSymbol(line, lineNum, symbols)) return true;
   return false;
 }
 
