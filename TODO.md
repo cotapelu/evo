@@ -212,6 +212,7 @@ Last Updated: 2026-06-14
 - [x] Refactored call_graph.execute: extracted determineRoots and buildResult; execute now ~15 lines, all helpers ≤20 lines.
 - [x] Refactored safe_edit.execute: compacted, removed blank lines/comments; execute ~20 lines.
 - [x] Refactored complexity.execute: extracted parseAST and analyzeComplexity; execute ~15 lines, all helpers ≤20 lines.
+- [x] Refactored search.execute: extracted shouldProcess, scanAndCollect, handleFile, formatSearchOutput; execute ~15 lines, all helpers ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress

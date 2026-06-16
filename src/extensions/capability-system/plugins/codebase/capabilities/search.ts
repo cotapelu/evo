@@ -45,6 +45,60 @@ async function walkDir(dir: string, callback: (filePath: string) => Promise<void
   }
 }
 
+function shouldProcess(ext: string, filePath: string, filePattern?: string): boolean {
+  if (!CODE_EXTENSIONS.includes(ext)) return false;
+  if (!filePattern) return true;
+  if (filePattern.includes(ext)) return true;
+  if (filePath.toLowerCase().includes(filePattern.toLowerCase())) return true;
+  if (filePattern.startsWith('.') && ext === filePattern.toLowerCase()) return true;
+  return false;
+}
+
+async function scanAndCollect(filePath: string, cwd: string, query: string, caseSensitive: boolean, matches: SearchMatch[], maxResults: number): Promise<boolean> {
+  if (matches.length >= maxResults) return true;
+  const content = await fs.readFile(filePath, "utf-8");
+  const lines = content.split('\n');
+  const q = caseSensitive ? query : query.toLowerCase();
+  for (let i = 0; i < lines.length; i++) {
+    if (matches.length >= maxResults) return true;
+    const line = lines[i];
+    const searchIn = caseSensitive ? line : line.toLowerCase();
+    const idx = searchIn.indexOf(q);
+    if (idx !== -1) {
+      const relPath = relative(cwd, filePath);
+      matches.push({
+        file: relPath,
+        line: i + 1,
+        column: idx + 1,
+        text: line.trim().substring(0, 120)
+      });
+    }
+  }
+  return matches.length >= maxResults;
+}
+
+interface ScanContext {
+  cwd: string;
+  query: string;
+  maxResults: number;
+  caseSensitive: boolean;
+  filePattern: string | undefined;
+  matches: SearchMatch[];
+}
+
+async function handleFile(filePath: string, ctx: ScanContext): Promise<void> {
+  if (ctx.matches.length >= ctx.maxResults) return;
+  const ext = extname(filePath).toLowerCase();
+  if (!shouldProcess(ext, filePath, ctx.filePattern)) return;
+  await scanAndCollect(filePath, ctx.cwd, ctx.query, ctx.caseSensitive, ctx.matches, ctx.maxResults);
+}
+
+function formatSearchOutput(matches: SearchMatch[], query: string): string {
+  return matches.length === 0
+    ? `No matches for "${query}"`
+    : matches.map(m => `${m.file}:${m.line}:${m.column}: ${m.text}`).join('\n');
+}
+
 export async function execute(params: { query: string; filePattern?: string; maxResults?: number; caseSensitive?: boolean }, ctx: any): Promise<any> {
   const cwd = ctx.cwd || process.cwd();
   const query = params.query;
@@ -57,53 +111,14 @@ export async function execute(params: { query: string; filePattern?: string; max
 
   const matches: SearchMatch[] = [];
 
-  const processFile = async (filePath: string) => {
-    if (matches.length >= maxResults) return;
-
-    const ext = extname(filePath).toLowerCase();
-    if (!CODE_EXTENSIONS.includes(ext)) return;
-    if (filePattern && !filePattern.includes(ext) && !filePath.toLowerCase().includes(filePattern.toLowerCase())) {
-      // If filePattern is provided and doesn't match extension or path substring, skip
-      // Simple heuristic: if filePattern is like '.ts', check extension; else check if file path contains pattern.
-      // This is a simplification.
-      if (filePattern.startsWith('.') && ext !== filePattern.toLowerCase()) return;
-      if (!filePath.toLowerCase().includes(filePattern.toLowerCase())) return;
-    }
-
-    try {
-      const content = await fs.readFile(filePath, "utf-8");
-      const lines = content.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const searchIn = caseSensitive ? line : line.toLowerCase();
-        const q = caseSensitive ? query : query.toLowerCase();
-        const idx = searchIn.indexOf(q);
-        if (idx !== -1) {
-          const relPath = relative(cwd, filePath);
-          matches.push({
-            file: relPath,
-            line: i + 1,
-            column: idx + 1,
-            text: line.trim().substring(0, 120) // limit snippet length
-          });
-          if (matches.length >= maxResults) break;
-        }
-      }
-    } catch (err) {
-      // Ignore unreadable files
-    }
-  };
-
+  const context: ScanContext = { cwd, query, maxResults, caseSensitive, filePattern, matches };
   try {
-    await walkDir(cwd, processFile);
-  } catch (err) {
+    await walkDir(cwd, (fp) => handleFile(fp, context));
+  } catch {
     // ignore
   }
 
-  const output = matches.length === 0
-    ? `No matches for "${query}"`
-    : matches.map(m => `${m.file}:${m.line}:${m.column}: ${m.text}`).join('\n');
-
+  const output = formatSearchOutput(matches, query);
   return {
     content: [{ type: "text" as const, text: output }],
     details: { matches, total: matches.length, query },
