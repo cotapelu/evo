@@ -197,15 +197,9 @@ function resolveCallee(
   }
 }
 
-export async function execute(params: { file: string; entryPoints?: string[]; query: any }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-  const { query = {} } = params;
-  const { depth = 1, includeCrossFile = false, limit = 50 } = query;
-  const nameFilter = query.name;
-
+async function collectAllFiles(cwd: string, roots: string[], depth: number, includeCrossFile: boolean): Promise<ParsedFile[]> {
   const visited = new Set<string>();
   const allFiles: ParsedFile[] = [];
-  const fileRelToPF = new Map<string, ParsedFile>();
 
   async function visitFile(fileRel: string, currentDepth: number): Promise<void> {
     const pf = await parseFile(cwd, fileRel);
@@ -213,7 +207,6 @@ export async function execute(params: { file: string; entryPoints?: string[]; qu
     if (visited.has(pf.fileAbs)) return;
     visited.add(pf.fileAbs);
     allFiles.push(pf);
-    fileRelToPF.set(pf.fileRel, pf);
 
     if (includeCrossFile && currentDepth > 0) {
       const nextDepth = currentDepth - 1;
@@ -248,26 +241,27 @@ export async function execute(params: { file: string; entryPoints?: string[]; qu
     }
   }
 
-  // Determine all root entry points
-  const roots: string[] = [params.file];
-  if (params.entryPoints && Array.isArray(params.entryPoints)) {
-    for (const ep of params.entryPoints) {
-      if (!roots.includes(ep)) roots.push(ep);
-    }
-  }
-
-  // Visit each root
   for (const root of roots) {
     await visitFile(root, depth);
   }
 
-  // Build absolute path to Map<funcName, node>
-  const absToFuncs = new Map<string, Map<string, CallGraphNode>>();
-  for (const pf of allFiles) {
-    absToFuncs.set(pf.fileAbs, pf.funcs);
-  }
+  return allFiles;
+}
 
-  // Build edges
+function buildAbsToFuncs(allFiles: ParsedFile[]): Map<string, Map<string, CallGraphNode>> {
+  const map = new Map<string, Map<string, CallGraphNode>>();
+  for (const pf of allFiles) {
+    map.set(pf.fileAbs, pf.funcs);
+  }
+  return map;
+}
+
+function buildEdges(
+  allFiles: ParsedFile[],
+  absToFuncs: Map<string, Map<string, CallGraphNode>>,
+  nameFilter?: string,
+  limit?: number
+): CallGraphEdge[] {
   const edges: CallGraphEdge[] = [];
   for (const pf of allFiles) {
     for (const call of pf.calls) {
@@ -281,12 +275,13 @@ export async function execute(params: { file: string; entryPoints?: string[]; qu
       }
     }
   }
-
   if (limit && edges.length > limit) {
-    edges.splice(limit);
+    edges.length = limit;
   }
+  return edges;
+}
 
-  // Collect unique nodes
+function collectUniqueNodes(allFiles: ParsedFile[], edges: CallGraphEdge[]): Map<string, CallGraphNode> {
   const nodeSet = new Map<string, CallGraphNode>();
   for (const pf of allFiles) {
     for (const node of pf.funcs.values()) {
@@ -294,27 +289,56 @@ export async function execute(params: { file: string; entryPoints?: string[]; qu
       if (!nodeSet.has(key)) nodeSet.set(key, node);
     }
   }
-  edges.forEach(e => {
+  for (const e of edges) {
     const k1 = `${e.from.file}:${e.from.name}`;
     const k2 = `${e.to.file}:${e.to.name}`;
     if (!nodeSet.has(k1)) nodeSet.set(k1, e.from);
     if (!nodeSet.has(k2)) nodeSet.set(k2, e.to);
-  });
+  }
+  return nodeSet;
+}
 
-  const result = {
-    nodes: Array.from(nodeSet.values()),
-    edges,
-    stats: { nodeCount: nodeSet.size, edgeCount: edges.length }
-  };
-
+function formatSummary(params: { file: string; entryPoints?: string[]; query: any }, result: { stats: { nodeCount: number; edgeCount: number } }, edges: CallGraphEdge[]): string {
+  const { file, entryPoints, query } = params;
+  const { depth = 1, includeCrossFile = false } = query;
+  const name = query.name;
   const summary = `
-📊 Call Graph: ${params.file}${params.entryPoints?.length ? ` + ${params.entryPoints.length} entryPoints` : ''}
-🔍 Query: ${query.name ? `name="${query.name}"` : ''} ${depth !== undefined ? `depth=${depth}` : ''} ${includeCrossFile ? '+cross-file' : ''}
+📊 Call Graph: ${file}${entryPoints?.length ? ` + ${entryPoints.length} entryPoints` : ''}
+🔍 Query: ${name ? `name="${name}"` : ''} ${depth !== undefined ? `depth=${depth}` : ''} ${includeCrossFile ? '+cross-file' : ''}
 📈 Stats: ${result.stats.nodeCount} nodes, ${result.stats.edgeCount} edges
 
 Edges (${edges.length}):
 ${edges.map((e, i) => `  ${i+1}. ${e.from.name} (${e.from.file}) → ${e.to.name} (${e.to.file})`).join('\n')}
 `.trim();
+  return summary;
+}
+
+export async function execute(params: { file: string; entryPoints?: string[]; query: any }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+  const { query = {} } = params;
+  const { depth = 1, includeCrossFile = false, limit = 50 } = query;
+  const nameFilter = query.name;
+
+  // Determine roots
+  const roots: string[] = [params.file];
+  if (params.entryPoints && Array.isArray(params.entryPoints)) {
+    for (const ep of params.entryPoints) {
+      if (!roots.includes(ep)) roots.push(ep);
+    }
+  }
+
+  // Collect all files
+  const allFiles = await collectAllFiles(cwd, roots, depth, includeCrossFile);
+
+  // Build functional index and edges
+  const absToFuncs = buildAbsToFuncs(allFiles);
+  let edges = buildEdges(allFiles, absToFuncs, nameFilter, limit);
+
+  // Collect unique nodes
+  const nodeSet = collectUniqueNodes(allFiles, edges);
+
+  const result = { nodes: Array.from(nodeSet.values()), edges, stats: { nodeCount: nodeSet.size, edgeCount: edges.length } };
+  const summary = formatSummary(params, result, edges);
 
   return {
     content: [{ type: "text" as const, text: summary }],

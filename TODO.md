@@ -198,7 +198,8 @@ Last Updated: 2026-06-14
 - [x] Fix team event handling: corrected `extractText` call in `handleAgentEvent` to pass full message object instead of content array, restoring correct content truncation in team updates.
 - [x] Improve type safety in codebase plugin tests: replaced ` as any` with proper result detail interfaces in analyze_ast, ast_query, call_graph, complexity, dependency_tree, search, and codebase (analyze, safe_edit) tests. Enhanced test maintainability and type checking.
 - [x] Final test type cleanup: eliminated remaining ` as any` in skill-reader, tool-template, read-skill, and codebase tests. Zero ` as any` in entire codebase.
-- [x] Refactored safe_edit.execute: broke monolithic function into smaller helpers (backupFiles, computeFinalContents, writeFiles, validateAllAndDiff, groupOperationsByFile, validateOperations). Improved maintainability.
+- [x] Refactored safe_edit.execute: broke monolithic function into smaller helpers.
+- [x] Refactored dependency_tree.execute: extracted readAndParseFiles and convertToRelative.
 
 ## In Progress
 - (none)
