@@ -69,66 +69,85 @@ function countDecisions(node: any): number {
 }
 
 // Collect operators and operands for Halstead metrics
+const HALSTEAD_OPERATORS = ['=', '==', '===', '!=', '!==', '<', '>', '<=', '>=', '+', '-', '*', '/', '%', '&', '|', '^', '&&', '||', '!', '??', '?:', '=>', '...', '++', '--', '<<', '>>', '>>>'];
+const HALSTEAD_KEYWORDS = ['if', 'else', 'switch', 'case', 'default', 'for', 'while', 'do', 'break', 'continue', 'return', 'throw', 'try', 'catch', 'finally', 'function', 'class', 'var', 'let', 'const', 'new', 'this', 'super', 'typeof', 'instanceof', 'void', 'delete', 'in', 'of', 'as', 'from', 'export', 'import', 'default', 'extends', 'implements', 'interface', 'type', 'enum', 'public', 'private', 'protected', 'static', 'readonly', 'abstract', 'async', 'await'];
+
 interface HalsteadCounts {
   operators: Map<string, number>;
   operands: Map<string, number>;
 }
 
+function addOperator(counts: HalsteadCounts, op: string) {
+  if (HALSTEAD_OPERATORS.includes(op) || HALSTEAD_KEYWORDS.includes(op)) {
+    counts.operators.set(op, (counts.operators.get(op) || 0) + 1);
+  }
+}
+
+function addOperand(counts: HalsteadCounts, operand: string) {
+  if (operand && !['true', 'false', 'null', 'undefined'].includes(operand)) {
+    counts.operands.set(operand, (counts.operands.get(operand) || 0) + 1);
+  }
+}
+
+function handleCallExpression(node: any, counts: HalsteadCounts) {
+  if (node.callee.type === 'Identifier') {
+    addOperand(counts, node.callee.name);
+  } else if (node.callee.type === 'MemberExpression') {
+    if (node.callee.property.type === 'Identifier') {
+      addOperand(counts, node.callee.property.name);
+    }
+  }
+  node.arguments?.forEach((arg: any) => {
+    if (arg.type === 'Identifier') addOperand(counts, arg.name);
+  });
+}
+
+function handleVariableDeclarator(node: any, counts: HalsteadCounts) {
+  if (node.id.type === 'Identifier') {
+    addOperand(counts, node.id.name);
+  }
+}
+
+function handleMemberExpression(node: any, counts: HalsteadCounts) {
+  if (node.property.type === 'Identifier') {
+    addOperand(counts, node.property.name);
+  }
+}
+
+function handleLiteral(node: any, counts: HalsteadCounts) {
+  const val = node.value !== undefined ? String(node.value) : '<template>';
+  addOperand(counts, val);
+}
+
+function visitHalstead(node: any, counts: HalsteadCounts) {
+  // Operators
+  if (node.operator) addOperator(counts, node.operator);
+  if (node.left && node.left.type === 'Identifier') addOperand(counts, node.left.name);
+  if (node.right && node.right.type === 'Identifier') addOperand(counts, node.right.name);
+
+  // Function calls
+  if (node.type === 'CallExpression') {
+    handleCallExpression(node, counts);
+  }
+
+  // Variable declarations
+  if (node.type === 'VariableDeclarator') {
+    handleVariableDeclarator(node, counts);
+  }
+
+  // Member expressions
+  if (node.type === 'MemberExpression') {
+    handleMemberExpression(node, counts);
+  }
+
+  // Literals
+  if (node.type === 'Literal' || node.type === 'TemplateLiteral') {
+    handleLiteral(node, counts);
+  }
+}
+
 function collectHalstead(node: any, counts: HalsteadCounts) {
-  const operators = ['=', '==', '===', '!=', '!==', '<', '>', '<=', '>=', '+', '-', '*', '/', '%', '&', '|', '^', '&&', '||', '!', '??', '?:', '=>', '...', '++', '--', '<<', '>>', '>>>'];
-  const keywords = ['if', 'else', 'switch', 'case', 'default', 'for', 'while', 'do', 'break', 'continue', 'return', 'throw', 'try', 'catch', 'finally', 'function', 'class', 'var', 'let', 'const', 'new', 'this', 'super', 'typeof', 'instanceof', 'void', 'delete', 'in', 'of', 'as', 'from', 'export', 'import', 'default', 'extends', 'implements', 'interface', 'type', 'enum', 'public', 'private', 'protected', 'static', 'readonly', 'abstract', 'async', 'await'];
-
-  function addOperator(op: string) {
-    if (operators.includes(op) || keywords.includes(op)) {
-      counts.operators.set(op, (counts.operators.get(op) || 0) + 1);
-    }
-  }
-
-  function addOperand(operand: string) {
-    if (operand && !['true', 'false', 'null', 'undefined'].includes(operand)) {
-      counts.operands.set(operand, (counts.operands.get(operand) || 0) + 1);
-    }
-  }
-
-  const visitor = (n: any) => {
-    // Operators
-    if (n.operator) addOperator(n.operator);
-    if (n.left && n.left.type === 'Identifier') addOperand(n.left.name);
-    if (n.right && n.right.type === 'Identifier') addOperand(n.right.name);
-
-    // Function calls: function name is operand, arguments are operands
-    if (n.type === 'CallExpression') {
-      if (n.callee.type === 'Identifier') {
-        addOperand(n.callee.name);
-      } else if (n.callee.type === 'MemberExpression') {
-        // dot access: property name as operand
-        if (n.callee.property.type === 'Identifier') {
-          addOperand(n.callee.property.name);
-        }
-      }
-      n.arguments?.forEach((arg: any) => {
-        if (arg.type === 'Identifier') addOperand(arg.name);
-      });
-    }
-
-    // Variable declarations
-    if (n.type === 'VariableDeclarator') {
-      if (n.id.type === 'Identifier') addOperand(n.id.name);
-    }
-
-    // Property access in member expressions
-    if (n.type === 'MemberExpression' && n.property.type === 'Identifier') {
-      addOperand(n.property.name);
-    }
-
-    // Literals as operands (string/numeric literals count once per unique value)
-    if (n.type === 'Literal' || n.type === 'TemplateLiteral') {
-      const val = n.value !== undefined ? String(n.value) : '<template>';
-      addOperand(val);
-    }
-  };
-
-  walk(node, visitor);
+  walk(node, (n) => visitHalstead(n, counts));
 }
 
 // Halstead metrics calculations
