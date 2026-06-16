@@ -175,11 +175,10 @@ interface GraphResult {
   };
 }
 
-function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>, entryPoints?: string[]): GraphResult {
+function createNodes(fileInfos: FileModuleInfo[]): Map<string, NodeInfo> {
   const nodes = new Map<string, NodeInfo>();
-  // First, create nodes
   for (const info of fileInfos) {
-    const id = info.file; // use absolute path as ID
+    const id = info.file;
     nodes.set(id, {
       id,
       file: info.file,
@@ -188,8 +187,10 @@ function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>, entryPoi
       incoming: new Set()
     });
   }
+  return nodes;
+}
 
-  // Second, resolve imports and create edges
+function resolveImports(nodes: Map<string, NodeInfo>, fileInfos: FileModuleInfo[], allFiles: Set<string>): void {
   for (const info of fileInfos) {
     const fromId = info.file;
     const fromNode = nodes.get(fromId);
@@ -197,129 +198,142 @@ function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>, entryPoi
 
     for (const [srcSpecifier, symbols] of info.imports) {
       let targetId: string | null = null;
-      // Try resolve specifier to an internal file
       if (srcSpecifier.startsWith('.') || srcSpecifier.startsWith('/')) {
-        // Resolve relative/absolute using the set of all files
         const resolved = resolveInAllFiles(srcSpecifier, info.file, allFiles);
-        if (resolved) {
-          targetId = resolved;
-        }
+        if (resolved) targetId = resolved;
       } else {
-        // Could be a package; skip for now (not in codebase graph)
         continue;
       }
-
-      const hasNode = nodes.has(targetId || '');
-      if (targetId && hasNode) {
+      if (targetId && nodes.has(targetId)) {
         fromNode.imports.set(targetId, symbols);
         const toNode = nodes.get(targetId)!;
         toNode.incoming.add(fromId);
       }
     }
   }
+}
 
-  // Build edges array
+function buildEdgesArray(nodes: Map<string, NodeInfo>): Array<{ from: string; to: string; symbols: string[] }> {
   const edges: Array<{ from: string; to: string; symbols: string[] }> = [];
   for (const [fromId, node] of nodes) {
     for (const [toId, symbols] of node.imports) {
       edges.push({ from: fromId, to: toId, symbols });
     }
   }
+  return edges;
+}
 
-  // Detect cycles using DFS (Tarjan's algorithm would be overkill; simple cycle detection)
+function detectCycles(nodes: Map<string, NodeInfo>): string[][] {
   const cycles: string[][] = [];
   const visited = new Set<string>();
   const stack: string[] = [];
   const onStack = new Set<string>();
 
-  function dfs(nodeId: string) {
-    visited.add(nodeId);
-    stack.push(nodeId);
-    onStack.add(nodeId);
+  for (const nodeId of nodes.keys()) {
+    if (!visited.has(nodeId)) {
+      dfsDetectCycle(nodeId, nodes, visited, stack, onStack, cycles);
+    }
+  }
+  return cycles;
+}
 
-    const node = nodes.get(nodeId)!;
-    for (const [toId] of node.imports) {
-      if (!visited.has(toId)) {
-        dfs(toId);
-      } else if (onStack.has(toId)) {
-        // Cycle detected: from toId to nodeId
-        const start = stack.indexOf(toId);
-        if (start !== -1) {
-          const cycle = stack.slice(start).concat(toId);
-          cycles.push(cycle);
-        }
+function dfsDetectCycle(nodeId: string, nodes: Map<string, NodeInfo>, visited: Set<string>, stack: string[], onStack: Set<string>, cycles: string[][]): void {
+  visited.add(nodeId);
+  stack.push(nodeId);
+  onStack.add(nodeId);
+
+  const node = nodes.get(nodeId)!;
+  for (const [toId] of node.imports) {
+    if (!visited.has(toId)) {
+      dfsDetectCycle(toId, nodes, visited, stack, onStack, cycles);
+    } else if (onStack.has(toId)) {
+      const start = stack.indexOf(toId);
+      if (start !== -1) {
+        const cycle = stack.slice(start).concat(toId);
+        cycles.push(cycle);
       }
     }
-
-    stack.pop();
-    onStack.delete(nodeId);
   }
 
-  for (const nodeId of nodes.keys()) {
-    if (!visited.has(nodeId)) dfs(nodeId);
-  }
+  stack.pop();
+  onStack.delete(nodeId);
+}
 
-  // Deduplicate cycles (order may differ)
+function deduplicateCycles(cycles: string[][]): string[][] {
   const uniqueCycles: string[][] = [];
   const cycleKeys = new Set<string>();
   for (const cycle of cycles) {
-    const sorted = cycle.slice(0, -1).sort(); // remove duplicate last element
+    const sorted = cycle.slice(0, -1).sort();
     const key = sorted.join('|');
     if (!cycleKeys.has(key)) {
       cycleKeys.add(key);
       uniqueCycles.push(cycle);
     }
   }
+  return uniqueCycles;
+}
 
-
-  // Determine reachable set based on entryPoints (if provided)
-  let reachable: Set<string>;
+function computeReachable(nodes: Map<string, NodeInfo>, entryPoints?: string[]): Set<string> {
   if (entryPoints && entryPoints.length > 0) {
-    // Only consider entry points that exist in the graph (absolute paths expected)
     const entrySet = new Set(entryPoints.filter(p => nodes.has(p)));
-    reachable = new Set<string>();
+    const reachable = new Set<string>();
     const queue: string[] = Array.from(entrySet);
     for (const ep of entrySet) reachable.add(ep);
     while (queue.length > 0) {
       const cur = queue.shift()!;
-      const curNode = nodes.get(cur)!;
-      if (!curNode) continue;
-      for (const [next] of curNode.imports) {
-        if (!reachable.has(next)) {
-          reachable.add(next);
-          queue.push(next);
+      const curNode = nodes.get(cur);
+      if (curNode) {
+        for (const [next] of curNode.imports) {
+          if (!reachable.has(next)) {
+            reachable.add(next);
+            queue.push(next);
+          }
         }
       }
     }
+    return reachable;
   } else {
-    // No filtering: include all nodes
-    reachable = new Set(nodes.keys());
+    return new Set(nodes.keys());
   }
+}
 
-  // Filter nodes, edges, cycles to reachable set
-  const filteredNodes = new Map<string, NodeInfo>();
+function filterNodes(nodes: Map<string, NodeInfo>, reachable: Set<string>): Map<string, NodeInfo> {
+  const filtered = new Map<string, NodeInfo>();
   for (const [id, node] of nodes) {
-    if (reachable.has(id)) filteredNodes.set(id, node);
+    if (reachable.has(id)) filtered.set(id, node);
   }
-  const filteredEdges = edges.filter(e => reachable.has(e.from) && reachable.has(e.to));
-  const filteredCycles = uniqueCycles.filter(cycle => cycle.slice(0, -1).every(n => reachable.has(n)));
+  return filtered;
+}
 
-  // Summary
-  const summary = {
-    totalFiles: filteredNodes.size,
-    totalEdges: filteredEdges.length,
-    cycleCount: filteredCycles.length
+function filterEdges(edges: Array<{ from: string; to: string; symbols: string[] }>, reachable: Set<string>): Array<{ from: string; to: string; symbols: string[] }> {
+  return edges.filter(e => reachable.has(e.from) && reachable.has(e.to));
+}
+
+function filterCycles(cycles: string[][], reachable: Set<string>): string[][] {
+  return cycles.filter(cycle => cycle.slice(0, -1).every(n => reachable.has(n)));
+}
+
+function buildGraph(fileInfos: FileModuleInfo[], allFiles: Set<string>, entryPoints?: string[]): GraphResult {
+  const nodes = createNodes(fileInfos);
+  resolveImports(nodes, fileInfos, allFiles);
+  const edges = buildEdgesArray(nodes);
+  let cycles = detectCycles(nodes);
+  cycles = deduplicateCycles(cycles);
+  const reachable = computeReachable(nodes, entryPoints);
+  const filteredNodes = filterNodes(nodes, reachable);
+  const filteredEdges = filterEdges(edges, reachable);
+  const filteredCycles = filterCycles(cycles, reachable);
+  return {
+    nodes: Array.from(filteredNodes.values()).map(n => ({
+      id: n.id,
+      file: n.file,
+      exports: Array.from(n.exports),
+      imports: Array.from(n.imports.keys())
+    })),
+    edges: filteredEdges,
+    cycles: filteredCycles,
+    summary: { totalFiles: filteredNodes.size, totalEdges: filteredEdges.length, cycleCount: filteredCycles.length }
   };
-
-  // Convert nodes to arrays
-  const nodeArray = Array.from(filteredNodes.values()).map(n => ({
-    id: n.id,
-    file: n.file,
-    exports: Array.from(n.exports),
-    imports: Array.from(n.imports.keys())
-  }));
-
-  return { nodes: nodeArray, edges: filteredEdges, cycles: filteredCycles, summary };
 }
 
 export const schema = Type.Object({

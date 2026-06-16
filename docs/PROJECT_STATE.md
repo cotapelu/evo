@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 123 (latest) — refactored analyze analyzeContent: extracted tryParseImport, tryParseExport, tryParseSymbol; moved regexes to module constants; main function now ~15 lines. All tests passing.
+✅ Iteration 124 (latest) — refactored dependency_tree buildGraph: extracted createNodes, resolveImports, buildEdgesArray, detectCycles, deduplicateCycles, computeReachable, filterNodes, filterEdges, filterCycles, and dfsDetectCycle. BuildGraph orchestrator now 15 lines, all helpers ≤20 lines. All tests passing (9 dependency_tree tests green).
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components
