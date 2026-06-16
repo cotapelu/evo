@@ -774,6 +774,14 @@ Last Updated: 2026-06-15
 - Extracted `closeAllWatchers` to clear caches and close file watchers.
 - `unloadAll` now a simple orchestrator (~4 lines); all helpers ≤20 lines.
 
+### One Hundred Fourty-Eighth Round (Team Manager Initialize Refactor)
+- Refactored `team-manager.initialize` to bring it within the ≤20 line quality gate.
+- Extracted `resetTaskState` to initialize tasks and task statuses.
+- Extracted `clearTransientState` to clear message bus, workspace, and heartbeat tracking.
+- Extracted `resetAgentStatuses` to set each agent's status to idle.
+- Extracted `sendInitializationUpdate` to notify team initialization.
+- `initialize` now a concise 5‑line orchestrator.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
