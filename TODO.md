@@ -207,6 +207,7 @@ Last Updated: 2026-06-14
 - [x] Refactored analyze: split tryParseExport and tryParseSymbol into small handlers; all helpers ≤20 lines.
 - [x] Refactored analyze tryParseImport: extracted processNamedGroup helper; tryParseImport now ~15 lines.
 - [x] Refactored analyze_ast.execute: extracted executeInternal helper; execute now ~20 lines; all analyze_ast tests pass.
+- [x] Refactored analyze.execute: extracted buildSummary and analyzeFile; execute now ~16 lines, all helpers ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress

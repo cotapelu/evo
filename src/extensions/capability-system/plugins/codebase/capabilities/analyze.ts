@@ -291,46 +291,9 @@ function analyzeContent(content: string): { imports: ImportInfo[]; exports: Expo
   return { imports, exports, symbols };
 }
 
-export async function execute(params: { file: string }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-  const filePath = join(cwd, params.file);
-
-  try {
-    // Check file exists
-    try {
-      await fs.access(filePath);
-    } catch {
-      return {
-        content: [{ type: "text" as const, text: `File not found: ${params.file}` }],
-        isError: true,
-        details: { file: params.file, exists: false }
-      };
-    }
-
-    // Read file
-    const content = await fs.readFile(filePath, "utf-8");
-    const lines = content.split('\n').length;
-
-    // Determine language from extension
-    const ext = params.file.split('.').pop()?.toLowerCase() ?? '';
-    const language = isCodeExtension(ext) ? ext : 'unknown';
-
-    // Analyze
-    const { imports, exports, symbols } = analyzeContent(content);
-
-    const result: AnalysisResult = {
-      file: params.file,
-      exists: true,
-      language,
-      lines,
-      imports,
-      exports,
-      symbols
-    };
-
-    // Format result as readable text + JSON
-    const summary = `
-📄 File: ${params.file}
+function buildSummary(file: string, lines: number, language: string, imports: ImportInfo[], exports: ExportInfo[], symbols: SymbolDef[]): string {
+  return `
+📄 File: ${file}
 📏 Lines: ${lines}
 🔤 Language: ${language}
 
@@ -343,19 +306,41 @@ ${exports.map((exp, i) => `  ${i+1}. ${exp.type} ${exp.name}${exp.aliases ? ' as
 🔧 Symbols (${symbols.length}):
 ${symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.line})`).join('\n')}
 `.trim();
+}
 
-    return {
-      content: [{ type: "text" as const, text: summary }],
-      details: result,
-      isError: false
-    };
+async function analyzeFile(filePath: string, file: string): Promise<{ result: AnalysisResult; summary: string }> {
+  const content = await fs.readFile(filePath, "utf-8");
+  const lines = content.split('\n').length;
+  const ext = file.split('.').pop()?.toLowerCase() ?? '';
+  const language = isCodeExtension(ext) ? ext : 'unknown';
+  const { imports, exports, symbols } = analyzeContent(content);
+  const result: AnalysisResult = {
+    file,
+    exists: true,
+    language,
+    lines,
+    imports,
+    exports,
+    symbols
+  };
+  const summary = buildSummary(file, lines, language, imports, exports, symbols);
+  return { result, summary };
+}
+
+export async function execute(params: { file: string }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+  const filePath = join(cwd, params.file);
+
+  try { await fs.access(filePath); } catch {
+    return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
+  }
+
+  try {
+    const { result, summary } = await analyzeFile(filePath, params.file);
+    return { content: [{ type: "text" as const, text: summary }], details: result, isError: false };
   } catch (err: any) {
     const msg = err instanceof Error ? err.message : String(err);
-    return {
-      content: [{ type: "text" as const, text: `❌ Error: ${msg}` }],
-      isError: true,
-      details: { file: params.file, error: msg }
-    };
+    return { content: [{ type: "text" as const, text: `❌ Error: ${msg}` }], isError: true, details: { file: params.file, error: msg } };
   }
 }
 
