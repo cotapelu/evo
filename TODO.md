@@ -206,6 +206,7 @@ Last Updated: 2026-06-14
 - [x] Refactored dependency_tree parseModule: extracted handler functions (handleExportNamedDeclaration, handleExportDefaultDeclaration, handleExportAllDeclaration, handleImportDeclaration); main parseModule ~20 lines.
 - [x] Refactored analyze: split tryParseExport and tryParseSymbol into small handlers; all helpers ≤20 lines.
 - [x] Refactored analyze tryParseImport: extracted processNamedGroup helper; tryParseImport now ~15 lines.
+- [x] Refactored analyze_ast.execute: extracted executeInternal helper; execute now ~20 lines; all analyze_ast tests pass.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress

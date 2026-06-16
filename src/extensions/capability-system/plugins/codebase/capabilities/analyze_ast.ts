@@ -272,22 +272,11 @@ async function parseAST(content: string): Promise<any> {
   });
 }
 
-export async function execute(params: { file: string }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-  const filePath = join(cwd, params.file);
-
-  try {
-    await fs.access(filePath);
-  } catch {
-    return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
-  }
-
+async function executeInternal(filePath: string, file: string, language: "ts" | "tsx" | "js" | "jsx" | "unknown"): Promise<{ result: AnalysisResult; summary: string }> {
   const content = await fs.readFile(filePath, "utf-8");
   const lines = content.split('\n').length;
-  const language = detectLanguage(params.file);
-
   const result: AnalysisResult = {
-    file: params.file,
+    file,
     exists: true,
     language,
     lines,
@@ -295,22 +284,28 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
     exports: [],
     symbols: []
   };
+  const ast = await parseAST(content);
+  walk(ast, createVisitor(result));
+  const summary = buildSummary({ file }, lines, language, result);
+  return { result, summary };
+}
 
-  let ast;
+export async function execute(params: { file: string }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+  const filePath = join(cwd, params.file);
+
+  try { await fs.access(filePath); } catch {
+    return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
+  }
+
+  const language = detectLanguage(params.file);
+
   try {
-    ast = await parseAST(content);
+    const { result, summary } = await executeInternal(filePath, params.file, language);
+    return { content: [{ type: "text" as const, text: summary }], details: result, isError: false };
   } catch (err: any) {
     return { content: [{ type: "text" as const, text: `Parse error: ${err.message}` }], isError: true, details: { file: params.file, error: err.message } };
   }
-
-  walk(ast, createVisitor(result));
-  const summary = buildSummary(params, lines, language, result);
-
-  return {
-    content: [{ type: "text" as const, text: summary }],
-    details: result,
-    isError: false
-  };
 }
 
 export default { execute, schema };
