@@ -9,6 +9,9 @@ import { Type } from "typebox";
 import { promises as fs } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -68,8 +71,8 @@ async function parseFile(cwd: string, fileRel: string): Promise<ParseResult> {
   const fileAbs = join(cwd, fileRel);
   try {
     const source = await fs.readFile(fileAbs, "utf8");
-    // @ts-ignore - dynamic import of parser with types not resolvable under current moduleResolution
-    const { parse } = await import("@typescript-eslint/parser/dist/index.js");
+    const parser = require('@typescript-eslint/parser');
+    const { parse } = parser;
     const ast = parse(source, { sourceType: "module", ecmaVersion: "latest", ts: true, jsx: true });
     return { source, ast };
   } catch (e: any) {

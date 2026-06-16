@@ -28,8 +28,7 @@ vi.mock("../extensions/commands/settings-command.js", () => ({ registerSettingsC
 vi.mock("../extensions/commands/provider-command.js", () => ({ registerProviderCommand: vi.fn() }));
 vi.mock("../extensions/commands/copy-command.js", () => ({ registerCopyCommand: vi.fn() }));
 vi.mock("../extensions/commands/team-command.js", () => ({ registerTeamCommand: vi.fn() }));
-vi.mock("../extensions/commands/metrics-command.js", () => ({ registerMetricsCommand: vi.fn() }));
-vi.mock("../extensions/metrics/metrics-widget.js", () => ({ registerMetricsWidget: vi.fn() }));
+// Metrics command and widget removed (0fb3d3e)
 
 // Now import the module under test and the mocked functions
 import { extensionsAggregator, getExtensionFactories } from "../extensions/factory";
@@ -54,8 +53,8 @@ import { registerSettingsCommand } from "../extensions/commands/settings-command
 import { registerProviderCommand } from "../extensions/commands/provider-command";
 import { registerCopyCommand } from "../extensions/commands/copy-command";
 import { registerTeamCommand } from "../extensions/commands/team-command";
-import { registerMetricsCommand } from "../extensions/commands/metrics-command";
-import { registerMetricsWidget } from "../extensions/metrics/metrics-widget";
+// import { registerMetricsCommand } from "../extensions/commands/metrics-command"; // removed
+// import { registerMetricsWidget } from "../extensions/metrics/metrics-widget"; // removed
 //
 
 describe("Extensions Aggregator", () => {
@@ -90,8 +89,7 @@ describe("Extensions Aggregator", () => {
     expect(registerProviderCommand).toHaveBeenCalledWith(mockApi);
     expect(registerCopyCommand).toHaveBeenCalledWith(mockApi);
     expect(registerTeamCommand).toHaveBeenCalledWith(mockApi);
-    expect(registerMetricsWidget).toHaveBeenCalledWith(mockApi);
-    expect(registerMetricsCommand).toHaveBeenCalledWith(mockApi);
+    // Metrics widget and command removed
   });
 
   it("getExtensionFactories returns array containing aggregator", () => {

@@ -12,10 +12,9 @@ import { Type } from "typebox";
 import { promises as fs } from "fs";
 import { join, relative, dirname } from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 
-interface ParserModule {
-  parse: (source: string, options?: any) => any;
-}
+const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -261,8 +260,7 @@ ${result.symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.
 }
 
 async function parseAST(content: string): Promise<any> {
-// @ts-ignore
-  const parser = await import("@typescript-eslint/parser/dist/index.js") as ParserModule;
+  const parser = require('@typescript-eslint/parser');
   const { parse } = parser;
   return parse(content, {
     sourceType: "module",

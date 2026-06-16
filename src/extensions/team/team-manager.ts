@@ -736,10 +736,10 @@ export class AgentTeam implements AgentTeamRuntime {
         if (e.message && typeof e.message === 'object' && 'role' in e.message) {
           const msg = e.message as { role: string; content?: unknown };
           if (msg.role === 'user') {
-            const content = this.extractText(msg.content);
+            const content = this.extractText(msg);
             text = `[${role}] User: ${content.substring(0, 200)}`;
           } else if (msg.role === 'assistant') {
-            const content = this.extractText(msg.content);
+            const content = this.extractText(msg);
             text = `[${role}] Assistant: ${content.substring(0, 200)}`;
           }
         }
