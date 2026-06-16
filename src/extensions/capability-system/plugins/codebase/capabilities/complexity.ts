@@ -181,32 +181,13 @@ export const schema = Type.Object({
   file: Type.String({ description: "File path to analyze (relative to cwd)" })
 });
 
-export async function execute(params: { file: string }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-  const filePath = join(cwd, params.file);
-
-  try {
-    await fs.access(filePath);
-  } catch {
-    return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
-  }
-
-  const source = await fs.readFile(filePath, "utf-8");
-  const lines = source.split('\n').length;
-  const language = detectLanguage(params.file);
-
-  // Dynamic import of parser
+function parseAST(content: string): any {
   const parser = require('@typescript-eslint/parser');
   const { parse } = parser;
+  return parse(content, { sourceType: "module", ecmaVersion: "latest", ts: true, jsx: true });
+}
 
-  let ast;
-  try {
-    ast = parse(source, { sourceType: "module", ecmaVersion: "latest", ts: true, jsx: true });
-  } catch (err: any) {
-    return { content: [{ type: "text" as const, text: `Parse error: ${err.message}` }], isError: true, details: { file: params.file, error: err.message } };
-  }
-
-  // Analyze
+function analyzeComplexity(file: string, language: "ts" | "tsx" | "js" | "jsx" | "unknown", lines: number, ast: any): ComplexityResult {
   let functions = 0;
   let cyclomatic = 0;
   const halsteadCounts: HalsteadCounts = { operators: new Map(), operands: new Map() };
@@ -214,22 +195,19 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
   walk(ast, (node: any) => {
     if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression') {
       functions++;
-      // Each function adds 1 to cyclomatic complexity base
       cyclomatic++;
-      // Add decisions inside function body
       if (node.body) {
         cyclomatic += countDecisions(node.body);
       }
     }
   });
 
-  // Collect Halstead across entire file
   collectHalstead(ast, halsteadCounts);
   const halstead = computeHalstead(halsteadCounts);
   const maintainability = computeMaintainabilityIndex(halstead.volume, cyclomatic, lines);
 
-  const result: ComplexityResult = {
-    file: params.file,
+  return {
+    file,
     exists: true,
     language,
     lines,
@@ -243,7 +221,28 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
     },
     maintainability: Math.round(maintainability * 10) / 10
   };
+}
 
+export async function execute(params: { file: string }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+  const filePath = join(cwd, params.file);
+
+  try { await fs.access(filePath); } catch {
+    return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
+  }
+
+  const content = await fs.readFile(filePath, "utf-8");
+  const lines = content.split('\n').length;
+  const language = detectLanguage(params.file);
+
+  let ast;
+  try {
+    ast = await parseAST(content);
+  } catch (err: any) {
+    return { content: [{ type: "text" as const, text: `Parse error: ${err.message}` }], isError: true, details: { file: params.file, error: err.message } };
+  }
+
+  const result = analyzeComplexity(params.file, language, lines, ast);
   const output = formatOutput(result);
   return { content: [{ type: "text" as const, text: output }], isError: false, details: result };
 }
