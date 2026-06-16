@@ -235,13 +235,34 @@ function collectMatches(ast: any, query: any): Match[] {
 }
 
 // --- Execute capability ---
+async function parseAST(content: string): Promise<any> {
+  const parser = require('@typescript-eslint/parser');
+  const { parse } = parser;
+  return parse(content, {
+    sourceType: "module",
+    ecmaVersion: "latest",
+    ts: true,
+    jsx: true,
+    range: false,
+    loc: true
+  });
+}
+
+function buildQuerySummary(query: any, file: string, matches: any[]): string {
+  return `
+🔍 Query: ${query.kind} ${query.name ? `name="${query.name}"` : ''} ${query.parent ? `in "${query.parent}"` : ''}
+📄 File: ${file}
+✅ Matches: ${matches.length}
+
+${matches.map((m, i) => `  ${i+1}. ${m.kind} ${m.name || ''} (line ${m.line}${m.column !== undefined ? `, col ${m.column}` : ''}${m.parent ? ` in ${m.parent}` : ''})`).join('\n')}
+`.trim();
+}
+
 export async function execute(params: { file: string; query: any }, ctx: any): Promise<any> {
   const cwd = ctx.cwd || process.cwd();
   const filePath = join(cwd, params.file);
 
-  try {
-    await fs.access(filePath);
-  } catch {
+  try { await fs.access(filePath); } catch {
     return { content: [{ type: "text" as const, text: `File not found: ${params.file}` }], isError: true, details: { file: params.file, exists: false } };
   }
 
@@ -249,29 +270,13 @@ export async function execute(params: { file: string; query: any }, ctx: any): P
 
   let ast;
   try {
-    const parser = require('@typescript-eslint/parser');
-    const { parse } = parser;
-    ast = parse(content, {
-      sourceType: "module",
-      ecmaVersion: "latest",
-      ts: true,
-      jsx: true,
-      range: false,
-      loc: true
-    });
+    ast = await parseAST(content);
   } catch (err: any) {
     return { content: [{ type: "text" as const, text: `Parse error: ${err.message}` }], isError: true, details: { file: params.file, error: err.message } };
   }
 
   const matches = collectMatches(ast, params.query);
-
-  const summary = `
-🔍 Query: ${params.query.kind} ${params.query.name ? `name="${params.query.name}"` : ''} ${params.query.parent ? `in "${params.query.parent}"` : ''}
-📄 File: ${params.file}
-✅ Matches: ${matches.length}
-
-${matches.map((m, i) => `  ${i+1}. ${m.kind} ${m.name || ''} (line ${m.line}${m.column !== undefined ? `, col ${m.column}` : ''}${m.parent ? ` in ${m.parent}` : ''})`).join('\n')}
-`.trim();
+  const summary = buildQuerySummary(params.query, params.file, matches);
 
   return {
     content: [{ type: "text" as const, text: summary }],
