@@ -3,8 +3,8 @@
 Last Updated: 2026-06-16
 
 ## Session Summary
-- Iterations: 121
-- Tasks Completed: 150 (refactored dependency_tree.execute: extracted readAndParseFiles and convertToRelative helpers)
+- Iterations: 122
+- Tasks Completed: 151 (refactored call_graph.execute: extracted collectAllFiles, buildAbsToFuncs, buildEdges, collectUniqueNodes, formatSummary)
 - High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph, metrics, complexity, dependency_tree) with consistent quality gates (≤20 lines, ≤10 complexity)
 
 ## Test Metrics

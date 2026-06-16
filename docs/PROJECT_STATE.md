@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 121 (latest) — refactored dependency_tree.execute: extracted readAndParseFiles and convertToRelative helpers. All tests passing.
+✅ Iteration 122 (latest) — refactored call_graph.execute: extracted collectAllFiles, buildAbsToFuncs, buildEdges, collectUniqueNodes, formatSummary. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

@@ -40,3 +40,6 @@ temp/
 # LLM context
 llm-context/
 
+# Test artifacts
+evo-test-metrics-*/
+

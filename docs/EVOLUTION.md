@@ -609,6 +609,12 @@ Last Updated: 2026-06-15
 - All 9 dependency_tree tests pass; no regressions.
 - Continued commitment to decomposing large functions into testable units.
 
+### One Hundred Twenty-Second Round (Call Graph Refactor)
+- Refactored `call_graph.execute` by extracting focused helpers: `collectAllFiles`, `buildAbsToFuncs`, `buildEdges`, `collectUniqueNodes`, `formatSummary`.
+- Orchestrator ~25 lines; all helpers ≤20 lines. Improved modularity and testability.
+- All 10 call_graph tests pass; no regressions.
+- Confirmed pattern of functional decomposition across capabilities is successful.
+
 ## Anticipated Technical Debt
 
 ## Anticipated Technical Debt

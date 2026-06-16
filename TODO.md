@@ -200,6 +200,7 @@ Last Updated: 2026-06-14
 - [x] Final test type cleanup: eliminated remaining ` as any` in skill-reader, tool-template, read-skill, and codebase tests. Zero ` as any` in entire codebase.
 - [x] Refactored safe_edit.execute: broke monolithic function into smaller helpers.
 - [x] Refactored dependency_tree.execute: extracted readAndParseFiles and convertToRelative.
+- [x] Refactored call_graph.execute: extracted collectAllFiles, buildAbsToFuncs, buildEdges, collectUniqueNodes, formatSummary.
 
 ## In Progress
 - (none)
