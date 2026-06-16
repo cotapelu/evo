@@ -957,6 +957,18 @@ export class TeamRegistry {
   }
 }
 
+function createTeamBase(team: AgentTeam, roles: string[]): void {
+  for (const role of roles) {
+    team.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
+  }
+  team.roles = roles;
+  team.size = roles.length;
+}
+
+function generateTeamId(): string {
+  return `team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export async function bootPiclawTeam(
   parentRuntime: AgentSessionRuntime,
   options: {
@@ -966,29 +978,51 @@ export async function bootPiclawTeam(
     agentCwd?: string | ((role: string) => string);
   } = {}
 ): Promise<AgentTeam> {
-  const { size: teamSize, roles: normalizedRoles } = validateOptions(
+  const { roles: normalizedRoles } = validateOptions(
     options.teamSize ?? 2,
     Array.isArray(options.teamRoles) ? options.teamRoles : []
   );
+  const allRoles = ["parent", ...normalizedRoles];
 
   const team = new AgentTeam();
-  team.setTeamId(`team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  team.setTeamId(generateTeamId());
+  createTeamBase(team, allRoles);
 
-  // Include parent as a role, size includes parent + children
-  const allRoles = ["parent", ...normalizedRoles];
-  team.roles = allRoles;
-  for (const role of allRoles) {
-    team.agentStatuses.set(role, { currentTaskIndex: null, status: 'idle' });
-  }
-  team.size = allRoles.length;
-
-  // Create isolated child runtimes and start agent loops
   await team.setupChildRuntimes(parentRuntime, options.agentCwd);
-
-  // Register team in global registry
   TeamRegistry.getInstance().register(team.id, team);
 
   return team;
+}
+
+function startCompletionMonitor(team: AgentTeam): void {
+  team.monitorInterval = setInterval(async () => {
+    await team.withLock(() => team.reclaimZombieAgents());
+    const status = await team.getTeamStatus();
+    if (status.isComplete && status.totalTasks > 0) {
+      clearInterval(team.monitorInterval!);
+      team.monitorInterval = null;
+      try {
+        TeamRegistry.getInstance().resetAutoDisposeTimer(team.id);
+      } catch (e) {
+        console.warn('Failed to schedule auto-dispose:', e);
+      }
+    }
+  }, 1000);
+}
+
+function sendImmediateStartUpdate(team: AgentTeam, onUpdate?: (update: AgentToolResult<unknown>) => void, tasks?: string[]): void {
+  onUpdate?.(team.createUpdate(
+    `✅ Team started (teamId: ${team.id}). Progress updates will follow.`,
+    { teamId: team.id, agentCount: team.roles.length, totalTasks: tasks?.length ?? 0 }
+  ));
+}
+
+async function sendCompletionUpdate(team: AgentTeam, onUpdate?: (update: AgentToolResult<unknown>) => void): Promise<void> {
+  const finalStatus = await team.getTeamStatus();
+  onUpdate?.(team.createUpdate(
+    `🎉 Team execution complete: ${finalStatus.completedTasks}/${finalStatus.totalTasks} tasks done`,
+    { completed: finalStatus.completedTasks, total: finalStatus.totalTasks }
+  ));
 }
 
 export async function executeTeamTasks(
@@ -999,27 +1033,9 @@ export async function executeTeamTasks(
 ): Promise<AgentTeam> {
   team.setOnUpdate(onUpdate);
   await team.initialize(tasks);
-  // Start autonomous agent loops
   team.startAgentLoops();
-  // Setup monitor for completion and auto-dispose
-  team.monitorInterval = setInterval(async () => {
-    await team.withLock(() => {
-      team.reclaimZombieAgents();
-    });
-    const status = await team.getTeamStatus();
-    if (status.isComplete && status.totalTasks > 0) {
-      clearInterval(team.monitorInterval!);
-      team.monitorInterval = null;
-      try {
-        const registry = TeamRegistry.getInstance();
-        registry.resetAutoDisposeTimer(team.id);
-      } catch (e) {
-        console.warn('Failed to schedule auto-dispose:', e);
-      }
-    }
-  }, 1000);
+  startCompletionMonitor(team);
 
-  // If wait option is true, await completion; otherwise return immediately
   if (_options?.wait) {
     try {
       await Promise.all(team.childPromises);
@@ -1029,16 +1045,9 @@ export async function executeTeamTasks(
         team.monitorInterval = null;
       }
     }
-    const finalStatus = await team.getTeamStatus();
-    onUpdate?.(team.createUpdate(
-      `🎉 Team execution complete: ${finalStatus.completedTasks}/${finalStatus.totalTasks} tasks done`,
-      { completed: finalStatus.completedTasks, total: finalStatus.totalTasks }
-    ));
+    await sendCompletionUpdate(team, onUpdate);
   } else {
-    onUpdate?.(team.createUpdate(
-      `✅ Team started (teamId: ${team.id}). Progress updates will follow.`,
-      { teamId: team.id, agentCount: team.roles.length, totalTasks: tasks.length }
-    ));
+    sendImmediateStartUpdate(team, onUpdate, tasks);
   }
   return team;
 }
