@@ -177,59 +177,48 @@ function handleVariableDeclarator(node: any, parent: any, result: AnalysisResult
 }
 
 // Main AST walk visitor
+function handleFunctionDeclaration(node: any, result: AnalysisResult) {
+  if (node.id) {
+    addSymbol(result, { name: node.id.name, kind: "function", line: node.loc.start.line });
+  }
+}
+
+function handleClassDeclaration(node: any, result: AnalysisResult) {
+  if (node.id) {
+    addSymbol(result, { name: node.id.name, kind: "class", line: node.loc.start.line });
+  }
+}
+
+function handleTSTypeAlias(node: any, result: AnalysisResult) {
+  if (node.id) {
+    addSymbol(result, { name: node.id.name, kind: "type", line: node.loc.start.line });
+  }
+}
+
+function handleTSInterface(node: any, result: AnalysisResult) {
+  if (node.id) {
+    addSymbol(result, { name: node.id.name, kind: "interface", line: node.loc.start.line });
+  }
+}
+
+function handleTSEnum(node: any, result: AnalysisResult) {
+  if (node.id) {
+    addSymbol(result, { name: node.id.name, kind: "enum", line: node.loc.start.line });
+  }
+}
+
 function createVisitor(result: AnalysisResult) {
   return (node: any, parent?: any) => {
-    // Imports
-    if (node.type === 'ImportDeclaration') {
-      handleImport(node, result);
-      return;
-    }
-
-    // Exports
-    if (node.type === 'ExportNamedDeclaration') {
-      handleExportNamed(node, result);
-      return;
-    }
-    if (node.type === 'ExportDefaultDeclaration') {
-      handleExportDefault(node, result);
-      return;
-    }
-    if (node.type === 'ExportAllDeclaration') {
-      handleExportAll(node, result);
-      return;
-    }
-
-    // Functions (declarations)
-    if (node.type === 'FunctionDeclaration' && node.id) {
-      addSymbol(result, { name: node.id.name, kind: "function", line: node.loc.start.line });
-      return;
-    }
-
-    // Classes
-    if (node.type === 'ClassDeclaration' && node.id) {
-      addSymbol(result, { name: node.id.name, kind: "class", line: node.loc.start.line });
-      return;
-    }
-
-    // Variable declarations (const/let/var)
-    if (node.type === 'VariableDeclarator') {
-      handleVariableDeclarator(node, parent, result);
-      return;
-    }
-
-    // TS Interface and TypeAlias
-    if (node.type === 'TSTypeAliasDeclaration' && node.id) {
-      addSymbol(result, { name: node.id.name, kind: "type", line: node.loc.start.line });
-      return;
-    }
-    if (node.type === 'TSInterfaceDeclaration' && node.id) {
-      addSymbol(result, { name: node.id.name, kind: "interface", line: node.loc.start.line });
-      return;
-    }
-    if (node.type === 'TSEnumDeclaration' && node.id) {
-      addSymbol(result, { name: node.id.name, kind: "enum", line: node.loc.start.line });
-      return;
-    }
+    if (node.type === 'ImportDeclaration') return handleImport(node, result);
+    if (node.type === 'ExportNamedDeclaration') return handleExportNamed(node, result);
+    if (node.type === 'ExportDefaultDeclaration') return handleExportDefault(node, result);
+    if (node.type === 'ExportAllDeclaration') return handleExportAll(node, result);
+    if (node.type === 'FunctionDeclaration') return handleFunctionDeclaration(node, result);
+    if (node.type === 'ClassDeclaration') return handleClassDeclaration(node, result);
+    if (node.type === 'VariableDeclarator') return handleVariableDeclarator(node, parent, result);
+    if (node.type === 'TSTypeAliasDeclaration') return handleTSTypeAlias(node, result);
+    if (node.type === 'TSInterfaceDeclaration') return handleTSInterface(node, result);
+    if (node.type === 'TSEnumDeclaration') return handleTSEnum(node, result);
   };
 }
 

@@ -213,6 +213,7 @@ Last Updated: 2026-06-14
 - [x] Refactored safe_edit.execute: compacted, removed blank lines/comments; execute ~20 lines.
 - [x] Refactored complexity.execute: extracted parseAST and analyzeComplexity; execute ~15 lines, all helpers ≤20 lines.
 - [x] Refactored search.execute: extracted shouldProcess, scanAndCollect, handleFile, formatSearchOutput; execute ~15 lines, all helpers ≤20 lines.
+- [x] Refactored analyze_ast.createVisitor: extracted per-node handlers; createVisitor ~10 lines, all handlers ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress
