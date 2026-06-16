@@ -184,42 +184,66 @@ export class PluginLoader {
     const executePath = join(pluginPath, capMan.execute);
     const rendererPath = capMan.renderer ? join(pluginPath, capMan.renderer) : null;
 
+    const { executeFn } = await this.loadExecuteModule(executePath);
+    const renderResultFn = rendererPath ? await this.loadRendererModule(rendererPath) : undefined;
+
+    const capabilityId = `${pluginMan.id}.${capMan.id}`;
+    const finalGuidelines = generateCapabilityGuidelines(
+      capabilityId,
+      capMan.inputSchema,
+      capMan.outputSchema,
+      capMan.promptGuidelines || []
+    );
+    const minimalParams = extractMinimalParams(capMan.inputSchema);
+    const promptSnippet = JSON.stringify({
+      capability: capabilityId,
+      params: minimalParams
+    }, null, 2);
+
+    return this.buildCapability(
+      pluginId,
+      capMan,
+      pluginMan,
+      executeFn,
+      renderResultFn,
+      capabilityId,
+      finalGuidelines,
+      promptSnippet
+    );
+  }
+
+  private async loadExecuteModule(executePath: string): Promise<{executeFn: (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>}> {
     const executeModule = await this.dynamicImport(executePath);
     // @ts-ignore - dynamic module shape
     const rawExecuteFn = executeModule.execute || executeModule.default;
     if (typeof rawExecuteFn !== "function") throw new Error("Missing execute function");
     const executeFn = rawExecuteFn as (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>;
+    return { executeFn };
+  }
 
-    let renderResultFn: Capability["renderResult"] = undefined;
-    if (rendererPath && existsSync(rendererPath)) {
-      try {
-        const rendererModule = await this.dynamicImport(rendererPath);
-        // @ts-ignore - dynamic module shape
-        renderResultFn = rendererModule.renderResult || rendererModule.default;
-      } catch {}
+  private async loadRendererModule(rendererPath: string): Promise<Capability["renderResult"] | undefined> {
+    if (!existsSync(rendererPath)) return undefined;
+    try {
+      const rendererModule = await this.dynamicImport(rendererPath);
+      // @ts-ignore - dynamic module shape
+      return rendererModule.renderResult || rendererModule.default;
+    } catch {
+      return undefined;
     }
+  }
 
-    const capabilityId = `${pluginMan.id}.${capMan.id}`;
-
-    const capabilityIdFull = capabilityId;
-
-    // Generate smart guidelines from schema + custom guidelines from manifest
-    const finalGuidelines = generateCapabilityGuidelines(
-      capabilityIdFull,
-      capMan.inputSchema,
-      capMan.outputSchema,
-      capMan.promptGuidelines || []
-    );
-
-    // Generate snippet from minimal example
-    const minimalParams = extractMinimalParams(capMan.inputSchema);
-    const promptSnippet = JSON.stringify({
-      capability: capabilityIdFull,
-      params: minimalParams
-    }, null, 2);
-
+  private buildCapability(
+    pluginId: string,
+    capMan: CapabilityManifest,
+    pluginMan: PluginManifest,
+    executeFn: (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>,
+    renderResultFn: Capability["renderResult"] | undefined,
+    capabilityId: string,
+    finalGuidelines: string[],
+    promptSnippet: string
+  ): Capability {
     return {
-      id: capabilityIdFull,
+      id: capabilityId,
       name: capMan.name,
       description: capMan.description,
       pluginId,
@@ -227,26 +251,40 @@ export class PluginLoader {
       promptGuidelines: finalGuidelines,
       parameters: capMan.inputSchema,
       outputSchema: capMan.outputSchema,
-      execute: (
-        toolCallId: string,
-        params: Record<string, unknown>,
-        signal: AbortSignal | null | undefined,
-        onUpdate: ((data: unknown) => void) | null | undefined,
-        ctx: ExtensionContext
-      ): Promise<AgentToolResult<unknown>> => {
-        return executeFn(params, ctx).then((result: AgentToolResult<unknown>) => ({
-          ...result,
-          details: result.details && typeof result.details === 'object' && !Array.isArray(result.details) ? { ...result.details, capabilityId } : { capabilityId }
-        })).catch((error: unknown) => ({
-          content: [{ type: "text" as const, text: `❌ ${capabilityId} error: ${error instanceof Error ? error.message : String(error)}` }],
-          details: { error: error instanceof Error ? error.message : String(error), capabilityId },
-          isError: true
-        }));
-      },
+      execute: this.createExecuteHandler(capabilityId, executeFn),
       ...(renderResultFn && { renderResult: renderResultFn }),
       tags: pluginMan.tags,
       dependencies: capMan.dependencies,
       permissions: capMan.permissions
+    };
+  }
+
+  private createExecuteHandler(
+    capabilityId: string,
+    executeFn: (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>
+  ): Capability["execute"] {
+    return async (
+      toolCallId: string,
+      params: Record<string, unknown>,
+      signal: AbortSignal | null | undefined,
+      onUpdate: ((data: unknown) => void) | null | undefined,
+      ctx: ExtensionContext
+    ): Promise<AgentToolResult<unknown>> => {
+      try {
+        const result = await executeFn(params, ctx);
+        return {
+          ...result,
+          details: result.details && typeof result.details === 'object' && !Array.isArray(result.details)
+            ? { ...result.details, capabilityId }
+            : { capabilityId }
+        };
+      } catch (error: unknown) {
+        return {
+          content: [{ type: "text" as const, text: `❌ ${capabilityId} error: ${error instanceof Error ? error.message : String(error)}` }],
+          details: { error: error instanceof Error ? error.message : String(error), capabilityId },
+          isError: true
+        };
+      }
     };
   }
 

@@ -724,6 +724,15 @@ Last Updated: 2026-06-15
 - Plugin loader tests (edge cases and watch mode) continue to pass.
 - Improves modularity and paves way for further refactoring of `createCapability`.
 
+### One Hundred Fortieth Round (Plugin Loader CreateCapability Refactor)
+- Refactored `plugin-loader.createCapability` to reduce size and improve separation of concerns.
+- Extracted `loadExecuteModule` for dynamic import and validation of execute function.
+- Extracted `loadRendererModule` for optional renderer loading.
+- Extracted `buildCapability` to assemble the Capability object, and `createExecuteHandler` for the execute wrapper.
+- `createCapability` now orchestrates; all new helpers ≤20 lines.
+- p-loader tests (edge cases, watch mode) continue to pass.
+- Maintains consistency with overall function size quality gate.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
