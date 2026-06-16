@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 130 (latest) — refactored ast_query.execute: extracted parseAST and buildQuerySummary helpers; execute now ~15 lines, all helpers ≤20 lines. All tests passing.
+✅ Iteration 131 (latest) — refactored call_graph.execute: extracted determineRoots and buildResult helpers; execute now ~15 lines, all helpers ≤20 lines. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

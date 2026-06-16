@@ -313,31 +313,36 @@ ${edges.map((e, i) => `  ${i+1}. ${e.from.name} (${e.from.file}) → ${e.to.name
   return summary;
 }
 
+function determineRoots(file: string, entryPoints?: string[]): string[] {
+  const roots: string[] = [file];
+  if (entryPoints && Array.isArray(entryPoints)) {
+    for (const ep of entryPoints) {
+      if (!roots.includes(ep)) roots.push(ep);
+    }
+  }
+  return roots;
+}
+
+function buildResult(nodeSet: Map<string, CallGraphNode>, edges: CallGraphEdge[]): { nodes: CallGraphNode[]; edges: CallGraphEdge[]; stats: { nodeCount: number; edgeCount: number } } {
+  return {
+    nodes: Array.from(nodeSet.values()),
+    edges,
+    stats: { nodeCount: nodeSet.size, edgeCount: edges.length }
+  };
+}
+
 export async function execute(params: { file: string; entryPoints?: string[]; query: any }, ctx: any): Promise<any> {
   const cwd = ctx.cwd || process.cwd();
   const { query = {} } = params;
   const { depth = 1, includeCrossFile = false, limit = 50 } = query;
   const nameFilter = query.name;
 
-  // Determine roots
-  const roots: string[] = [params.file];
-  if (params.entryPoints && Array.isArray(params.entryPoints)) {
-    for (const ep of params.entryPoints) {
-      if (!roots.includes(ep)) roots.push(ep);
-    }
-  }
-
-  // Collect all files
+  const roots = determineRoots(params.file, params.entryPoints);
   const allFiles = await collectAllFiles(cwd, roots, depth, includeCrossFile);
-
-  // Build functional index and edges
   const absToFuncs = buildAbsToFuncs(allFiles);
   let edges = buildEdges(allFiles, absToFuncs, nameFilter, limit);
-
-  // Collect unique nodes
   const nodeSet = collectUniqueNodes(allFiles, edges);
-
-  const result = { nodes: Array.from(nodeSet.values()), edges, stats: { nodeCount: nodeSet.size, edgeCount: edges.length } };
+  const result = buildResult(nodeSet, edges);
   const summary = formatSummary(params, result, edges);
 
   return {

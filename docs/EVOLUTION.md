@@ -665,6 +665,12 @@ Last Updated: 2026-06-15
 - All 11 ast_query tests continue to pass.
 - Progress toward ≤20 line function compliance across the codebase.
 
+### One Hundred Thirty-First Round (Call Graph Execute Refactor)
+- Refactored `call_graph.execute` by extracting `determineRoots` and `buildResult` helpers.
+- `execute` now ~15 lines; all helpers ≤20 lines.
+- All 10 call_graph tests continue to pass.
+- Continues progress toward ≤20 line function quality gate across capabilities.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
