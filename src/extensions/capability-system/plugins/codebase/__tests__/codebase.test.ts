@@ -45,6 +45,26 @@ function createMockCtx(cwd: string) {
 const analyzeModule = await import("../capabilities/analyze.ts");
 const safeEditModule = await import("../capabilities/safe_edit.ts");
 
+// Types for analyze and safe_edit results
+interface AnalyzeDetails {
+  file?: string;
+  exists: boolean;
+  imports: Array<{ moduleSpecifier: string; importClause?: string; namedImports?: string[]; typeOnly?: boolean }>;
+  exports: Array<{ type: string; name?: string; aliases?: string[] }>;
+  symbols: Array<{ name: string; kind: string; line: number; column?: number }>;
+  language?: string;
+  lines?: number;
+  error?: string;
+}
+
+interface SafeEditDetails {
+  success: boolean;
+  file: string;
+  message: string;
+  backupPath?: string;
+  diff?: string;
+}
+
 describe("codebase.analyze", () => {
   it("should parse simple imports and exports", async () => {
     const code = `
@@ -60,7 +80,7 @@ function myFunc() {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeModule.execute({ file: path.basename(file) }, ctx as { cwd: string });
     if (result.isError) console.error('ANALYZE ERROR:', result.content, result.details);
     else console.log('ANALYZE RESULT:', { imports: result.details.imports.length, exports: result.details.exports.length, symbols: result.details.symbols.map(s => `${s.kind} ${s.name}`) });
 
@@ -78,7 +98,7 @@ function myFunc() {}
 
   it("should report missing file as error", async () => {
     const ctx = { cwd: __dirname };
-    const result = await analyzeModule.execute({ file: "nonexistent.ts" }, ctx as any);
+    const result = await analyzeModule.execute({ file: "nonexistent.ts" }, ctx as { cwd: string });
     expect(result.isError).toBe(true);
     expect(result.details.exists).toBe(false);
   });
@@ -87,7 +107,7 @@ function myFunc() {}
     const code = "line1\nline2\nline3";
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeModule.execute({ file: path.basename(file) }, ctx as { cwd: string });
     expect(result.details.lines).toBe(3);
     await unlink(file);
   });
@@ -96,7 +116,7 @@ function myFunc() {}
     const code = "export {};";
     const file = await writeTempFile(code, "tsx");
     const ctx = { cwd: path.dirname(file) };
-    const result = await analyzeModule.execute({ file: path.basename(file) }, ctx as any);
+    const result = await analyzeModule.execute({ file: path.basename(file) }, ctx as { cwd: string });
     expect(result.details.language).toBe("tsx");
     await unlink(file);
   });
@@ -128,7 +148,7 @@ describe("codebase.safe_edit", () => {
       }]
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     console.log('SAFE_EDIT REPLACE RESULT:', JSON.stringify(result, null, 2));
     if (!result.success) console.error('SAFE_EDIT REPLACE ERROR:', JSON.stringify(result, null, 2));
     expect(result.success).toBe(true);
@@ -154,7 +174,7 @@ describe("codebase.safe_edit", () => {
       }]
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(true);
     const content = await readFile(file, "utf-8");
     expect(content).toBe("line1\ninserted\nline3");
@@ -174,7 +194,7 @@ describe("codebase.safe_edit", () => {
       }]
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(true);
     const content = await readFile(file, "utf-8");
     expect(content).toBe("line1\nline3");
@@ -205,7 +225,7 @@ describe("codebase.safe_edit", () => {
       fixImports: false
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(false);
     expect(result.results[0].backupRestored).toBe(true);
 
@@ -237,7 +257,7 @@ describe("codebase.safe_edit", () => {
       fixImports: false
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(false);
     expect(result.results[0].backupRestored).toBe(true);
     const content = await readFile(file, "utf-8");
@@ -258,7 +278,7 @@ describe("codebase.safe_edit", () => {
       }]
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(false);
     expect(result.results[0].error).toContain("Invalid range");
   });
@@ -277,7 +297,7 @@ describe("codebase.safe_edit", () => {
       }]
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(false);
     expect(result.results[0].error).toContain("newCode is required");
   });
@@ -294,7 +314,7 @@ describe("codebase.safe_edit", () => {
       ]
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(true);
     const content = await readFile(file, "utf-8");
     expect(content).toBe("A\nB\nc\nd");
@@ -316,7 +336,7 @@ describe("codebase.safe_edit", () => {
       fixImports: false
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(true);
     expect(result.results).toHaveLength(2);
     expect(result.results[0].success).toBe(true);
@@ -354,7 +374,7 @@ describe("codebase.safe_edit", () => {
       fixImports: false
     };
 
-    const result = await safeEditModule.execute(params, ctx as any);
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
     expect(result.success).toBe(false);
     // Both files should be rolled back to original
     const content1 = await readFile(file1, "utf-8");
@@ -380,7 +400,7 @@ describe("codebase.safe_edit", () => {
       operations: [{ file: "sample.ts", editType: "replace" as const, range: { start: 0, end: 1 }, newCode: "new" }],
       format: false
     };
-    await safeEditModule.execute(params, ctx as any);
+    await safeEditModule.execute(params, ctx as { cwd: string });
     expect(prettierCalled).toBe(false);
   });
 
@@ -398,7 +418,7 @@ describe("codebase.safe_edit", () => {
       operations: [{ file: "sample.ts", editType: "replace" as const, range: { start: 0, end: 1 }, newCode: "new" }],
       fixImports: false
     };
-    await safeEditModule.execute(params, ctx as any);
+    await safeEditModule.execute(params, ctx as { cwd: string });
     expect(eslintCalled).toBe(false);
   });
 });

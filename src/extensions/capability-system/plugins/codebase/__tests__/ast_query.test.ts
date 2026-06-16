@@ -24,6 +24,17 @@ async function writeTempFile(content: string, ext = "ts"): Promise<string> {
 // Import ast_query capability
 const astQueryModule = await import("../capabilities/ast_query.ts");
 
+// Types
+interface AstQueryDetails {
+  file: string;
+  exists: boolean;
+  language: string;
+  lines: number;
+  nodes: Array<{ kind: string; name?: string; line: number; column?: number; parent?: string }>;
+  total: number;
+  error?: string;
+}
+
 describe("codebase.ast_query", () => {
   afterEach(async () => {
     // Cleanup not strictly needed; temp files overwritten with timestamp
@@ -31,7 +42,7 @@ describe("codebase.ast_query", () => {
 
   it("should handle missing file", async () => {
     const ctx = { cwd: __dirname };
-    const result = await astQueryModule.execute({ file: "nonexistent.ts", query: { kind: "function" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: "nonexistent.ts", query: { kind: "function" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(true);
     expect(result.details?.exists).toBe(false);
@@ -43,7 +54,7 @@ function foo() {
   return (`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(true);
     expect(result.details?.error).toBeDefined();
@@ -58,7 +69,7 @@ function other() {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", name: "target" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", name: "target" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.matches.length).toBe(1);
@@ -75,7 +86,7 @@ function fooBaz() {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", name: "foo.*" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", name: "foo.*" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     const names = result.details.matches.map(m => m.name);
@@ -93,7 +104,7 @@ interface MyInterface {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "class" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "class" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     const classMatches = result.details.matches.filter(m => m.kind === "class");
@@ -111,7 +122,7 @@ baz();
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "call", name: "foo" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "call", name: "foo" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.matches.length).toBe(1);
@@ -130,7 +141,7 @@ enum MyEnum { A, B }
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "symbol" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "symbol" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     const names = result.details.matches.map(m => m.name);
@@ -151,7 +162,7 @@ import defaultImp from "module3";
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "import" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "import" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.matches.length).toBe(3);
@@ -172,7 +183,7 @@ export type MyType = string;
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "export" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "export" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.matches.length).toBeGreaterThanOrEqual(3);
@@ -189,7 +200,7 @@ export type MyType = string;
     const code = Array.from({ length: 10 }, (_, i) => `function fn${i}() {}`).join('\n');
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", limit: 5 } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", limit: 5 } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.matches.length).toBe(5);
@@ -206,7 +217,7 @@ function standalone() {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", parent: "MyClass" } }, ctx as any);
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: "function", parent: "MyClass" } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.matches.length).toBe(1);
