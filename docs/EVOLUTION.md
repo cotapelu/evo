@@ -755,6 +755,11 @@ Last Updated: 2026-06-15
 - `generateExamples` now orchestrates example generation; helpers handle building of minimal and full parameter examples, each ≤20 lines.
 - Further reduces function complexity and improves readability.
 
+### One Hundred Forty-Fifth Round (Guideline Generator Example Value Refactor)
+- Refactored `guideline-generator.getExampleValue` by extracting specialized helpers: `getStringExample`, `getBooleanExample`, `getArrayExample`, `getObjectExample`.
+- `getExampleValue` now a simple dispatcher; each helper ≤20 lines.
+- Maintains rich context-aware example generation for capability guidelines.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

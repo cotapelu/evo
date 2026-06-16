@@ -142,32 +142,27 @@ function generateVariations(
   required: string[]
 ): string[] {
   const variations: string[] = [];
-  
-  // Find optional params with clear use cases
   for (const [key, prop] of Object.entries(props)) {
     if (required.includes(key)) continue;
-    
     const type = prop.type;
     if (!type) continue;
-
-    // Boolean flag variations
-    if (type === "boolean") {
-      variations.push(`  • With ${key}=true: { "capability": "${capabilityId}", "params": { "${key}": true } }`);
-      variations.push(`  • With ${key}=false: { "capability": "${capabilityId}", "params": { "${key}": false } }`);
-    }
-    // Array variations
-    else if (type === "array") {
-      variations.push(`  • With ${key}=["item1", "item2"]: { "capability": "${capabilityId}", "params": { "${key}": ["item1", "item2"] } }`);
-    }
-    // String with enum
-    else if (type === "string" && prop.enum) {
-      const exampleVal = prop.enum[0];
-      variations.push(`  • With ${key}="${exampleVal}": { "capability": "${capabilityId}", "params": { "${key}": "${exampleVal}" } }`);
-    }
+    variations.push(...processVariationForProp(capabilityId, key, prop, type));
   }
-
-  // Limit to 3 variations max
   return variations.slice(0, 3);
+}
+
+function processVariationForProp(capabilityId: string, key: string, prop: any, type: any): string[] {
+  const result: string[] = [];
+  if (type === "boolean") {
+    result.push(`  • With ${key}=true: { "capability": "${capabilityId}", "params": { "${key}": true } }`);
+    result.push(`  • With ${key}=false: { "capability": "${capabilityId}", "params": { "${key}": false } }`);
+  } else if (type === "array") {
+    result.push(`  • With ${key}=["item1", "item2"]: { "capability": "${capabilityId}", "params": { "${key}": ["item1", "item2"] } }`);
+  } else if (type === "string" && prop.enum) {
+    const exampleVal = prop.enum[0];
+    result.push(`  • With ${key}="${exampleVal}": { "capability": "${capabilityId}", "params": { "${key}": "${exampleVal}" } }`);
+  }
+  return result;
 }
 
 function generateReturnsSection(schema: any): string[] {
@@ -209,75 +204,57 @@ function formatType(type: any): string {
 function getExampleValue(prop: any, parentDescription: string = ""): any {
   // Direct example in prop?
   if (prop.example !== undefined) return prop.example;
-  
   // Default value?
   if (prop.default !== undefined) return prop.default;
-  
-  // Use parent description if available (for array items)
   const description = prop.description || parentDescription;
-  
-  // Type-based examples
   const type = prop.type;
-  
-  if (type === "string") {
-    // Try enum first
-    if (prop.enum && prop.enum.length > 0) return prop.enum[0];
-    
-    // Context-aware examples from description
-    const lowerDesc = description.toLowerCase();
-    if (lowerDesc.includes("file") || lowerDesc.includes("path") || lowerDesc.includes(".ts") || lowerDesc.includes(".js")) {
-      return "src/example.test.ts";
-    }
-    if (lowerDesc.includes("name")) {
-      return "example";
-    }
-    if (lowerDesc.includes("url") || lowerDesc.includes("link") || lowerDesc.includes("http")) {
-      return "https://example.com";
-    }
-    if (lowerDesc.includes("email")) {
-      return "user@example.com";
-    }
-    if (lowerDesc.includes("directory") || lowerDesc.includes("folder")) {
-      return "./src";
-    }
-    if (lowerDesc.includes("branch")) {
-      return "main";
-    }
-    if (lowerDesc.includes("commit")) {
-      return "HEAD";
-    }
-    return "example";
-  }
-  
+  if (type === "string") return getStringExample(prop, description);
   if (type === "number") return 0;
-  if (type === "boolean") {
-    // Common boolean defaults from description
-    if (description.includes("enable") || description.includes("watch") || description.includes("verbose")) {
-      return true;
-    }
-    if (description.includes("dry run") || description.includes("quiet")) {
-      return false;
-    }
-    return false;
-  }
-  if (type === "array") {
-    const items = prop.items;
-    if (items) {
-      // Pass parent description to items for context-aware examples
-      const itemExample = getExampleValue(items, description);
-      return [itemExample];
-    }
-    return [];
-  }
-  if (type === "object" && prop.properties) {
-    const objExample: Record<string, any> = {};
-    for (const [k, p] of Object.entries(prop.properties)) {
-      objExample[k] = getExampleValue(p, description);
-    }
-    return objExample;
-  }
-  
+  if (type === "boolean") return getBooleanExample(description);
+  if (type === "array") return getArrayExample(prop, description);
+  if (type === "object" && prop.properties) return getObjectExample(prop, description);
   return undefined;
+}
+
+function getStringExample(prop: any, description: string): any {
+  // Try enum first
+  if (prop.enum && prop.enum.length > 0) return prop.enum[0];
+  // Context-aware examples from description
+  const lowerDesc = description.toLowerCase();
+  if (lowerDesc.includes("file") || lowerDesc.includes("path") || lowerDesc.includes(".ts") || lowerDesc.includes(".js")) {
+    return "src/example.test.ts";
+  }
+  if (lowerDesc.includes("name")) return "example";
+  if (lowerDesc.includes("url") || lowerDesc.includes("link") || lowerDesc.includes("http")) return "https://example.com";
+  if (lowerDesc.includes("email")) return "user@example.com";
+  if (lowerDesc.includes("directory") || lowerDesc.includes("folder")) return "./src";
+  if (lowerDesc.includes("branch")) return "main";
+  if (lowerDesc.includes("commit")) return "HEAD";
+  return "example";
+}
+
+function getBooleanExample(description: string): boolean {
+  // Common boolean defaults from description
+  if (description.includes("enable") || description.includes("watch") || description.includes("verbose")) return true;
+  if (description.includes("dry run") || description.includes("quiet")) return false;
+  return false;
+}
+
+function getArrayExample(prop: any, parentDescription: string): any[] {
+  const items = prop.items;
+  if (items) {
+    const itemExample = getExampleValue(items, parentDescription);
+    return [itemExample];
+  }
+  return [];
+}
+
+function getObjectExample(prop: any, parentDescription: string): Record<string, any> {
+  const objExample: Record<string, any> = {};
+  for (const [k, p] of Object.entries(prop.properties)) {
+    objExample[k] = getExampleValue(p, parentDescription);
+  }
+  return objExample;
 }
 
 // ============================================================================
