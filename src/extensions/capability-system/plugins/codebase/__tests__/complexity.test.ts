@@ -4,6 +4,18 @@ import { join } from 'path';
 import { mkdtemp, rm } from 'fs/promises';
 import { execute } from '../capabilities/complexity';
 
+// Define type for details (matches ComplexityResult from capability)
+interface ComplexityDetails {
+  file: string;
+  exists: boolean;
+  language: string;
+  lines: number;
+  functions: number;
+  cyclomatic: number;
+  halstead: { volume: number; difficulty: number; effort: number; bugs: number };
+  maintainability: number;
+}
+
 describe('codebase.complexity', () => {
   let tmpdir: string;
 
@@ -27,7 +39,7 @@ export function add(a: number, b: number): number {
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
     expect(result.isError).toBe(false);
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.lines).toBeGreaterThan(0);
     expect(details.functions).toBe(1);
     expect(details.cyclomatic).toBe(1);
@@ -50,7 +62,7 @@ function process(x: number): number {
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.cyclomatic).toBe(3);
   });
 
@@ -71,7 +83,7 @@ function sum(arr: number[]): number {
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.cyclomatic).toBe(4);
   });
 
@@ -91,7 +103,7 @@ function categorize(x: number): string {
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.cyclomatic).toBe(4);
   });
 
@@ -106,7 +118,7 @@ function test(a: boolean, b: boolean, c: boolean): boolean {
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.cyclomatic).toBe(3);
   });
 
@@ -125,7 +137,7 @@ function divide(x: number, y: number): number {
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.halstead).toBeDefined();
     expect(details.halstead.volume).toBeGreaterThan(0);
     expect(details.halstead.difficulty).toBeGreaterThan(0);
@@ -144,7 +156,7 @@ function baz() { return 3; }
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.maintainability).toBeGreaterThan(0);
     expect(details.maintainability).toBeLessThanOrEqual(100);
   });
@@ -159,7 +171,7 @@ function foo() { return x; }
     await fs.writeFile(fileAbs, content, 'utf8');
 
     const result = await execute({ file: fileRel }, { cwd: tmpdir });
-    const details = result.details as any;
+    const details = result.details as ComplexityDetails;
     expect(details.language).toBe('tsx');
   });
 

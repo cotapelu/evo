@@ -24,6 +24,12 @@ async function writeTempFile(content: string, ext = "ts"): Promise<string> {
 
 const searchModule = await import("../capabilities/search.ts");
 
+// Type for details
+interface SearchDetails {
+  total: number;
+  matches: Array<{ file: string; line: number; column: number; text: string }>;
+}
+
 describe("codebase.search", () => {
   let tempDir: string;
 
@@ -42,7 +48,7 @@ describe("codebase.search", () => {
     await writeFile(file, "const x = 1;\nconst y = 2;\nconst z = x + y;", "utf-8");
     const ctx = { cwd: tempDir };
 
-    const result = await searchModule.execute({ query: "const" }, ctx as any);
+    const result = await searchModule.execute({ query: "const" }, ctx as { cwd: string });
     expect(result.isError).toBe(false);
     expect(result.details.total).toBe(3);
     expect(result.details.matches.length).toBe(3);
@@ -60,7 +66,7 @@ describe("codebase.search", () => {
     await writeFile(file, "CONST X = 1;\nconst y = 2;", "utf-8");
     const ctx = { cwd: tempDir };
 
-    const result = await searchModule.execute({ query: "const" }, ctx as any);
+    const result = await searchModule.execute({ query: "const" }, ctx as { cwd: string });
     expect(result.details.total).toBe(2);
   });
 
@@ -69,7 +75,7 @@ describe("codebase.search", () => {
     await writeFile(file, "CONST X = 1;\nconst y = 2;", "utf-8");
     const ctx = { cwd: tempDir };
 
-    const result = await searchModule.execute({ query: "const", caseSensitive: true }, ctx as any);
+    const result = await searchModule.execute({ query: "const", caseSensitive: true }, ctx as { cwd: string });
     expect(result.details.total).toBe(1); // only lowercase const
   });
 
@@ -78,7 +84,7 @@ describe("codebase.search", () => {
     await writeFile(file, "line1\nline2\nline3\nline4\nline5", "utf-8");
     const ctx = { cwd: tempDir };
 
-    const result = await searchModule.execute({ query: "line", maxResults: 2 }, ctx as any);
+    const result = await searchModule.execute({ query: "line", maxResults: 2 }, ctx as { cwd: string });
     expect(result.details.total).toBe(2);
   });
 
@@ -87,7 +93,7 @@ describe("codebase.search", () => {
     await writeFile(file, "const x = 1;", "utf-8");
     const ctx = { cwd: tempDir };
 
-    const result = await searchModule.execute({ query: "nonexistent" }, ctx as any);
+    const result = await searchModule.execute({ query: "nonexistent" }, ctx as { cwd: string });
     expect(result.details.total).toBe(0);
     expect(result.content[0].text).toContain("No matches");
   });

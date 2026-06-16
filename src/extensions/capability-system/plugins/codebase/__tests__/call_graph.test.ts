@@ -25,6 +25,18 @@ async function writeTempFile(content: string, ext = "ts", subdir?: string): Prom
 // Import call_graph capability
 const callGraphModule = await import("../capabilities/call_graph.ts");
 
+// Type for result details
+interface CallGraphDetails {
+  file: string;
+  entryPoints?: string[];
+  query: Record<string, unknown>;
+  result: {
+    nodes: Array<{ name: string; file: string; line: number }>;
+    edges: Array<{ from: { name: string; file: string }, to: { name: string; file: string } }>;
+    stats: { nodeCount: number; edgeCount: number };
+  };
+}
+
 describe("codebase.call_graph", () => {
   afterEach(async () => {
     // Cleanup not strictly needed; temp files overwritten with timestamp
@@ -32,7 +44,7 @@ describe("codebase.call_graph", () => {
 
   it("should handle missing file", async () => {
     const ctx = { cwd: __dirname };
-    const result = await callGraphModule.execute({ file: "nonexistent.ts", query: {} }, ctx as any);
+    const result = await callGraphModule.execute({ file: "nonexistent.ts", query: {} }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false); // Currently we just return empty graph for missing files
     expect(result.details.result.nodes.length).toBe(0);
@@ -43,7 +55,7 @@ describe("codebase.call_graph", () => {
   return (`;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await callGraphModule.execute({ file: path.basename(file), query: {} }, ctx as any);
+    const result = await callGraphModule.execute({ file: path.basename(file), query: {} }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false); // Graceful: empty graph
     expect(result.details.result.nodes.length).toBe(0);
@@ -60,7 +72,7 @@ function c() {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await callGraphModule.execute({ file: path.basename(file), query: { includeCrossFile: false } }, ctx as any);
+    const result = await callGraphModule.execute({ file: path.basename(file), query: { includeCrossFile: false } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     const nodes = result.details.result.nodes;
@@ -83,7 +95,7 @@ function baz() {}
     `;
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await callGraphModule.execute({ file: path.basename(file), query: { name: "bar", includeCrossFile: false } }, ctx as any);
+    const result = await callGraphModule.execute({ file: path.basename(file), query: { name: "bar", includeCrossFile: false } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.result.edges.length).toBe(1);
@@ -97,7 +109,7 @@ function baz() {}
     const code = `function caller() { ${lines} }` + Array.from({ length: 10 }, (_, i) => `function func${i}() {}`).join('\n');
     const file = await writeTempFile(code);
     const ctx = { cwd: path.dirname(file) };
-    const result = await callGraphModule.execute({ file: path.basename(file), query: { limit: 5, includeCrossFile: false } }, ctx as any);
+    const result = await callGraphModule.execute({ file: path.basename(file), query: { limit: 5, includeCrossFile: false } }, ctx as { cwd: string });
 
     expect(result.isError).toBe(false);
     expect(result.details.result.edges.length).toBe(5);
@@ -116,7 +128,7 @@ function baz() {}
     await writeFile(libFile, libCode, "utf-8");
     await writeFile(mainFile, mainCode, "utf-8");
 
-    const result = await callGraphModule.execute({ file: "main.ts", query: { includeCrossFile: true, depth: 1 } }, { cwd: dir } as any);
+    const result = await callGraphModule.execute({ file: "main.ts", query: { includeCrossFile: true, depth: 1 } }, { cwd: dir } as { cwd: string });
 
     expect(result.isError).toBe(false);
     const nodes = result.details.result.nodes.map(n => n.name);
@@ -146,18 +158,18 @@ function baz() {}
     await writeFile(path.join(dir, 'd.ts'), codeD);
 
     // Without entryPoints, only the file itself is visited (no imports)
-    const full = await callGraphModule.execute({ file: 'a.ts', query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as any);
+    const full = await callGraphModule.execute({ file: 'a.ts', query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as { cwd: string });
     expect(full.isError).toBe(false);
     expect(full.details.result.nodes.map(n => n.name).sort()).toEqual(['a']);
 
     // With entryPoints=['b.ts'], both a.ts (file) and b.ts (entryPoints) are visited; b imports a, so both appear.
-    const sub = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['b.ts'], query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as any);
+    const sub = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['b.ts'], query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as { cwd: string });
     expect(sub.isError).toBe(false);
     const subNames = sub.details.result.nodes.map(n => n.name).sort();
     expect(subNames).toEqual(['a','b']);
 
     // With entryPoints=['a.ts','c.ts'], visited files: a, c; c imports b, which imports a (already visited). So {a,b,c}.
-    const multi = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['a.ts','c.ts'], query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as any);
+    const multi = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['a.ts','c.ts'], query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as { cwd: string });
     expect(multi.isError).toBe(false);
     const multiNames = multi.details.result.nodes.map(n => n.name).sort();
     expect(multiNames).toEqual(['a','b','c']);
@@ -174,7 +186,7 @@ function baz() {}
     const dir = await mkdtemp(path.join(os.tmpdir(), 'callgraph-missing-'));
     await writeFile(path.join(dir, 'a.ts'), code);
 
-    const result = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['missing.ts'], query: { includeCrossFile: false, depth: 1 } }, { cwd: dir } as any);
+    const result = await callGraphModule.execute({ file: 'a.ts', entryPoints: ['missing.ts'], query: { includeCrossFile: false, depth: 1 } }, { cwd: dir } as { cwd: string });
     expect(result.isError).toBe(false);
     // Should still include a from main file
     expect(result.details.result.nodes.map(n => n.name)).toContain('x');
@@ -195,7 +207,7 @@ function baz() {}
     await writeFile(path.join(dir, "libB.ts"), libB);
     await writeFile(path.join(dir, "libA.ts"), libA);
 
-    const result = await callGraphModule.execute({ file: "libA.ts", query: { includeCrossFile: true, depth: 2 } }, { cwd: dir } as any);
+    const result = await callGraphModule.execute({ file: "libA.ts", query: { includeCrossFile: true, depth: 2 } }, { cwd: dir } as { cwd: string });
 
     expect(result.isError).toBe(false);
     const names = result.details.result.nodes.map(n => n.name).sort();
@@ -219,7 +231,7 @@ function baz() {}
     await writeFile(path.join(dir, "a.ts"), a);
     await writeFile(path.join(dir, "b.ts"), b);
 
-    const result = await callGraphModule.execute({ file: "a.ts", query: { includeCrossFile: true, depth: 1 } }, { cwd: dir } as any);
+    const result = await callGraphModule.execute({ file: "a.ts", query: { includeCrossFile: true, depth: 1 } }, { cwd: dir } as { cwd: string });
 
     expect(result.isError).toBe(false);
     // shared should appear once
