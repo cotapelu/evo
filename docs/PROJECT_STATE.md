@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 143 (latest) — refactored guideline-generator: split generateParametersSection using processProperty; all functions ≤20 lines. All tests passing.
+✅ Iteration 144 (latest) — refactored guideline-generator: split generateExamples into buildMinimalExample and buildFullExample; all functions ≤20 lines. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

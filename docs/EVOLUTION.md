@@ -750,6 +750,11 @@ Last Updated: 2026-06-15
 - All guideline-generator functions now ≤20 lines.
 - Maintains comprehensive auto-generated capability guidelines.
 
+### One Hundred Forty-Fourth Round (Guideline Generator Examples Refactor)
+- Refactored `guideline-generator.generateExamples` by extracting `buildMinimalExample` and `buildFullExample`.
+- `generateExamples` now orchestrates example generation; helpers handle building of minimal and full parameter examples, each ≤20 lines.
+- Further reduces function complexity and improves readability.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

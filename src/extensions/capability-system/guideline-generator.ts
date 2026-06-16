@@ -109,29 +109,31 @@ function generateExamples(capabilityId: string, schema: any): string[] {
   const props = schema.properties as Record<string, any>;
   const required = schema.required || [];
 
-  // Minimal (required only)
+  lines.push(buildMinimalExample(capabilityId, props, required));
+  const fullExample = buildFullExample(capabilityId, props);
+  if (fullExample) lines.push(fullExample);
+  lines.push(...generateVariations(capabilityId, props, required));
+
+  return lines;
+}
+
+function buildMinimalExample(capabilityId: string, props: Record<string, any>, required: string[]): string {
   const minimalParams: Record<string, any> = {};
   for (const key of required) {
     if (props[key]) {
       minimalParams[key] = getExampleValue(props[key]);
     }
   }
-  lines.push(`  • Minimal: ${JSON.stringify({ capability: capabilityId, params: minimalParams })}`);
+  return `  • Minimal: ${JSON.stringify({ capability: capabilityId, params: minimalParams })}`;
+}
 
-  // Full (all params)
+function buildFullExample(capabilityId: string, props: Record<string, any>): string | null {
   const fullParams: Record<string, any> = {};
   for (const [key, prop] of Object.entries(props)) {
     fullParams[key] = getExampleValue(prop);
   }
-  if (Object.keys(fullParams).length > 0) {
-    lines.push(`  • Full: ${JSON.stringify({ capability: capabilityId, params: fullParams })}`);
-  }
-
-  // Variation examples for common patterns
-  const variations = generateVariations(capabilityId, props, required);
-  lines.push(...variations);
-
-  return lines;
+  if (Object.keys(fullParams).length === 0) return null;
+  return `  • Full: ${JSON.stringify({ capability: capabilityId, params: fullParams })}`;
 }
 
 function generateVariations(
