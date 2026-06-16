@@ -193,6 +193,9 @@ Last Updated: 2026-06-14
 - [x] Improve test mock factories: changed createMockExtensionAPI to return any and simplified tui property.
 - [x] Resolve remaining test type errors: cast renderer results to any, fix ToolResult casts, and adjust mockFs typing.
 - [x] Fix test suite regressions: standardized config dir (`.piclaw`), added missing mocks (SettingsManager, getAgentDir), rewrote keybinding-extension tests to use fs/os mocks, removed orphaned empty test files. All tests now passing (792 tests, 90 suites).
+- [x] Fix parser imports for codebase plugin: replaced `@typescript-eslint/parser/dist/index.js` dynamic ESM import with CommonJS `require()` using `createRequire` to resolve Vite/Vitest module resolution issues.
+- [x] Remove metrics dashboard feature: deleted `metrics-command.ts` and `metrics-widget.ts` and updated aggregator and related tests.
+- [x] Fix team event handling: corrected `extractText` call in `handleAgentEvent` to pass full message object instead of content array, restoring correct content truncation in team updates.
 
 ## In Progress
 - (none)

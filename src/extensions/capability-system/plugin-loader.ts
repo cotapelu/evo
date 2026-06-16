@@ -173,7 +173,8 @@ export class PluginLoader {
     const rendererPath = capMan.renderer ? join(pluginPath, capMan.renderer) : null;
 
     const executeModule = await this.dynamicImport(executePath);
-    const rawExecuteFn = (executeModule as any).execute || (executeModule as any).default;
+    // @ts-ignore - dynamic module shape
+    const rawExecuteFn = executeModule.execute || executeModule.default;
     if (typeof rawExecuteFn !== "function") throw new Error("Missing execute function");
     const executeFn = rawExecuteFn as (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>;
 
@@ -181,7 +182,8 @@ export class PluginLoader {
     if (rendererPath && existsSync(rendererPath)) {
       try {
         const rendererModule = await this.dynamicImport(rendererPath);
-        renderResultFn = (rendererModule as any).renderResult || (rendererModule as any).default;
+        // @ts-ignore - dynamic module shape
+        renderResultFn = rendererModule.renderResult || rendererModule.default;
       } catch {}
     }
 

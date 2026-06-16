@@ -113,7 +113,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
       const { action } = parsedParams;
 
       // Ensure team context with session
-      if (!('session' in ctx) || !(ctx as any).session?.sessionId) {
+      if (!('session' in ctx) || !(ctx as TeamContext).session?.sessionId) {
         throw new Error("Team context missing session");
       }
       const teamCtx = ctx as TeamContext;

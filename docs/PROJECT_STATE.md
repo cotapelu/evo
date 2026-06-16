@@ -1,12 +1,12 @@
 # Project State
 
-Last Updated: 2026-06-15
+Last Updated: 2026-06-16
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (97 suites, 872 tests, 3 skipped)
+✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration: 114 (latest) — completed final any reduction: eliminated all `as any` casts in production code (team-ops-tool, team-tool, workspace, plugin-loader)
+✅ Iteration: 115 (latest) — fixed parser imports (require), removed metrics dashboard, fixed team event handling
 
 ## Key Components
 - **Capability System**: Properly initializes plugins asynchronously and exposes global loader. All built-in plugins (dev, git, security, system) load correctly.

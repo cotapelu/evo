@@ -560,6 +560,13 @@ Last Updated: 2026-06-15
 - Updated documentation: `AGENT_METRICS.md` (iteration increment, tasks, test counts, new section), `PROJECT_STATE.md` (capability list, test stats), `AGENT_PROFILE.md` (coverage, codebase tests count).
 - Build green; all 867 tests passing; zero type errors; quality gates maintained.
 
+### One Hundred Fifteenth Round (Parser Imports & Metrics Removal)
+- Fixed `@typescript-eslint/parser` import issues in codebase plugin capabilities: switched from dynamic ESM import of `dist/index.js` to CommonJS `require()` via `createRequire`. Resolved Vite/Vitest module resolution errors during tests.
+- Removed metrics dashboard feature (commit 0fb3d3e): deleted `metrics-command.ts` and `metrics-widget.ts` and updated aggregator and tests accordingly.
+- Fixed `team-multi-runtime.test.ts` failure caused by `extractText` parameter regression in `team-manager.ts`: restored passing of full message object instead of content array.
+- All tests now passing: 95 suites, 866 tests, 3 skipped; build green; zero type errors.
+- Documentation updates: `PROJECT_STATE.md`, `AGENT_METRICS.md` with new iteration and test counts.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.

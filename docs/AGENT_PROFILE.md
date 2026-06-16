@@ -1,6 +1,6 @@
 # Agent Profile
 
-Last Updated: 2026-06-15
+Last Updated: 2026-06-16
 
 ## Common Failure Modes
 1. **Relative import path errors**: Tests using incorrect paths like `../../src/...` instead of `../../...` after directory restructuring.
@@ -18,7 +18,7 @@ Last Updated: 2026-06-15
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (97 test suites, 867 tests).
+- Comprehensive test coverage (95 test suites, 866 tests).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.

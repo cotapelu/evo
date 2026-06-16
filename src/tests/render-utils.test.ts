@@ -12,24 +12,28 @@ describe("Render Utils", () => {
   it("renderError returns Text with error color applied", () => {
     const comp = renderError(theme, "failure");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[error]failure");
+    // @ts-ignore - Text has text property
+    expect(comp.text).toBe("[error]failure");
   });
 
   it("renderSuccess returns Text with success color", () => {
     const comp = renderSuccess(theme, "ok");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[success]ok");
+    // @ts-ignore - Text has text property
+    expect(comp.text).toBe("[success]ok");
   });
 
   it("renderMuted returns Text with muted color", () => {
     const comp = renderMuted(theme, "dim");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[muted]dim");
+    // @ts-ignore - Text has text property
+    expect(comp.text).toBe("[muted]dim");
   });
 
   it("renderAccent returns Text with accent color", () => {
     const comp = renderAccent(theme, "highlight");
     expect(comp).toBeInstanceOf(Text);
-    expect((comp as any).text).toBe("[accent]highlight");
+    // @ts-ignore - Text has text property
+    expect(comp.text).toBe("[accent]highlight");
   });
 });
