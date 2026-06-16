@@ -62,14 +62,18 @@ function computeDiff(original: string, modified: string, file: string): string {
   return diff;
 }
 
-function applyEditInMemory(op: EditOperation, content: string): string {
-  const lines = content.split('\n');
-  if (op.range.start < 0 || op.range.end < op.range.start || op.range.end > lines.length) {
-    throw new Error(`Invalid range ${JSON.stringify(op.range)} for file with ${lines.length} lines`);
+function validateEditOp(op: EditOperation, lineCount: number): void {
+  if (op.range.start < 0 || op.range.end < op.range.start || op.range.end > lineCount) {
+    throw new Error(`Invalid range ${JSON.stringify(op.range)} for file with ${lineCount} lines`);
   }
   if (op.editType !== 'delete' && op.newCode === undefined) {
     throw new Error(`newCode is required for editType '${op.editType}'`);
   }
+}
+
+function applyEditInMemory(op: EditOperation, content: string): string {
+  const lines = content.split('\n');
+  validateEditOp(op, lines.length);
   const newLines = op.editType !== 'delete' ? op.newCode!.split('\n') : [];
   const edited = lines.slice();
   if (op.editType === 'replace') {
@@ -101,41 +105,21 @@ async function validateFile(file: string, cwd: string, format: boolean, fixImpor
   }
 }
 
-export async function execute(params: { operations: EditOperation[]; format?: boolean; fixImports?: boolean }, ctx: any): Promise<any> {
-  const cwd = ctx.cwd || process.cwd();
-  const format = params.format !== false;
-  const fixImports = params.fixImports !== false;
-  const { operations } = params;
-
-  // 1. Backup all files upfront
+async function backupFiles(operations: EditOperation[], cwd: string): Promise<Map<string, string>> {
   const backups = new Map<string, string>();
   for (const op of operations) {
     if (!backups.has(op.file)) {
       try {
         backups.set(op.file, await fs.readFile(join(cwd, op.file), 'utf-8'));
       } catch (err) {
-        return {
-          success: false,
-          results: [{
-            file: op.file,
-            success: false,
-            error: `Cannot read file ${op.file}: ${err instanceof Error ? err.message : String(err)}`
-          }]
-        };
+        throw new Error(`Cannot read file ${op.file}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   }
+  return backups;
+}
 
-  // 2. Group operations by file (preserve order)
-  const opsByFile = new Map<string, EditOperation[]>();
-  for (const op of operations) {
-    const list = opsByFile.get(op.file) || [];
-    list.push(op);
-    opsByFile.set(op.file, list);
-  }
-
-  // 3. Compute final content per file by applying all ops in-memory sequentially.
-  //    If any op fails, return immediately with error (no files written).
+function computeFinalContents(opsByFile: Map<string, EditOperation[]>, backups: Map<string, string>): Map<string, string> {
   const finalContents = new Map<string, string>();
   for (const [file, fileOps] of opsByFile) {
     const original = backups.get(file)!;
@@ -146,55 +130,124 @@ export async function execute(params: { operations: EditOperation[]; format?: bo
       }
       finalContents.set(file, content);
     } catch (err) {
-      return {
-        success: false,
-        results: [{
-          file,
-          success: false,
-          error: err instanceof Error ? err.message : String(err)
-        }]
-      };
+      throw new Error(`Edit failed in ${file}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
+  return finalContents;
+}
 
-  // 4. Write all final contents to disk
+async function writeFiles(finalContents: Map<string, string>, cwd: string): Promise<void> {
   for (const [file, content] of finalContents) {
     await fs.writeFile(join(cwd, file), content, 'utf-8');
   }
+}
 
-  // 5. Validate each file; on any failure, rollback all and mark previous results as rolled back
+function groupOperationsByFile(operations: EditOperation[]): Map<string, EditOperation[]> {
+  const map = new Map<string, EditOperation[]>();
+  for (const op of operations) {
+    const list = map.get(op.file) || [];
+    list.push(op);
+    map.set(op.file, list);
+  }
+  return map;
+}
+
+async function validateAndDiff(file: string, cwd: string, format: boolean, fixImports: boolean, ctx: any, backup: string): Promise<EditResult> {
+  try {
+    await validateFile(file, cwd, format, fixImports, ctx);
+    const final = await fs.readFile(join(cwd, file), 'utf-8');
+    return {
+      file,
+      success: true,
+      diff: computeDiff(backup, final, file)
+    };
+  } catch (err) {
+    return {
+      file,
+      success: false,
+      error: err instanceof Error ? err.message : String(err)
+    };
+  }
+}
+
+async function rollbackAll(backups: Map<string, string>, cwd: string): Promise<void> {
+  for (const [f, backup] of backups) {
+    try { await fs.writeFile(join(cwd, f), backup, 'utf-8'); } catch {}
+  }
+}
+
+async function validateAllAndDiff(
+  finalContents: Map<string, string>,
+  backups: Map<string, string>,
+  cwd: string,
+  format: boolean,
+  fixImports: boolean,
+  ctx: any
+): Promise<EditResult[]> {
   const results: EditResult[] = [];
   for (const [file] of finalContents) {
     try {
       await validateFile(file, cwd, format, fixImports, ctx);
-      // After validation (and formatting), re-read to get final on-disk content for diff
       const final = await fs.readFile(join(cwd, file), 'utf-8');
-      results.push({
-        file,
-        success: true,
-        diff: computeDiff(backups.get(file)!, final, file)
-      });
+      results.push({ file, success: true, diff: computeDiff(backups.get(file)!, final, file) });
     } catch (err) {
-      // Rollback all files
-      for (const [f, backup] of backups) {
-        try { await fs.writeFile(join(cwd, f), backup, 'utf-8'); } catch {}
-      }
-      // Mark previous results as rolled back
-      for (const r of results) {
-        r.success = false;
-        r.backupRestored = true;
-      }
-      results.push({
-        file,
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-        backupRestored: true
-      });
-      return { success: false, results };
+      await rollbackAll(backups, cwd);
+      for (const r of results) { r.success = false; r.backupRestored = true; }
+      results.push({ file, success: false, error: String(err), backupRestored: true });
+      break; // stop processing further files
     }
   }
+  return results;
+}
 
-  return { success: true, results };
+function validateOperations(operations: EditOperation[]): { valid: boolean; file?: string; error?: string } {
+  for (const op of operations) {
+    if ((op.editType === 'replace' || op.editType === 'insert') && op.newCode === undefined) {
+      return { valid: false, file: op.file, error: 'newCode is required for replace/insert' };
+    }
+  }
+  return { valid: true };
+}
+
+export async function execute(params: { operations: EditOperation[]; format?: boolean; fixImports?: boolean }, ctx: any): Promise<any> {
+  const cwd = ctx.cwd || process.cwd();
+  const format = params.format !== false;
+  const fixImports = params.fixImports !== false;
+  const { operations } = params;
+
+  // Validate input
+  const inputCheck = validateOperations(operations);
+  if (!inputCheck.valid) {
+    return { success: false, results: [{ file: inputCheck.file || '', success: false, error: inputCheck.error || 'Invalid input' }] };
+  }
+
+  let backups: Map<string, string>;
+  try {
+    backups = await backupFiles(operations, cwd);
+  } catch (err) {
+    const file = operations[0]?.file || '';
+    return { success: false, results: [{ file, success: false, error: String(err) }] };
+  }
+
+  // Group ops by file
+  const opsByFile = groupOperationsByFile(operations);
+
+  let finalContents: Map<string, string>;
+  try {
+    finalContents = computeFinalContents(opsByFile, backups);
+  } catch (err) {
+    const file = Array.from(opsByFile.keys())[0] || '';
+    return { success: false, results: [{ file, success: false, error: String(err) }] };
+  }
+
+  // Write to disk
+  await writeFiles(finalContents, cwd);
+
+  // Validate and diff
+  const results = await validateAllAndDiff(finalContents, backups, cwd, format, fixImports, ctx);
+  const allSuccess = results.every(r => r.success);
+
+  return { success: allSuccess, results };
 }
 
 export default { execute, schema };
