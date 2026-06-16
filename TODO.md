@@ -201,6 +201,8 @@ Last Updated: 2026-06-14
 - [x] Refactored safe_edit.execute: broke monolithic function into smaller helpers.
 - [x] Refactored dependency_tree.execute: extracted readAndParseFiles and convertToRelative.
 - [x] Refactored call_graph.execute: extracted collectAllFiles, buildAbsToFuncs, buildEdges, collectUniqueNodes, formatSummary.
+- [x] Refactored analyze analyzeContent: extracted tryParseImport, tryParseExport, tryParseSymbol; moved regexes to module constants; reduced to ~15 lines.
+- [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress
 - (none)

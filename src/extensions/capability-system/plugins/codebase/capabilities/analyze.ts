@@ -58,178 +58,165 @@ interface AnalysisResult {
 
 // Simple regex-based analyzer (lightweight, no external parser)
 // This is a heuristic analyzer suitable for LLM context.
+
+// Regex patterns for parsing
+const IMPORT_DECL_REGEX = /^\s*import\s+(?:(\*)\s*as\s+(\w+)|({[\s\S]*?})|(\w+))\s*from\s*['"]([^'"]+)['"];?/;
+const EXPORT_DECL_REGEX = /^\s*export\s+(?:(\*)\s*from\s*['"][^'"]+['"];?|({[\s\S]*?})|(\w+)(\s+as\s+(\w+))?|default\s+(\w+))/;
+const FUNCTION_DECL_REGEX = /^\s*(?:async\s+)?function\s+(\w+)\s*\(/;
+const CLASS_DECL_REGEX = /^\s*class\s+(\w+)/;
+const INTERFACE_DECL_REGEX = /^\s*interface\s+(\w+)/;
+const TYPE_DECL_REGEX = /^\s*type\s+(\w+)\s*=/;
+const VAR_DECL_REGEX = /^\s*(?:const|let)\s+(\w+)\s*[=;]/;
+const ENUM_DECL_REGEX = /^\s*enum\s+(\w+)/;
+
+// Parsing helpers
+function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): boolean {
+  const importMatch = line.match(IMPORT_DECL_REGEX);
+  if (importMatch) {
+    const [_, starAs, namedGroup, defaultImport, moduleSpecifier] = importMatch;
+    const importInfo: ImportInfo = { moduleSpecifier };
+    if (starAs) {
+      importInfo.importClause = `* as ${starAs}`;
+    } else if (namedGroup) {
+      const namedStr = namedGroup.slice(1, -1).trim();
+      if (namedStr) {
+        const parts = namedStr.split(',').map(p => p.trim());
+        importInfo.namedImports = parts.map(p => {
+          const [name, alias] = p.split(/\s+as\s+/);
+          return alias || name;
+        });
+        importInfo.importClause = `{ ${namedStr} }`;
+      }
+    } else if (defaultImport) {
+      importInfo.importClause = defaultImport;
+    }
+    imports.push(importInfo);
+    return true;
+  }
+  return false;
+}
+
+function tryParseExport(line: string, lineNum: number, exports: ExportInfo[], symbols: SymbolDef[]): boolean {
+  // export default class
+  const m1 = line.match(/^\s*export\s+default\s+class\s+(\w+)/);
+  if (m1) {
+    symbols.push({ name: m1[1], kind: "class", line: lineNum });
+    exports.push({ type: "default", name: m1[1] });
+    return true;
+  }
+  // export default interface
+  const m2 = line.match(/^\s*export\s+default\s+interface\s+(\w+)/);
+  if (m2) {
+    symbols.push({ name: m2[1], kind: "interface", line: lineNum });
+    exports.push({ type: "default", name: m2[1] });
+    return true;
+  }
+  // export default type
+  const m3 = line.match(/^\s*export\s+default\s+type\s+(\w+)\s*=/);
+  if (m3) {
+    symbols.push({ name: m3[1], kind: "type", line: lineNum });
+    exports.push({ type: "default", name: m3[1] });
+    return true;
+  }
+  // export default function
+  const m4 = line.match(/^\s*export\s+default\s+function\s+(\w+)\s*\(/);
+  if (m4) {
+    symbols.push({ name: m4[1], kind: "function", line: lineNum });
+    exports.push({ type: "default", name: m4[1] });
+    return true;
+  }
+  // export default const/let/var
+  const m5 = line.match(/^\s*export\s+default\s+(const|let|var)\s+(\w+)/);
+  if (m5) {
+    symbols.push({ name: m5[2], kind: "variable", line: lineNum });
+    exports.push({ type: "default", name: m5[2] });
+    return true;
+  }
+  // export type
+  const m6 = line.match(/^\s*export\s+type\s+(\w+)\s*=/);
+  if (m6) {
+    symbols.push({ name: m6[1], kind: "type", line: lineNum });
+    exports.push({ type: "named", name: m6[1] });
+    return true;
+  }
+  // export interface
+  const m7 = line.match(/^\s*export\s+interface\s+(\w+)/);
+  if (m7) {
+    symbols.push({ name: m7[1], kind: "interface", line: lineNum });
+    exports.push({ type: "named", name: m7[1] });
+    return true;
+  }
+  // other export forms using EXPORT_DECL_REGEX
+  const exportMatch = line.match(EXPORT_DECL_REGEX);
+  if (exportMatch) {
+    const [_1, starFrom, namedGroup, exportName, asAlias1, aliasName, defaultName] = exportMatch;
+    if (starFrom) {
+      exports.push({ type: "named", name: "*" });
+    } else if (namedGroup) {
+      const namedStr = namedGroup.slice(1, -1).trim();
+      if (namedStr) {
+        const parts = namedStr.split(',').map(p => p.trim());
+        parts.forEach(p => {
+          const [name, alias] = p.split(/\s+as\s+/);
+          exports.push({ type: "named", name, aliases: alias ? [alias] : undefined });
+        });
+      }
+    } else if (exportName) {
+      exports.push({ type: "named", name: exportName, ...(asAlias1 && aliasName ? { aliases: [aliasName] } : {}) });
+    } else if (defaultName) {
+      exports.push({ type: "default", name: defaultName });
+    }
+    return true;
+  }
+  return false;
+}
+
+function tryParseSymbol(line: string, lineNum: number, symbols: SymbolDef[]): boolean {
+  const fm = line.match(FUNCTION_DECL_REGEX);
+  if (fm) {
+    symbols.push({ name: fm[1], kind: "function", line: lineNum });
+    return true;
+  }
+  const cm = line.match(CLASS_DECL_REGEX);
+  if (cm) {
+    symbols.push({ name: cm[1], kind: "class", line: lineNum });
+    return true;
+  }
+  const im = line.match(INTERFACE_DECL_REGEX);
+  if (im) {
+    symbols.push({ name: im[1], kind: "interface", line: lineNum });
+    return true;
+  }
+  const tm = line.match(TYPE_DECL_REGEX);
+  if (tm) {
+    symbols.push({ name: tm[1], kind: "type", line: lineNum });
+    return true;
+  }
+  const vm = line.match(VAR_DECL_REGEX);
+  if (vm) {
+    symbols.push({ name: vm[1], kind: "variable", line: lineNum });
+    return true;
+  }
+  const em = line.match(ENUM_DECL_REGEX);
+  if (em) {
+    symbols.push({ name: em[1], kind: "enum", line: lineNum });
+    return true;
+  }
+  return false;
+}
+
 function analyzeContent(content: string): { imports: ImportInfo[]; exports: ExportInfo[]; symbols: SymbolDef[] } {
   const lines = content.split('\n');
   const imports: ImportInfo[] = [];
   const exports: ExportInfo[] = [];
   const symbols: SymbolDef[] = [];
 
-  // Patterns
-  const importDecl = /^\s*import\s+(?:(\*)\s*as\s+(\w+)|({[\s\S]*?})|(\w+))\s*from\s*['"]([^'"]+)['"];?/;
-  const exportDecl = /^\s*export\s+(?:(\*)\s*from\s*['"][^'"]+['"];?|({[\s\S]*?})|(\w+)(\s+as\s+(\w+))?|default\s+(\w+))/;
-  const functionDecl = /^\s*(?:async\s+)?function\s+(\w+)\s*\(/;
-  const classDecl = /^\s*class\s+(\w+)/;
-  const interfaceDecl = /^\s*interface\s+(\w+)/;
-  const typeDecl = /^\s*type\s+(\w+)\s*=/;
-  const varDecl = /^\s*(?:const|let)\s+(\w+)\s*[=;]/;
-  const enumDecl = /^\s*enum\s+(\w+)/;
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineNum = i + 1;
-
-    // Imports
-    const importMatch = line.match(importDecl);
-    if (importMatch) {
-      const [_, starAs, namedGroup, defaultImport, moduleSpecifier] = importMatch;
-      const importInfo: ImportInfo = { moduleSpecifier };
-      if (starAs) {
-        importInfo.importClause = `* as ${starAs}`;
-      } else if (namedGroup) {
-        // Parse { a, b as c }
-        const namedStr = namedGroup.slice(1, -1).trim();
-        if (namedStr) {
-          const parts = namedStr.split(',').map(p => p.trim());
-          importInfo.namedImports = parts.map(p => {
-            const [name, alias] = p.split(/\s+as\s+/);
-            return alias || name;
-          });
-          importInfo.importClause = `{ ${namedStr} }`;
-        }
-      } else if (defaultImport) {
-        importInfo.importClause = defaultImport;
-      }
-      // Check for type-only? Not fully parsed, assume if line contains 'type' keyword? Skip for now.
-      imports.push(importInfo);
-      continue;
-    }
-
-    // Exports - first check for default declarations with keywords
-    let handled = false;
-
-    // export default class Foo
-    const exportDefaultClass = line.match(/^\s*export\s+default\s+class\s+(\w+)/);
-    if (exportDefaultClass) {
-      symbols.push({ name: exportDefaultClass[1], kind: "class", line: lineNum });
-      exports.push({ type: "default", name: exportDefaultClass[1] });
-      handled = true;
-    }
-
-    // export default interface Foo
-    const exportDefaultInterface = line.match(/^\s*export\s+default\s+interface\s+(\w+)/);
-    if (exportDefaultInterface) {
-      symbols.push({ name: exportDefaultInterface[1], kind: "interface", line: lineNum });
-      exports.push({ type: "default", name: exportDefaultInterface[1] });
-      handled = true;
-    }
-
-    // export default type Foo = ...
-    const exportDefaultType = line.match(/^\s*export\s+default\s+type\s+(\w+)\s*=/);
-    if (exportDefaultType) {
-      symbols.push({ name: exportDefaultType[1], kind: "type", line: lineNum });
-      exports.push({ type: "default", name: exportDefaultType[1] });
-      handled = true;
-    }
-
-    // export default function foo(...)
-    const exportDefaultFunction = line.match(/^\s*export\s+default\s+function\s+(\w+)\s*\(/);
-    if (exportDefaultFunction) {
-      symbols.push({ name: exportDefaultFunction[1], kind: "function", line: lineNum });
-      exports.push({ type: "default", name: exportDefaultFunction[1] });
-      handled = true;
-    }
-
-    // export default const/let/var
-    const exportDefaultVar = line.match(/^\s*export\s+default\s+(const|let|var)\s+(\w+)/);
-    if (exportDefaultVar) {
-      symbols.push({ name: exportDefaultVar[2], kind: "variable", line: lineNum });
-      exports.push({ type: "default", name: exportDefaultVar[2] });
-      handled = true;
-    }
-
-    // export type Foo = ...
-    const exportTypeMatch = line.match(/^\s*export\s+type\s+(\w+)\s*=/);
-    if (exportTypeMatch) {
-      symbols.push({ name: exportTypeMatch[1], kind: "type", line: lineNum });
-      exports.push({ type: "named", name: exportTypeMatch[1] });
-      handled = true;
-    }
-
-    // export interface Foo
-    const exportInterfaceMatch = line.match(/^\s*export\s+interface\s+(\w+)/);
-    if (exportInterfaceMatch) {
-      symbols.push({ name: exportInterfaceMatch[1], kind: "interface", line: lineNum });
-      exports.push({ type: "named", name: exportInterfaceMatch[1] });
-      handled = true;
-    }
-
-    // If already handled by default declarations, skip to next line
-    if (handled) continue;
-
-    // Existing exportDecl handling for other forms
-    const exportMatch = line.match(exportDecl);
-    if (exportMatch) {
-      const [_, starFrom, namedGroup, exportName, asAlias1, aliasName, defaultName] = exportMatch;
-      if (starFrom) {
-        exports.push({ type: "named", name: "*" });
-      } else if (namedGroup) {
-        const namedStr = namedGroup.slice(1, -1).trim();
-        if (namedStr) {
-          const parts = namedStr.split(',').map(p => p.trim());
-          parts.forEach(p => {
-            const [name, alias] = p.split(/\s+as\s+/);
-            exports.push({ type: "named", name, aliases: alias ? [alias] : undefined });
-          });
-        }
-      } else if (exportName) {
-        exports.push({ type: "named", name: exportName, ...(asAlias1 && aliasName ? { aliases: [aliasName] } : {}) });
-      } else if (defaultName) {
-        exports.push({ type: "default", name: defaultName });
-      }
-      continue;
-    }
-
-    // Function
-    const funcMatch = line.match(functionDecl);
-    if (funcMatch) {
-      symbols.push({ name: funcMatch[1], kind: "function", line: lineNum });
-      continue;
-    }
-
-    // Class
-    const classMatch = line.match(classDecl);
-    if (classMatch) {
-      symbols.push({ name: classMatch[1], kind: "class", line: lineNum });
-      continue;
-    }
-
-    // Interface
-    const interfaceMatch = line.match(interfaceDecl);
-    if (interfaceMatch) {
-      symbols.push({ name: interfaceMatch[1], kind: "interface", line: lineNum });
-      continue;
-    }
-
-    // Type alias
-    const typeMatch = line.match(typeDecl);
-    if (typeMatch) {
-      symbols.push({ name: typeMatch[1], kind: "type", line: lineNum });
-      continue;
-    }
-
-    // Variable (const/let)
-    const varMatch = line.match(varDecl);
-    if (varMatch) {
-      symbols.push({ name: varMatch[1], kind: "variable", line: lineNum });
-      continue;
-    }
-
-    // Enum
-    const enumMatch = line.match(enumDecl);
-    if (enumMatch) {
-      symbols.push({ name: enumMatch[1], kind: "enum", line: lineNum });
-      continue;
-    }
+    if (tryParseImport(line, lineNum, imports)) continue;
+    if (tryParseExport(line, lineNum, exports, symbols)) continue;
+    if (tryParseSymbol(line, lineNum, symbols)) continue;
   }
 
   return { imports, exports, symbols };
