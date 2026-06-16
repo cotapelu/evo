@@ -22,7 +22,6 @@ import contextLoggerExtension from "./context-logger.js";
 import piclawHeader from "./piclaw-header.js";
 import { registerTodosRenderer } from "./renderers/todos-renderer.js";
 import { registerTeamWidget } from "./team/team-widget.js";
-import { registerMetricsWidget } from "./metrics/metrics-widget.js";
 import { registerMemoryRenderer } from "./renderers/memory-renderer.js";
 import { registerBranchSummaryRenderer } from "./renderers/branch-summary-renderer.js";
 import { registerTeamOpsRenderer } from "./renderers/team-ops-renderer.js";
@@ -31,7 +30,6 @@ import { registerSettingsCommand } from "./commands/settings-command.js";
 import { registerProviderCommand } from "./commands/provider-command.js";
 import { registerCopyCommand } from "./commands/copy-command.js";
 import { registerTeamCommand } from "./commands/team-command.js";
-import { registerMetricsCommand } from "./commands/metrics-command.js";
 import { registerKeybindingExtension } from "./keybinding/keybinding-extension.js";
 
 /**
@@ -68,7 +66,6 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerTeamWidget(api);
   registerBranchSummaryRenderer(api);
   registerTeamOpsRenderer(api);
-  registerMetricsWidget(api);
 
   // Register commands
   registerSessionTreeCommand(api);
@@ -76,7 +73,6 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerProviderCommand(api);
   registerCopyCommand(api);
   registerTeamCommand(api);
-  registerMetricsCommand(api);
   // Register keybinding extension
   registerKeybindingExtension(api);
 
