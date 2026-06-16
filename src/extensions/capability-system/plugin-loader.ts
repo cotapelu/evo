@@ -127,6 +127,15 @@ export class PluginLoader {
       this.unloadPlugin(manifest.id);
     }
 
+    const capabilities = await this.loadCapabilities(pluginFolder, pluginPath, manifest);
+    return this.finalizePlugin(pluginFolder, pluginPath, manifest, capabilities);
+  }
+
+  private async loadCapabilities(
+    pluginFolder: string,
+    pluginPath: string,
+    manifest: PluginManifest
+  ): Promise<Capability[]> {
     const capabilities: Capability[] = [];
     for (const capMan of manifest.capabilities) {
       try {
@@ -137,7 +146,15 @@ export class PluginLoader {
         throw new Error(`Capability '${capMan.id}' failed: ${message}`);
       }
     }
+    return capabilities;
+  }
 
+  private finalizePlugin(
+    pluginFolder: string,
+    pluginPath: string,
+    manifest: PluginManifest,
+    capabilities: Capability[]
+  ): LoadedPlugin {
     const loaded: LoadedPlugin = {
       manifest,
       capabilities,
@@ -147,19 +164,14 @@ export class PluginLoader {
       },
       unload: () => this.unloadPlugin(manifest.id)
     };
-
     this.loadedPlugins.set(manifest.id, loaded);
     for (const cap of capabilities) {
       this.registry.register(cap);
     }
-
     this.options.onPluginLoaded(manifest);
-
-    // Set up file watcher for this plugin if watch mode is enabled
     if (this.options.watchMode) {
       this.watchSinglePlugin(pluginPath, pluginFolder);
     }
-
     return loaded;
   }
 

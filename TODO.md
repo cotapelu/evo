@@ -217,6 +217,7 @@ Last Updated: 2026-06-14
 - [x] Refactored complexity.collectHalstead: extracted helpers (addOperator, addOperand, handle*); collectHalstead 2 lines, all ≤20 lines.
 - [x] Refactored dependency_tree: split handleExportNamedDeclaration, resolveImports, computeReachable into small helpers; all functions ≤20 lines.
 - [x] Refactored complexity: split countDecisions using handler map, extracted countFunctionsAndCyclomatic; all functions ≤20 lines.
+- [x] Refactored plugin-loader: extracted loadCapabilities and finalizePlugin from loadPlugin; all functions ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress
