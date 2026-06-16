@@ -767,6 +767,13 @@ Last Updated: 2026-06-15
 - All team manager functions now ≤20 lines.
 - Maintains comprehensive team functionality while improving readability and maintainability.
 
+### One Hundred Forty-Seventh Round (Plugin Loader UnloadAll Refactor)
+- Refactored `plugin-loader.unloadAll` to improve clarity and maintainability.
+- Extracted `clearAllTimers` to clear both reload and new-plugin timers.
+- Extracted `unloadAllPlugins` to iterate and unload each plugin.
+- Extracted `closeAllWatchers` to clear caches and close file watchers.
+- `unloadAll` now a simple orchestrator (~4 lines); all helpers ≤20 lines.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

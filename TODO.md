@@ -225,6 +225,7 @@ Last Updated: 2026-06-14
 - [x] Refactored guideline-generator: split generateExamples into buildMinimalExample and buildFullExample; all functions ≤20 lines.
 - [x] Refactored guideline-generator: split getExampleValue into getStringExample, getBooleanExample, getArrayExample, getObjectExample; all functions ≤20 lines.
 - [x] Refactored team-manager: split bootPiclawTeam, executeTeamTasks into small helpers; all functions ≤20 lines.
+- [x] Refactored plugin-loader.unloadAll: extracted clearAllTimers, unloadAllPlugins, closeAllWatchers; all functions ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
 
 ## In Progress

@@ -399,28 +399,31 @@ export class PluginLoader {
     }
   }
 
-  unloadAll(): void {
-    // Clear all pending reload timers
-    for (const timer of this.reloadTimers.values()) {
-      clearTimeout(timer);
-    }
+  private clearAllTimers(): void {
+    for (const timer of this.reloadTimers.values()) clearTimeout(timer);
     this.reloadTimers.clear();
-
-    // Clear all pending new plugin load timers
-    for (const timer of this.newPluginTimers.values()) {
-      clearTimeout(timer);
-    }
+    for (const timer of this.newPluginTimers.values()) clearTimeout(timer);
     this.newPluginTimers.clear();
+  }
 
-    // Unload all plugins (collect keys first to avoid mutation during iteration)
+  private unloadAllPlugins(): void {
     const pluginIds = Array.from(this.loadedPlugins.keys());
     for (const pluginId of pluginIds) {
       this.unloadPlugin(pluginId);
     }
+  }
+
+  private closeAllWatchers(): void {
     this.resolveCache.clear();
     for (const handle of this.watchHandles.values()) handle.close();
     this.watchHandles.clear();
     this.rootWatcher?.close();
+  }
+
+  unloadAll(): void {
+    this.clearAllTimers();
+    this.unloadAllPlugins();
+    this.closeAllWatchers();
   }
 
   getStats(): PluginLoaderStats {
