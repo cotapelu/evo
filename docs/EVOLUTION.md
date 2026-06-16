@@ -567,6 +567,13 @@ Last Updated: 2026-06-15
 - All tests now passing: 95 suites, 866 tests, 3 skipped; build green; zero type errors.
 - Documentation updates: `PROJECT_STATE.md`, `AGENT_METRICS.md` with new iteration and test counts.
 
+### One Hundred Sixteenth Round (Type Safety in Codebase Tests)
+- Enhanced type safety in codebase plugin test suite by replacing ` as any` casts with properly defined result detail interfaces.
+- Analyzed each capability's return shape and created interfaces: `TestContext`, `AnalyzeDetails`, `AstQueryDetails`, `CallGraphDetails`, `ComplexityDetails`, `DepTreeSuccessDetails`, `SearchDetails`.
+- Updated tests: `analyze_ast.test.ts`, `ast_query.test.ts`, `call_graph.test.ts`, `complexity.test.ts`, `dependency_tree.test.ts`, `search.test.ts`, `codebase.test.ts` (analyze & safe_edit parts).
+- All 89 codebase tests passing; zero ` as any` in production code maintained.
+- Improved maintainability and IDE type checking for test development.
+
 ## Planned Refactors
 - [x] Introduce a `ready` promise (`waitForLoad`) in `PluginLoader` to simplify consumption.
 - [x] Update `extensionsAggregator` to async and await capability system init.
