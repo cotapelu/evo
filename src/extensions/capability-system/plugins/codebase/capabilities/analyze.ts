@@ -70,6 +70,19 @@ const VAR_DECL_REGEX = /^\s*(?:const|let)\s+(\w+)\s*[=;]/;
 const ENUM_DECL_REGEX = /^\s*enum\s+(\w+)/;
 
 // Parsing helpers
+function processNamedGroup(namedGroup: string): { importClause: string; namedImports: string[] } {
+  const namedStr = namedGroup.slice(1, -1).trim();
+  if (namedStr) {
+    const parts = namedStr.split(',').map(p => p.trim());
+    const namedImports = parts.map(p => {
+      const [name, alias] = p.split(/\s+as\s+/);
+      return alias || name;
+    });
+    return { importClause: `{ ${namedStr} }`, namedImports };
+  }
+  return { importClause: '', namedImports: [] };
+}
+
 function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): boolean {
   const importMatch = line.match(IMPORT_DECL_REGEX);
   if (importMatch) {
@@ -78,15 +91,9 @@ function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): b
     if (starAs) {
       importInfo.importClause = `* as ${starAs}`;
     } else if (namedGroup) {
-      const namedStr = namedGroup.slice(1, -1).trim();
-      if (namedStr) {
-        const parts = namedStr.split(',').map(p => p.trim());
-        importInfo.namedImports = parts.map(p => {
-          const [name, alias] = p.split(/\s+as\s+/);
-          return alias || name;
-        });
-        importInfo.importClause = `{ ${namedStr} }`;
-      }
+      const result = processNamedGroup(namedGroup);
+      importInfo.importClause = result.importClause;
+      importInfo.namedImports = result.namedImports;
     } else if (defaultImport) {
       importInfo.importClause = defaultImport;
     }

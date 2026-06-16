@@ -641,6 +641,12 @@ Last Updated: 2026-06-15
 - All 5 analyze tests continue to pass.
 - Continuing to systematically enforce ≤20 line function quality gate across the codebase.
 
+### One Hundred Twenty-Seventh Round (Analyze Refactor: TryParseImport Decomposition)
+- Refactored `tryParseImport` (25+ lines) by extracting `processNamedGroup` helper for named import handling.
+- `tryParseImport` now ~15 lines; all helpers ≤20 lines.
+- All analyze tests continue to pass.
+- Steady progress toward full compliance with the function size quality gate across the entire codebase.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
