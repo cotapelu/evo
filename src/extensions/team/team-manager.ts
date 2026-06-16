@@ -77,9 +77,9 @@ export class AgentTeam implements AgentTeamRuntime {
   private lockQueue: (() => void)[] = [];
   private locked = false;
   monitorInterval: NodeJS.Timeout | null = null;
-  private onUpdate?: (update: AgentToolResult<any>) => void;
+  private onUpdate?: (update: AgentToolResult<unknown>) => void;
 
-  public notifyUpdate(update: any): void {
+  public notifyUpdate(update: AgentToolResult<unknown>): void {
     if (this.onUpdate) {
       try {
         this.onUpdate(update);
@@ -91,7 +91,7 @@ export class AgentTeam implements AgentTeamRuntime {
   }
 
   // Helper to create consistent update format
-  public createUpdate(content: string, details?: any, isError?: boolean): AgentToolResult<any> {
+  public createUpdate(content: string, details?: unknown, isError?: boolean): AgentToolResult<unknown> {
     return {
       content: [{ type: "text", text: content }],
       details,
@@ -144,7 +144,7 @@ export class AgentTeam implements AgentTeamRuntime {
     this.id = id;
   }
 
-  setOnUpdate(fn: ((update: AgentToolResult<any>) => void) | undefined): void {
+  setOnUpdate(fn: ((update: AgentToolResult<unknown>) => void) | undefined): void {
     this.onUpdate = fn;
   }
 
@@ -189,7 +189,7 @@ export class AgentTeam implements AgentTeamRuntime {
     this.workspace.clear();
   }
 
-  async workspaceWrite(key: string, value: any, owner: string): Promise<void> {
+  async workspaceWrite(key: string, value: unknown, owner: string): Promise<void> {
     return this.withLock(() => {
       this.workspace.set(key, value, owner);
       // Notify workspace update
@@ -200,7 +200,7 @@ export class AgentTeam implements AgentTeamRuntime {
     });
   }
 
-  async workspaceRead(key: string): Promise<any> {
+  async workspaceRead(key: string): Promise<unknown> {
     return this.withLock(() => this.workspace.get(key));
   }
 
@@ -220,7 +220,7 @@ export class AgentTeam implements AgentTeamRuntime {
     return this.withLock(() => this.workspace.delete(key));
   }
 
-  async workspaceToObject(): Promise<Record<string, any>> {
+  async workspaceToObject(): Promise<Record<string, unknown>> {
     return this.withLock(() => this.workspace.toObject());
   }
 
@@ -416,7 +416,7 @@ export class AgentTeam implements AgentTeamRuntime {
     });
   }
 
-  async handleAgentFailure(agentId: string, taskIndex: number, error?: any): Promise<void> {
+  async handleAgentFailure(agentId: string, taskIndex: number, error?: unknown): Promise<void> {
     const role = this.roleByAgentId.get(agentId) ?? agentId;
     await this.withLock(() => {
       const task = this.taskStatuses.get(taskIndex);
@@ -430,7 +430,16 @@ export class AgentTeam implements AgentTeamRuntime {
       if (task.retryCount >= DEFAULT_MAX_RETRIES) {
         // Max retries exceeded - mark as failed
         task.status = 'failed';
-        task.result = error?.message || error?.toString() || 'Unknown error';
+        // Determine error message
+        let errorMessage: string;
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error !== undefined && error !== null) {
+          errorMessage = String(error);
+        } else {
+          errorMessage = 'Unknown error';
+        }
+        task.result = errorMessage;
         task.retryAvailableAt = undefined;
         // Remove from pendingIndices if present
         const pendingIdx = this.pendingIndices.indexOf(taskIndex);
@@ -549,7 +558,7 @@ export class AgentTeam implements AgentTeamRuntime {
   async setupChildRuntimes(
     parentRuntime: AgentSessionRuntime,
     baseCwd?: string | ((role: string) => string),
-    options?: { createRuntime?: (factory: CreateAgentSessionRuntimeFactory, opts: any) => Promise<AgentSessionRuntime> }
+    options?: { createRuntime?: (factory: CreateAgentSessionRuntimeFactory, opts: unknown) => Promise<AgentSessionRuntime> }
   ): Promise<void> {
     if (this.disposed) throw new Error('Team disposed');
     // roles should already be defined via initialize options or registerRuntime
@@ -629,7 +638,7 @@ export class AgentTeam implements AgentTeamRuntime {
       this.size = this.roles.length;
 
       // Subscribe to child session events
-      runtime.session.subscribe((event: any) => this.handleAgentEvent(role, event));
+      runtime.session.subscribe((event: unknown) => this.handleAgentEvent(role, event));
     }
   }
 
@@ -693,11 +702,12 @@ export class AgentTeam implements AgentTeamRuntime {
           : await this.getContinuationPrompt(turnCount);
 
         await runtime.session.prompt(prompt);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`Agent ${role} prompt error:`, error);
         this.notifyUpdate(this.createUpdate(
-          `❌ Agent ${role} error: ${error.message}`,
-          { role, error: error.message },
+          `❌ Agent ${role} error: ${errorMessage}`,
+          { role, error: errorMessage },
           true
         ));
       }
@@ -710,29 +720,39 @@ export class AgentTeam implements AgentTeamRuntime {
   /**
    * Handle events from child sessions and forward to UI updates.
    */
-  private handleAgentEvent(role: string, event: any): void {
+  private handleAgentEvent(role: string, event: unknown): void {
+    // Guard: ensure event is an object with a type property
+    if (typeof event !== 'object' || event === null || !('type' in event)) return;
+    const e = event as { type: string; stopReason?: unknown; message?: unknown; toolName?: unknown };
     let text: string | null = null;
-    switch (event.type) {
+    switch (e.type) {
       case 'agent_start':
         text = `[${role}] Agent started`;
         break;
       case 'agent_end':
-        text = `[${role}] Agent finished: ${event.stopReason}`;
+        text = `[${role}] Agent finished: ${e.stopReason}`;
         break;
       case 'message_start':
-        if (event.message?.role === 'user') {
-          const content = this.extractText(event.message);
-          text = `[${role}] User: ${content.substring(0, 200)}`;
-        } else if (event.message?.role === 'assistant') {
-          const content = this.extractText(event.message);
-          text = `[${role}] Assistant: ${content.substring(0, 200)}`;
+        if (e.message && typeof e.message === 'object' && 'role' in e.message) {
+          const msg = e.message as { role: string; content?: unknown };
+          if (msg.role === 'user') {
+            const content = this.extractText(msg.content);
+            text = `[${role}] User: ${content.substring(0, 200)}`;
+          } else if (msg.role === 'assistant') {
+            const content = this.extractText(msg.content);
+            text = `[${role}] Assistant: ${content.substring(0, 200)}`;
+          }
         }
         break;
       case 'tool_execution_start':
-        text = `[${role}] Tool: ${event.toolName}`;
+        if (typeof e.toolName === 'string') {
+          text = `[${role}] Tool: ${e.toolName}`;
+        }
         break;
       case 'tool_execution_end':
-        text = `[${role}] Tool ${event.toolName} done`;
+        if (typeof e.toolName === 'string') {
+          text = `[${role}] Tool ${e.toolName} done`;
+        }
         break;
       case 'message_update':
         // ignore streaming updates
@@ -741,8 +761,8 @@ export class AgentTeam implements AgentTeamRuntime {
     if (text) {
       this.notifyUpdate({
         content: [{ type: 'text', text }],
-        details: { role, eventType: event.type },
-        isError: event.type === 'agent_end' && event.stopReason === 'error'
+        details: { role, eventType: e.type },
+        isError: e.type === 'agent_end' && e.stopReason === 'error'
       });
     }
   }
@@ -750,9 +770,11 @@ export class AgentTeam implements AgentTeamRuntime {
   /**
    * Extract plain text from a message object (handles array content).
    */
-  private extractText(message: any): string {
-    if (typeof message.content === 'string') return message.content;
-    const parts = (message.content || []) as Array<{ type: string; text?: string }>;
+  private extractText(message: unknown): string {
+    if (!message || typeof message !== 'object') return '';
+    const msg = message as { content?: unknown };
+    if (typeof msg.content === 'string') return msg.content;
+    const parts = (msg.content || []) as Array<{ type: string; text?: string }>;
     const texts = parts.filter(c => c.type === 'text').map(c => c.text).filter(Boolean);
     return texts.join('');
   }
@@ -972,7 +994,7 @@ export async function bootPiclawTeam(
 export async function executeTeamTasks(
   team: AgentTeam,
   tasks: string[],
-  onUpdate?: (update: AgentToolResult<any>) => void,
+  onUpdate?: (update: AgentToolResult<unknown>) => void,
   _options?: { wait?: boolean; maxTurnsPerAgent?: number }
 ): Promise<AgentTeam> {
   team.setOnUpdate(onUpdate);

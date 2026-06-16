@@ -7,7 +7,7 @@
  */
 
 import { bootPiclawTeam, executeTeamTasks, TeamRegistry } from "./team-manager.js";
-import type { ToolDefinition, ExtensionAPI, AgentToolUpdateCallback, AgentSessionRuntime, AgentToolResult } from "@earendil-works/pi-coding-agent";
+import type { ToolDefinition, AgentToolUpdateCallback, AgentToolResult, ExtensionContext, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 interface TeamToolParams {
   teamId?: string;
@@ -15,10 +15,7 @@ interface TeamToolParams {
   teamSize?: number;
   teamRoles?: string[];
 }
-
-interface TeamToolContext extends ExtensionAPI {
-  runtime?: AgentSessionRuntime;
-}
+// TeamToolContext not needed explicitly; we'll use ExtensionContext and cast for runtime access.
 
 
 export function registerTeamTool(api: ExtensionAPI): void {
@@ -80,10 +77,10 @@ export function createTeamTool(): ToolDefinition {
      */
     async execute(
       toolCallId: string,
-      params: unknown,
-      signal?: AbortSignal,
-      onUpdate?: AgentToolUpdateCallback<unknown>,
-      ctx: TeamToolContext
+      params: any,
+      signal: AbortSignal | undefined,
+      onUpdate: AgentToolUpdateCallback<unknown> | undefined,
+      ctx: ExtensionContext
     ) {
       // Support LLM outputting JSON string or handle call references
       let parsedParams: TeamToolParams;
@@ -91,7 +88,7 @@ export function createTeamTool(): ToolDefinition {
         // Detect call reference pattern (e.g., "call_abc123") which indicates unresolved reference
         if (params.startsWith('call_')) {
           return {
-            content: [{ type: "text", text: `❌ Error: team_run expects a JSON object with tasks and optional teamSize. Received a call reference string (${params.substring(0, 20)}...). Call references must be resolved before passing to tools.` }],
+            content: [{ type: "text" as const, text: `❌ Error: team_run expects a JSON object with tasks and optional teamSize. Received a call reference string (${params.substring(0, 20)}...). Call references must be resolved before passing to tools.` }],
             isError: true,
             details: { error: "Unresolved call reference" }
           };
@@ -101,7 +98,7 @@ export function createTeamTool(): ToolDefinition {
         } catch (e: unknown) {
           const message = e instanceof Error ? e.message : String(e);
           return {
-            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${message}` }],
+            content: [{ type: "text" as const, text: `❌ Error: Invalid JSON string: ${message}` }],
             isError: true,
             details: { error: "Invalid JSON" }
           };
@@ -110,7 +107,7 @@ export function createTeamTool(): ToolDefinition {
         parsedParams = params as TeamToolParams;
       } else {
         return {
-          content: [{ type: "text", text: "Invalid parameters: expected object or JSON string" }],
+          content: [{ type: "text" as const, text: "Invalid parameters: expected object or JSON string" }],
           isError: true,
           details: { error: "Invalid parameters" }
         };
@@ -122,12 +119,12 @@ export function createTeamTool(): ToolDefinition {
       let wrappedOnUpdate: ((update: AgentToolResult<unknown>) => void) | undefined;
       if (onUpdate) {
         // Accumulate all text messages across updates for complete history
-        const messageHistory: Array<{ type: string; text: string }> = [];
+        const messageHistory: Array<{ type: "text"; text: string }> = [];
         wrappedOnUpdate = (update: AgentToolResult<unknown>) => {
           if (update.content && Array.isArray(update.content)) {
             for (const block of update.content) {
               if (block.type === 'text') {
-                messageHistory.push({ type: 'text', text: block.text });
+                messageHistory.push({ type: 'text' as const, text: block.text });
               }
             }
             onUpdate({
@@ -147,7 +144,7 @@ export function createTeamTool(): ToolDefinition {
         const team = registry.get(teamId);
         if (!team) {
           return {
-            content: [{ type: "text", text: `Error: Team with ID ${teamId} not found` }],
+            content: [{ type: "text" as const, text: `Error: Team with ID ${teamId} not found` }],
             isError: true,
             details: { error: "Team not found" }
           };
@@ -159,7 +156,7 @@ export function createTeamTool(): ToolDefinition {
         // Always non-blocking: return current status immediately
         const status = await team.getTeamStatus();
         return {
-          content: [{ type: "text", text: `📊 Team ${teamId} status: ${status.completedTasks}/${status.totalTasks} tasks completed, ${status.agents.length} agents` }],
+          content: [{ type: "text" as const, text: `📊 Team ${teamId} status: ${status.completedTasks}/${status.totalTasks} tasks completed, ${status.agents.length} agents` }],
           details: { teamId, status, running: status.completedTasks < status.totalTasks },
           isError: false
         };
@@ -167,7 +164,7 @@ export function createTeamTool(): ToolDefinition {
       // New team creation
       if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
         return {
-          content: [{ type: "text", text: "Error: tasks must be a non-empty array of strings when creating a new team" }],
+          content: [{ type: "text" as const, text: "Error: tasks must be a non-empty array of strings when creating a new team" }],
           isError: true,
           details: { error: "Invalid tasks parameter" }
         };
@@ -182,7 +179,7 @@ export function createTeamTool(): ToolDefinition {
 
         // Send initial update (will be accumulated)
         wrappedOnUpdate?.({
-          content: [{ type: "text", text: `🚀 Starting team with ${teamSize || 2} agents for ${tasks.length} tasks` }],
+          content: [{ type: "text" as const, text: `🚀 Starting team with ${teamSize || 2} agents for ${tasks.length} tasks` }],
           details: { teamSize, teamRoles, taskCount: tasks.length },
           isError: false
         });
@@ -194,7 +191,7 @@ export function createTeamTool(): ToolDefinition {
         });
 
         wrappedOnUpdate?.({
-          content: [{ type: "text", text: `✅ Team booted: ${team.roles.join(", ")}` }],
+          content: [{ type: "text" as const, text: `✅ Team booted: ${team.roles.join(", ")}` }],
           details: { roles: team.roles, teamId: team.id },
           isError: false
         });
@@ -204,7 +201,7 @@ export function createTeamTool(): ToolDefinition {
 
         // Return immediately with teamId (non-blocking)
         return {
-          content: [{ type: "text", text: `✅ Team started: ${team.id}\\nAgents: ${team.roles.join(", ")}\\nTasks: ${tasks.length}\\n\\nProgress updates will be shown automatically.\\nTo check status, call team_run({teamId: \"${team.id}\")` }],
+          content: [{ type: "text" as const, text: `✅ Team started: ${team.id}\\nAgents: ${team.roles.join(", ")}\\nTasks: ${tasks.length}\\n\\nProgress updates will be shown automatically.\\nTo check status, call team_run({teamId: \"${team.id}\")` }],
           details: {
             teamId: team.id,
             agentCount: team.roles.length,
@@ -219,12 +216,12 @@ export function createTeamTool(): ToolDefinition {
         // Send error update before returning (use wrappedOnUpdate if available to preserve history)
         const notify = wrappedOnUpdate || onUpdate;
         notify?.({
-          content: [{ type: "text", text: `❌ Team execution failed: ${message}` }],
+          content: [{ type: "text" as const, text: `❌ Team execution failed: ${message}` }],
           details: { error: message, stack },
           isError: true
         });
         return {
-          content: [{ type: "text", text: `❌ Team execution failed: ${message}` }],
+          content: [{ type: "text" as const, text: `❌ Team execution failed: ${message}` }],
           details: { error: message, stack },
           isError: true
         };

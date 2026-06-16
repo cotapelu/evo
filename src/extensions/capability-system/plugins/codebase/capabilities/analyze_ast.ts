@@ -261,7 +261,8 @@ ${result.symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.
 }
 
 async function parseAST(content: string): Promise<any> {
-  const parser = await import("@typescript-eslint/parser") as ParserModule;
+// @ts-ignore
+  const parser = await import("@typescript-eslint/parser/dist/index.js") as ParserModule;
   const { parse } = parser;
   return parse(content, {
     sourceType: "module",

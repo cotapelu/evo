@@ -13,10 +13,9 @@ import type {
   Capability,
   PluginLoaderStats,
   CapabilityManifest,
-  ExtensionContext,
-  CapabilityExecute,
-  AgentToolResult
+  CapabilityExecute
 } from "./types.js";
+import type { ExtensionContext, AgentToolResult } from "@earendil-works/pi-coding-agent";
 import { getCapabilityRegistry } from "./registry.js";
 import { MANIFEST_FILENAME } from "./types.js";
 import { generateCapabilityGuidelines, extractMinimalParams } from "./guideline-generator.js";
@@ -174,7 +173,7 @@ export class PluginLoader {
     const rendererPath = capMan.renderer ? join(pluginPath, capMan.renderer) : null;
 
     const executeModule = await this.dynamicImport(executePath);
-    const rawExecuteFn = executeModule.execute || executeModule.default;
+    const rawExecuteFn = (executeModule as any).execute || (executeModule as any).default;
     if (typeof rawExecuteFn !== "function") throw new Error("Missing execute function");
     const executeFn = rawExecuteFn as (params: Record<string, unknown>, ctx: ExtensionContext) => Promise<AgentToolResult<unknown>>;
 
@@ -182,7 +181,7 @@ export class PluginLoader {
     if (rendererPath && existsSync(rendererPath)) {
       try {
         const rendererModule = await this.dynamicImport(rendererPath);
-        renderResultFn = rendererModule.renderResult || rendererModule.default;
+        renderResultFn = (rendererModule as any).renderResult || (rendererModule as any).default;
       } catch {}
     }
 
@@ -223,7 +222,7 @@ export class PluginLoader {
       ): Promise<AgentToolResult<unknown>> => {
         return executeFn(params, ctx).then((result: AgentToolResult<unknown>) => ({
           ...result,
-          details: { ...result.details, capabilityId }
+          details: result.details && typeof result.details === 'object' && !Array.isArray(result.details) ? { ...result.details, capabilityId } : { capabilityId }
         })).catch((error: unknown) => ({
           content: [{ type: "text" as const, text: `❌ ${capabilityId} error: ${error instanceof Error ? error.message : String(error)}` }],
           details: { error: error instanceof Error ? error.message : String(error), capabilityId },
@@ -323,10 +322,11 @@ export class PluginLoader {
   }
 
   private validateManifest(manifest: PluginManifest, pluginFolder: string): void {
-    const required = ["id", "name", "description", "version", "capabilities"];
-    for (const field of required) {
-      if (!manifest[field]) throw new Error(`Missing '${field}'`);
-    }
+    if (!manifest.id) throw new Error("Missing 'id'");
+    if (!manifest.name) throw new Error("Missing 'name'");
+    if (!manifest.description) throw new Error("Missing 'description'");
+    if (!manifest.version) throw new Error("Missing 'version'");
+    if (!manifest.capabilities) throw new Error("Missing 'capabilities'");
     if (!/^[a-z][a-z0-9_-]*$/.test(manifest.id)) throw new Error(`Invalid plugin ID: ${manifest.id}`);
     if (!Array.isArray(manifest.capabilities) || manifest.capabilities.length === 0) throw new Error("At least one capability required");
     for (const cap of manifest.capabilities) {

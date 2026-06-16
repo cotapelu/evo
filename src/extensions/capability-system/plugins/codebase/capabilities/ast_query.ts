@@ -250,7 +250,8 @@ export async function execute(params: { file: string; query: any }, ctx: any): P
 
   let ast;
   try {
-    const parser = await import("@typescript-eslint/parser") as ParserModule;
+// @ts-ignore
+    const parser = await import("@typescript-eslint/parser/dist/index.js") as ParserModule;
     const { parse } = parser;
     ast = parse(content, {
       sourceType: "module",

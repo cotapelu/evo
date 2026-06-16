@@ -3,145 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Type Safety Cleanup",
+      "name": "Fix TypeScript compilation errors",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Inventory all `as any` casts in src/ (excluding tests)",
-          "status": "completed"
+          "content": "Fix plugin-loader.ts import and type issues",
+          "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Refactor extension.ts casts: improve types for context.state access",
-          "status": "completed"
+          "content": "Fix @typescript-eslint/parser import issues",
+          "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Remove casts in codebase capabilities (metrics, complexity, ast_query, dependency_tree, call_graph, analyze, analyze_ast)",
-          "status": "completed"
+          "content": "Fix metrics-widget.ts theme color types",
+          "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Remove cast in settings-command.ts",
-          "status": "completed"
+          "content": "Fix team extension type issues",
+          "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Run tests and verify no regressions",
-          "status": "completed"
-        },
-        {
-          "id": "task-6",
-          "content": "Commit and push: 'chore: evolution round - type safety cleanup: removed remaining as any casts'",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-2",
-      "name": "Reduce any Types",
-      "tasks": [
-        {
-          "id": "task-7",
-          "content": "Inventory remaining `any` types in production code (excluding tests)",
-          "status": "completed"
-        },
-        {
-          "id": "task-8",
-          "content": "Refactor high-impact modules: team-manager.ts, team-widget.ts, metrics-widget.ts to reduce any usage",
-          "status": "completed"
-        },
-        {
-          "id": "task-9",
-          "content": "Improve type safety in other modules (extension.ts residual any, codebase caps any parameters)",
-          "status": "completed"
-        },
-        {
-          "id": "task-10",
-          "content": "Run tests and ensure no regressions",
-          "status": "completed"
-        },
-        {
-          "id": "task-11",
-          "content": "Update docs and commit: 'chore: evolution round - reduced any types'",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-3",
-      "name": "Final Any Reduction",
-      "tasks": [
-        {
-          "id": "task-12",
-          "content": "Refactor team-ops-tool.ts to eliminate any types and improve parameter typing",
-          "status": "completed"
-        },
-        {
-          "id": "task-13",
-          "content": "Refactor team-tool.ts to eliminate any types and improve parameter typing",
-          "status": "completed"
-        },
-        {
-          "id": "task-14",
-          "content": "Refactor workspace.ts to eliminate any in value storage and returns",
-          "status": "completed"
-        },
-        {
-          "id": "task-15",
-          "content": "Refactor plugin-loader.ts residual any types (cache, errors, module)",
-          "status": "pending"
-        },
-        {
-          "id": "task-16",
-          "content": "Run tests and verify no regressions",
-          "status": "completed"
-        },
-        {
-          "id": "task-17",
-          "content": "Update docs and commit: 'chore: evolution round - final any reduction'",
-          "status": "completed"
-        }
-      ]
-    },
-    {
-      "id": "phase-4",
-      "name": "Deep Type Safety in Core Modules",
-      "tasks": [
-        {
-          "id": "task-18",
-          "content": "Refactor team-manager.ts remaining any types (notifyUpdate, createUpdate, workspaceWrite value, handleAgentFailure error, etc.)",
-          "status": "pending"
-        },
-        {
-          "id": "task-19",
-          "content": "Refactor guideline-generator.ts to eliminate any in schema handling and example generation",
-          "status": "pending"
-        },
-        {
-          "id": "task-20",
-          "content": "Refactor capability-system registry.ts any types",
-          "status": "pending"
-        },
-        {
-          "id": "task-21",
-          "content": "Refactor capability-system extension.ts any types (api, ctx, etc.)",
-          "status": "pending"
-        },
-        {
-          "id": "task-22",
-          "content": "Run tests and ensure no regressions",
-          "status": "pending"
-        },
-        {
-          "id": "task-23",
-          "content": "Update docs and commit: 'chore: evolution round - deep type safety'",
+          "content": "Verify build succeeds",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 24,
-  "nextPhaseId": 4,
-  "updatedAt": "2026-06-15T23:35:05.849Z"
+  "nextTaskId": 6,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-06-16T10:48:05.842Z"
 }

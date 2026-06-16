@@ -3,5 +3,5 @@
   "compilerOptions": {
     "noEmit": false
   },
-  "exclude": ["src/**/*.test.ts", "src/tests/**/*", "src/**/__tests__/temp/**"]
+  "exclude": ["src/**/*.test.ts", "src/tests/**/*", "src/**/__tests__/**", "src/**/__tests__/temp/**", "src/benchmarks/**"]
 }

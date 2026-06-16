@@ -1,6 +1,6 @@
 // THIS FILE IS AUTO-GENERATED
 // Source: https://models.dev/api.json
-// Generated: 2026-06-15T17:25:37.879Z
+// Generated: 2026-06-16T11:50:12.349Z
 // DO NOT EDIT MANUALLY - Run 'npm run generate-custom-models' to update
 
 import type { Model } from "@earendil-works/pi-ai";
@@ -2962,8 +2962,8 @@ export const CUSTOM_MODELS = {
         cacheRead: 0,
         cacheWrite: 0,
       },
-      contextWindow: 131072,
-      maxTokens: 8192,
+      contextWindow: 262144,
+      maxTokens: 32768,
     } satisfies Model<"openai-completions">,
     "poolside/laguna-xs.2:free": {
       id: "poolside/laguna-xs.2:free",
@@ -2979,8 +2979,8 @@ export const CUSTOM_MODELS = {
         cacheRead: 0,
         cacheWrite: 0,
       },
-      contextWindow: 131072,
-      maxTokens: 8192,
+      contextWindow: 262144,
+      maxTokens: 32768,
     } satisfies Model<"openai-completions">,
     "prime-intellect/intellect-3": {
       id: "prime-intellect/intellect-3",

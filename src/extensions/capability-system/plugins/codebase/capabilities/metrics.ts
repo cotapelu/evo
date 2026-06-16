@@ -69,7 +69,7 @@ async function parseFile(cwd: string, fileRel: string): Promise<ParseResult> {
   try {
     const source = await fs.readFile(fileAbs, "utf8");
     // @ts-ignore - dynamic import of parser with types not resolvable under current moduleResolution
-    const { parse } = await import("@typescript-eslint/parser");
+    const { parse } = await import("@typescript-eslint/parser/dist/index.js");
     const ast = parse(source, { sourceType: "module", ecmaVersion: "latest", ts: true, jsx: true });
     return { source, ast };
   } catch (e: any) {

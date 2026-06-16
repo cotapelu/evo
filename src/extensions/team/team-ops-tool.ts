@@ -20,6 +20,7 @@ interface TeamOpsParams {
   channel?: string;
   content?: string;
   status?: string;
+  limit?: number;
 }
 
 interface TeamContext extends ExtensionContext {
@@ -81,10 +82,10 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
     },
     async execute(
       toolCallId: string,
-      params: unknown,
-      signal?: AbortSignal,
-      onUpdate?: AgentToolUpdateCallback<unknown>,
-      ctx: TeamContext
+      params: any,
+      signal: AbortSignal | undefined,
+      onUpdate: AgentToolUpdateCallback<unknown> | undefined,
+      ctx: ExtensionContext
     ) {
       // Support LLM outputting JSON string
       let parsedParams: TeamOpsParams;
@@ -94,7 +95,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
         } catch (e: unknown) {
           const message = e instanceof Error ? e.message : String(e);
           return {
-            content: [{ type: "text", text: `❌ Error: Invalid JSON string: ${message}` }],
+            content: [{ type: "text" as const, text: `❌ Error: Invalid JSON string: ${message}` }],
             isError: true,
             details: { error: "Invalid JSON" }
           };
@@ -103,7 +104,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
         parsedParams = params as TeamOpsParams;
       } else {
         return {
-          content: [{ type: "text", text: "Invalid parameters" }],
+          content: [{ type: "text" as const, text: "Invalid parameters" }],
           isError: true,
           details: { error: "Invalid parameters" }
         };
@@ -111,31 +112,38 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
       const { action } = parsedParams;
 
+      // Ensure team context with session
+      if (!('session' in ctx) || !(ctx as any).session?.sessionId) {
+        throw new Error("Team context missing session");
+      }
+      const teamCtx = ctx as TeamContext;
+      const sessionId = teamCtx.session.sessionId;
+
       try {
         switch (action) {
           // ==================== TASK MANAGEMENT ====================
           case "claim_task": {
-            const taskIndex = await team.claimTask(ctx.session.sessionId);
+            const taskIndex = await team.claimTask(sessionId);
             if (taskIndex !== null) {
               return {
-                content: [{ type: "text", text: `Claimed task ${taskIndex}: ${team.tasks[taskIndex]}` }],
+                content: [{ type: "text" as const, text: `Claimed task ${taskIndex}: ${team.tasks[taskIndex]}` }],
                 details: { taskIndex },
                 isError: false,
               } as const;
             }
             return {
-              content: [{ type: "text", text: "No pending tasks available." }],
+              content: [{ type: "text" as const, text: "No pending tasks available." }],
               details: undefined,
               isError: true,
             } as const;
           }
 
           case "release_task": {
-            const agentId = ctx.session.sessionId;
+            const agentId = sessionId;
             const currentTask = await team.getMyCurrentTask(agentId);
             if (currentTask === null) {
               return {
-                content: [{ type: "text", text: "No active task to release." }],
+                content: [{ type: "text" as const, text: "No active task to release." }],
                 details: undefined,
                 isError: true,
               } as const;
@@ -143,24 +151,24 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
             const released = await team.releaseTask(agentId, currentTask);
             if (released) {
               return {
-                content: [{ type: "text", text: `Released task ${currentTask}` }],
+                content: [{ type: "text" as const, text: `Released task ${currentTask}` }],
                 details: { taskIndex: currentTask },
                 isError: false,
               } as const;
             }
             return {
-              content: [{ type: "text", text: `Failed to release task ${currentTask}` }],
+              content: [{ type: "text" as const, text: `Failed to release task ${currentTask}` }],
               details: undefined,
               isError: true,
             } as const;
           }
 
           case "complete_task": {
-            const { taskIndex, result } = params;
-            const agentId = ctx.session.sessionId;
+            const { taskIndex, result } = parsedParams;
+            const agentId = sessionId;
             if (taskIndex === undefined) {
               return {
-                content: [{ type: "text", text: "Missing taskIndex" }],
+                content: [{ type: "text" as const, text: "Missing taskIndex" }],
                 details: undefined,
                 isError: true,
               } as const;
@@ -168,14 +176,14 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
             const currentTask = await team.getMyCurrentTask(agentId);
             if (currentTask !== taskIndex) {
               return {
-                content: [{ type: "text", text: `Task ${taskIndex} is not assigned to you.` }],
+                content: [{ type: "text" as const, text: `Task ${taskIndex} is not assigned to you.` }],
                 details: undefined,
                 isError: true,
               } as const;
             }
             await team.completeTask(agentId, taskIndex, result || "");
             return {
-              content: [{ type: "text", text: `Completed task ${taskIndex}` }],
+              content: [{ type: "text" as const, text: `Completed task ${taskIndex}` }],
               details: { taskIndex, result },
               isError: false,
             } as const;
@@ -184,7 +192,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
           case "get_team_status": {
             const status = await team.getTeamStatus();
             return {
-              content: [{ type: "text", text: JSON.stringify(status, null, 2) }],
+              content: [{ type: "text" as const, text: JSON.stringify(status, null, 2) }],
               details: status,
               isError: false,
             } as const;
@@ -192,26 +200,26 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
           // ==================== WORKSPACE ====================
           case "workspace_read": {
-            const { key } = params;
+            const { key } = parsedParams;
             if (!key) {
-              return { content: [{ type: "text", text: "Missing key" }], details: undefined, isError: true } as const;
+              return { content: [{ type: "text" as const, text: "Missing key" }], details: undefined, isError: true } as const;
             }
             const value = await team.workspaceRead(key);
             return {
-              content: [{ type: "text", text: value !== undefined ? String(value) : "(not found)" }],
+              content: [{ type: "text" as const, text: value !== undefined ? String(value) : "(not found)" }],
               details: { key, value, exists: value !== undefined },
               isError: false,
             } as const;
           }
 
           case "workspace_write": {
-            const { key, value } = params;
+            const { key, value } = parsedParams;
             if (!key || value === undefined) {
-              return { content: [{ type: "text", text: "Missing key or value" }], details: undefined, isError: true } as const;
+              return { content: [{ type: "text" as const, text: "Missing key or value" }], details: undefined, isError: true } as const;
             }
-            await team.workspaceWrite(key, String(value), ctx.session.sessionId);
+            await team.workspaceWrite(key, String(value), sessionId);
             return {
-              content: [{ type: "text", text: `Wrote to workspace key: ${key}` }],
+              content: [{ type: "text" as const, text: `Wrote to workspace key: ${key}` }],
               details: { key },
               isError: false,
             } as const;
@@ -219,24 +227,24 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
           // ==================== MESSAGING ====================
           case "send_message": {
-            const { channel = "team.chat", content } = params;
+            const { channel = "team.chat", content } = parsedParams;
             if (!content) {
-              return { content: [{ type: "text", text: "Missing content" }], details: undefined, isError: true } as const;
+              return { content: [{ type: "text" as const, text: "Missing content" }], details: undefined, isError: true } as const;
             }
-            await team.publishMessage(channel, ctx.session.sessionId, content);
+            await team.publishMessage(channel, sessionId, content);
             return {
-              content: [{ type: "text", text: `Sent to ${channel}` }],
+              content: [{ type: "text" as const, text: `Sent to ${channel}` }],
               details: { channel },
               isError: false,
             } as const;
           }
 
           case "get_messages": {
-            const { channel = "team.chat", limit } = params;
+            const { channel = "team.chat", limit } = parsedParams;
             const msgs = await team.getMessages(channel, limit);
             const text = msgs.map(m => `[${new Date(m.timestamp).toLocaleTimeString()}] ${m.from}: ${m.content}`).join("\n");
             return {
-              content: [{ type: "text", text: text || "(no messages)" }],
+              content: [{ type: "text" as const, text: text || "(no messages)" }],
               details: { channel, messages: msgs },
               isError: false,
             } as const;
@@ -244,15 +252,15 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
           // ==================== STATUS ====================
           case "update_status": {
-            const { status } = params;
+            const { status } = parsedParams;
             if (!status) {
-              return { content: [{ type: "text", text: "Missing status" }], details: undefined, isError: true } as const;
+              return { content: [{ type: "text" as const, text: "Missing status" }], details: undefined, isError: true } as const;
             }
-            await team.getMyCurrentTask(ctx.session.sessionId); // ensures agent exists
-            const current = await team.getMyCurrentTask(ctx.session.sessionId);
+            await team.getMyCurrentTask(sessionId); // ensures agent exists
+            const current = await team.getMyCurrentTask(sessionId);
             // For simplicity, just record it; not used yet in minimal version
             return {
-              content: [{ type: "text", text: `Status updated to: ${status}` }],
+              content: [{ type: "text" as const, text: `Status updated to: ${status}` }],
               details: { status, currentTask: current },
               isError: false,
             } as const;
@@ -260,7 +268,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
 
           default:
             return {
-              content: [{ type: "text", text: `Unknown action: ${action}` }],
+              content: [{ type: "text" as const, text: `Unknown action: ${action}` }],
               details: undefined,
               isError: true,
             } as const;
@@ -268,7 +276,7 @@ export function createTeamOpsTool(team: AgentTeam): ToolDefinition {
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text", text: `Error: ${message}` }],
+          content: [{ type: "text" as const, text: `Error: ${message}` }],
           details: undefined,
           isError: true,
         } as const;

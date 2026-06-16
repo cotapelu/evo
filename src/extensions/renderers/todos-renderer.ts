@@ -8,7 +8,7 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import { styleError, styleSuccess, styleWarning, styleText } from "../utils/render-utils";
+import { styleError, styleSuccess, styleWarning, styleText } from "../utils/render-utils.js";
 
 interface TodoPhase {
   name: string;

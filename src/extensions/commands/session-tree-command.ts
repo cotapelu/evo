@@ -10,7 +10,14 @@ import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder, TreeSelectorComponent } from "@earendil-works/pi-coding-agent";
 import { Container, Text, Spacer } from "@earendil-works/pi-tui";
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
-import type { SessionTreeNode } from "@earendil-works/pi-coding-agent/dist/core/session-manager";
+
+// LocalSessionTreeNode matches the structure returned by SessionManager.getTree()
+interface SessionTreeNode {
+  entry: SessionEntry;
+  children: SessionTreeNode[];
+  label?: string;
+  labelTimestamp?: string;
+}
 import { addSectionHeader } from "../utils/widget-helpers.js";
 
 // Helper functions for rendering entry details (extracted to reduce function size)

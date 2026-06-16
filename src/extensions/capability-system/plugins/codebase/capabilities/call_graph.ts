@@ -95,7 +95,8 @@ async function parseFile(cwd: string, fileRel: string): Promise<ParsedFile | nul
 
   let ast;
   try {
-    const parser = await import("@typescript-eslint/parser") as ParserModule;
+// @ts-ignore
+    const parser = await import("@typescript-eslint/parser/dist/index.js") as ParserModule;
     const { parse } = parser;
     ast = parse(content, {
       sourceType: "module",

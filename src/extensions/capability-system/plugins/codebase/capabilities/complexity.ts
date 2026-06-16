@@ -197,7 +197,8 @@ export async function execute(params: { file: string }, ctx: any): Promise<any> 
   const language = detectLanguage(params.file);
 
   // Dynamic import of parser
-  const parser = await import("@typescript-eslint/parser") as ParserModule;
+// @ts-ignore
+  const parser = await import("@typescript-eslint/parser/dist/index.js") as ParserModule;
   const { parse } = parser;
 
   let ast;

@@ -42,7 +42,8 @@ interface FileModuleInfo {
 
 async function parseModule(filePath: string, source: string): Promise<FileModuleInfo> {
   // Dynamic import of parser
-  const parser = await import("@typescript-eslint/parser") as ParserModule;
+// @ts-ignore
+  const parser = await import("@typescript-eslint/parser/dist/index.js") as ParserModule;
   const { parse } = parser;
 
   let ast;

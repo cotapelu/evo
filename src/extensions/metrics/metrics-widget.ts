@@ -65,7 +65,7 @@ function buildMetricsLines(ctx: ExtensionContext, theme: Theme): string[] {
 
   // Agent idle status
   const idle = ctx.isIdle();
-  lines.push(`${theme.fg("muted", "Status:")} ${idle ? theme.fg("green", "idle") : theme.fg("yellow", "working")}`);
+  lines.push(`${theme.fg("muted", "Status:")} ${idle ? theme.fg("success", "idle") : theme.fg("warning", "working")}`);
 
   return lines;
 }
