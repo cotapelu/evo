@@ -709,6 +709,13 @@ Last Updated: 2026-06-15
 - All 9 dependency_tree tests continue to pass.
 - Further solidifies codebase plugin's adherence to function size quality gate.
 
+### One Hundred Thirty-Eighth Round (Complexity Refactor)
+- Refactored `complexity` module to ensure all functions ≤20 lines.
+- Replaced `countDecisions` with a handler map approach: extracted `handleFunctionDecision`, `DECISION_HANDLERS`, `countForNode`; `countDecisions` now a simple wrapper.
+- Extracted `countFunctionsAndCyclomatic` from `analyzeComplexity`; analyzeComplexity now concise.
+- All 10 complexity tests continue to pass.
+- Achieved full compliance with function size quality gate across all codebase plugin capabilities.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

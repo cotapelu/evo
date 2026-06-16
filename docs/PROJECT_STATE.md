@@ -6,7 +6,7 @@ Last Updated: 2026-06-16
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 137 (latest) — refactored dependency_tree: split handleExportNamedDeclaration into processDeclaration, processExportSpecifiers, processReimport; extracted processFileImports from resolveImports; extracted bfs from computeReachable; all functions now ≤20 lines. All tests passing.
+✅ Iteration 138 (latest) — refactored complexity: split countDecisions using DECISION_HANDLERS map and handleFunctionDecision; extracted countFunctionsAndCyclomatic from analyzeComplexity; all functions now ≤20 lines. All tests passing.
 ✅ All tests passing (95 suites, 866 tests, 3 skipped).
 
 ## Key Components

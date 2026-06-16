@@ -33,37 +33,36 @@ function walk(node: any, visitor: (n: any, parent?: any) => void, parent?: any) 
 }
 
 // Count decision points for cyclomatic complexity
+function handleFunctionDecision(node: any): number {
+  if (node.body) {
+    return countDecisions(node.body);
+  }
+  return 0;
+}
+
+const DECISION_HANDLERS: Record<string, (node: any) => number> = {
+  IfStatement: () => 1,
+  ConditionalExpression: () => 1,
+  SwitchStatement: (n: any) => Math.max(0, n.cases.length - 1),
+  ForStatement: () => 1,
+  WhileStatement: () => 1,
+  DoWhileStatement: () => 1,
+  LogicalExpression: (n: any) => (n.operator === '&&' || n.operator === '||') ? 1 : 0,
+  CatchClause: () => 1,
+  FunctionExpression: handleFunctionDecision,
+  ArrowFunctionExpression: handleFunctionDecision,
+  FunctionDeclaration: handleFunctionDecision,
+};
+
+function countForNode(node: any): number {
+  const handler = DECISION_HANDLERS[node.type];
+  return handler ? handler(node) : 0;
+}
+
 function countDecisions(node: any): number {
   let count = 0;
   walk(node, (n: any) => {
-    switch (n.type) {
-      case 'IfStatement':
-      case 'ConditionalExpression':
-        count++; break;
-      case 'SwitchStatement':
-        count += n.cases.length - 1 || 0; // each case after first adds a path
-        break;
-      case 'ForStatement':
-      case 'WhileStatement':
-      case 'DoWhileStatement':
-        count++; // loops add a decision point
-        break;
-      case 'LogicalExpression':
-        // && and || operators add decision points
-        if (n.operator === '&&' || n.operator === '||') count++;
-        break;
-      case 'CatchClause':
-        count++; // exception handler
-        break;
-      case 'FunctionExpression':
-      case 'ArrowFunctionExpression':
-      case 'FunctionDeclaration':
-        // each conditional operator in function body counts
-        if (n.body) {
-          count += countDecisions(n.body);
-        }
-        break;
-    }
+    count += countForNode(n);
   });
   return count;
 }
@@ -206,11 +205,9 @@ function parseAST(content: string): any {
   return parse(content, { sourceType: "module", ecmaVersion: "latest", ts: true, jsx: true });
 }
 
-function analyzeComplexity(file: string, language: "ts" | "tsx" | "js" | "jsx" | "unknown", lines: number, ast: any): ComplexityResult {
+function countFunctionsAndCyclomatic(ast: any): { functions: number; cyclomatic: number } {
   let functions = 0;
   let cyclomatic = 0;
-  const halsteadCounts: HalsteadCounts = { operators: new Map(), operands: new Map() };
-
   walk(ast, (node: any) => {
     if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression') {
       functions++;
@@ -220,11 +217,15 @@ function analyzeComplexity(file: string, language: "ts" | "tsx" | "js" | "jsx" |
       }
     }
   });
+  return { functions, cyclomatic };
+}
 
+function analyzeComplexity(file: string, language: "ts" | "tsx" | "js" | "jsx" | "unknown", lines: number, ast: any): ComplexityResult {
+  const { functions, cyclomatic } = countFunctionsAndCyclomatic(ast);
+  const halsteadCounts: HalsteadCounts = { operators: new Map(), operands: new Map() };
   collectHalstead(ast, halsteadCounts);
   const halstead = computeHalstead(halsteadCounts);
   const maintainability = computeMaintainabilityIndex(halstead.volume, cyclomatic, lines);
-
   return {
     file,
     exists: true,
