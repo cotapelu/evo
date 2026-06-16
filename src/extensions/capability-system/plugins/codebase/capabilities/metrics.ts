@@ -101,32 +101,44 @@ async function analyzeFile(cwd: string, fileRel: string): Promise<MetricResult> 
   return { file: fileRel, lines, functions, classes, imports, exports };
 }
 
-export async function execute(params: { files: string[] }, ctx: any): Promise<Result> {
-  const cwd = ctx.cwd || process.cwd();
-  const results: MetricResult[] = [];
-  let totalLines = 0, totalFunctions = 0, totalClasses = 0, totalImports = 0, totalExports = 0;
+function initStats() {
+  return { totalLines: 0, totalFunctions: 0, totalClasses: 0, totalImports: 0, totalExports: 0 };
+}
 
-  for (const fileRel of params.files) {
+function accumulateStats(stats: ReturnType<typeof initStats>, res: MetricResult): void {
+  if (!res.error) {
+    stats.totalLines += res.lines;
+    stats.totalFunctions += res.functions;
+    stats.totalClasses += res.classes;
+    stats.totalImports += res.imports;
+    stats.totalExports += res.exports;
+  }
+}
+
+function buildStats(results: MetricResult[], stats: ReturnType<typeof initStats>): Result['stats'] {
+  return {
+    totalFiles: results.length,
+    totalLines: stats.totalLines,
+    totalFunctions: stats.totalFunctions,
+    totalClasses: stats.totalClasses,
+    totalImports: stats.totalImports,
+    totalExports: stats.totalExports
+  };
+}
+
+async function computeMetrics(cwd: string, files: string[]): Promise<{ results: MetricResult[]; stats: Result['stats'] }> {
+  const results: MetricResult[] = [];
+  let stats = initStats();
+  for (const fileRel of files) {
     const res = await analyzeFile(cwd, fileRel);
     results.push(res);
-    if (!res.error) {
-      totalLines += res.lines;
-      totalFunctions += res.functions;
-      totalClasses += res.classes;
-      totalImports += res.imports;
-      totalExports += res.exports;
-    }
+    accumulateStats(stats, res);
   }
+  return { results, stats: buildStats(results, stats) };
+}
 
-  return {
-    results,
-    stats: {
-      totalFiles: results.length,
-      totalLines,
-      totalFunctions,
-      totalClasses,
-      totalImports,
-      totalExports
-    }
-  };
+export async function execute(params: { files: string[] }, ctx: any): Promise<Result> {
+  const cwd = ctx.cwd || process.cwd();
+  const { results, stats } = await computeMetrics(cwd, params.files);
+  return { results, stats };
 }

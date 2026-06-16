@@ -214,39 +214,18 @@ export async function execute(params: { operations: EditOperation[]; format?: bo
   const format = params.format !== false;
   const fixImports = params.fixImports !== false;
   const { operations } = params;
-
-  // Validate input
   const inputCheck = validateOperations(operations);
   if (!inputCheck.valid) {
     return { success: false, results: [{ file: inputCheck.file || '', success: false, error: inputCheck.error || 'Invalid input' }] };
   }
-
-  let backups: Map<string, string>;
-  try {
-    backups = await backupFiles(operations, cwd);
-  } catch (err) {
-    const file = operations[0]?.file || '';
-    return { success: false, results: [{ file, success: false, error: String(err) }] };
-  }
-
-  // Group ops by file
   const opsByFile = groupOperationsByFile(operations);
-
+  let backups: Map<string, string>;
+  try { backups = await backupFiles(operations, cwd); } catch (err) { return { success: false, results: [{ file: operations[0]?.file || '', success: false, error: String(err) }] }; }
   let finalContents: Map<string, string>;
-  try {
-    finalContents = computeFinalContents(opsByFile, backups);
-  } catch (err) {
-    const file = Array.from(opsByFile.keys())[0] || '';
-    return { success: false, results: [{ file, success: false, error: String(err) }] };
-  }
-
-  // Write to disk
+  try { finalContents = computeFinalContents(opsByFile, backups); } catch (err) { const file = Array.from(opsByFile.keys())[0] || ''; return { success: false, results: [{ file, success: false, error: String(err) }] }; }
   await writeFiles(finalContents, cwd);
-
-  // Validate and diff
   const results = await validateAllAndDiff(finalContents, backups, cwd, format, fixImports, ctx);
   const allSuccess = results.every(r => r.success);
-
   return { success: allSuccess, results };
 }
 
