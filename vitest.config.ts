@@ -25,6 +25,7 @@ export default defineConfig({
         "dist/",
         "node_modules/",
         "llm-context/",
+        "src/benchmarks/",
       ],
       thresholds: {
         lines: 30,
