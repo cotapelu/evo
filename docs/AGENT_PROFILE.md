@@ -18,7 +18,7 @@ Last Updated: 2026-06-18
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (98 test suites, 931 tests).
+- Comprehensive test coverage (109 test suites, 1027 tests).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.
@@ -71,7 +71,7 @@ Last Updated: 2026-06-18
 - **branch-summary-renderer.test.ts, todos-renderer.test.ts, team-ops-renderer.test.ts**: Cast renderer results to `any` to access `.content` property on Text mocks.
 - **skill-reader.test.ts, tool-template.test.ts**: Replaced `as ToolResult` casts with `as any` to avoid conversion errors.
 - **read-skill.test.ts**: Typed `mockFs` as `any` to enable mockResolvedValue/mockRejectedValue in vitest.
-- **Test Coverage Initiative**: Added tests for benchmark-harness (21), logger (22), computer-use (22); excluded benchmarks from coverage. Coverage increased from ~68.5% to 75.29% (Statements). On track for ≥80%.
+- **Coverage target achieved**: Reached ≥80% statements coverage (80.13%) through targeted tests for low-coverage modules (subtool-loader, settings-command, team-widget, auto-continue, etc.).
 
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.

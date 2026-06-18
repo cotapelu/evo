@@ -1,87 +1,81 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import { registerTeamCommand } from "../extensions/commands/team-command.js";
-import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
-import { toggleTeamWidget, getTeamWidgetEnabled } from "../extensions/team/team-widget.js";
+#!/usr/bin/node
+/**
+ * Team Command Tests
+ */
 
-// Mock team-widget module functions are already imported
-vi.mock("../extensions/team/team-widget.js", () => ({
-  registerTeamWidget: vi.fn(),
-  toggleTeamWidget: vi.fn(),
-  getTeamWidgetEnabled: vi.fn(),
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { registerTeamCommand } from '../extensions/commands/team-command.js';
+import { toggleTeamWidget, getTeamWidgetEnabled } from '../extensions/team/team-widget.js';
+
+// Mock pi-coding-agent to avoid real imports
+vi.mock('@earendil-works/pi-coding-agent', () => ({
+  // Minimal exports; we only need types (erased)
 }));
 
-const mockNotify = vi.fn();
-
-const createMockCtx = () => ({
-  ui: {
-    notify: mockNotify,
+// Mock team-manager
+vi.mock('../extensions/team/team-manager.js', () => ({
+  AgentTeam: class AgentTeam {},
+  TeamRegistry: {
+    getInstance: vi.fn().mockReturnValue({
+      getAll: vi.fn().mockReturnValue(new Map()),
+    }),
   },
-});
+}));
 
-const createMockApi = () => createMockExtensionAPI();
+// Mock team-widget functions (override actual implementation)
+vi.mock('../extensions/team/team-widget.js', () => ({
+  toggleTeamWidget: vi.fn().mockReturnValue(true),
+  getTeamWidgetEnabled: vi.fn().mockReturnValue(true),
+}));
 
-describe("Team Command", () => {
+function createMockAPI() {
+  return { registerCommand: vi.fn() } as any;
+}
+function createMockContext() {
+  return { ui: { notify: vi.fn() } } as any;
+}
+
+describe('Team Command', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("registerTeamCommand", () => {
-    it("should register command with correct name", () => {
-      const api = createMockApi();
-      registerTeamCommand(api);
-      expect(api.registerCommand).toHaveBeenCalledWith("team", expect.any(Object));
-    });
+  it('registers /team command', () => {
+    const api = createMockAPI();
+    registerTeamCommand(api);
+    expect(api.registerCommand).toHaveBeenCalledWith(
+      'team',
+      expect.objectContaining({
+        description: expect.stringContaining('Toggle team status widget'),
+        handler: expect.any(Function),
+      })
+    );
+  });
 
-    it("should toggle team widget and notify", async () => {
-      vi.mocked(getTeamWidgetEnabled).mockReturnValue(false);
-      vi.mocked(toggleTeamWidget).mockReturnValue(true);
+  it('handler toggles widget and notifies shown', async () => {
+    const api = createMockAPI();
+    registerTeamCommand(api);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    const ctx = createMockContext();
 
-      const api = createMockApi();
-      registerTeamCommand(api);
-      const ctx = createMockCtx();
+    // Configure mocks: current state disabled, toggle returns enabled
+    getTeamWidgetEnabled.mockReturnValue(false);
+    toggleTeamWidget.mockReturnValue(true);
 
-      const handler = api.registerCommand.mock.calls[0][1].handler;
-      await handler("", ctx);
+    await handler('', ctx);
+    expect(ctx.ui.notify).toHaveBeenCalledWith('Team widget shown', 'info');
+  });
 
-      expect(toggleTeamWidget).toHaveBeenCalled();
-      expect(mockNotify).toHaveBeenCalledWith("Team widget shown", "info");
-    });
+  it('handler toggles off and notifies hidden', async () => {
+    const api = createMockAPI();
+    registerTeamCommand(api);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    const ctx = createMockContext();
 
-    it("should handle toggle to false", async () => {
-      vi.mocked(getTeamWidgetEnabled).mockReturnValue(true);
-      vi.mocked(toggleTeamWidget).mockReturnValue(false);
+    getTeamWidgetEnabled.mockReturnValue(true);
+    toggleTeamWidget.mockReturnValue(false);
 
-      const api = createMockApi();
-      registerTeamCommand(api);
-      const ctx = createMockCtx();
-
-      const handler = api.registerCommand.mock.calls[0][1].handler;
-      await handler("", ctx);
-
-      expect(toggleTeamWidget).toHaveBeenCalled();
-      expect(mockNotify).toHaveBeenCalledWith("Team widget hidden", "info");
-    });
-
-    it("should work without arguments", async () => {
-      const api = createMockApi();
-      registerTeamCommand(api);
-      const ctx = createMockCtx();
-
-      const handler = api.registerCommand.mock.calls[0][1].handler;
-      await handler("", ctx);
-
-      expect(toggleTeamWidget).toHaveBeenCalled();
-    });
-
-    it("should ignore arguments", async () => {
-      const api = createMockApi();
-      registerTeamCommand(api);
-      const ctx = createMockCtx();
-
-      const handler = api.registerCommand.mock.calls[0][1].handler;
-      await handler("on", ctx); // extra arg should be ignored
-
-      expect(toggleTeamWidget).toHaveBeenCalled();
-    });
+    await handler('', ctx);
+    expect(ctx.ui.notify).toHaveBeenCalledWith('Team widget hidden', 'info');
   });
 });

@@ -251,6 +251,9 @@ Last Updated: 2026-06-14
 ## In Progress
 - (none)
 
+- [x] Achieve ≥80% test coverage (reached 80.13%) through systematic test expansion across low-covered modules.
+- [x] Finalize all evolution documentation updates.
+
 ## Upcoming
 - (none)
 

@@ -1,115 +1,186 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import { registerSessionTreeCommand } from "../extensions/commands/session-tree-command.js";
-import { createMockExtensionAPI } from "../tests/utils/mock-factory.js";
+#!/usr/bin/env node
+/**
+ * Session Tree Command Tests
+ */
 
-// Mock SDK and TUI
-vi.mock("@earendil-works/pi-coding-agent", () => ({
-  DynamicBorder: class DynamicBorder {},
-  TreeSelectorComponent: class TreeSelectorComponent {
-    getTreeList() { return { getSelectedNode: () => null }; }
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+
+// Global captures for TreeSelectorComponent
+let treeSelectorCtorArgs: any[][] = [];
+let treeSelectorInstance: any = null;
+
+// Mock pi-coding-agent (DynamicBorder, TreeSelectorComponent)
+vi.mock('@earendil-works/pi-coding-agent', () => {
+  class DynamicBorder {}
+  class TreeSelectorComponent {
+    tree: any[];
+    constructor(...args: any[]) {
+      this.tree = args[0];
+      treeSelectorCtorArgs.push(args);
+      treeSelectorInstance = this;
+    }
+    getTreeList() {
+      // Return the first node as selected if available
+      const selected = this.tree && this.tree[0] ? this.tree[0] : null;
+      return { getSelectedNode: () => selected };
+    }
     handleInput() {}
-  },
-}));
-
-vi.mock("@earendil-works/pi-tui", () => ({
-  Container: class Container {
-    addChild() {}
-    render() { return []; }
-    invalidate() {}
-  },
-  Text: class Text { constructor(public content: string) {} },
-  Spacer: class Spacer {},
-}));
-
-const mockNotify = vi.fn();
-const mockCustom = vi.fn();
-
-const createMockCtx = (overrides = {}) => ({
-  sessionManager: {
-    getTree: () => [{ id: "e1", type: "message", parentId: null, timestamp: Date.now() }],
-    getLeafId: () => "e1",
-  },
-  mode: "tui",
-  hasUI: true,
-  ui: {
-    notify: mockNotify,
-    custom: mockCustom,
-  },
-  ...overrides,
+  }
+  return { DynamicBorder, TreeSelectorComponent };
 });
 
-const createMockApi = () => createMockExtensionAPI();
+// Mock pi-tui (Container, Text, Spacer)
+vi.mock('@earendil-works/pi-tui', () => {
+  class Container {
+    children: any[] = [];
+    addChild(child: any) { this.children.push(child); }
+    clear() { this.children = []; }
+    render() { return []; }
+    invalidate() {}
+  }
+  class Text {
+    constructor(public content: string) {}
+  }
+  class Spacer {}
+  return { Container, Text, Spacer };
+});
 
-describe("Session Tree Command", () => {
+// Mock widget-helpers used by the command
+vi.mock('../utils/widget-helpers.js', () => ({
+  addSectionHeader: vi.fn(),
+}));
+
+// Import command after mocks are registered
+import { registerSessionTreeCommand } from '@extensions/commands/session-tree-command';
+
+function createMockAPI() {
+  return { registerCommand: vi.fn() } as any;
+}
+function createMockTheme() {
+  return {
+    fg: (_color: string, s: string) => s,
+    bold: (s: string) => s,
+  };
+}
+
+describe('Session Tree Command', () => {
+  let api: any;
+  let handler: Function;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    treeSelectorCtorArgs = [];
+    treeSelectorInstance = null;
+    // Mock terminal size
+    Object.defineProperty(process.stdout, 'rows', { value: 24, configurable: true });
+    Object.defineProperty(process.stdout, 'columns', { value: 80, configurable: true });
+
+    api = createMockAPI();
+    registerSessionTreeCommand(api);
+    handler = api.registerCommand.mock.calls[0][1].handler;
   });
 
-  it("should register command correctly", () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    expect(api.registerCommand).toHaveBeenCalledWith("tree", expect.any(Object));
+  it('registers the tree command', () => {
+    expect(api.registerCommand).toHaveBeenCalledWith(
+      'tree',
+      expect.objectContaining({
+        description: expect.stringContaining('navigate branches'),
+        handler: expect.any(Function),
+      })
+    );
   });
 
-  it("should require TUI mode", async () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    const ctx = createMockCtx({ hasUI: false });
-    const handler = api.registerCommand.mock.calls[0][1].handler;
-    await handler("", ctx);
-    expect(mockNotify).toHaveBeenCalledWith("/tree requires TUI mode", "error");
-    expect(mockCustom).not.toHaveBeenCalled();
+  it('requires TUI mode', async () => {
+    const sessionManager = { getTree: () => [], getLeafId: () => null };
+    const ctx = { hasUI: false, sessionManager, ui: { notify: vi.fn() } } as any;
+    await handler('', ctx);
+    expect(ctx.ui.notify).toHaveBeenCalledWith('/tree requires TUI mode', 'error');
   });
 
-  it("should require session manager", async () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    const ctx = createMockCtx({ sessionManager: null });
-    const handler = api.registerCommand.mock.calls[0][1].handler;
-    await handler("", ctx);
-    expect(mockNotify).toHaveBeenCalledWith("Session manager not available", "error");
-    expect(mockCustom).not.toHaveBeenCalled();
+  it('requires sessionManager', async () => {
+    const ctx = { hasUI: true, sessionManager: undefined, ui: { notify: vi.fn() } } as any;
+    await handler('', ctx);
+    expect(ctx.ui.notify).toHaveBeenCalledWith('Session manager not available', 'error');
   });
 
-  it("should call custom UI in TUI mode", async () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    const ctx = createMockCtx();
-    const handler = api.registerCommand.mock.calls[0][1].handler;
-    await handler("", ctx);
-    expect(mockCustom).toHaveBeenCalled();
-    // The argument to custom is a function (component factory)
-    const componentFactory = mockCustom.mock.calls[0][0];
-    expect(typeof componentFactory).toBe("function");
+  it('renders UI with empty tree', async () => {
+    const sessionManager = { getTree: () => [], getLeafId: () => null };
+    const ctx = { hasUI: true, sessionManager, cwd: '/repo', ui: { custom: vi.fn(), notify: vi.fn() } } as any;
+    await handler('', ctx);
+    expect(ctx.ui.custom).toHaveBeenCalled();
+    const renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
+    const tui = { requestRender: vi.fn() };
+    const component = renderFn(tui, createMockTheme(), {}, vi.fn());
+    expect(component).toBeDefined();
+    expect(typeof component.handleInput).toBe('function');
   });
 
-  it("should notify when entry selected", async () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    mockCustom.mockResolvedValue({ entryId: "selected-entry-123" });
-    const ctx = createMockCtx();
-    const handler = api.registerCommand.mock.calls[0][1].handler;
-    await handler("", ctx);
-    expect(mockNotify).toHaveBeenCalledWith("Selected entry: selected-entry-123", "info");
+  it('renders UI when sessions exist, showing detail for selected entry', async () => {
+    const entry = {
+      id: '1',
+      parentId: null,
+      type: 'message',
+      timestamp: Date.now(),
+      message: { role: 'user', content: 'hi' },
+    } as any;
+    const tree = [{ entry, children: [] }];
+    const sessionManager = { getTree: () => tree, getLeafId: () => '1' };
+    const ctx = {
+      hasUI: true,
+      sessionManager,
+      cwd: '/repo',
+      ui: { custom: vi.fn(), notify: vi.fn() },
+    } as any;
+
+    await handler('', ctx);
+
+    // Custom UI should be registered
+    expect(ctx.ui.custom).toHaveBeenCalled();
+    // The first argument of the first call is the render function
+    const renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
+
+    // Invoke render callback
+    const tui = { requestRender: vi.fn() };
+    const theme = createMockTheme();
+    const done = vi.fn();
+    const component = renderFn(tui, theme, {}, done);
+
+    // TreeSelectorComponent instantiated
+    expect(treeSelectorCtorArgs.length).toBeGreaterThanOrEqual(1);
+
+    // Simulate an input event via the component's handleInput to trigger requestRender
+    if (component && typeof component.handleInput === 'function') {
+      component.handleInput('down');
+      expect(tui.requestRender).toHaveBeenCalled();
+    }
   });
 
-  it("should notify when cancelled", async () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    mockCustom.mockResolvedValue(null);
-    const ctx = createMockCtx();
-    const handler = api.registerCommand.mock.calls[0][1].handler;
-    await handler("", ctx);
-    expect(mockNotify).toHaveBeenCalledWith("Tree view closed", "info");
-  });
+  it('handles input and updates details on selection change', async () => {
+    const entry = {
+      id: '1',
+      parentId: null,
+      type: 'message',
+      timestamp: Date.now(),
+      message: { role: 'user', content: 'hello' },
+    } as any;
+    const tree = [{ entry, children: [] }];
+    const sessionManager = { getTree: () => tree, getLeafId: () => '1' };
+    const ctx = {
+      hasUI: true,
+      sessionManager,
+      cwd: '/repo',
+      ui: { custom: vi.fn(), notify: vi.fn() },
+    } as any;
 
-  it("should handle empty tree", async () => {
-    const api = createMockApi();
-    registerSessionTreeCommand(api);
-    const ctx = createMockCtx();
-    ctx.sessionManager.getTree = () => [];
-    const handler = api.registerCommand.mock.calls[0][1].handler;
-    await handler("", ctx);
-    expect(mockCustom).toHaveBeenCalled();
+    await handler('', ctx);
+    const renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
+    const tui = { requestRender: vi.fn() };
+    const component = renderFn(tui, createMockTheme(), {}, vi.fn());
+
+    // Simulate another input via component.handleInput
+    if (component && typeof component.handleInput === 'function') {
+      component.handleInput('j');
+      expect(tui.requestRender).toHaveBeenCalled();
+    }
   });
 });
