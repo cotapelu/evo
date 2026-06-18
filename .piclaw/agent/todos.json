@@ -3,52 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Benchmark Implementation",
+      "name": "Benchmark Harness Tests",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Create benchmark directory structure and core harness",
+          "content": "Create test directory for benchmarks",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Implement team-performance benchmark",
+          "content": "Write unit tests for statistical functions (mean, median, percentiles, stddev)",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Implement codebase plugin benchmarks",
+          "content": "Write tests for BenchmarkHarness class (runBenchmark, reset, toJSON)",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Implement memory tool and TUI benchmarks",
+          "content": "Add edge case tests (empty measurements, single iteration, outliers)",
           "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Add benchmark runner script and fix package.json",
+          "content": "Run tests and verify coverage improvement",
           "status": "completed"
         },
         {
           "id": "task-6",
-          "content": "Add benchmarks README with performance targets",
+          "content": "Commit test additions and update docs",
           "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Run all benchmarks and verify output",
-          "status": "completed"
-        },
-        {
-          "id": "task-8",
-          "content": "Commit changes and update evolution docs",
-          "status": "in_progress"
         }
       ]
     }
   ],
-  "nextTaskId": 9,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-18T15:12:18.986Z"
+  "updatedAt": "2026-06-18T15:21:48.388Z"
 }
