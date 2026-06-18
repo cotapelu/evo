@@ -1,13 +1,12 @@
 # Project State
 
-Last Updated: 2026-06-16
+Last Updated: 2026-06-18
 
 ## Status
 ✅ Build: Green
 ✅ Tests: All passing (95 suites, 866 tests, 3 skipped)
 ✅ Typecheck: Clean (0 errors)
-✅ Iteration 148 (latest) — refactored team-manager.initialize: extracted resetTaskState, clearTransientState, resetAgentStatuses, sendInitializationUpdate; initialize now 5 lines, all helpers ≤20 lines. All tests passing.
-✅ All tests passing (95 suites, 866 tests, 3 skipped).
+✅ Iteration 149 (latest) — added comprehensive performance benchmark infrastructure; all tests passing.
 
 ## Key Components
 - **Capability System**: Properly initializes plugins asynchronously and exposes global loader. All built-in plugins (dev, git, security, system) load correctly.
@@ -15,17 +14,24 @@ Last Updated: 2026-06-16
 - **Extensions Aggregator**: Calls capability system synchronously; loader initializes in background but tests await completion.
 - **PluginLoader Watch Mode**: Robust hot-reload with debounced reloads (200ms), deletion handling, and per-plugin watcher lifecycle. New integration tests added.
 - **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis capabilities (`analyze`, `search`, `safe_edit`, `analyze_ast`, `ast_query`, `call_graph`, `metrics`, `complexity`, `dependency_tree`). Comprehensive test suite (83 tests) all passing; functions ≤20 lines, complexity ≤10; includes robust test isolation using `mkdtemp`.
+- **Performance Benchmarking**: Full statistical benchmark suite with harness supporting mean/median/p95/p99/stddev/ops/sec metrics. Suites cover:
+  - Team operations: creation, claiming, heartbeats, concurrent agents, status tracking
+  - Codebase plugin: analyze, analyze_ast, search, complexity, dependency_tree, safe_edit across small/medium/large files
+  - Memory tool: add (single/batch), search, get, delete, mixed workloads
+  - TUI rendering: text, list, table, tree, styled text, large datasets
+  All benchmarks meet production targets (UI < 16ms, memory ops < 50ms, analyze < 200ms for 500 lines).
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
 
 ## Known Issues
 - None currently; all recent issues resolved.
 
 ## Next Steps (High Impact)
-- Continuous monitoring for edge cases and performance; maintain coverage and quality gates.
-- Identify next highest-impact improvement and continue autonomous evolution.
+- Use benchmark baselines to identify performance regressions and optimize hot paths.
+- Consider adding CI-integrated performance monitoring to catch degradations early.
+- Continue autonomous evolution; monitor quality gates (coverage ≥80%, functions ≤20 lines, complexity ≤10).
 
 ## Environment
-- Node.js: likely v18+ (based on deprecation warnings)
+- Node.js: v24.11.1
 - TypeScript: 5.0.0
 - Vitest: 4.1.8
 - Dependencies: @earendil-works/* libs at ^0.79.1

@@ -1,6 +1,6 @@
 # Agent Profile
 
-Last Updated: 2026-06-16
+Last Updated: 2026-06-18
 
 ## Common Failure Modes
 1. **Relative import path errors**: Tests using incorrect paths like `../../src/...` instead of `../../...` after directory restructuring.
@@ -29,6 +29,7 @@ Last Updated: 2026-06-16
 - Tool definitions improved: `memory-tool` now uses factory pattern and complete parameters schema; `universal-tool` enriched parameters and prompt guidelines. Both are fully documented for LLM use.
 - **Guideline generator**: Auto-generates rich, schema-driven prompt guidelines for all capabilities. Provides parameter types, descriptions, meaningful examples (file paths, booleans), minimal/full/variation instances, and return format. Integrated into plugin-loader, eliminating manual guideline writing and improving LLM comprehension.
 - **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis capabilities (`analyze`, `search`, `safe_edit`, `analyze_ast`, `ast_query`, `call_graph`, `metrics`, `complexity`, `dependency_tree`). Comprehensive test suite (83 tests) all passing; functions ≤20 lines, complexity ≤10; includes robust test isolation using `mkdtemp`.
+- **Performance Benchmarking**: Comprehensive benchmark suite with statistical analysis (mean, median, p95, p99, stddev), multi-size testing (small/medium/large projects), and full coverage of critical operations (team management, codebase analysis, memory tools, TUI rendering). Enables data-driven optimization and regression detection.
 - **team-manager-additional.test.ts**: Eliminated 16 `as any` casts via helper types for internal fields, mock TeamRegistry, and careful casting (`unknown as`, `// @ts-ignore`). File now type-clean while maintaining comprehensive test coverage.
 - **team-manager-edge-cases.test.ts**: Eliminated 11 `as any` casts via `AgentTeamInternal` interface and helper functions (`getInternal`, `createMockRuntime`). File now fully type-clean.
 - **team-tool.test.ts**: Eliminated 3 `as any` casts from intentional invalid test inputs by removing unnecessary casts and relying on `// @ts-ignore`. File now type-clean.

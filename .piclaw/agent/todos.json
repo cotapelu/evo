@@ -3,37 +3,52 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix TypeScript compilation errors",
+      "name": "Benchmark Implementation",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Fix plugin-loader.ts import and type issues",
-          "status": "in_progress"
+          "content": "Create benchmark directory structure and core harness",
+          "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Fix @typescript-eslint/parser import issues",
-          "status": "pending"
+          "content": "Implement team-performance benchmark",
+          "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Fix metrics-widget.ts theme color types",
-          "status": "pending"
+          "content": "Implement codebase plugin benchmarks",
+          "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Fix team extension type issues",
-          "status": "pending"
+          "content": "Implement memory tool and TUI benchmarks",
+          "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Verify build succeeds",
-          "status": "pending"
+          "content": "Add benchmark runner script and fix package.json",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Add benchmarks README with performance targets",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Run all benchmarks and verify output",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Commit changes and update evolution docs",
+          "status": "in_progress"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-16T10:48:05.842Z"
+  "updatedAt": "2026-06-18T15:12:18.986Z"
 }

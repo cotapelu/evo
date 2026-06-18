@@ -21,7 +21,11 @@
     "check": "npm run typecheck",
     "test": "vitest run",
     "prepublishOnly": "npm run build && npm test",
-    "benchmark": "tsx src/benchmarks/team-performance.ts"
+    "benchmark": "tsx src/benchmarks/index.ts",
+    "benchmark:team": "tsx src/benchmarks/team-performance.ts",
+    "benchmark:codebase": "tsx src/benchmarks/codebase-performance.ts",
+    "benchmark:memory": "tsx src/benchmarks/memory-tool.ts",
+    "benchmark:tui": "tsx src/benchmarks/tui-rendering.ts"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.79.1",

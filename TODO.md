@@ -228,6 +228,17 @@ Last Updated: 2026-06-14
 - [x] Refactored plugin-loader.unloadAll: extracted clearAllTimers, unloadAllPlugins, closeAllWatchers; all functions ≤20 lines.
 - [x] Refactored team-manager.initialize: split into small helpers (resetTaskState, clearTransientState, resetAgentStatuses, sendInitializationUpdate); all functions ≤20 lines.
 - [x] Fixed duplicate "## Anticipated Technical Debt" header in EVOLUTION.md.
+- [x] Implemented comprehensive performance benchmarking infrastructure:
+  - Created core benchmark harness with statistical analysis (mean, median, p95, p99, stddev, ops/sec)
+  - Implemented team-performance benchmark (creation, claiming, heartbeats, concurrency, status tracking)
+  - Implemented codebase-performance benchmark (analyze, analyze_ast, search, complexity, dependency_tree, safe_edit across small/medium/large files)
+  - Implemented memory-tool benchmark (add single/batch, search, get, delete, mixed workload)
+  - Implemented tui-rendering benchmark (text, list, table, tree, styled text, large dataset)
+  - Added suite runner (`index.ts`) with filtering and JSON output support
+  - Updated `package.json` with multiple benchmark scripts (benchmark, benchmark:team, benchmark:codebase, benchmark:memory, benchmark:tui)
+  - Created comprehensive `docs/BENCHMARKS.md` with performance targets, methodology, usage guide, and troubleshooting
+  - All benchmarks verified running successfully; establish baseline metrics for regression detection
+  - Meets AUTO‑CONTINUE.md performance target requirements; enables data‑driven optimization
 
 ## In Progress
 - (none)
