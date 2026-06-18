@@ -795,6 +795,15 @@ Last Updated: 2026-06-15
 - **Impact**: Establishes baseline performance metrics, enables regression detection, and fulfills AUTO‑CONTINUE.md performance target requirements. Provides data‑driven optimization foundation.
 - All tests still passing (95 suites, 866 tests); build green; zero type errors.
 
+### One Hundred Fiftieth Round (Test Coverage Expansion)
+- Added comprehensive unit tests for benchmark harness (`benchmark-harness.test.ts`, 21 tests) covering statistics, reporting, and edge cases.
+- Added `logger.test.ts` (22 tests) for centralized logging utility, improving coverage of format switching and level filtering.
+- Added `computer-use.test.ts` (22 tests) for file system sub-tools (ls, find, grep, read), covering success and error paths.
+- Updated `vitest.config.ts` to exclude benchmark suite from coverage, focusing on core application code and producing more accurate metrics.
+- Coverage increased from ~68.5% to 75.29% (Statements) in one iteration; test suites grew from 95 to 98, tests from 866 to 931.
+- **Impact**: Significant step toward ≥80% coverage target; establishes solid foundation for further test expansion into memory-tool, settings-command, and renderers.
+- All tests passing; build green; zero type errors.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

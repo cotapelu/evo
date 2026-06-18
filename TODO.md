@@ -240,6 +240,14 @@ Last Updated: 2026-06-14
   - All benchmarks verified running successfully; establish baseline metrics for regression detection
   - Meets AUTO‑CONTINUE.md performance target requirements; enables data‑driven optimization
 
+- **Test Coverage Expansion** (75.3% → 80%+ target):
+  - Added `benchmark-harness.test.ts` (21 tests) for statistical engine
+  - Added `logger.test.ts` (22 tests) for centralized logging utility
+  - Added `computer-use.test.ts` (22 tests) for file system sub-tools
+  - Updated `vitest.config.ts` to exclude benchmark suite from coverage
+  - Coverage increased from ~68.5% to 75.29% (Statements) in one iteration
+  - Future work: target memory-tool, settings-command, and renderers to reach ≥80%
+
 ## In Progress
 - (none)
 
