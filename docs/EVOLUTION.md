@@ -996,3 +996,9 @@ Last Updated: 2026-06-15
 - 4 tests covering: empty status output, branch-only with no file changes, only untracked files, and mixed staged states (renamed + modified).
 - Overall coverage remains at **85.10%** statements, **86.35%** lines, **73.97%** branches. The slight test additions improve risk coverage for parsing logic.
 - All tests passing (135 suites, 1305 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Fifth Round (Git Status Edge Cases)
+- Added edge case unit tests for `git.status` parser (`src/extensions/capability-system/plugins/git/__tests__/status-edge-cases.test.ts`).
+- 4 tests covering: empty output, branch-only with no changes, only untracked files, and mixed staged states (renamed + modified).
+- Coverage remains at **85.10%** statements, **86.35%** lines, **73.97%** branches — modest improvement in code path diversity.
+- All tests passing (135 suites, 1309 tests, 3 skipped); build green; zero typecheck errors.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Git Status Additional Edge Case Tests
- * Targeted to increase branch coverage.
+ * Target: increase branch coverage for parser logic.
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -29,7 +29,7 @@ describe('git.status edge cases', () => {
     expect(result.details.untracked).toEqual([]);
   });
 
-  it('should handle branch-only line with no file changes', async () => {
+  it('should handle branch-only line (no file changes)', async () => {
     const mockCtx = createMockCtx('/test', { code: 0, stdout: '## main\n', stderr: '' });
     const result = await execute({}, mockCtx);
     expect(result.isError).toBe(false);
@@ -39,7 +39,7 @@ describe('git.status edge cases', () => {
     expect(result.details.untracked).toEqual([]);
   });
 
-  it('should handle only untracked files, no branch line', async () => {
+  it('should handle only untracked files (no branch line)', async () => {
     const mockCtx = createMockCtx('/test', { code: 0, stdout: '?? file1.ts\n?? file2.ts\n', stderr: '' });
     const result = await execute({}, mockCtx);
     expect(result.isError).toBe(false);
@@ -49,16 +49,23 @@ describe('git.status edge cases', () => {
     expect(result.details.untracked).toEqual(['file1.ts', 'file2.ts']);
   });
 
-  it('should handle mixed staged (renamed and modified', async () => {
+  it('should handle mixed staged (renamed and modified) and unstaged', async () => {
     const mockCtx = createMockCtx('/test', {
       code: 0,
-      stdout: 'R  old.ts -> new.ts\nM  modified.ts\n',
+      stdout: 'R  old.ts -> new.ts\nM  modified.ts\n M unstaged.ts\n',
       stderr: ''
     });
     const result = await execute({}, mockCtx);
     expect(result.isError).toBe(false);
+    // Parser: staged = entries where code != '??' and not starting with space (branch line already skipped)
+    // 'R  old.ts -> new.ts' -> staged
+    // 'M  modified.ts' -> staged
+    // ' M unstaged.ts' (code starts with space) -> unstaged
+    expect(result.details.staged).toHaveLength(2);
     expect(result.details.staged).toContain('R  old.ts -> new.ts');
-      expect(result.details.staged).toHaveLength(2);
+    expect(result.details.staged).toContain('M  modified.ts');
+    expect(result.details.unstaged).toEqual([' M unstaged.ts']);
+    expect(result.details.untracked).toEqual([]);
   });
 
 });
