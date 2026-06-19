@@ -96,6 +96,16 @@ describe("Provider Command", () => {
         expect(mockCustom).not.toHaveBeenCalled();
         expect(mockNotify).toHaveBeenCalledWith("No providers registered", "info");
       });
+
+      it("should notify error when modelRegistry.getAll throws", async () => {
+        const api = createMockApi();
+        registerProviderCommand(api);
+        const ctx = createMockCtx();
+        ctx.modelRegistry.getAll = vi.fn(() => { throw new Error('DB failure'); });
+        const handler = api.registerCommand.mock.calls[0][1].handler;
+        await handler('list', ctx);
+        expect(mockNotify).toHaveBeenCalledWith('Failed to list providers: DB failure', 'error');
+      });
     });
 
     describe("handler - add action", () => {

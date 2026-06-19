@@ -255,6 +255,7 @@ Last Updated: 2026-06-14
 - [x] Finalize all evolution documentation updates.
 
 ## Upcoming
+- Increase `memory-tool` coverage to ≥85% by adding edge-case tests (error paths, unknown action, storage failures).
 - (none)
 
 ## Notes

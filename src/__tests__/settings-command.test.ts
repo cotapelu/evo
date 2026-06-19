@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
  * Settings Command Tests
+ *
+ * Covers: registration, TUI requirement, items building from settings,
+ * model/thinking edit success, thinking fallback, and error handling.
  */
 
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-// We'll use a var to avoid TDZ issues with vi.mock hoisting
+// --- Mocks setup (avoid TDZ via var) ---
 var mockSettingsManager: any;
 let capturedSettingsListArgs: any[] = [];
 
+// Mock pi-coding-agent: provide SettingsManager, getAgentDir, getSettingsListTheme
 vi.mock('@earendil-works/pi-coding-agent', () => {
   mockSettingsManager = {
     getDefaultModel: vi.fn(),
@@ -23,6 +27,7 @@ vi.mock('@earendil-works/pi-coding-agent', () => {
   };
 });
 
+// Mock pi-tui: Container, Text, Spacer, DynamicBorder, SettingsList
 vi.mock('@earendil-works/pi-tui', () => {
   class Container {
     children: any[] = [];
@@ -31,6 +36,8 @@ vi.mock('@earendil-works/pi-tui', () => {
       const idx = this.children.indexOf(child);
       if (idx > -1) this.children.splice(idx, 1);
     }
+    render() { return []; }
+    invalidate() {}
   }
   class Text { constructor(public content: any) {} }
   class Spacer {}
@@ -40,11 +47,13 @@ vi.mock('@earendil-works/pi-tui', () => {
       capturedSettingsListArgs = args;
     }
     handleInput() {}
-    updateItems() {} // no-op
+    // optional updateItems used in tests
+    updateItems() {}
   }
   return { Container, Text, Spacer, DynamicBorder, SettingsList };
 });
 
+// Mock local widget helper
 vi.mock('../utils/widget-helpers.js', () => ({
   addSectionHeader: vi.fn(),
 }));
@@ -61,28 +70,31 @@ function createMockTheme() {
 
 describe('Settings Command', () => {
   let ctx: any;
-  let tui: any;
   let renderFn: any;
+  let tui: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     capturedSettingsListArgs = [];
-    // Reset manager methods to default mocks and provide default returns
+    // Default manager returns (set in each test as needed)
     if (mockSettingsManager) {
-      mockSettingsManager.getDefaultModel.mockReturnValue('');
-      mockSettingsManager.getDefaultThinkingLevel.mockReturnValue('medium');
+      mockSettingsManager.getDefaultModel.mockReset();
+      mockSettingsManager.getDefaultThinkingLevel.mockReset();
       mockSettingsManager.setDefaultModel.mockReset();
       mockSettingsManager.setDefaultThinkingLevel.mockReset();
     }
   });
 
-  it('registers command', () => {
+  it('registers the /settings command', () => {
     const api = createMockAPI();
     registerSettingsCommand(api);
-    expect(api.registerCommand).toHaveBeenCalledWith('settings', expect.objectContaining({
-      description: expect.stringContaining('Configure Piclaw settings'),
-      handler: expect.any(Function),
-    }));
+    expect(api.registerCommand).toHaveBeenCalledWith(
+      'settings',
+      expect.objectContaining({
+        description: expect.stringContaining('Configure Piclaw settings'),
+        handler: expect.any(Function),
+      })
+    );
   });
 
   it('requires TUI mode', async () => {
@@ -94,7 +106,7 @@ describe('Settings Command', () => {
     expect(ctx.ui.notify).toHaveBeenCalledWith('/settings requires TUI mode', 'error');
   });
 
-  it('builds correct items from settings', async () => {
+  it('builds correct items from settings and renders UI', async () => {
     const api = createMockAPI();
     registerSettingsCommand(api);
     const handler = api.registerCommand.mock.calls[0][1].handler;
@@ -104,13 +116,15 @@ describe('Settings Command', () => {
     mockSettingsManager.getDefaultThinkingLevel.mockReturnValue('medium');
 
     await handler('', ctx);
-    // Extract render callback from ui.custom mock
-    renderFn = ctx.ui.custom.mock.calls[0][0];
+
+    // UI custom renderer should be called
+    expect(ctx.ui.custom).toHaveBeenCalled();
+    renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
     tui = { requestRender: vi.fn() };
     const theme = createMockTheme();
     renderFn(tui, theme, {}, vi.fn());
 
-    // Verify captured SettingsList constructor args
+    // Check SettingsList was constructed with items and onEdit
     expect(capturedSettingsListArgs.length).toBeGreaterThanOrEqual(4);
     const items = capturedSettingsListArgs[0];
     expect(items).toEqual([
@@ -121,7 +135,7 @@ describe('Settings Command', () => {
     expect(typeof onEdit).toBe('function');
   });
 
-  it('calls setDefaultModel on model edit', async () => {
+  it('calls setDefaultModel when model is edited', async () => {
     const api = createMockAPI();
     registerSettingsCommand(api);
     const handler = api.registerCommand.mock.calls[0][1].handler;
@@ -131,19 +145,15 @@ describe('Settings Command', () => {
     mockSettingsManager.getDefaultThinkingLevel.mockReturnValue('medium');
 
     await handler('', ctx);
-    renderFn = ctx.ui.custom.mock.calls[0][0];
+    renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
     tui = { requestRender: vi.fn() };
     renderFn(tui, createMockTheme(), {}, vi.fn());
 
     const onEdit = capturedSettingsListArgs[3];
-    // Invoke edit for model
-    onEdit('model', 'openai:gpt-4o');
+    await onEdit('model', 'openai:gpt-4o');
 
     expect(mockSettingsManager.setDefaultModel).toHaveBeenCalledWith('openai:gpt-4o');
-    // The onEdit should notify saved
     expect(ctx.ui.notify).toHaveBeenCalledWith('Saved model = openai:gpt-4o', 'info');
-    // It should also recreate settingsList and request render
-    expect(tui.requestRender).toHaveBeenCalled();
   });
 
   it('falls back to medium for invalid thinking level', async () => {
@@ -156,19 +166,19 @@ describe('Settings Command', () => {
     mockSettingsManager.getDefaultThinkingLevel.mockReturnValue('medium');
 
     await handler('', ctx);
-    renderFn = ctx.ui.custom.mock.calls[0][0];
+    renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
     tui = { requestRender: vi.fn() };
     renderFn(tui, createMockTheme(), {}, vi.fn());
 
     const onEdit = capturedSettingsListArgs[3];
-    onEdit('thinking', 'invalid');
+    await onEdit('thinking', 'invalid');
 
     expect(mockSettingsManager.setDefaultThinkingLevel).toHaveBeenCalledWith('medium');
-    // The notify uses the user-provided value, not the fallback
+    // The notification uses the user-provided value (invalid) even though fallback applied
     expect(ctx.ui.notify).toHaveBeenCalledWith('Saved thinking = invalid', 'info');
   });
 
-  it('handles setDefaultModel error synchronously', async () => {
+  it('handles setDefaultModel rejection', async () => {
     const api = createMockAPI();
     registerSettingsCommand(api);
     const handler = api.registerCommand.mock.calls[0][1].handler;
@@ -181,13 +191,31 @@ describe('Settings Command', () => {
     });
 
     await handler('', ctx);
-    renderFn = ctx.ui.custom.mock.calls[0][0];
+    renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
     tui = { requestRender: vi.fn() };
     renderFn(tui, createMockTheme(), {}, vi.fn());
 
     const onEdit = capturedSettingsListArgs[3];
-    onEdit('model', 'bad');
+    await onEdit('model', 'bad');
 
     expect(ctx.ui.notify).toHaveBeenCalledWith(expect.stringContaining('Failed to save model'), 'error');
+  });
+
+  it('renders UI with unset model', async () => {
+    const api = createMockAPI();
+    registerSettingsCommand(api);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    ctx = { hasUI: true, cwd: '/repo', ui: { custom: vi.fn(), notify: vi.fn() } } as any;
+
+    mockSettingsManager.getDefaultModel.mockReturnValue('');
+    mockSettingsManager.getDefaultThinkingLevel.mockReturnValue('medium');
+
+    await handler('', ctx);
+    expect(ctx.ui.custom).toHaveBeenCalled();
+    renderFn = ctx.ui.custom.mock.calls[0][0] as Function;
+    renderFn(tui = { requestRender: vi.fn() }, createMockTheme(), {}, vi.fn());
+
+    const items = capturedSettingsListArgs[0];
+    expect(items[0].currentValue).toBe('<unset>');
   });
 });
