@@ -3,20 +3,20 @@
 Last Updated: 2026-06-19
 
 ## Session Summary
-- Iterations: 152
-- Tasks Completed: 187 (memory-tool edge-cases + provider-command error handling + dead code removal)
+- Iterations: 153
+- Tasks Completed: 190 (coverage expansion: todos-tool renderer (19), universal-tool renderer (4), subtool-loader edge cases (15), plus integration)
 - High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph, metrics, complexity, dependency_tree) with consistent quality gates (≤20 lines, ≤10 complexity)
 - **Performance Benchmarking**: Full benchmark suite with statistical analysis, multi-size testing. Meets performance target requirements.
 - **Test Coverage Expansion**: Coverage increased from ~68.5% to 75.29% (Statements) through targeted tests (benchmark-harness, logger, computer-use). On track for ≥80% target.
 
 ## Test Metrics
-- Total Test Suites: 110 (+12)
+- Total Test Suites: 113 (+15)
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1046 (baseline)
+- Tests Passed: 1090 (baseline)
 - Tests Skipped: 3
-- Coverage: 80.81% Statements (3820/4727), 67.31% Branches (2002/2976), 80.57% Functions (682/848), 82.00% Lines (3533/4314)
+- Coverage: 81.36% Statements (3846/4727), 68.78% Branches (2047/2976), 80.77% Functions (685/848), 82.54% Lines (3552/4303)
 
 ## Reliability
 - Rollback Count: 0
@@ -33,6 +33,7 @@ Last Updated: 2026-06-19
 - **Scoped PluginLoader**: Modified `capabilitySystemExtension` to accept optional custom loader via `api.pluginLoader`. Backward compatible; enables parallel test execution by avoiding global singleton state.
 - **Test Typing**: Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`. Plugin capability tests (git, dev, security-system) typed. Command tests (provider-command, metrics-command, copy-command, team-command, team-ops-tool) use `vi.mocked()` or typed interfaces. Renderer tests (todos-renderer, branch-summary-renderer) use typed RendererFn. Tool tests (memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, integration-flow) typed. **team-manager-additional.test.ts** (12 `as any` casts eliminated via helper types, mock registry, and careful casting). 11 test files cleaned so far. Systematic elimination continues.
 - **Tool Definitions Cleanup**: Refactored `memory-tool` to use proper factory pattern (`createMemoryTool`) and added full JSON Schema `parameters` for actions (add, list, get, delete, clear, search). Refactored `universal-tool` with improved `promptSnippet` and enriched `parameters` schema (message, min/max, expression). All tests pass; build stable.
+- **Renderer Coverage Expansion**: Added targeted tests for `todos-tool` render functions (19 tests covering statuses, truncation, phase rendering), `universal-tool` renderResult (4 tests for system info formatting and fallbacks), and `subtool-loader` validation (15 tests). Boosted statement coverage from 80.81% to 81.36%.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627

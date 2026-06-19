@@ -831,6 +831,15 @@ Last Updated: 2026-06-15
 - Coverage increased from 80.43% to 80.81% Statements as a result of removing uncovered lines.
 - All tests continue to pass; build stable.
 
+### One Hundred Fifty-Fourth Round (Renderer Coverage Expansion)
+- Added comprehensive renderer tests targeting uncovered branches:
+  - `todos-tool`: 19 tests covering `renderCall` operations and `renderResult` for all task statuses, truncation, phase headers, and edge cases.
+  - `universal-tool`: 4 tests covering `renderResult` for structured `system_info` output and fallback rendering.
+  - `subtool-loader`: 15 tests validating parameter validation, URL checks, routing, and error handling with mocked SDK tools.
+- Refactored `subtool-loader.test.ts` to remove deprecated edge-case tests; created dedicated coverage test file.
+- Increased overall statement coverage from 80.81% to **81.36%** (3846/4727), with significant gains in branch coverage (+1.56%).
+- All tests passing (113 suites, 1090 tests, 3 skipped); build stable.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

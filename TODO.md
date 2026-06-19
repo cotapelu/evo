@@ -1,6 +1,6 @@
 # TODO
 
-Last Updated: 2026-06-14
+Last Updated: 2026-06-19
 
 ## Completed
 - [x] Fix failing plugin capability tests (dev, git, security-system)
@@ -251,15 +251,21 @@ Last Updated: 2026-06-14
 - [x] Fixed `provider-command` error handling: added try-catch around `modelRegistry.getAll()` in list action to prevent crashes.
 
 - [x] Remove dead code: deleted unused `buildMemoryLines` helper from `memory-tool.ts`, improving coverage and reducing duplication.
+- [x] Added comprehensive renderer coverage tests:
+  - `todos-tool` renderCall/Result (19 tests)
+  - `universal-tool` renderResult (4 tests)
+  - `subtool-loader` edge cases and validation (15 tests)
+- [x] Increased overall statement coverage from 80.81% to 81.36% (towards 85% target).
 
 ## In Progress
 - (none)
 
-- [x] Achieve ≥80% test coverage (reached 80.13%) through systematic test expansion across low-covered modules.
+- [x] Achieve ≥80% test coverage (reached 81.36%) through systematic test expansion.
 - [x] Finalize all evolution documentation updates.
 
 ## Upcoming
-- (none)
+- Increase coverage to ≥85% by targeting remaining low-covered modules (e.g., error handling in todos-tool file I/O, additional renderers).
+
 
 ## Notes
 - All tests passing; build green.
