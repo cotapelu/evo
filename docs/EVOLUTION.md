@@ -943,3 +943,10 @@ Last Updated: 2026-06-15
 - **Remaining dev capability**: Only `dev.scripts` remains untested in dev plugin.
 - Increased overall statement coverage from 84.89% to **84.97%** (3939/4636), lines from 86.11% to **86.21%** (3644/4216).
 - All tests passing (127 suites, 1227 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Eighth Round (Dev Scripts Tests)
+- Added unit tests for `dev.scripts` capability (`src/extensions/capability-system/plugins/dev/__tests__/scripts.test.ts`).
+- 11 tests covering: listing npm scripts (`npm run`), running specific scripts, validation (script required for run), handling failures, cwd handling, and exceptions.
+- **Milestone**: Dev plugin (format, test, build, audit, scripts) is now fully unit tested.
+- Overall statement coverage remains at **84.97%** (3939/4636), lines **86.21%** (3644/4216) — stable due to rounding; however branch coverage increased from 73.53% to **73.67%**.
+- All tests passing (128 suites, 1238 tests, 3 skipped); build green; zero typecheck errors.
