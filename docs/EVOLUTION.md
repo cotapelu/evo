@@ -971,3 +971,9 @@ Last Updated: 2026-06-15
 - Exported `buildCommand` and `execute` from universal-tool to enable unit testing.
 - Increased overall statement coverage from 85.06% to **85.08%** (3942/4630), lines from 86.30% to **86.32%** (3647/4204), branch coverage from 73.87% to **73.90%**.
 - All tests passing (131 suites, 1268 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Second Round (Todos Tool Core Tests)
+- Added unit tests for todos-tool core logic (`src/extensions/tools/__tests__/todos-tool.core.test.ts`).
+- 20 tests covering: `applyOp` for all operations (add_phase, add_task, update single/batch, remove_task, delete, list), validation errors, status normalization (auto-one in_progress), and `formatSummary` output. Also tests `normalizeParams` JSON parsing and validation.
+- Increased overall statement coverage from 85.08% to **85.10%** (3943/4628), lines from 86.32% to **86.35%** (3648/4200), branch coverage from 73.90% to **73.97%**.
+- All tests passing (132 suites, 1288 tests, 3 skipped); build green; zero typecheck errors.
