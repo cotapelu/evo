@@ -990,3 +990,9 @@ Last Updated: 2026-06-15
 - 5 tests covering: skill template listing, retrieving specific skill content, error handling (skill not found, skills directory inaccessible), and empty directory scenario.
 - Coverage remains at **85.10%** statements (3943/4628), **86.35%** lines (3648/4200) due to rounding and small file size.
 - All tests passing (134 suites, 1301 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Fifth Round (Git Status Edge Cases)
+- Added additional unit tests for `git.status` edge cases (`src/extensions/capability-system/plugins/git/__tests__/status-edge-cases.test.ts`).
+- 4 tests covering: empty status output, branch-only with no file changes, only untracked files, and mixed staged states (renamed + modified).
+- Overall coverage remains at **85.10%** statements, **86.35%** lines, **73.97%** branches. The slight test additions improve risk coverage for parsing logic.
+- All tests passing (135 suites, 1305 tests, 3 skipped); build green; zero typecheck errors.
