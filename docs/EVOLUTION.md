@@ -922,3 +922,10 @@ Last Updated: 2026-06-15
 - **Remaining dev capabilities**: `dev.test`, `dev.build`, `dev.audit`, `dev.scripts` still lack unit tests.
 - Increased overall statement coverage from 84.76% to **84.82%** (3936/4642), lines from 85.97% to **86.04%** (3641/4228).
 - All tests passing (124 suites, 1204 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Fifth Round (Dev Test Tests)
+- Added unit tests for `dev.test` capability (`src/extensions/capability-system/plugins/dev/__tests__/test.test.ts`).
+- 10 tests covering: running npm test, filtering by file paths, watch mode, combined file + watch, handling test failures (non-zero exit), cwd handling, and exceptions.
+- **Remaining dev capabilities**: `dev.build`, `dev.audit`, `dev.scripts` still lack unit tests.
+- Increased overall statement coverage from 84.82% to **84.89%** (3937/4640), lines from 86.04% to **86.11%** (3642/4224).
+- All tests passing (125 suites, 1214 tests, 3 skipped); build green; zero typecheck errors.
