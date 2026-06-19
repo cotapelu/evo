@@ -1,6 +1,6 @@
 # Agent Profile
 
-Last Updated: 2026-06-18
+Last Updated: 2026-06-19
 
 ## Common Failure Modes
 1. **Relative import path errors**: Tests using incorrect paths like `../../src/...` instead of `../../...` after directory restructuring.
@@ -71,8 +71,9 @@ Last Updated: 2026-06-18
 - **branch-summary-renderer.test.ts, todos-renderer.test.ts, team-ops-renderer.test.ts**: Cast renderer results to `any` to access `.content` property on Text mocks.
 - **skill-reader.test.ts, tool-template.test.ts**: Replaced `as ToolResult` casts with `as any` to avoid conversion errors.
 - **read-skill.test.ts**: Typed `mockFs` as `any` to enable mockResolvedValue/mockRejectedValue in vitest.
-- **Coverage target achieved**: Reached ≥80% statements coverage (80.13%) through targeted tests for low-coverage modules (subtool-loader, settings-command, team-widget, auto-continue, etc.).
+- **Coverage target achieved**: Reached ≥80% statements coverage (82.81%) through targeted tests for low-coverage modules (subtool-loader, settings-command, team-widget, auto-continue, etc.).
 
+* **CapabilityRegistry unit tests**: Added 24 tests covering registration, lookup, filtering, sorting, and system prompt generation. Increased coverage from 81.36% to 82.81% statements (83.99% lines).
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.
 - ✅ Introduced `@extensions` path alias for test imports.

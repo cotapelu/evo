@@ -142,30 +142,29 @@ class RegistryImpl implements CapabilityRegistry {
   private applyFilter(capabilities: Capability[], options: any): Capability[] {
     let result = capabilities;
 
-    // Filter by tags
-    if (options.filterTags && options.filterTags.length > 0) {
+    const filterTags = options.filterTags as string[] | undefined;
+    if (filterTags && filterTags.length > 0) {
       result = result.filter(cap =>
-        options.filterTags.some((tag: string) => cap.tags.includes(tag))
+        filterTags.some(tag => cap.tags.includes(tag))
       );
     }
 
-    // Exclude by tags
-    if (options.excludeTags && options.excludeTags.length > 0) {
+    const excludeTags = options.excludeTags as string[] | undefined;
+    if (excludeTags && excludeTags.length > 0) {
       result = result.filter(cap =>
-        !options.excludeTags.some((tag: string) => cap.tags.includes(tag))
+        !excludeTags.some(tag => cap.tags.includes(tag))
       );
     }
 
-    // Sort
     if (options.sortBy === 'name') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (options.sortBy === 'plugin') {
       result.sort((a, b) => a.pluginId.localeCompare(b.pluginId) || a.name.localeCompare(b.name));
     }
 
-    // Limit
-    if (options.maxCapabilities && options.maxCapabilities > 0) {
-      result = result.slice(0, options.maxCapabilities);
+    const max = Number(options.maxCapabilities) || 0;
+    if (max > 0) {
+      result = result.slice(0, max);
     }
 
     return result;

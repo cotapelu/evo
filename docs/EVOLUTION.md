@@ -846,3 +846,12 @@ Last Updated: 2026-06-15
 ## Quality Targets
 - Maintain ≥80% test coverage (currently high).
 - Keep functions ≤20 lines; watch for growing methods.
+
+### One Hundred Fifty-Fifth Round (Capability Registry Unit Tests)
+- Added comprehensive unit test suite for `CapabilityRegistry` (`src/extensions/capability-system/__tests__/registry.test.ts`).
+- 24 tests covering: registration (duplicate detection, unregister), lookup (get, has, listAll, listByPlugin, listByTag, search, getCapabilityIds), system prompt generation (filtering, sorting, limiting, empty handling), and statistics.
+- Tests use isolated registry instances and mock capabilities; verify singleton behavior separately.
+- Increased overall statement coverage from 81.36% to **82.81%** (3917/4730), lines from 82.54% to **83.99%** (3617/4306).
+- All tests passing (113 suites, 1114 tests, 3 skipped); build green.
+- No regressions; zero typecheck errors.
+
