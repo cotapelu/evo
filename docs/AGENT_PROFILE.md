@@ -71,7 +71,7 @@ Last Updated: 2026-06-19
 - **branch-summary-renderer.test.ts, todos-renderer.test.ts, team-ops-renderer.test.ts**: Cast renderer results to `any` to access `.content` property on Text mocks.
 - **skill-reader.test.ts, tool-template.test.ts**: Replaced `as ToolResult` casts with `as any` to avoid conversion errors.
 - **read-skill.test.ts**: Typed `mockFs` as `any` to enable mockResolvedValue/mockRejectedValue in vitest.
-- **Coverage target achieved**: Reached ≥80% statements coverage (82.81%) through targeted tests for low-coverage modules (subtool-loader, settings-command, team-widget, auto-continue, etc.).
+- **Coverage improvements**: Added CapabilityRegistry unit tests (24 tests) and git.status capability tests (10 tests). Maintained ≥80% coverage (82.86% statements, 84.05% lines).
 
 * **CapabilityRegistry unit tests**: Added 24 tests covering registration, lookup, filtering, sorting, and system prompt generation. Increased coverage from 81.36% to 82.81% statements (83.99% lines).
 ## Recommendations

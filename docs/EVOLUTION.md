@@ -840,6 +840,15 @@ Last Updated: 2026-06-15
 - Increased overall statement coverage from 80.81% to **81.36%** (3846/4727), with significant gains in branch coverage (+1.56%).
 - All tests passing (113 suites, 1090 tests, 3 skipped); build stable.
 
+### One Hundred Fifty-Fifth Round (Capability Registry & Git Status Tests)
+- Added comprehensive unit test suite for `CapabilityRegistry` (`src/extensions/capability-system/__tests__/registry.test.ts`).
+- 24 tests covering: registration (duplicate detection, unregister), lookup (get, has, listAll, listByPlugin, listByTag, search, getCapabilityIds), system prompt generation (filtering, sorting, limiting, empty handling), and statistics.
+- Added unit tests for `git.status` capability (`src/extensions/capability-system/plugins/git/__tests__/status.test.ts`).
+- 10 tests covering happy path parsing (branch extraction, staged/unstaged/untracked categorization), empty status, unknown branch, git command failures, and exceptions.
+- Fixed bug in `git.status` parser: branch line was incorrectly counted as a staged file; now properly skipped. Adjusted `totalFiles` to count only file entries.
+- Increased overall statement coverage from 82.81% to **82.86%** (3919/4732), lines from 83.99% to **84.05%** (3619/4308).
+- All tests passing (115 suites, 1124 tests, 3 skipped); build green; zero typecheck errors.
+
 ## Anticipated Technical Debt
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 

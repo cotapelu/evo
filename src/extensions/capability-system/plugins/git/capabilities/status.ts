@@ -28,7 +28,13 @@ export async function execute(params: Record<string, never> = {}, ctx: any): Pro
     const unstaged: string[] = [];
     const untracked: string[] = [];
 
+    // Extract branch first (skip branch line from file processing)
+    const branchLine = lines.find((l: string) => l.startsWith('## '));
+    const branch = branchLine ? branchLine.slice(3).split('...')[0] : '(unknown)';
+
+    // Process file entries only (skip branch line)
     for (const line of lines) {
+      if (line.startsWith('##')) continue; // skip branch meta line
       const code = line.slice(0, 2);
       const file = line.slice(3);
       if (code === '??') {
@@ -40,9 +46,6 @@ export async function execute(params: Record<string, never> = {}, ctx: any): Pro
       }
     }
 
-    const branchLine = lines.find((l: string) => l.startsWith('## '));
-    const branch = branchLine ? branchLine.slice(3).split('...')[0] : '(unknown)';
-
     const summary = [
       `Branch: ${branch}`,
       `Staged: ${staged.length}`,
@@ -53,6 +56,8 @@ export async function execute(params: Record<string, never> = {}, ctx: any): Pro
       untracked.length > 0 ? `  ${untracked.join('\n  ')}` : ''
     ].filter(Boolean).join('\n');
 
+    const totalFileEntries = staged.length + unstaged.length + untracked.length;
+
     return {
       content: [{ type: "text" as const, text: summary }],
       details: {
@@ -60,7 +65,7 @@ export async function execute(params: Record<string, never> = {}, ctx: any): Pro
         staged,
         unstaged,
         untracked,
-        totalFiles: lines.length
+        totalFiles: totalFileEntries
       },
       isError: false
     };
