@@ -40,7 +40,13 @@ export function registerProviderCommand(api: ExtensionAPI): void {
       const action = parsed.action || "list";
 
       if (action === "list") {
-        const infos = getProviderInfo(ctx);
+        let infos;
+        try {
+          infos = getProviderInfo(ctx);
+        } catch (e: any) {
+          ctx.ui.notify(`Failed to list providers: ${e.message}`, "error");
+          return;
+        }
         if (infos.length === 0) {
           ctx.ui.notify("No providers registered", "info");
           return;

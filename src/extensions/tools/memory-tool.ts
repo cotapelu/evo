@@ -212,13 +212,18 @@ export function registerMemoryTool(api: ExtensionAPI): void {
               return { content: [{ type: "text", text: "Error: text required for add" }], details: { action, memories: [...memories], nextId, error: "text required" }, isError: false };
             }
             const mem: Memory = {
-              id: nextId++,
+              id: nextId,
               text,
               tags: params.tags as string[] | undefined,
               created: Date.now(),
             };
+            try {
+              api.appendEntry("memory", mem);
+            } catch (e: any) {
+              return { content: [{ type: "text", text: `Error: ${e.message}` }], details: { action, memories: [...memories], nextId, error: e.message }, isError: true };
+            }
             memories.push(mem);
-            api.appendEntry("memory", mem);
+            nextId++;
             return { content: [{ type: "text", text: `Stored memory #${mem.id}` }], details: { action, memories: [...memories], nextId }, isError: false };
           }
 
@@ -253,14 +258,25 @@ export function registerMemoryTool(api: ExtensionAPI): void {
               return { content: [{ type: "text", text: `Memory #${id} not found` }], details: { action, memories: [...memories], nextId, targetId: id, error: `#${id} not found` }, isError: false };
             }
             const deleted = memories.splice(index, 1)[0];
-            api.appendEntry("memory", { ...deleted, _deleted: true });
+            try {
+              api.appendEntry("memory", { ...deleted, _deleted: true });
+            } catch (e: any) {
+              // rollback
+              memories.splice(index, 0, deleted);
+              return { content: [{ type: "text", text: `Error: ${e.message}` }], details: { action, memories: [...memories], nextId, targetId: id, error: e.message }, isError: true };
+            }
             return { content: [{ type: "text", text: `Deleted memory #${id}` }], details: { action, memories: [...memories], nextId, targetId: id }, isError: false };
           }
 
           case "clear": {
             const count = memories.length;
-            for (const mem of memories) {
-              api.appendEntry("memory", { ...mem, _deleted: true });
+            const deletedSnapshots = memories.map(m => ({ ...m, _deleted: true }));
+            try {
+              for (const mem of deletedSnapshots) {
+                api.appendEntry("memory", mem);
+              }
+            } catch (e: any) {
+              return { content: [{ type: "text", text: `Error: ${e.message}` }], details: { action, memories: [...memories], nextId, error: e.message }, isError: true };
             }
             memories = [];
             nextId = 1;

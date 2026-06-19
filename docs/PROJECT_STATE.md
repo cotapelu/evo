@@ -4,8 +4,8 @@ Last Updated: 2026-06-18
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (109 suites, 1027 tests, 3 skipped)
-✅ Coverage: 80.13% Statements (3795/4736)
+✅ Tests: All passing (110 suites, 1046 tests, 3 skipped)
+✅ Coverage: 80.43% Statements (3820/4749)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -21,6 +21,7 @@ Last Updated: 2026-06-18
   - TUI rendering: text, list, table, tree, styled text, large datasets
   All benchmarks meet production targets (UI < 16ms, memory ops < 50ms, analyze < 200ms for 500 lines).
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
+- **Error Handling**: `memory-tool` now handles `api.appendEntry` failures gracefully and includes robust edge-case tests (JSON parsing, session reconstruction, concurrency). `provider-command` adds try-catch around `modelRegistry.getAll` to prevent crashes.
 
 ## Known Issues
 - None currently; all recent issues resolved.

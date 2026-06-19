@@ -247,6 +247,8 @@ Last Updated: 2026-06-14
   - Updated `vitest.config.ts` to exclude benchmark suite from coverage
   - Coverage increased from ~68.5% to 75.29% (Statements) in one iteration
   - Future work: target memory-tool, settings-command, and renderers to reach ≥80%
+- [x] Fixed broken `memory-tool-edge-cases.test.ts` by rewriting to match actual implementation; added tests for JSON parsing errors, session reconstruction, error handling, and concurrency.
+- [x] Fixed `provider-command` error handling: added try-catch around `modelRegistry.getAll()` in list action to prevent crashes.
 
 ## In Progress
 - (none)
@@ -255,7 +257,6 @@ Last Updated: 2026-06-14
 - [x] Finalize all evolution documentation updates.
 
 ## Upcoming
-- Increase `memory-tool` coverage to ≥85% by adding edge-case tests (error paths, unknown action, storage failures).
 - (none)
 
 ## Notes
