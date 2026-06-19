@@ -882,3 +882,9 @@ Last Updated: 2026-06-15
 - 9 tests covering: default commit listing (10 commits, oneline/graph/decorate), custom count parameter, empty repository handling, git command failures, cwd handling, and exceptions.
 - Increased overall statement coverage from 83.58% to **83.77%** (3927/4710), lines from 84.79% to **85.00%** (3627/4280).
 - All tests passing (118 suites, 1152 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Fifty-Ninth Round (Git Diff Tests)
+- Added unit tests for `git.diff` capability (`src/extensions/capability-system/plugins/git/__tests__/diff.test.ts`).
+- 8 tests covering: default diff against HEAD, custom revision (branch/commit range), no changes output, git command failures, cwd handling, and exceptions.
+- Increased overall statement coverage from 83.77% to **83.83%** (3929/4712), lines from 85.00% to **85.07%** (3629/4274).
+- All tests passing (119 suites, 1160 tests, 3 skipped); build green; zero typecheck errors.
