@@ -34,7 +34,7 @@ function getBashTool(ctx: any): any {
   return tool;
 }
 
-function buildCommand(action: string, params: any): string {
+export function buildCommand(action: string, params: any): string {
   switch (action) {
     case "echo": {
       const message = params.message;
@@ -93,7 +93,7 @@ function buildCommand(action: string, params: any): string {
 /**
  * Execute universal tool action via bash tool.
  */
-async function executeUniversal(
+export async function execute(
   _toolCallId: string,
   params: { action: string; [key: string]: any },
   signal: AbortSignal | undefined,
@@ -203,7 +203,7 @@ export function registerUniversalTool(api: ExtensionAPI): void {
       },
       required: ["action"],
     },
-    execute: executeUniversal,
+    execute: execute,
     renderResult: renderUniversal,
   };
 
