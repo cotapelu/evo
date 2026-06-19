@@ -908,3 +908,10 @@ Last Updated: 2026-06-15
 - **Remaining git capabilities**: `git.commit` is the last untested git capability.
 - Increased overall statement coverage from 84.40% to **84.68%** (3934/4648), lines from 85.63% to **85.90%** (3639/4236).
 - All tests passing (122 suites, 1187 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Third Round (Git Commit Tests)
+- Added unit tests for `git.commit` capability (`src/extensions/capability-system/plugins/git/__tests__/commit.test.ts`).
+- 10 tests covering: basic commit with message, committing all changes (`-a`), amending commits (`--amend`), combining `-a` and `--amend`, failures (nothing to commit, pre-commit hook), cwd handling, exceptions.
+- **Milestone achieved**: All git capabilities (`add`, `branch`, `checkout`, `commit`, `diff`, `log`, `pull`, `push`, `status`) now have comprehensive unit test coverage.
+- Increased overall statement coverage from 84.68% to **84.76%** (3935/4644), lines from 85.90% to **85.97%** (3640/4232).
+- All tests passing (123 suites, 1197 tests, 3 skipped); build green; zero typecheck errors.
