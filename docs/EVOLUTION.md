@@ -1008,3 +1008,9 @@ Last Updated: 2026-06-15
 - 14 tests covering: `add_phase.tasks` comma-separated string splitting, `add_phase.name` JSON object parsing, whole `add_phase` JSON string parsing, `delete` JSON parsing, and error handling for invalid JSON strings in all operations.
 - Increased overall coverage from 85.10% to **85.18%** statements, lines from 86.35% to **86.44%**, and branch coverage from 73.97% to **74.14%**.
 - All tests passing (136 suites, 1319 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Seventh Round (Dev Test Edge Cases)
+- Added edge case unit tests for `dev.test` (`src/extensions/capability-system/plugins/dev/__tests__/test.edge-cases.test.ts`).
+- 7 tests covering: plain npm test, file filtering (`-- <files>`), watch mode (`-- --watch`), combined files+watch, failure propagation, cwd handling, and exec exceptions.
+- Coverage remains at **85.18%** statements, **86.44%** lines, **74.14%** branches (paths already largely covered by existing tests).
+- All tests passing (137 suites, 1326 tests, 3 skipped); build green; zero typecheck errors.
