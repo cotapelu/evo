@@ -250,6 +250,8 @@ Last Updated: 2026-06-14
 - [x] Fixed broken `memory-tool-edge-cases.test.ts` by rewriting to match actual implementation; added tests for JSON parsing errors, session reconstruction, error handling, and concurrency.
 - [x] Fixed `provider-command` error handling: added try-catch around `modelRegistry.getAll()` in list action to prevent crashes.
 
+- [x] Remove dead code: deleted unused `buildMemoryLines` helper from `memory-tool.ts`, improving coverage and reducing duplication.
+
 ## In Progress
 - (none)
 

@@ -5,7 +5,7 @@ Last Updated: 2026-06-18
 ## Status
 ✅ Build: Green
 ✅ Tests: All passing (110 suites, 1046 tests, 3 skipped)
-✅ Coverage: 80.43% Statements (3820/4749)
+✅ Coverage: 80.81% Statements (3820/4727)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -22,6 +22,7 @@ Last Updated: 2026-06-18
   All benchmarks meet production targets (UI < 16ms, memory ops < 50ms, analyze < 200ms for 500 lines).
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
 - **Error Handling**: `memory-tool` now handles `api.appendEntry` failures gracefully and includes robust edge-case tests (JSON parsing, session reconstruction, concurrency). `provider-command` adds try-catch around `modelRegistry.getAll` to prevent crashes.
+- **Dead Code Removal**: Deleted unused `buildMemoryLines` helper from `memory-tool.ts`, reducing duplication and improving maintainability.
 
 ## Known Issues
 - None currently; all recent issues resolved.
