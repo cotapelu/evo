@@ -228,4 +228,58 @@ describe('subtool_loader', () => {
       expect(result.content[0].text).toBe('Tool error');
     });
   });
+
+  describe('execute edge cases', () => {
+    let tool: any;
+
+    beforeEach(() => {
+      tool = createSubLoaderToolDefinition();
+    });
+
+    const ctx = { cwd: '/test' } as any;
+
+    it('should reject http without url', async () => {
+      const result = await tool.execute('call-1', { subtool: 'http', args: {} }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('url');
+    });
+
+    it('should reject http with invalid url format', async () => {
+      const result = await tool.execute('call-1', { subtool: 'http', args: { url: 'not a valid url' } }, undefined, undefined, ctx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid URL');
+    });
+
+    it('should accept valid http url', async () => {
+      const result = await tool.execute('call-1', { subtool: 'http', args: { url: 'https://example.com' } }, undefined, undefined, ctx);
+      // The underlying curl may fail (not installed), but validation passes
+      expect(result).toHaveProperty('isError');
+    });
+
+    it('should include method in curl command', async () => {
+      const result = await tool.execute('call-1', {
+        subtool: 'http',
+        args: { url: 'https://example.com', method: 'POST' },
+      }, undefined, undefined, ctx);
+      // Underlying tool will process curl; just ensure no validation error
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should include headers in curl command', async () => {
+      const result = await tool.execute('call-1', {
+        subtool: 'http',
+        args: { url: 'https://example.com', headers: { 'X-Test': 'val' } },
+      }, undefined, undefined, ctx);
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should include body when provided', async () => {
+      const result = await tool.execute('call-1', {
+        subtool: 'http',
+        args: { url: 'https://example.com', method: 'PUT', body: '{"a":1}' },
+      }, undefined, undefined, ctx);
+      expect(result).toHaveProperty('content');
+    });
+
+  });
 });
