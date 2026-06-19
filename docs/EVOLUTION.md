@@ -901,3 +901,10 @@ Last Updated: 2026-06-15
 - **Milestone**: All git capabilities (`add`, `branch`, `status`, `log`, `diff`, `pull`, `push`) now have comprehensive unit test coverage.
 - Increased overall statement coverage from 84.09% to **84.40%** (3928/4652), lines from 85.32% to **85.63%** (3634/4244).
 - All tests passing (121 suites, 1179 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Second Round (Git Checkout Tests)
+- Added unit tests for `git.checkout` capability (`src/extensions/capability-system/plugins/git/__tests__/checkout.test.ts`).
+- 8 tests covering: checkout to existing branch, creating new branch with `-b`, handling missing branches, uncommitted changes blocking checkout, cwd handling, and exceptions.
+- **Remaining git capabilities**: `git.commit` is the last untested git capability.
+- Increased overall statement coverage from 84.40% to **84.68%** (3934/4648), lines from 85.63% to **85.90%** (3639/4236).
+- All tests passing (122 suites, 1187 tests, 3 skipped); build green; zero typecheck errors.
