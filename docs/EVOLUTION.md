@@ -977,3 +977,10 @@ Last Updated: 2026-06-15
 - 20 tests covering: `applyOp` for all operations (add_phase, add_task, update single/batch, remove_task, delete, list), validation errors, status normalization (auto-one in_progress), and `formatSummary` output. Also tests `normalizeParams` JSON parsing and validation.
 - Increased overall statement coverage from 85.08% to **85.10%** (3943/4628), lines from 86.32% to **86.35%** (3648/4200), branch coverage from 73.90% to **73.97%**.
 - All tests passing (132 suites, 1288 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Third Round (Subtool Loader Tests)
+- Added unit tests for `subtool-loader` (`src/extensions/tools/__tests__/subtool-loader.test.ts`).
+- 8 tests covering: `executeSubtool` validation (missing subtool, unknown), routing for each sub-tool (ls, find, grep, read), error handling for http sub-tool (missing URL, invalid URL).
+- Exported `executeSubtool` from subtool-loader to enable unit testing.
+- Overall coverage remains at **85.10%** statements (3943/4628), lines **86.35%** (3648/4200), branch coverage **73.97%** (2123/2880) — unchanged due to rounding and small file size impact.
+- All tests passing (133 suites, 1296 tests, 3 skipped); build green; zero typecheck errors.

@@ -79,7 +79,7 @@ function createReadToolWrapper(cwd: string): ToolDefinition {
  * Execute a subtool call.
  * Validates subtool, routes to appropriate SDK tool, returns standardized result.
  */
-async function executeSubtool(
+export async function executeSubtool(
   _toolCallId: string,
   params: { subtool: string; args: Record<string, unknown> },
   signal: AbortSignal | undefined,
