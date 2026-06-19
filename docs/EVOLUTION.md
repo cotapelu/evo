@@ -936,3 +936,10 @@ Last Updated: 2026-06-15
 - **Remaining dev capabilities**: `dev.audit`, `dev.scripts` still lack unit tests.
 - Increased overall statement coverage from 84.89% to **84.93%** (3938/4638), lines from 86.11% to **86.16%** (3643/4220).
 - All tests passing (126 suites, 1220 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Seventh Round (Dev Audit Tests)
+- Added unit tests for `dev.audit` capability (`src/extensions/capability-system/plugins/dev/__tests__/audit.test.ts`).
+- 7 tests covering: audit check, fix mode (`npm audit -- fix`), handling vulnerability findings, cwd handling, and exceptions.
+- **Remaining dev capability**: Only `dev.scripts` remains untested in dev plugin.
+- Increased overall statement coverage from 84.89% to **84.97%** (3939/4636), lines from 86.11% to **86.21%** (3644/4216).
+- All tests passing (127 suites, 1227 tests, 3 skipped); build green; zero typecheck errors.
