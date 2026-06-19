@@ -957,3 +957,10 @@ Last Updated: 2026-06-15
 - **Remaining capability**: Only `system.metrics` remains untested.
 - Increased overall statement coverage from 84.97% to **85.02%** (3940/4634), lines from 86.21% to **86.25%** (3645/4212), branch coverage from 73.67% to **73.80%**.
 - All tests passing (129 suites, 1247 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventieth Round (System Metrics Tests)
+- Added unit tests for `system.metrics` capability (`src/extensions/capability-system/plugins/system/__tests__/metrics.test.ts`).
+- 7 tests covering: metrics JSON retrieval, pretty-print validation, non-JSON fallback, failure handling, cwd handling, and exceptions.
+- **Major Milestone**: All capability plugins (git, codebase, dev, security, system) now have comprehensive unit test coverage.
+- Increased overall statement coverage from 85.02% to **85.06%** (3941/4632), lines from 86.25% to **86.30%** (3646/4208), branch coverage from 73.80% to **73.87%**.
+- All tests passing (130 suites, 1254 tests, 3 skipped); build green; zero typecheck errors.
