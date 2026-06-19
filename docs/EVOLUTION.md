@@ -915,3 +915,10 @@ Last Updated: 2026-06-15
 - **Milestone achieved**: All git capabilities (`add`, `branch`, `checkout`, `commit`, `diff`, `log`, `pull`, `push`, `status`) now have comprehensive unit test coverage.
 - Increased overall statement coverage from 84.68% to **84.76%** (3935/4644), lines from 85.90% to **85.97%** (3640/4232).
 - All tests passing (123 suites, 1197 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Fourth Round (Dev Format Tests)
+- Added unit tests for `dev.format` capability (`src/extensions/capability-system/plugins/dev/__tests__/format.test.ts`).
+- 7 tests covering: formatting files with Prettier, handling empty stdout, validation (empty files array), Prettier failure (parsing error), cwd handling, and exceptions.
+- **Remaining dev capabilities**: `dev.test`, `dev.build`, `dev.audit`, `dev.scripts` still lack unit tests.
+- Increased overall statement coverage from 84.76% to **84.82%** (3936/4642), lines from 85.97% to **86.04%** (3641/4228).
+- All tests passing (124 suites, 1204 tests, 3 skipped); build green; zero typecheck errors.
