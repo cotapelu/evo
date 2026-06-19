@@ -929,3 +929,10 @@ Last Updated: 2026-06-15
 - **Remaining dev capabilities**: `dev.build`, `dev.audit`, `dev.scripts` still lack unit tests.
 - Increased overall statement coverage from 84.82% to **84.89%** (3937/4640), lines from 86.04% to **86.11%** (3642/4224).
 - All tests passing (125 suites, 1214 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Sixth Round (Dev Build Tests)
+- Added unit tests for `dev.build` capability (`src/extensions/capability-system/plugins/dev/__tests__/build.test.ts`).
+- 6 tests covering: successful `npm run build`, handling empty stdout, build failures (TS errors), cwd handling, and exceptions.
+- **Remaining dev capabilities**: `dev.audit`, `dev.scripts` still lack unit tests.
+- Increased overall statement coverage from 84.89% to **84.93%** (3938/4638), lines from 86.11% to **86.16%** (3643/4220).
+- All tests passing (126 suites, 1220 tests, 3 skipped); build green; zero typecheck errors.
