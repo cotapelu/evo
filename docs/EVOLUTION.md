@@ -984,3 +984,9 @@ Last Updated: 2026-06-15
 - Exported `executeSubtool` from subtool-loader to enable unit testing.
 - Overall coverage remains at **85.10%** statements (3943/4628), lines **86.35%** (3648/4200), branch coverage **73.97%** (2123/2880) — unchanged due to rounding and small file size impact.
 - All tests passing (133 suites, 1296 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Fourth Round (Skill Reader Load Tests)
+- Added unit tests for `skill-reader`'s `executeLoadSkill` function (`src/extensions/tools/__tests__/skill-reader-load.test.ts`).
+- 5 tests covering: skill template listing, retrieving specific skill content, error handling (skill not found, skills directory inaccessible), and empty directory scenario.
+- Coverage remains at **85.10%** statements (3943/4628), **86.35%** lines (3648/4200) due to rounding and small file size.
+- All tests passing (134 suites, 1301 tests, 3 skipped); build green; zero typecheck errors.
