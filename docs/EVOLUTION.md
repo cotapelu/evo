@@ -950,3 +950,10 @@ Last Updated: 2026-06-15
 - **Milestone**: Dev plugin (format, test, build, audit, scripts) is now fully unit tested.
 - Overall statement coverage remains at **84.97%** (3939/4636), lines **86.21%** (3644/4216) — stable due to rounding; however branch coverage increased from 73.53% to **73.67%**.
 - All tests passing (128 suites, 1238 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixty-Ninth Round (Security Scan Tests)
+- Added unit tests for `security.scan` capability (`src/extensions/capability-system/plugins/security/__tests__/scan.test.ts`).
+- 9 tests covering: scanning cwd by default, scanning specific path, secret detection failures, error handling, cwd handling, and exceptions.
+- **Remaining capability**: Only `system.metrics` remains untested.
+- Increased overall statement coverage from 84.97% to **85.02%** (3940/4634), lines from 86.21% to **86.25%** (3645/4212), branch coverage from 73.67% to **73.80%**.
+- All tests passing (129 suites, 1247 tests, 3 skipped); build green; zero typecheck errors.
