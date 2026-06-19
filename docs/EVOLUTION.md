@@ -888,3 +888,9 @@ Last Updated: 2026-06-15
 - 8 tests covering: default diff against HEAD, custom revision (branch/commit range), no changes output, git command failures, cwd handling, and exceptions.
 - Increased overall statement coverage from 83.77% to **83.83%** (3929/4712), lines from 85.00% to **85.07%** (3629/4274).
 - All tests passing (119 suites, 1160 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Sixtieth Round (Git Pull Tests)
+- Added unit tests for `git.pull` capability (`src/extensions/capability-system/plugins/git/__tests__/pull.test.ts`).
+- 9 tests covering: pulling from origin by default, pulling specific branch from custom remote, handling of empty stdout, failure scenarios (local changes, non-existent branch), cwd handling, and exceptions.
+- Increased overall statement coverage from 83.83% to **84.09%** (3931/4676), lines from 85.07% to **85.32%** (3632/4256).
+- All tests passing (120 suites, 1169 tests, 3 skipped); build green; zero typecheck errors.
