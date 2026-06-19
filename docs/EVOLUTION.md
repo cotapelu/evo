@@ -876,3 +876,9 @@ Last Updated: 2026-06-15
 - 9 tests covering: staging specific files, staging all changes (`-A`), validation errors (missing files/all), git command failures, cwd handling, and exceptions.
 - Increased overall statement coverage from 83.26% to **83.58%** (3924/4712), lines from 84.44% to **84.79%** (3624/4288).
 - All tests passing (117 suites, 1143 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Fifty-Eighth Round (Git Log Tests)
+- Added unit tests for `git.log` capability (`src/extensions/capability-system/plugins/git/__tests__/log.test.ts`).
+- 9 tests covering: default commit listing (10 commits, oneline/graph/decorate), custom count parameter, empty repository handling, git command failures, cwd handling, and exceptions.
+- Increased overall statement coverage from 83.58% to **83.77%** (3927/4710), lines from 84.79% to **85.00%** (3627/4280).
+- All tests passing (118 suites, 1152 tests, 3 skipped); build green; zero typecheck errors.
