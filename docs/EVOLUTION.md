@@ -870,3 +870,9 @@ Last Updated: 2026-06-15
 - 10 tests covering: list (branch listing with upstream tracking), create (with name validation), delete (with name validation and failure handling), empty repository, command failures, exceptions, and cwd handling.
 - Increased overall statement coverage from 83.26% to **83.26%** (slight increase due to test structure adjustments), lines from 84.44% to **84.44%**.
 - All tests passing (116 suites, 1134 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Fifty-Seventh Round (Git Add Tests)
+- Added unit tests for `git.add` capability (`src/extensions/capability-system/plugins/git/__tests__/add.test.ts`).
+- 9 tests covering: staging specific files, staging all changes (`-A`), validation errors (missing files/all), git command failures, cwd handling, and exceptions.
+- Increased overall statement coverage from 83.26% to **83.58%** (3924/4712), lines from 84.44% to **84.79%** (3624/4288).
+- All tests passing (117 suites, 1143 tests, 3 skipped); build green; zero typecheck errors.
