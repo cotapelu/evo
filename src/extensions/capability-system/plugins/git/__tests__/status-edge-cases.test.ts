@@ -68,4 +68,61 @@ describe('git.status edge cases', () => {
     expect(result.details.untracked).toEqual([]);
   });
 
+  describe('additional status codes', () => {
+    it('should handle Added (A) files as staged', async () => {
+      const mockCtx = createMockCtx('/test', { code: 0, stdout: 'A  newfile.ts\n', stderr: '' });
+      const result = await execute({}, mockCtx);
+      expect(result.isError).toBe(false);
+      expect(result.details.staged).toContain('A  newfile.ts');
+      expect(result.details.unstaged).toEqual([]);
+    });
+
+    it('should handle Deleted (D) files as staged', async () => {
+      const mockCtx = createMockCtx('/test', { code: 0, stdout: 'D  deleted.ts\n', stderr: '' });
+      const result = await execute({}, mockCtx);
+      expect(result.isError).toBe(false);
+      expect(result.details.staged).toContain('D  deleted.ts');
+      expect(result.details.unstaged).toEqual([]);
+    });
+
+    it('should handle Copied (C) files as staged', async () => {
+      const mockCtx = createMockCtx('/test', { code: 0, stdout: 'C  original.ts -> copy.ts\n', stderr: '' });
+      const result = await execute({}, mockCtx);
+      expect(result.isError).toBe(false);
+      expect(result.details.staged).toContain('C  original.ts -> copy.ts');
+    });
+
+    it('should handle Type change (T) as staged', async () => {
+      const mockCtx = createMockCtx('/test', { code: 0, stdout: 'T  mode-change.sh\n', stderr: '' });
+      const result = await execute({}, mockCtx);
+      expect(result.isError).toBe(false);
+      expect(result.details.staged).toContain('T  mode-change.sh');
+    });
+
+    it('should handle Unmerged (U) as staged (conflict)', async () => {
+      const mockCtx = createMockCtx('/test', { code: 0, stdout: 'U  conflict.ts\n', stderr: '' });
+      const result = await execute({}, mockCtx);
+      expect(result.isError).toBe(false);
+      expect(result.details.staged).toContain('U  conflict.ts');
+      expect(result.details.unstaged).toEqual([]);
+    });
+
+    it('should handle multiple different status codes together', async () => {
+      const mockCtx = createMockCtx('/test', {
+        code: 0,
+        stdout: 'A  added.ts\nM  modified.ts\nD  deleted.ts\nR  old -> new.ts\n?? untracked.ts\n',
+        stderr: ''
+      });
+      const result = await execute({}, mockCtx);
+      expect(result.isError).toBe(false);
+      expect(result.details.staged).toHaveLength(4);
+      expect(result.details.staged).toContain('A  added.ts');
+      expect(result.details.staged).toContain('M  modified.ts');
+      expect(result.details.staged).toContain('D  deleted.ts');
+      expect(result.details.staged).toContain('R  old -> new.ts');
+      expect(result.details.unstaged).toEqual([]);
+      expect(result.details.untracked).toEqual(['untracked.ts']);
+    });
+  });
+
 });

@@ -1014,3 +1014,9 @@ Last Updated: 2026-06-15
 - 7 tests covering: plain npm test, file filtering (`-- <files>`), watch mode (`-- --watch`), combined files+watch, failure propagation, cwd handling, and exec exceptions.
 - Coverage remains at **85.18%** statements, **86.44%** lines, **74.14%** branches (paths already largely covered by existing tests).
 - All tests passing (137 suites, 1326 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Seventy-Eighth Round (Git Status Additional Status Codes)
+- Extended `git.status` parser tests with additional porcelain status codes.
+- 6 new tests in `src/extensions/capability-system/plugins/git/__tests__/status-edge-cases.test.ts` covering: Added (A), Deleted (D), Copied (C), Type change (T), Unmerged (U), and combined multi-status output.
+- Coverage remains at **85.18%** statements, **86.44%** lines, **74.14%** branches. The additional tests improve path diversity but rounding keeps numbers stable.
+- All tests passing (137 suites, 1332 tests, 3 skipped); build green; zero typecheck errors.
