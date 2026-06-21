@@ -110,10 +110,12 @@ export class CommandValidator {
   private hasPrototypePollution(obj: any): boolean {
     if (typeof obj !== 'object' || obj === null) return false;
 
-    if (obj.__proto__ !== undefined || obj.constructor !== undefined || obj.prototype !== undefined) {
-      return true;
-    }
+    // Check for own properties that can affect prototype
+    if (Object.prototype.hasOwnProperty.call(obj, '__proto__')) return true;
+    if (Object.prototype.hasOwnProperty.call(obj, 'constructor')) return true;
+    if (Object.prototype.hasOwnProperty.call(obj, 'prototype')) return true;
 
+    // Recursive check
     for (const value of Object.values(obj)) {
       if (this.hasPrototypePollution(value)) return true;
     }

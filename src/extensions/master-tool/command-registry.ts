@@ -291,6 +291,27 @@ export class CommandRegistry {
   }
 
   /**
+   * Get all registered command names
+   */
+  listCommands(): string[] {
+    return this.executor.listCommands();
+  }
+
+  /**
+   * Get commands by category
+   */
+  listCommandsByCategory(): Map<string, string[]> {
+    return this.executor.listCommandsByCategory();
+  }
+
+  /**
+   * Get metadata for a command
+   */
+  getMetadata(commandName: string): CommandMetadata | undefined {
+    return this.executor.getMetadata(commandName);
+  }
+
+  /**
    * Get command help text
    */
   getCommandHelp(commandName: string): string | null {
