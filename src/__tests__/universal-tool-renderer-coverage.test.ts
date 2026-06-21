@@ -64,4 +64,14 @@ describe('Universal Tool Renderer Coverage', () => {
     const comp = tool.renderResult(result, { expanded: false, isPartial: false }, createMockTheme());
     expect(comp.text).toContain('error occurred');
   });
+
+  it('uses defaultRender when provided', () => {
+    const mockDefaultRender = vi.fn(() => new Text('defaulted', 0, 0));
+    const result = { content: [{ type: 'text', text: 'ignored' }], details: {} };
+    const options = { expanded: false, isPartial: false, defaultRender: mockDefaultRender };
+    const comp = tool.renderResult(result, options, createMockTheme());
+    expect(mockDefaultRender).toHaveBeenCalledWith(result);
+    expect(comp).toBeInstanceOf(Text);
+    expect(comp.text).toBe('defaulted');
+  });
 });
