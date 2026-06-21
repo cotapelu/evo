@@ -1,0 +1,8 @@
+
+> evo@0.0.1 test
+> vitest run --coverage
+
+
+ RUN  v4.1.8 /home/quangtynu/Qcoder/evo
+      Coverage enabled with v8
+
