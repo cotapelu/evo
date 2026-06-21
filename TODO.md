@@ -264,7 +264,7 @@ Last Updated: 2026-06-19
 - [x] Finalize all evolution documentation updates.
 
 ## Upcoming
-- Increase coverage to ≥85% by targeting remaining low-covered modules (e.g., error handling in todos-tool file I/O, additional renderers).
+- Increase coverage to ≥80% (currently 78.38%) by adding tests for remaining low-covered modules (provider-command, session-tree-command, auto-continue, keybinding, settings-command, memory-tool, command-cache, skill-reader, and one-statement renderers).
 
 
 ## Notes
