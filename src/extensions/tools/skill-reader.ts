@@ -102,7 +102,7 @@ export function createSkillLoaderTool(): ToolDefinition {
     name: "skill_reader",
     label: "Skill Reader",
     description: "CRITICAL: Read skill playbooks BEFORE executing complex tasks. Skills contain mandatory step-by-step procedures, checklists, and best practices for audit, code review, debugging, refactoring, and testing. NEVER skip this step.",
-    promptSnippet: `skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  ${skillsConcise}`,
+    promptSnippet: `skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  // MANDATORY before audit, code-review, debug, refactor, test`,
     promptGuidelines: [
       `# ⚠️ CRITICAL: SKILL READER - MANDATORY FIRST STEP`,
       ``,
