@@ -74,6 +74,8 @@ Last Updated: 2026-06-19
 - **Coverage improvements**: Added CapabilityRegistry unit tests (24 tests) and git.status capability tests (10 tests). Maintained ≥80% coverage (82.86% statements, 84.05% lines).
 
 * **CapabilityRegistry unit tests**: Added 24 tests covering registration, lookup, filtering, sorting, and system prompt generation. Increased coverage from 81.36% to 82.81% statements (83.99% lines).
+
+- **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.
 - ✅ Introduced `@extensions` path alias for test imports.

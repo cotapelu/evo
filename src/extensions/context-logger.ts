@@ -53,12 +53,12 @@ export default function (pi: ExtensionAPI) {
 
 			// Cast payload to expected shape (model, context, options)
 			const payload = event.payload as { model: unknown; context: unknown; options: unknown };
-			const logEntry = JSON.stringify({
+			const logEntry = `${JSON.stringify({
 				timestamp: new Date().toISOString(),
 				model: payload.model,
 				context: payload.context,
 				options: payload.options,
-			}) + "\n";
+			})  }\n`;
 
 			appendFileSync(effectiveLogFile, logEntry);
 		} catch (err) {
