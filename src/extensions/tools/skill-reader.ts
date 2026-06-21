@@ -162,7 +162,7 @@ export function createSkillLoaderTool(): ToolDefinition {
       ``,
       ...skillListLines,
       `Note: Skills are READ-ONLY guides. They do NOT execute code. You must manually perform each step using other tools.`,
-    ]
+    ],
     parameters: {
       type: "object",
       properties: {
