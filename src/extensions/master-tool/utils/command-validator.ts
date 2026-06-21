@@ -108,19 +108,20 @@ export class CommandValidator {
    * Detect prototype pollution patterns
    */
   private hasPrototypePollution(obj: any): boolean {
-    if (typeof obj !== 'object' || obj === null) return false;
-
-    // Check for own properties that can affect prototype
-    if (Object.prototype.hasOwnProperty.call(obj, '__proto__')) return true;
-    if (Object.prototype.hasOwnProperty.call(obj, 'constructor')) return true;
-    if (Object.prototype.hasOwnProperty.call(obj, 'prototype')) return true;
-
-    // Recursive check
-    for (const value of Object.values(obj)) {
-      if (this.hasPrototypePollution(value)) return true;
-    }
-
-    return false;
+    const visited = new WeakSet();
+    const check = (o: any): boolean => {
+      if (typeof o !== 'object' || o === null) return false;
+      if (visited.has(o)) return false;
+      visited.add(o);
+      if (Object.prototype.hasOwnProperty.call(o, '__proto__')) return true;
+      if (Object.prototype.hasOwnProperty.call(o, 'constructor')) return true;
+      if (Object.prototype.hasOwnProperty.call(o, 'prototype')) return true;
+      for (const v of Object.values(o)) {
+        if (check(v)) return true;
+      }
+      return false;
+    };
+    return check(obj);
   }
 
   /**

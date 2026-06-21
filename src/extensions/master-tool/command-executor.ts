@@ -305,9 +305,11 @@ export class CommandExecutor {
 
       // Update registry entry with loaded module (for reuse without cache)
       entry.module = mod;
-      entry.StateClass = mod.StateClass; // Capture state class
-      entry.getPersistencePath = mod.getPersistencePath; // Capture persistence path
+      entry.StateClass = mod.StateClass;
+      entry.getPersistencePath = mod.getPersistencePath;
       entry.lastLoaded = Date.now();
+      // Sync metadata from loaded module (in case placeholder was set)
+      entry.metadata = mod.metadata;
 
       return mod;
     } catch (error: any) {

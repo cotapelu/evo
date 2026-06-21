@@ -274,16 +274,18 @@ export class CommandRegistry {
       experimental: boolean;
     }> = [];
 
-    for (const [name, entry] of this.executor.listCommandsByCategory()) {
-      const meta = this.executor.getMetadata(name);
-      if (meta) {
-        commands.push({
-          name,
-          category: meta.category,
-          description: meta.description,
-          tags: meta.tags ?? [],
-          experimental: meta.experimental ?? false
-        });
+    for (const [category, names] of this.executor.listCommandsByCategory()) {
+      for (const name of names) {
+        const meta = this.executor.getMetadata(name);
+        if (meta) {
+          commands.push({
+            name,
+            category: meta.category,
+            description: meta.description,
+            tags: meta.tags ?? [],
+            experimental: meta.experimental ?? false
+          });
+        }
       }
     }
 

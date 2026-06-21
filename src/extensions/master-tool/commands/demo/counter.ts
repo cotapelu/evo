@@ -30,6 +30,7 @@ export class CounterState {
   private _dirty = false;
 
   get isDirty(): boolean { return this._dirty; }
+  set isDirty(val: boolean) { this._dirty = val; }
   markDirty(): void { this._dirty = true; }
   markClean(): void { this._dirty = false; }
 
@@ -258,15 +259,5 @@ export function renderResult(result: any, options: any, theme: any): any {
   return new Text(lines.join("\n"));
 }
 
-// ============================================================================
-// 6. EXPORT WITH StateClass
-// ============================================================================
-
-export default {
-  metadata,
-  schema,
-  execute,
-  renderResult,
-  StateClass: CounterState,
-  getPersistencePath: (ctx: ExtensionContext, cmd: string) => CounterState.getPersistencePath(ctx, cmd)
-};
+export const StateClass = CounterState;
+export const getPersistencePath = (ctx: ExtensionContext, commandName: string) => CounterState.getPersistencePath(ctx, commandName);

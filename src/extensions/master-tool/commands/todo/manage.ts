@@ -45,6 +45,7 @@ export class TodoState {
 
   get tasks(): TodoItem[] { return this._tasks; }
   get isDirty(): boolean { return this._dirty; }
+  set isDirty(val: boolean) { this._dirty = val; }
 
   markDirty(): void {
     this._dirty = true;
@@ -401,18 +402,5 @@ export function renderResult(result: any, options: any, theme: any): any {
   return new Text(lines.join("\n"));
 }
 
-// ============================================================================
-// 6. EXPORT WITH StateClass and getPersistencePath
-// ============================================================================
-
-// Note: StateClass phải được export để executor có thể instantiate
-// getPersistencePath là static method, executor sẽ gọi nó
-
-export default {
-  metadata,
-  schema,
-  execute,
-  renderResult,
-  StateClass: TodoState,
-  getPersistencePath: (ctx: ExtensionContext, commandName: string) => TodoState.getPersistencePath(ctx, commandName)
-};
+export const StateClass = TodoState;
+export const getPersistencePath = (ctx: ExtensionContext, commandName: string) => TodoState.getPersistencePath(ctx, commandName);
