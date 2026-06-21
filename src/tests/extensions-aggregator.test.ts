@@ -13,7 +13,7 @@ vi.mock("../extensions/tools/index.js", () => ({
 // No mocking needed
 vi.mock("../extensions/team/index.js", () => ({ registerTeamTool: vi.fn() }));
 vi.mock("../extensions/tools/subtool-loader.js", () => ({ registerSubToolLoaderExtension: vi.fn() }));
-vi.mock("../extensions/tools/tool-template.js", () => ({ registerToolTemplate: vi.fn() }));
+// tool-template removed (moved to master-tool)
 vi.mock("../extensions/tools/skill-reader.js", () => ({ registerSkillReaderExtension: vi.fn() }));
 vi.mock("../extensions/hooks/auto-continue.js", () => ({ default: vi.fn() }));
 vi.mock("../extensions/hooks/auto-compact-85.js", () => ({ default: vi.fn() }));
@@ -38,7 +38,7 @@ import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "..
 // Tools moved to plugins, no direct imports
 import { registerTeamTool } from "../extensions/team/index";
 import { registerSubToolLoaderExtension } from "../extensions/tools/subtool-loader";
-import { registerToolTemplate } from "../extensions/tools/tool-template";
+// tool-template removed (master-tool replaces it)
 import { registerSkillReaderExtension } from "../extensions/tools/skill-reader";
 import autoContinueExtension from "../extensions/hooks/auto-continue";
 import autoCompact85Extension from "../extensions/hooks/auto-compact-85";
@@ -74,7 +74,7 @@ describe("Extensions Aggregator", () => {
     // Plugin-based tools are loaded automatically, not directly registered
     expect(registerTeamTool).toHaveBeenCalledWith(mockApi);
     expect(registerSubToolLoaderExtension).toHaveBeenCalledWith(mockApi);
-    expect(registerToolTemplate).toHaveBeenCalledWith(mockApi);
+    // tool-template removed (replaced by master-tool)
     expect(registerSkillReaderExtension).toHaveBeenCalledWith(mockApi);
     expect(autoContinueExtension).toHaveBeenCalledWith(mockApi);
     expect(autoCompact85Extension).toHaveBeenCalledWith(mockApi);

@@ -12,7 +12,6 @@ import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "./
 // Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
 import { registerTeamTool } from "./team/index.js";
 import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
-import { registerToolTemplate } from "./tools/tool-template.js";
 import capabilitySystemExtension from "./capability-system/extension.js";
 import { registerSkillReaderExtension } from "./tools/skill-reader.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
@@ -31,6 +30,7 @@ import { registerProviderCommand } from "./commands/provider-command.js";
 import { registerCopyCommand } from "./commands/copy-command.js";
 import { registerTeamCommand } from "./commands/team-command.js";
 import { registerKeybindingExtension } from "./keybinding/keybinding-extension.js";
+import { registerMasterTool } from "./master-tool/index.js";
 
 /**
  * Main extension aggregator function
@@ -52,8 +52,8 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerTodosTool(api);
   registerMemoryTool(api);
   registerTeamTool(api);
-  registerToolTemplate(api);
   registerSkillReaderExtension(api);
+  registerMasterTool(api); // MASTER TOOL - hundreds of commands in one!
 
   // Register universal tool
   registerUniversalTool(api);
