@@ -151,4 +151,21 @@ describe('auto-continue', () => {
     // No message should be sent
     expect(mockPi.sendMessage).not.toHaveBeenCalled();
   });
+
+  it('toggles off via empty args and clears timer', async () => {
+    // Set idle to true so enabling will start timer
+    mockCtx.isIdle = vi.fn().mockReturnValue(true);
+    autoContinueExtension(mockPi);
+    const handler = mockPi.registerCommand.mock.calls[0][1].handler;
+    // First empty arg: toggles on and starts timer (since idle)
+    handler('', mockCtx);
+    // At this point, the extension's internal idleTimer should be set (we can't access directly, but we can spy on clearTimeout)
+    const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+    // Second empty arg: toggles off (should clear timer via else block)
+    handler('', mockCtx);
+    expect(clearSpy).toHaveBeenCalled();
+    // Also should notify off
+    expect(mockCtx.ui.notify).toHaveBeenCalledWith(expect.stringContaining('TẮT'), 'info');
+    clearSpy.mockRestore();
+  });
 });

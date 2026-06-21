@@ -1056,3 +1056,22 @@ Last Updated: 2026-06-21
 - Updated `src/__tests__/universal-tool-renderer-coverage.test.ts` with new test case covering the previously uncovered branch.
 - Coverage improvement: +1 statement (universal-tool now 100% covered).
 - All tests passing (143 test suites, 1401 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Eighty-Third Round (Coverage Expansion via Edge Case Tests)
+- Added session-tree-command edge case tests:
+  * Image content rendering in `renderMessageDetails`
+  * Long line wrapping in `EntryDetailView.render`
+  * Direct `invalidate()` method call
+  (File: `src/tests/session-tree-command.test.ts`)
+- Added auto-continue test for toggle-off clearing timer via empty args (covers lines 127-128 in `auto-continue.ts`).
+- Added keybinding-extension edge case tests:
+  * Missing config file handling (`existsSync` false)
+  * Malformed JSON in config (catch block)
+  * Empty keybindings (early return)
+  * Escape key handling
+  * Error from `sendUserMessage` catch
+  * `session_shutdown` calls `unsubscribe`
+  (File: `src/tests/keybinding-extension.test.ts`)
+- Added logger test for invalid `PICLAW_LOG_LEVEL` falling back to 'info' (covers default case in `getLogLevel`).
+- Coverage improvement: Statements from 78.42% (4421) to 78.75% (4438/5635); tests increased by 19.
+- All tests passing (143 test suites, 1420 tests, 3 skipped); build green; zero typecheck errors.

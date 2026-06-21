@@ -62,6 +62,13 @@ describe('Logger', () => {
       expect(console.log).not.toHaveBeenCalled();
       expect(console.warn).not.toHaveBeenCalled();
     });
+
+    it('falls back to info level when PICLAW_LOG_LEVEL is invalid', () => {
+      vi.stubEnv('PICLAW_LOG_LEVEL', 'bogus');
+      vi.clearAllMocks();
+      logger.info('fallback test');
+      expect(console.log).toHaveBeenCalled();
+    });
   });
 
   describe('JSON Formatting', () => {

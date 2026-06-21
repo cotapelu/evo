@@ -163,4 +163,68 @@ describe("EntryDetailView", () => {
     expect(lines1).not.toBe(lines2);
     expect(lines2.some(l => l.includes("m2"))).toBe(true);
   });
+
+  it("renders message entry with image content", () => {
+    const view = new EntryDetailView({} as unknown as SessionEntry);
+    const entry = {
+      type: "message",
+      id: "m1",
+      parentId: null,
+      timestamp: Date.now(),
+      message: {
+        role: "user",
+        content: [{ type: "image", source: { mediaType: "image/png" } }],
+      },
+    } as unknown as SessionEntry;
+    view.setEntry(entry);
+    const lines = view.render(80);
+    const text = lines.join("\n");
+    expect(text).toContain("[Image: image/png]");
+  });
+
+  it("wraps long lines to fit width", () => {
+    const view = new EntryDetailView({} as unknown as SessionEntry);
+    const longText = "A".repeat(200);
+    const entry = {
+      type: "message",
+      id: "m1",
+      parentId: null,
+      timestamp: Date.now(),
+      message: {
+        role: "assistant",
+        content: [{ type: "text", text: longText }],
+      },
+    } as unknown as SessionEntry;
+    view.setEntry(entry);
+    const lines = view.render(50); // small width forces wrap
+    // Long text will be split into multiple lines
+    expect(lines.length).toBeGreaterThan(1);
+    // Ensure the long text appears across lines
+    const combined = lines.join("");
+    expect(combined).toContain(longText);
+  });
+
+  it("invalidate clears cached render data", () => {
+    const view = new EntryDetailView({} as unknown as SessionEntry);
+    const entry = {
+      type: "message",
+      id: "m1",
+      parentId: null,
+      timestamp: Date.now(),
+      message: {
+        role: "user",
+        content: [{ type: "text", text: "Test" }],
+      },
+    } as unknown as SessionEntry;
+    view.setEntry(entry);
+    view.render(80); // populate cache
+    // Access internal cache via any to verify state
+    const v: any = view;
+    expect(v.cachedLines.length).toBeGreaterThan(0);
+    expect(v.cachedWidth).toBe(80);
+    // Invalidate
+    view.invalidate();
+    expect(v.cachedLines).toEqual([]);
+    expect(v.cachedWidth).toBeUndefined();
+  });
 });

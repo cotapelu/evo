@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getValidator, CommandValidator } from '../utils/command-validator.js';
+import { getValidator, resetValidator, CommandValidator } from '../utils/command-validator.js';
 import { Type } from 'typebox';
 
 describe('CommandValidator', () => {
@@ -65,6 +65,14 @@ describe('CommandValidator', () => {
       expect(res1.valid).toBe(false);
       const res2 = validator.validateWithSchema(undefined as any, schema);
       expect(res2.valid).toBe(false);
+    });
+
+    it('should catch runtime error in validator compilation', () => {
+      // Pass an invalid schema (null) to trigger catch block
+      const res = validator.validateWithSchema({ x: 1 }, null as any);
+      expect(res.valid).toBe(false);
+      expect(res.errors).toBeDefined();
+      expect(res.errors!.length).toBeGreaterThan(0);
     });
   });
 
@@ -139,6 +147,23 @@ describe('CommandValidator', () => {
 
       expect(validator.checkRateLimit('cmd1').allowed).toBe(true);
       expect(validator.checkRateLimit('cmd2').allowed).toBe(true);
+    });
+  });
+
+  describe('getValidator / resetValidator (singleton)', () => {
+    it('getValidator should return same instance', () => {
+      const v1 = getValidator({ rateLimitPerMinute: 1 });
+      const v2 = getValidator({ rateLimitPerMinute: 2 });
+      expect(v1).toBe(v2); // same singleton
+    });
+
+    it('resetValidator should clear global instance', () => {
+      getValidator({ rateLimitPerMinute: 5 });
+      resetValidator();
+      const fresh = getValidator({ rateLimitPerMinute: 10 });
+      expect(fresh).toBeInstanceOf(CommandValidator);
+      // The fresh instance should have new options
+      expect((fresh as any).rateLimitPerMinute).toBe(10);
     });
   });
 });
