@@ -152,6 +152,33 @@ describe('todos tool', () => {
       state.setStorageType('memory');
       expect(state.storageType).toBe('memory');
     });
+
+    it('subscribe and notify work correctly', () => {
+      const state = new TodoState();
+      const listener = vi.fn();
+      const unsubscribe = state.subscribe(listener);
+      state.notify();
+      expect(listener).toHaveBeenCalledTimes(1);
+      unsubscribe();
+      state.notify();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('saveToFile computes next IDs correctly with malformed task and phase IDs', async () => {
+      const state = new TodoState();
+      state.phases = [
+        { id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] } as TodoPhase,
+        { id: 'phase-X', name: 'P2', tasks: [{ id: 'custom', content: 'T2', status: 'pending' }] } as TodoPhase
+      ];
+      state.nextTaskId = 1;
+      state.nextPhaseId = 1;
+      vi.mocked(promises.mkdir).mockResolvedValue(undefined);
+      await state.saveToFile('/cwd');
+      const writtenArg = vi.mocked(promises.writeFile).mock.calls[0][1];
+      const written = JSON.parse(writtenArg);
+      expect(written.nextTaskId).toBe(2);
+      expect(written.nextPhaseId).toBe(2);
+    });
   });
 
   describe('applyOp', () => {
@@ -554,6 +581,39 @@ describe('todos tool', () => {
       expect(result.details.error).toContain('Save failed');
       expect(result.details.storage).toBe('memory');
       expect(mockApi.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('execute: rejects non-object params', async () => {
+      mockApi = createMockApi();
+      mockCtx = createMockCtx();
+      registerTodosTool(mockApi);
+      const tool = capturedTool;
+
+      let result = await tool.execute('call', null as any, undefined, undefined, mockCtx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('object required');
+
+      result = await tool.execute('call', 123 as any, undefined, undefined, mockCtx);
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('object required');
+    });
+
+    it('execute: update task notes and details', async () => {
+      mockApi = createMockApi();
+      mockCtx = createMockCtx();
+      registerTodosTool(mockApi);
+      const tool = capturedTool;
+
+      // Add phase with task
+      const phaseResult = await tool.execute('p1', { add_phase: { name: 'P', tasks: [{ content: 'T' }] } }, undefined, undefined, mockCtx);
+      const taskId = phaseResult.details.phases[0].tasks[0].id;
+
+      // Update with notes and details
+      const updateResult = await tool.execute('upd', { update: { id: taskId, notes: 'My note', details: 'Line1\nLine2' } }, undefined, undefined, mockCtx);
+      expect(updateResult.isError).toBe(false);
+      const task = updateResult.details.phases[0].tasks[0];
+      expect(task.notes).toBe('My note');
+      expect(task.details).toBe('Line1\nLine2');
     });
   });
 

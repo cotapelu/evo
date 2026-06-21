@@ -1,6 +1,6 @@
 # Evolution Log
 
-Last Updated: 2026-06-15
+Last Updated: 2026-06-21
 
 ## Current Trajectory
 - Stabilizing the capability system to ensure deterministic test behavior.
@@ -1030,3 +1030,17 @@ Last Updated: 2026-06-15
 - Added comprehensive unit tests for Master Tool (12 tests covering mutex, validator, state manager, registry, execution).
 - Fixed prototype pollution detection to use own property checks.
 - All tests passing (136 suites, 1336 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Eightieth Round (Todos Tool Coverage)
+- Removed dead code: unused `formatTodoLineExtension` function from `todos-tool.ts`.
+- Fixed `skill-reader.test.ts` assertion to match updated tool description.
+- Added comprehensive tests for `todos-tool` to increase coverage and error handling:
+  - Event handler tests for `session_start` and `session_tree` (new file: `src/tests/todos-tool-session-handlers.test.ts`), covering session storage, file loading, memory fallback, error handling, and `notify` calls.
+  - Tests for invalid parameters type-check in `execute`.
+  - Tests for task update with `notes` and `details`.
+  - Tests for `TodoState.subscribe`/`notify`.
+  - Tests for `getNextIds` with malformed task/phase IDs to exercise `continue` branch.
+- Updated existing `todos-tool.test.ts` with additional unit tests.
+- Result: `todos-tool.ts` coverage improved from ~91% to 99.17% statements.
+- Coverage metrics: Statements 78.38% (4417/5635), Functions 77.83% (783/1006), Branches 69.07% (2390/3460), Lines 79.27% (4082/5149).
+- All tests passing (142 test suites, 1393 tests, 3 skipped); build green; zero typecheck errors.

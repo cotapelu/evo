@@ -15,7 +15,7 @@ describe('skill-reader tool', () => {
     const tool = createSkillLoaderTool();
     expect(tool.name).toBe('skill_reader');
     expect(tool.label).toBe('Skill Reader');
-    expect(tool.description).toContain('Retrieve skill .md');
+    expect(tool.description).toContain('CRITICAL: Read skill playbooks');
     expect(tool.parameters).toBeDefined();
     expect((tool.parameters as { properties: { command: { enum: string[] } } }).properties.command.enum).toContain('read_skill');
   });
