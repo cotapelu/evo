@@ -263,8 +263,12 @@ Last Updated: 2026-06-19
 - [x] Achieve ≥80% test coverage (reached 81.36%) through systematic test expansion.
 - [x] Finalize all evolution documentation updates.
 
+## Completed (continued)
+- [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
+
+
 ## Upcoming
-- Increase coverage to ≥80% (currently 78.38%) by adding tests for remaining low-covered modules (provider-command, session-tree-command, auto-continue, keybinding, settings-command, memory-tool, command-cache, skill-reader, and one-statement renderers).
+- Increase coverage to ≥80% (currently 78.75%) by adding tests for remaining low-covered modules (provider-command, settings-command, memory-tool, command-cache, skill-reader, render-utils, piclaw-header, and other 1-statement gaps).
 
 
 ## Notes
