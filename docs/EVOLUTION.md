@@ -1139,10 +1139,18 @@ Last Updated: 2026-06-21
 - Tests count: 1613 across 162 suites.
 - All tests passing; build green; zero typecheck errors.
 
+### One Hundred Ninety-Third Round (Branch Coverage Improvement)
+- Enabled and wrote comprehensive unit tests for `todo.manage` command (disabled test file → 22 tests).
+- Covered all `execute` branches: missing state, content validation, ID requirements, unknown action, signal abort, error handling.
+- Covered all `renderResult` branches: add, list (with ellipsis), toggle, remove, error, stdout fallback.
+- Result: Overall statement coverage increased to **87.13%** (4910/5635), branch coverage to **77.89%** (2695/3460).
+- Tests count: 1635 across 163 suites.
+- All tests passing; build green; zero typecheck errors.
+
 ## Current Status (2026-06-26)
 - ✅ Build: Green
-- ✅ Tests: All passing (162 suites, 1613 tests, 3 skipped)
-- ✅ Coverage: 85.08% Statements (4797/5635), Functions 84.09% (846/1006), Branches 76.53% (2648/3460), Lines 85.7% (4413/5149)
+- ✅ Tests: All passing (163 suites, 1635 tests, 3 skipped)
+- ✅ Coverage: 87.13% Statements (4910/5635), Functions 85.48% (859/1006), Branches 77.89% (2695/3460), Lines 87.76% (4518/5149)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1150,7 +1158,7 @@ Last Updated: 2026-06-21
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets
-- Maintain ≥80% test coverage (currently 85.12%).
+- Maintain ≥80% test coverage (currently 87.13%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Improve branch coverage (currently 76.53%) in next cycle.
+- Improve branch coverage further (currently 77.89%) toward ≥80% target.
 

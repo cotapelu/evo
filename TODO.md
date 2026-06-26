@@ -264,7 +264,7 @@ Last Updated: 2026-06-26
 ## In Progress
 - (none)
 
-- [x] Achieve ≥80% test coverage (reached 85.12%) through systematic test expansion.
+- [x] Achieve ≥80% test coverage (reached 87.13%) through systematic test expansion.
 - [x] Finalize all evolution documentation updates.
 
 ## Completed (continued)
@@ -272,10 +272,12 @@ Last Updated: 2026-06-26
 - [x] CommandExecutor comprehensive test suite (22 tests) covering registration, execution, validation, state injection, output truncation, and mutex handling. Increased command-executor coverage from 54.55% to 77.69% and overall to 81.65%.
 - [x] StateManager comprehensive test suite (18 tests) covering state creation, restoration, persistence, dirty flag management, and error handling. Increased state-manager coverage from 37.35% to 71.08% and overall to 82.14%.
 - [x] TeamManager additional tests (4 tests) covering pending index insertion, duplicate handling, claimTask backoff, and message sending. Increased team-manager coverage from 84.76% to 84.97% and overall to 82.18%.
+- [x] Branch coverage improvement: Enabled and wrote comprehensive tests for `todo.manage` command (22 tests covering all execute/renderResult branches). Coverage increased from 85.12% to **87.13%** statements, branch coverage from 76.53% to **77.89%**.
 
 ## Upcoming
-- Improve branch coverage (currently 76.53%) to target ≥80%.
-- Continue systematic test expansion for uncovered conditional paths.
+- Improve branch coverage further (currently 77.89%) toward ≥80% target.
+- Target remaining low-coverage files: src/extensions/master-tool/commands/todo/manage.ts (continue), src/extensions/tools/actions/index.ts, and other modules with <80% branch coverage.
+- Maintain overall statement coverage ≥85%.
 
 
 ## Notes

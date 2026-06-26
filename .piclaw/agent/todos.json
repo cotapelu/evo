@@ -3,37 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "DocUpdate",
+      "name": "BranchCoverageImprovement",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add Round 191-192 to EVOLUTION.md",
+          "content": "Enable and fix todo-manage.disabled test to match current API",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Verify AGENT_METRICS.md is up-to-date",
+          "content": "Add tests for execute branches: missing state, signal abort, validation errors, unknown action",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Update TODO.md with current coverage 85.12%",
+          "content": "Add tests for renderResult branches",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Update AGENT_PROFILE.md if needed",
+          "content": "Run tests and measure coverage increase for manage.ts",
           "status": "completed"
         },
         {
           "id": "task-5",
-          "content": "Git commit all changes",
+          "content": "Update documentation with coverage progress",
+          "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Git commit branch coverage improvements",
           "status": "in_progress"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-26T22:54:29.021Z"
+  "updatedAt": "2026-06-26T23:29:21.805Z"
 }
