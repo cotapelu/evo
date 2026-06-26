@@ -29,6 +29,8 @@ Last Updated: 2026-06-26
   - Round 2: Zombie recovery tests for team-manager (8 tests) covering reclaim, retry, agent timeout, and notifications. Team-manager coverage reached 84.76%. Overall coverage now 80.19%.
   - Round 3: Custom renderer test for provider-command covering UI callback paths. Overall coverage increased to 80.37%.
   - Round 4: Additional provider-command tests (else branch, invalidate, handleInput) achieving 100% coverage for that file. Overall coverage increased to 80.42%.
+  - Round 5: Analyze capability test suite (11 tests) covering file analysis, imports/exports, and symbol detection. analyze.ts coverage increased to 83.85%. Overall coverage increased to 81.15%.
+  - Round 6: CommandExecutor comprehensive tests (22 tests) covering registration, execution, validation, state injection, output truncation, and mutex handling. command-executor.ts coverage increased from 54.55% to 77.69%. Overall coverage increased to 81.65%.
 
 ## Known Issues
 - None currently; all recent issues resolved.

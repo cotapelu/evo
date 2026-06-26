@@ -269,10 +269,10 @@ Last Updated: 2026-06-26
 
 ## Completed (continued)
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
-
+- [x] CommandExecutor comprehensive test suite (22 tests) covering registration, execution, validation, state injection, output truncation, and mutex handling. Increased command-executor coverage from 54.55% to 77.69% and overall to 81.65%.
 
 ## Upcoming
-- Continue toward 85% coverage target (currently 80.42%).
+- Continue toward 85% coverage target (currently 81.65%).
 
 
 ## Notes
