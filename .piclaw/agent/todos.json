@@ -3,42 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Coverage Improvement Round",
+      "name": "Coverage Improvement Phase 2",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add missing tests for complexity.ts edge cases (ternary, try-catch, nested functions, member calls, .js/.jsx, MI ranges)",
-          "status": "completed"
-        },
-        {
-          "id": "task-2",
-          "content": "Add missing tests for search.ts (filePattern, directory traversal, error handling, early exits)",
-          "status": "completed"
-        },
-        {
-          "id": "task-3",
-          "content": "Create test suite for guideline-generator.ts (currently no tests)",
-          "status": "completed"
-        },
-        {
-          "id": "task-4",
-          "content": "Run tests and coverage to verify ≥80%",
+          "content": "Add targeted tests for team-manager.ts to increase coverage from 83.5% to ≥85%",
           "status": "in_progress"
         },
         {
-          "id": "task-5",
-          "content": "Update docs (TODO.md, PROJECT_STATE.md, AGENT_METRICS.md)",
+          "id": "task-2",
+          "content": "Add tests for provider-command.ts to reach ≥85%",
           "status": "pending"
         },
         {
-          "id": "task-6",
+          "id": "task-3",
+          "content": "Run full test suite and coverage, verify overall ≥82%",
+          "status": "pending"
+        },
+        {
+          "id": "task-4",
+          "content": "Update documentation (PROJECT_STATE.md, AGENT_METRICS.md, EVOLUTION.md, TODO.md)",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
           "content": "Git commit changes",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-26T17:28:50.823Z"
+  "updatedAt": "2026-06-26T18:15:10.630Z"
 }

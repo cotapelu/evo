@@ -256,6 +256,7 @@ Last Updated: 2026-06-26
   - `universal-tool` renderResult (4 tests)
   - `subtool-loader` edge cases and validation (15 tests)
 - [x] Increased overall statement coverage from 80.81% to 81.36% (towards 85% target).
+- [x] Zombie recovery tests for team-manager (8 tests) increased team-manager coverage to 84.76% and overall to 80.19%.
 - [x] Achieve ≥80% test coverage (reached 80.08%) through targeted tests for guideline-generator, search, complexity, and renderers.
 
 ## In Progress
@@ -269,7 +270,7 @@ Last Updated: 2026-06-26
 
 
 ## Upcoming
-- Continue toward 85% coverage target (currently 80.08%).
+- Continue toward 85% coverage target (currently 80.19%).
 
 
 ## Notes

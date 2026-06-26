@@ -1084,3 +1084,10 @@ Last Updated: 2026-06-21
 - Added tests for core modules to cover remaining zero‑coverage statements: `config-manager` (CONFIG_DIR_NAME constant), `index` (VERSION export), and `cli` bootstrap (mocked main and extension factories).
 - Result: Statement coverage increased from 79.89% to 80.08% (4505→4513 covered). Total test suites: 148, tests: 1454.
 - All tests passing (148 suites, 1454 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Eighty-Fifth Round (Zombie Recovery Testing)
+- Completed comprehensive `team-manager` zombie recovery tests (8 tests) in `team-zombie-recovery.test.ts`.
+- Covered: `reclaimZombieAgents` logic, retry count increment, retryAvailableAt scheduling, max retries leading to failure, pendingIndices management, agent status reset, lastSeen cleanup, and `notifyUpdate` calls.
+- Also added core module tests: `config-manager`, `index` VERSION, `cli` bootstrap, and `git/status-renderer`.
+- Result: `team-manager` coverage increased from 83.51% to 84.76%. Overall statement coverage rose from 80.08% to 80.19% (4519/5635). Test suites: 148, tests: 1458.
+- All tests passing (148 suites, 1458 tests, 3 skipped); build green; zero typecheck errors.

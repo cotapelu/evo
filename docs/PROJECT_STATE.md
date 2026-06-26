@@ -24,7 +24,9 @@ Last Updated: 2026-06-26
 - **Error Handling**: `memory-tool` now handles `api.appendEntry` failures gracefully and includes robust edge-case tests (JSON parsing, session reconstruction, concurrency). `provider-command` adds try-catch around `modelRegistry.getAll` to prevent crashes.
 - **Dead Code Removal**: Deleted unused `buildMemoryLines` helper from `memory-tool.ts`, reducing duplication and improving maintainability.
 - **Renderer Coverage Expansion**: Added comprehensive renderer tests for `todos-tool` (19), `universal-tool` (4), and `subtool-loader` (15). Overall statement coverage increased from 80.81% to 81.36%.
-- **Coverage Improvement Round**: Added tests for guideline-generator (previously 0% coverage), extended search tests (directory traversal, filePattern, early exit), enhanced complexity tests (direct rating function coverage, edge cases for try-catch, ternary, nested, member calls, language detection, MI/complexity rating branches), and added status-renderer tests. Pushed statement coverage back above 80% target.
+- **Coverage Improvement Rounds**:
+  - Round 1: guideline-generator, search, complexity, status-renderer, and core module tests → 80.08% coverage.
+  - Round 2: Zombie recovery tests for team-manager (8 tests) covering reclaim, retry, agent timeout, and notifications. Team-manager coverage reached 84.76%. Overall coverage now 80.19%.
 
 ## Known Issues
 - None currently; all recent issues resolved.
