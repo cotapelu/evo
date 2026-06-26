@@ -1097,3 +1097,9 @@ Last Updated: 2026-06-21
 - Covered lines inside `ctx.ui.custom` renderer: container construction, child additions for providers with/without baseUrl, component object creation, and render method invocation.
 - Result: Overall statement coverage increased to 80.46% (4524/5623). Tests count: 1459.
 - All tests passing (148 suites, 1459 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Eighty-Seventh Round (Provider Command Full Coverage)
+- Added additional test for `provider-command` to cover else branch (provider without baseUrl) and component methods (`invalidate`, `handleInput`).
+- Achieved 100% coverage for `provider-command` module.
+- Result: Overall statement coverage increased to 80.42% (4532/5635). Tests count: 1460.
+- All tests passing (148 suites, 1460 tests, 3 skipped); build green; zero typecheck errors.

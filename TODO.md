@@ -258,6 +258,7 @@ Last Updated: 2026-06-26
 - [x] Increased overall statement coverage from 80.81% to 81.36% (towards 85% target).
 - [x] Zombie recovery tests for team-manager (8 tests) increased team-manager coverage to 84.76% and overall to 80.19%.
 - [x] Custom renderer testing for provider-command, increased overall coverage to 80.46%.
+- [x] Full coverage for provider-command (100%) via else branch and component method tests.
 - [x] Achieve ≥80% test coverage (reached 80.08%) through targeted tests for guideline-generator, search, complexity, and renderers.
 
 ## In Progress
@@ -271,7 +272,7 @@ Last Updated: 2026-06-26
 
 
 ## Upcoming
-- Continue toward 85% coverage target (currently 80.46%).
+- Continue toward 85% coverage target (currently 80.42%).
 
 
 ## Notes
