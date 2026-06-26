@@ -3,42 +3,32 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "BranchCoverageImprovement",
+      "name": "BranchCoverageV2",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Enable and fix todo-manage.disabled test to match current API",
+          "content": "Add comprehensive system.info tests",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Add tests for execute branches: missing state, signal abort, validation errors, unknown action",
+          "content": "Measure coverage improvement",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Add tests for renderResult branches",
+          "content": "Update documentation",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Run tests and measure coverage increase for manage.ts",
+          "content": "Git commit changes",
           "status": "completed"
-        },
-        {
-          "id": "task-5",
-          "content": "Update documentation with coverage progress",
-          "status": "completed"
-        },
-        {
-          "id": "task-6",
-          "content": "Git commit branch coverage improvements",
-          "status": "in_progress"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-26T23:29:21.805Z"
+  "updatedAt": "2026-06-26T23:45:25.772Z"
 }

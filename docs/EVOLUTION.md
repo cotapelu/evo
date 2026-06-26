@@ -1147,10 +1147,18 @@ Last Updated: 2026-06-21
 - Tests count: 1635 across 163 suites.
 - All tests passing; build green; zero typecheck errors.
 
+### One Hundred Ninety-Fourth Round (System Info Coverage)
+- Wrote comprehensive unit tests for `system.info` command (7 tests).
+- Covered `execute` branches: successful default, detailed flag, CPU empty handling, multiple cores, error catching, signal abort.
+- Covered `renderResult` branches: success with custom renderer, memory bar, uptime formatting, stdout fallback, error rendering.
+- Result: Overall statement coverage increased to **87.48%** (4929/5635), branch coverage to **78.00%** (2700/3460).
+- Tests count: 1642 across 164 suites.
+- All tests passing; build green; zero typecheck errors.
+
 ## Current Status (2026-06-26)
 - ✅ Build: Green
-- ✅ Tests: All passing (163 suites, 1635 tests, 3 skipped)
-- ✅ Coverage: 87.13% Statements (4910/5635), Functions 85.48% (859/1006), Branches 77.89% (2695/3460), Lines 87.76% (4518/5149)
+- ✅ Tests: All passing (164 suites, 1642 tests, 3 skipped)
+- ✅ Coverage: 87.48% Statements (4929/5635), Functions 85.68% (863/1006), Branches 78.00% (2700/3460), Lines 88.15% (4538/5149)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1158,7 +1166,7 @@ Last Updated: 2026-06-21
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets
-- Maintain ≥80% test coverage (currently 87.13%).
+- Maintain ≥80% test coverage (currently 87.48%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Improve branch coverage further (currently 77.89%) toward ≥80% target.
+- Improve branch coverage further (currently 78.00%) toward ≥80% target.
 

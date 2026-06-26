@@ -4,8 +4,8 @@ Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (163 suites, 1635 tests, 3 skipped)
-✅ Coverage: 87.13% Statements (4910/5635), Functions 85.48% (859/1006), Branches 77.89% (2695/3460), Lines 87.76% (4518/5149)
+✅ Tests: All passing (164 suites, 1642 tests, 3 skipped)
+✅ Coverage: 87.48% Statements (4929/5635), Functions 85.68% (863/1006), Branches 78.00% (2700/3460), Lines 88.15% (4538/5149)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -46,6 +46,7 @@ Last Updated: 2026-06-26
     - Git-status renderer coverage (5 tests) → 95.08% coverage
     - Counter command extensive tests (15 tests) → overall coverage increased to 85.12%, surpassing target.
   - Round 10: Branch coverage improvement with comprehensive `todo.manage` command tests (22 tests) covering all execute and renderResult branches. Coverage increased to **87.13%** statements, **77.89%** branches.
+  - Round 11: Added comprehensive tests for `system.info` command (7 tests) covering execute and renderResult branches, including detailed mode and error handling. Coverage increased to **87.48%** statements, **78.00%** branches.
     - Total test suites: 162, tests: 1613 (3 skipped).
 
 ## Known Issues
