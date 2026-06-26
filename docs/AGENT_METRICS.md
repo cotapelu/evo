@@ -1,22 +1,22 @@
 # Agent Metrics
 
-Last Updated: 2026-06-21
+Last Updated: 2026-06-26
 
 ## Session Summary
-- Iterations: 183
-- Tasks Completed: 217 (added edge case tests for session-tree-command, auto-continue, keybinding-extension, and logger)
+- Iterations: 184
+- Tasks Completed: 227 (added comprehensive tests for guideline-generator, search, complexity, status-renderer; config & index coverage; new test files)
 - High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph, metrics, complexity, dependency_tree) with consistent quality gates (≤20 lines, ≤10 complexity)
 - **Performance Benchmarking**: Full benchmark suite with statistical analysis, multi-size testing. Meets performance target requirements.
-- **Test Coverage Expansion**: Coverage increased from 78.42% to 78.75% Statements through multiple edge case tests (session-tree-command image rendering, line wrapping; auto-continue toggle-off; keybinding-extension error paths; logger default level). Ongoing effort to reach ≥80%.
+- **Coverage Improvement Round**: Pushed statement coverage from ~79.89% to 80.08% by adding targeted tests for previously uncovered areas (guideline-generator, search edge cases, complexity rating functions, git status renderer, core modules). Achieved ≥80% target.
 
 ## Test Metrics
-- Total Test Suites: 143
+- Total Test Suites: 148
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1420 (+19)
+- Tests Passed: 1454 (+34)
 - Tests Skipped: 3
-- Coverage: 78.75% Statements (4438/5635), Functions 78.13% (786/1006), Branches 69.45% (2403/3460), Lines 79.66% (4102/5149)
+- Coverage: 80.08% Statements (4513/5635), Functions 79.12% (780/986), Branches 71.56% (2478/3462), Lines 80.75% (4162/5155)
 
 ## Reliability
 - Rollback Count: 0
@@ -94,3 +94,11 @@ Last Updated: 2026-06-21
 - Created `docs/BENCHMARKS.md` with performance targets, methodology, usage guide, troubleshooting, and baseline recording guidelines.
 - Verified all benchmarks produce stable, repeatable results; established baseline metrics for regression detection.
 - **Impact**: Fulfills AUTO‑CONTINUE.md performance target requirements, enables data‑driven optimization, and provides credibility for production deployment. All functions ≤20 lines; complexity ≤10; type‑safe; tests pass (95 suites, 866 tests).
+
+## Coverage Improvement Round (Iteration 184)
+- Added comprehensive test suite for `guideline-generator` (previously 0% coverage), covering parameter generation, examples, returns, and all helper functions.
+- Extended `codebase.search` tests: directory traversal, filePattern filtering (extension and partial path), early exit logic, empty query validation.
+- Enhanced `codebase.complexity` tests: covered edge cases (ternary, try-catch, nested functions, member calls), language detection (.js/.jsx), and all rating branches via direct function tests. Also validated MI/complexity rating outputs.
+- Introduced `git/status-renderer` tests covering success, empty, and error cases, exercising renderer logic.
+- Added small-f module tests (`config-manager`, `index` VERSION, `cli` bootstrap) to cover remaining zero-coverage statements.
+- Result: Statement coverage increased from 79.89% to 80.08%, achieving ≥80% target. Overall test count grew to 1454 across 148 suites.

@@ -1,6 +1,6 @@
 # TODO
 
-Last Updated: 2026-06-19
+Last Updated: 2026-06-26
 
 ## Completed
 - [x] Fix failing plugin capability tests (dev, git, security-system)
@@ -256,6 +256,7 @@ Last Updated: 2026-06-19
   - `universal-tool` renderResult (4 tests)
   - `subtool-loader` edge cases and validation (15 tests)
 - [x] Increased overall statement coverage from 80.81% to 81.36% (towards 85% target).
+- [x] Achieve ≥80% test coverage (reached 80.08%) through targeted tests for guideline-generator, search, complexity, and renderers.
 
 ## In Progress
 - (none)
@@ -268,7 +269,7 @@ Last Updated: 2026-06-19
 
 
 ## Upcoming
-- Increase coverage to ≥80% (currently 78.75%) by adding tests for remaining low-covered modules (provider-command, settings-command, memory-tool, command-cache, skill-reader, render-utils, piclaw-header, and other 1-statement gaps).
+- Continue toward 85% coverage target (currently 80.08%).
 
 
 ## Notes

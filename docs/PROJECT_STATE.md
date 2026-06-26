@@ -1,11 +1,11 @@
 # Project State
 
-Last Updated: 2026-06-19
+Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (113 suites, 1090 tests, 3 skipped)
-✅ Coverage: 81.36% Statements (3846/4727)
+✅ Tests: All passing (148 suites, 1454 tests, 3 skipped)
+✅ Coverage: 80.08% Statements (4513/5635)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -24,6 +24,7 @@ Last Updated: 2026-06-19
 - **Error Handling**: `memory-tool` now handles `api.appendEntry` failures gracefully and includes robust edge-case tests (JSON parsing, session reconstruction, concurrency). `provider-command` adds try-catch around `modelRegistry.getAll` to prevent crashes.
 - **Dead Code Removal**: Deleted unused `buildMemoryLines` helper from `memory-tool.ts`, reducing duplication and improving maintainability.
 - **Renderer Coverage Expansion**: Added comprehensive renderer tests for `todos-tool` (19), `universal-tool` (4), and `subtool-loader` (15). Overall statement coverage increased from 80.81% to 81.36%.
+- **Coverage Improvement Round**: Added tests for guideline-generator (previously 0% coverage), extended search tests (directory traversal, filePattern, early exit), enhanced complexity tests (direct rating function coverage, edge cases for try-catch, ternary, nested, member calls, language detection, MI/complexity rating branches), and added status-renderer tests. Pushed statement coverage back above 80% target.
 
 ## Known Issues
 - None currently; all recent issues resolved.

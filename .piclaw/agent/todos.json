@@ -3,47 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Coverage Improvement to 80%",
+      "name": "Coverage Improvement Round",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Analyze coverage and identify key files (benchmarks excluded)",
+          "content": "Add missing tests for complexity.ts edge cases (ternary, try-catch, nested functions, member calls, .js/.jsx, MI ranges)",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Write tests for logger.ts (+1.5% coverage)",
+          "content": "Add missing tests for search.ts (filePattern, directory traversal, error handling, early exits)",
           "status": "completed"
         },
         {
           "id": "task-3",
-          "content": "Write tests for computer-use.ts sub-tool",
+          "content": "Create test suite for guideline-generator.ts (currently no tests)",
           "status": "completed"
         },
         {
           "id": "task-4",
-          "content": "Write tests for benchmark-harness (21 tests)",
-          "status": "completed"
+          "content": "Run tests and coverage to verify ≥80%",
+          "status": "in_progress"
         },
         {
           "id": "task-5",
-          "content": "Exclude benchmarks from coverage to focus on core",
-          "status": "completed"
+          "content": "Update docs (TODO.md, PROJECT_STATE.md, AGENT_METRICS.md)",
+          "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Verify coverage improved from 66.5% to 75.3%",
-          "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Future: add tests for memory-tool, settings-command, todos-renderer to reach 80%",
-          "status": "in_progress"
+          "content": "Git commit changes",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 8,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-18T16:01:14.544Z"
+  "updatedAt": "2026-06-26T17:28:50.823Z"
 }

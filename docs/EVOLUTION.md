@@ -1075,3 +1075,12 @@ Last Updated: 2026-06-21
 - Added logger test for invalid `PICLAW_LOG_LEVEL` falling back to 'info' (covers default case in `getLogLevel`).
 - Coverage improvement: Statements from 78.42% (4421) to 78.75% (4438/5635); tests increased by 19.
 - All tests passing (143 test suites, 1420 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Eighty-Fourth Round (Coverage Improvement to ≥80%)
+- Created comprehensive test suite for `guideline-generator` (previously 0% coverage) covering parameter generation, examples, returns, and all helper functions (getExampleValue, formatType, getStringExample, getBooleanExample, getArrayExample, getObjectExample).
+- Extended `codebase.search` tests: added directory traversal, filePattern filtering (extension and partial path), early exit on maxResults, empty query error handling.
+- Enhanced `codebase.complexity` tests: added coverage for edge cases (ternary operator, try-catch, nested functions, member calls), language detection (.js, .jsx), and all rating branches via direct function tests. Also validated output contains correct rating strings.
+- Introduced `git/status-renderer` tests covering success, empty, and error render paths, exercising previously uncovered renderer logic.
+- Added tests for core modules to cover remaining zero‑coverage statements: `config-manager` (CONFIG_DIR_NAME constant), `index` (VERSION export), and `cli` bootstrap (mocked main and extension factories).
+- Result: Statement coverage increased from 79.89% to 80.08% (4505→4513 covered). Total test suites: 148, tests: 1454.
+- All tests passing (148 suites, 1454 tests, 3 skipped); build green; zero typecheck errors.

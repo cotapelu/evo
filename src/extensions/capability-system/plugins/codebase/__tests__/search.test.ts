@@ -97,4 +97,83 @@ describe("codebase.search", () => {
     expect(result.details.total).toBe(0);
     expect(result.content[0].text).toContain("No matches");
   });
+
+  // New tests to increase coverage
+  it("should traverse subdirectories", async () => {
+    // Create nested structure: subdir with a ts file
+    const subdir = join(tempDir, "sub");
+    await mkdir(subdir, { recursive: true });
+    const file1 = join(tempDir, "root.ts");
+    const file2 = join(subdir, "nested.ts");
+    await writeFile(file1, "const a = 1;", "utf-8");
+    await writeFile(file2, "const b = 2;", "utf-8");
+    const ctx = { cwd: tempDir };
+
+    const result = await searchModule.execute({ query: "const" }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    expect(result.details.total).toBe(2);
+    const files = result.details.matches.map((m: any) => m.file);
+    expect(files).toContain("root.ts");
+    expect(files).toContain(join("sub", "nested.ts"));
+  });
+
+  it("should skip non-code files (e.g., .txt)", async () => {
+    const tsFile = join(tempDir, "app.ts");
+    const txtFile = join(tempDir, "readme.txt");
+    await writeFile(tsFile, "const x = 1;", "utf-8");
+    await writeFile(txtFile, "const y = 2;", "utf-8"); // 'const' in txt but should be skipped
+    const ctx = { cwd: tempDir };
+
+    const result = await searchModule.execute({ query: "const" }, ctx as { cwd: string });
+    expect(result.details.total).toBe(1);
+    expect(result.details.matches[0].file).toBe("app.ts");
+  });
+
+  it("should filter by filePattern extension", async () => {
+    // Create .ts and .js files
+    const tsFile = join(tempDir, "app.ts");
+    const jsFile = join(tempDir, "lib.js");
+    await writeFile(tsFile, "const x = 1;", "utf-8");
+    await writeFile(jsFile, "var y = 2;", "utf-8");
+    const ctx = { cwd: tempDir };
+
+    const result = await searchModule.execute({ query: "const", filePattern: ".ts" }, ctx as { cwd: string });
+    expect(result.details.total).toBe(1);
+    expect(result.details.matches[0].file).toBe("app.ts");
+  });
+
+  it("should filter by filePattern partial path", async () => {
+    const file1 = join(tempDir, "src_app.ts");
+    const file2 = join(tempDir, "test_app.ts");
+    const file3 = join(tempDir, "other.ts");
+    await writeFile(file1, "const a = 1;", "utf-8");
+    await writeFile(file2, "const b = 2;", "utf-8");
+    await writeFile(file3, "const c = 3;", "utf-8");
+    const ctx = { cwd: tempDir };
+
+    const result = await searchModule.execute({ query: "const", filePattern: "src" }, ctx as { cwd: string });
+    expect(result.details.total).toBe(1);
+    expect(result.details.matches[0].file).toBe("src_app.ts");
+  });
+
+  it("should respect early exit when maxResults reached during scanning", async () => {
+    const file = join(tempDir, "many.ts");
+    // Generate 200 lines each with the word 'target'
+    const lines = Array(200).fill("target");
+    await writeFile(file, lines.join("\n"), "utf-8");
+    const ctx = { cwd: tempDir };
+
+    const result = await searchModule.execute({ query: "target", maxResults: 50 }, ctx as { cwd: string });
+    expect(result.details.total).toBe(50);
+  });
+
+  it("should handle empty query with error", async () => {
+    const file = join(tempDir, "sample.ts");
+    await writeFile(file, "const x = 1;", "utf-8");
+    const ctx = { cwd: tempDir };
+
+    const result = await searchModule.execute({ query: "" }, ctx as { cwd: string });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Query is required");
+  });
 });
