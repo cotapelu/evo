@@ -186,4 +186,31 @@ describe("StateManager", () => {
       expect(state2.isDirty).toBe(false);
     });
   });
+
+  describe("generic state (no StateClass)", () => {
+    it("should have working listeners and dirty flag", () => {
+      const state = sm.getOrCreateState("cmd", ctx);
+      const listener = vi.fn();
+      state.subscribe(listener);
+      state.markDirty();
+      expect(state.isDirty).toBe(true);
+      expect(listener).toHaveBeenCalled();
+      // Unsubscribe
+      const off = state.subscribe(listener);
+      off();
+      state.markDirty();
+      expect(listener).not.toHaveBeenCalledTimes(2);
+    });
+
+    it("should have default load returning false", async () => {
+      const state = sm.getOrCreateState("cmd", ctx);
+      const loaded = await state.load(ctx);
+      expect(loaded).toBe(false);
+    });
+
+    it("should have default save that resolves", async () => {
+      const state = sm.getOrCreateState("cmd", ctx);
+      await expect(state.save(ctx)).resolves.toBeUndefined();
+    });
+  });
 });

@@ -271,9 +271,10 @@ Last Updated: 2026-06-26
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
 - [x] CommandExecutor comprehensive test suite (22 tests) covering registration, execution, validation, state injection, output truncation, and mutex handling. Increased command-executor coverage from 54.55% to 77.69% and overall to 81.65%.
 - [x] StateManager comprehensive test suite (18 tests) covering state creation, restoration, persistence, dirty flag management, and error handling. Increased state-manager coverage from 37.35% to 71.08% and overall to 82.14%.
+- [x] TeamManager additional tests (4 tests) covering pending index insertion, duplicate handling, claimTask backoff, and message sending. Increased team-manager coverage from 84.76% to 84.97% and overall to 82.18%.
 
 ## Upcoming
-- Continue toward 85% coverage target (currently 82.14%).
+- Continue toward 85% coverage target (currently 82.18%).
 
 
 ## Notes
