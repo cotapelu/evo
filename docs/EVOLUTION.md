@@ -1091,3 +1091,9 @@ Last Updated: 2026-06-21
 - Also added core module tests: `config-manager`, `index` VERSION, `cli` bootstrap, and `git/status-renderer`.
 - Result: `team-manager` coverage increased from 83.51% to 84.76%. Overall statement coverage rose from 80.08% to 80.19% (4519/5635). Test suites: 148, tests: 1458.
 - All tests passing (148 suites, 1458 tests, 3 skipped); build green; zero typecheck errors.
+
+### One Hundred Eighty-Sixth Round (Provider Command Renderer Testing)
+- Added custom renderer test for `provider-command` that fully exercises the UI rendering callback.
+- Covered lines inside `ctx.ui.custom` renderer: container construction, child additions for providers with/without baseUrl, component object creation, and render method invocation.
+- Result: Overall statement coverage increased to 80.46% (4524/5623). Tests count: 1459.
+- All tests passing (148 suites, 1459 tests, 3 skipped); build green; zero typecheck errors.

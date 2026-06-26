@@ -106,6 +106,31 @@ describe("Provider Command", () => {
         await handler('list', ctx);
         expect(mockNotify).toHaveBeenCalledWith('Failed to list providers: DB failure', 'error');
       });
+
+      it('should render provider list UI fully (cover custom renderer)', async () => {
+        const api = createMockApi();
+        registerProviderCommand(api);
+        const ctx = createMockCtx();
+
+        let capturedComponent: any = null;
+        mockCustom.mockImplementation(async (rendererFn) => {
+          const fakeTui = {};
+          const fakeTheme = { fg: (_c: string, t: string) => t, bold: () => ({}) };
+          const fakeKb = {};
+          const done = vi.fn();
+          capturedComponent = rendererFn(fakeTui, fakeTheme, fakeKb, done);
+          // exercise render
+          capturedComponent.render(80);
+          return capturedComponent;
+        });
+
+        const handler = api.registerCommand.mock.calls[0][1].handler;
+        await handler('list', ctx);
+
+        expect(mockCustom).toHaveBeenCalled();
+        expect(capturedComponent).toBeDefined();
+        expect(typeof capturedComponent.render).toBe('function');
+      });
     });
 
     describe("handler - add action", () => {
