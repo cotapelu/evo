@@ -1,6 +1,6 @@
 # Agent Profile
 
-Last Updated: 2026-06-19
+Last Updated: 2026-06-26
 
 ## Common Failure Modes
 1. **Relative import path errors**: Tests using incorrect paths like `../../src/...` instead of `../../...` after directory restructuring.
@@ -18,7 +18,7 @@ Last Updated: 2026-06-19
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (109 test suites, 1027 tests).
+- Comprehensive test coverage (162 test suites, 1613 tests, 3 skipped).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.
@@ -71,9 +71,13 @@ Last Updated: 2026-06-19
 - **branch-summary-renderer.test.ts, todos-renderer.test.ts, team-ops-renderer.test.ts**: Cast renderer results to `any` to access `.content` property on Text mocks.
 - **skill-reader.test.ts, tool-template.test.ts**: Replaced `as ToolResult` casts with `as any` to avoid conversion errors.
 - **read-skill.test.ts**: Typed `mockFs` as `any` to enable mockResolvedValue/mockRejectedValue in vitest.
-- **Coverage improvements**: Added CapabilityRegistry unit tests (24 tests) and git.status capability tests (10 tests). Maintained ≥80% coverage (82.86% statements, 84.05% lines).
+- **Coverage improvements**: Systematic test expansion across all capability plugins and core modules. Achieved ≥80% target in Round 184 (80.08%), then continued to 85.12% through multiplexed improvements (StateManager 100%, CommandExecutor 95.87%, prompt-integration 75.61%, git-status renderer 95.08%, counter tests).
 
 * **CapabilityRegistry unit tests**: Added 24 tests covering registration, lookup, filtering, sorting, and system prompt generation. Increased coverage from 81.36% to 82.81% statements (83.99% lines).
+* **Git plugin full coverage**: All git capabilities (add, branch, checkout, commit, diff, log, pull, push, status) now have comprehensive unit tests.
+* **Dev plugin full coverage**: All dev capabilities (format, test, build, audit, scripts) fully tested.
+* **Security & System plugins**: security.scan and system.metrics now fully covered.
+* **Master Tool & Todos**: Extensive coverage improvements, including renderers and edge cases, bringing overall to 85.12% statements (76.53% branches).
 
 - **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
 ## Recommendations

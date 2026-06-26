@@ -264,7 +264,7 @@ Last Updated: 2026-06-26
 ## In Progress
 - (none)
 
-- [x] Achieve ≥80% test coverage (reached 81.36%) through systematic test expansion.
+- [x] Achieve ≥80% test coverage (reached 85.12%) through systematic test expansion.
 - [x] Finalize all evolution documentation updates.
 
 ## Completed (continued)
@@ -274,7 +274,8 @@ Last Updated: 2026-06-26
 - [x] TeamManager additional tests (4 tests) covering pending index insertion, duplicate handling, claimTask backoff, and message sending. Increased team-manager coverage from 84.76% to 84.97% and overall to 82.18%.
 
 ## Upcoming
-- Continue toward 85% coverage target (currently 82.18%).
+- Improve branch coverage (currently 76.53%) to target ≥80%.
+- Continue systematic test expansion for uncovered conditional paths.
 
 
 ## Notes

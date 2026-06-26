@@ -4,8 +4,8 @@ Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (148 suites, 1454 tests, 3 skipped)
-✅ Coverage: 80.08% Statements (4513/5635)
+✅ Tests: All passing (162 suites, 1613 tests, 3 skipped)
+✅ Coverage: 85.12% Statements (4797/5635), Functions 84.09% (846/1006), Branches 76.53% (2648/3460), Lines 85.7% (4413/5149)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -24,6 +24,12 @@ Last Updated: 2026-06-26
 - **Error Handling**: `memory-tool` now handles `api.appendEntry` failures gracefully and includes robust edge-case tests (JSON parsing, session reconstruction, concurrency). `provider-command` adds try-catch around `modelRegistry.getAll` to prevent crashes.
 - **Dead Code Removal**: Deleted unused `buildMemoryLines` helper from `memory-tool.ts`, reducing duplication and improving maintainability.
 - **Renderer Coverage Expansion**: Added comprehensive renderer tests for `todos-tool` (19), `universal-tool` (4), and `subtool-loader` (15). Overall statement coverage increased from 80.81% to 81.36%.
+
+**Capability Plugin Full Coverage**: All capability plugins (git, dev, security, system) now have comprehensive unit test coverage. Git plugin: add, branch, checkout, commit, diff, log, pull, push, status (9 capabilities). Dev plugin: format, test, build, audit, scripts (5 capabilities). Security plugin: scan. System plugin: metrics.
+
+**Master Tool System**: Replaced template-tool with production-ready command framework. Provides auto-discovery, TypeBox validation, LRU caching, rate limiting, audit logging, security checks, and stateful command support (persistence, mutex, auto-save/restore).
+
+**Final Coverage Push**: Multiplexed test expansion across core modules (StateManager 100%, CommandExecutor 95.87%, prompt-integration 75.61%, git-status renderer 95.08%, counter tests) brought overall coverage to **85.12%** (4797/5635 statements), exceeding the 80% target. Total: 162 suites, 1613 tests, 3 skipped.
 - **Coverage Improvement Rounds**:
   - Round 1: guideline-generator, search, complexity, status-renderer, and core module tests → 80.08% coverage.
   - Round 2: Zombie recovery tests for team-manager (8 tests) covering reclaim, retry, agent timeout, and notifications. Team-manager coverage reached 84.76%. Overall coverage now 80.19%.
@@ -39,6 +45,7 @@ Last Updated: 2026-06-26
     - prompt-integration comprehensive tests (11 tests) → 75.61% coverage
     - Git-status renderer coverage (5 tests) → 95.08% coverage
     - Counter command extensive tests (15 tests) → overall coverage increased to 85.12%, surpassing target.
+    - Total test suites: 162, tests: 1613 (3 skipped).
 
 ## Known Issues
 - None currently; all recent issues resolved.
