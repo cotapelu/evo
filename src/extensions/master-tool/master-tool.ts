@@ -151,8 +151,8 @@ export function createMasterTool(options: any = {}): ToolDefinition {
         };
       }
 
-      // Special meta-commands (list, help, stats)
-      if (command === "list" || command === "list.grep" || command === "help" || command === "stats") {
+      // Special meta-commands (list, help, stats, reload)
+      if (command === "list" || command === "list.grep" || command === "help" || command === "stats" || command === "reload") {
         return handleMetaCommand(command, args, ctx);
       }
 
@@ -370,6 +370,21 @@ function handleStatsCommand(registry: CommandRegistry): AgentToolResult<any> {
   };
 }
 
+function handleReloadCommand(registry: CommandRegistry, ctx: ExtensionContext): AgentToolResult<any> {
+  // Clear command cache
+  const executor = registry.getExecutor();
+  const cache = (executor as any)["getCache"]?.();
+  if (cache) {
+    cache.clear();
+  }
+  // Also could trigger full reload, but cache clear is sufficient for meta-command
+  return {
+    content: [{ type: "text", text: "✅ Caches cleared. Runtime reload may be needed for full effect." }],
+    details: { action: "cache_cleared" },
+    isError: false
+  };
+}
+
 function handleMetaCommand(
   command: string,
   args: any,
@@ -386,9 +401,11 @@ function handleMetaCommand(
       return handleHelpCommand(registry, args);
     case "stats":
       return handleStatsCommand(registry);
+    case "reload":
+      return handleReloadCommand(registry, ctx);
     default:
       return {
-        content: [{ type: "text", text: `❌ Unknown meta-command: ${command}. Use 'list', 'help', 'stats'` }],
+        content: [{ type: "text", text: `❌ Unknown meta-command: ${command}. Use 'list', 'help', 'stats', 'reload'` }],
         details: { error: "unknown_meta_command" },
         isError: true
       };

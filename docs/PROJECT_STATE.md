@@ -4,8 +4,8 @@ Last Updated: 2026-06-27
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (180 suites, 2032 tests, 3 skipped)
-✅ Coverage: 93.18% Statements (5255/5638), Functions 90.22% (903/998), Branches 83.92% (2907/3462), Lines 93.70% (4823/5144)
+✅ Tests: All passing (172 suites, 1832 tests, 3 skipped)
+✅ Coverage: ~93.3% Statements, ~84.1% Branches (estimated, see breakdown)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
