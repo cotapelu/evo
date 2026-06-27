@@ -1,6 +1,6 @@
 # Agent Profile
 
-Last Updated: 2026-06-26
+Last Updated: 2026-06-27
 
 ## Common Failure Modes
 1. **Relative import path errors**: Tests using incorrect paths like `../../src/...` instead of `../../...` after directory restructuring.
@@ -18,7 +18,7 @@ Last Updated: 2026-06-26
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (169 test suites, 1789 tests, 3 skipped).
+- Comprehensive test coverage (174 test suites, 1859 tests, 3 skipped).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.
@@ -93,6 +93,8 @@ Last Updated: 2026-06-26
 * **Round 205**: `team-manager` additional tests (29 tests) covering startAgentLoops missing runtime, handleAgentFailure error variants, reclaimZombieAgents backoff/failure, claimTask backoff and no-pending, getMyCurrentTask unknown, releaseTask edge cases, completeTask assignee mismatch, handleAgentEvent/extractText variations, TeamRegistry error conditions. `team-manager` branch coverage increased from ~72.73% to **81.36%**; overall to **92.38%** statements, **82.80%** branches.
 * **Round 206**: safe_edit additional tests (3 tests) covering empty operations array, non-Error thrown during validation, and multi-file rollback verification. No increase in overall coverage; branch coverage remains **82.80%**.
 * **Round 207**: team-manager comprehensive branch coverage tests (17 tests) covering waitForTeam timeout/completion, setupChildRuntimes empty-roles error and baseCwd variations, handleAgentEvent edge cases (non-string toolName, non-message, unknown role), insertPendingIndexSorted duplicate handling, claimTask skip non-pending, completeTask invalid index and pending splice, and waitForCompletion loops. Increased `team-manager` branch coverage from ~81.36% to **90.00%**; overall coverage to **92.66%** statements, **83.38%** branches.
+* **Evolution Round 208**: Added `evo-reload` extension with tool `evo.reload` allowing LLM to trigger runtime reload after development changes. Includes internal command `/reload-evo` and comprehensive test suite (6 tests). Coverage increased to **92.78%** statements, **83.45%** branches.
+* **Branch Coverage Round 209**: Added branch coverage tests for `prompt-integration` (12 tests) and `team-widget` (15 tests). Increased overall branch coverage from **83.45%** to **83.61%**; statements **92.55%**. Total test suites: 174, tests: 1859 (3 skipped).
 
 - **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
 ## Recommendations

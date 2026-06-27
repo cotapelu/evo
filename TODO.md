@@ -309,10 +309,15 @@ Last Updated: 2026-06-26
   - [x] Implemented `handleReloadCommand` to clear command cache
   - [x] Added 'reload' to meta-command handling and improved error message
   - [x] All master-tool tests pass (now includes reload meta-command)
+- [x] **Branch coverage push (Round 209)**
+  - [x] Added prompt-integration branch coverage tests (12 tests)
+  - [x] Added team-widget comprehensive tests (15 tests)
+  - [x] Updated test counts (174 suites, 1859 tests)
+  - [x] Overall branch coverage increased to **83.61%**
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 82.80%).
-- Target remaining low-coverage modules: team-widget (~61.53%), copy-command (~70.83%), codebase/analyze (now ~80.39%), codebase/ast_query (now ~75.16%), team-manager (~72.72%), etc.
+- Achieve ≥85% branch coverage (currently 83.61%).
+- Target remaining low-coverage modules: evo-reload (~57%), copy-command (~70%), codebase/analyze (~80%), codebase/ast_query (~80%), codebase/call_graph (~81%), etc.
 - Maintain overall statement coverage ≥91%.
 
 

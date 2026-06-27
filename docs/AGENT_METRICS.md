@@ -20,18 +20,19 @@ Last Updated: 2026-06-27
 - **Coverage Round 206**: safe_edit additional tests (3 tests) covering empty operations array, non-Error thrown during validation, and multi-file rollback verification. No increase in overall coverage; branch coverage remains **82.80%**.
 - **Coverage Round 207**: team-manager comprehensive branch coverage tests (17 tests) covering waitForTeam timeout/completion, setupChildRuntimes empty-roles error and baseCwd variations, handleAgentEvent edge cases (non-string toolName, non-message, unknown role), insertPendingIndexSorted duplicate handling, claimTask skip non-pending, completeTask invalid index and pending splice, and waitForCompletion loops. Increased `team-manager` branch coverage from ~81.36% to **90.00%**; overall coverage to **92.66%** statements, **83.38%** branches.
 - **Evolution Round 208**: Added `evo-reload` extension with tool `evo.reload` allowing LLM to trigger runtime reload after development changes. Includes internal command `/reload-evo` and comprehensive test suite (6 tests). Coverage increased to **92.78%** statements, **83.45%** branches.
+- **Branch Coverage Round 209**: Added branch coverage tests for `prompt-integration` (12 tests) and `team-widget` (15 tests). Increased overall branch coverage from **83.45%** to **83.61%**; statements **92.55%**. Total test suites: 174, tests: 1859 (3 skipped).
 - Earlier rounds: systematic test expansion across all capability plugins (git, dev, security, system) and core modules (StateManager 100%, CommandExecutor 95.87%, prompt-integration 75.61%, git-status renderer 95.08%, counter tests) brought overall to **85.12%** statements, **76.53%** branches.
 - Branch coverage progression: todo.manage → 77.89%, system.info → 78.00%, dev.test → 78.46%, master-tool → 80%, extension → 81.61%.
-- Total test suites: 169, tests: 1789 (3 skipped).
+- Total test suites: 174, tests: 1859 (3 skipped).
 
 ## Test Metrics
-- Total Test Suites: 170
+- Total Test Suites: 174
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1795
+- Tests Passed: 1859
 - Tests Skipped: 3
-- Coverage: 92.78% Statements (5229/5638), Functions 89.92% (898/998), Branches 83.45% (2889/3462), Lines 93.47% (4807/5144)
+- Coverage: 92.55% Statements (5250/5672), Functions 86.64% (902/1041), Branches 83.61% (2904/3473), Lines 93.41% (4835/5176)
 
 ## Reliability
 - Rollback Count: 0
