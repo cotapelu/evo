@@ -169,6 +169,9 @@ export function getTeamWidgetEnabled(ctx: TeamWidgetContext): boolean {
   return state?.enabled ?? true;
 }
 
+// Export for testing (internal functions)
+export { refreshWidget, startWidget, stopWidget, buildHeaderLines, buildTeamLines };
+
 export function registerTeamWidget(api: ExtensionAPI): void {
   // Set up widget on session start
   api.on("session_start", async (_event, ctx: TeamWidgetContext) => {

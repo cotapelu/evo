@@ -34,10 +34,14 @@ describe('todos-tool normalizeParams edge cases', () => {
   });
 
   describe('add_phase.name JSON object parsing', () => {
-    it('should parse add_phase.name as JSON object and replace add_phase', () => {
-      const input = { add_phase: { name: '{"name":"P","tasks":[{"content":"T"}]}' } };
+    // After fix: no longer hijack add_phase when name is JSON object string.
+    it('should NOT replace add_phase when name is JSON object string (bug fixed)', () => {
+      const input = { add_phase: { name: '{"name":"P","tasks":[{"content":"T"}]}', tasks: [{ content: 'Other' }] } };
       const result = normalizeParams(input);
-      expect(result.add_phase).toEqual({ name: 'P', tasks: [{ content: 'T' }] });
+      // Keep original add_phase structure
+      expect((result.add_phase as any).name).toBe('{"name":"P","tasks":[{"content":"T"}]}');
+      expect((result.add_phase as any).tasks).toHaveLength(1);
+      expect((result.add_phase as any).tasks[0].content).toBe('Other');
     });
 
     it('should keep original name if JSON parse fails', () => {

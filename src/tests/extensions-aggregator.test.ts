@@ -8,6 +8,7 @@ vi.mock("../extensions/tools/index.js", () => ({
   registerTodosTool: vi.fn(),
   registerMemoryTool: vi.fn(),
   registerUniversalTool: vi.fn(),
+  registerEvoReloadTool: vi.fn(),
 }));
 // Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
 // No mocking needed
@@ -34,7 +35,7 @@ vi.mock("../extensions/commands/team-command.js", () => ({ registerTeamCommand: 
 import { extensionsAggregator, getExtensionFactories } from "../extensions/factory";
 import { createMockExtensionAPI } from "./utils/mock-factory.js";
 import { registerKiloProvider } from "../extensions/providers/kilo-provider";
-import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "../extensions/tools/index";
+import { registerTodosTool, registerMemoryTool, registerUniversalTool, registerEvoReloadTool } from "../extensions/tools/index";
 // Tools moved to plugins, no direct imports
 import { registerTeamTool } from "../extensions/team/index";
 import { registerSubToolLoaderExtension } from "../extensions/tools/subtool-loader";
@@ -71,6 +72,7 @@ describe("Extensions Aggregator", () => {
     expect(registerTodosTool).toHaveBeenCalledWith(mockApi);
     expect(registerMemoryTool).toHaveBeenCalledWith(mockApi);
     expect(registerUniversalTool).toHaveBeenCalledWith(mockApi);
+    expect(registerEvoReloadTool).toHaveBeenCalledWith(mockApi);
     // Plugin-based tools are loaded automatically, not directly registered
     expect(registerTeamTool).toHaveBeenCalledWith(mockApi);
     expect(registerSubToolLoaderExtension).toHaveBeenCalledWith(mockApi);

@@ -288,6 +288,12 @@ Last Updated: 2026-06-26
 - [x] team-manager additional tests (29 tests) covering startAgentLoops missing runtime, handleAgentFailure error variants, reclaimZombieAgents backoff/failure, claimTask backoff and no-pending, getMyCurrentTask unknown, releaseTask edge cases, completeTask assignee mismatch, handleAgentEvent/extractText variations, TeamRegistry error handling. Increased `team-manager` branch coverage to **81.36%**; overall statements **92.38%**, branches **82.80%**.
 - [x] Create `evo-reload` extension with tool `evo.reload` to allow LLM to trigger runtime reload after development changes. Includes internal command `/reload-evo` and comprehensive tests (6 tests). Coverage increased to **92.78%** statements, **83.45%** branches.
 - [x] **Todos-tool comprehensive testing & critical bug fixes**
+  - (see above)
+- [x] **ast_query branch coverage expansion**
+  - [x] Fixed limit=0 logic bug (changed `limit || 50` to `limit !== undefined ? limit : 50`)
+  - [x] Added 9 new tests covering ClassExpression, parent filter (method in class), export variants (default expression, default function, multi-declarator, empty), limit=0, limit stop, and name no-match
+  - [x] All ast_query tests pass; overall branch coverage increased to **83.92%**
+  - [x] Updated PROJECT_STATE.md with latest metrics
   - [x] Added extensive test suite (`todos-tool-additional-validation.test.ts`) with 21 new tests covering validation edge cases, type checking, batch operations, multi-phase workflows, and formatSummary edge cases
   - [x] Fixed dangerous bug in `normalizeParams`: removed code that hijacked `add_phase` when `name` started with `{` (possible data loss)
   - [x] Fixed `formatSummary` to exclude `abandoned` from `completed` count (correct semantics)

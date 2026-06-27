@@ -16,6 +16,7 @@ vi.mock('@extensions/tools/index.js', () => ({
   registerTodosTool: vi.fn(),
   registerMemoryTool: vi.fn(),
   registerUniversalTool: vi.fn(),
+  registerEvoReloadTool: vi.fn(),
 }));
 
 vi.mock('@extensions/auto-memory.js', () => ({
@@ -35,7 +36,7 @@ vi.mock('@extensions/tools/subtool-loader', () => ({
 import extensionIndex from '@extensions/index.js';
 import { createMockExtensionAPI } from './utils/mock-factory.js';
 import { registerKiloProvider } from '@extensions/providers/kilo-provider.js';
-import { registerTodosTool, registerMemoryTool, registerUniversalTool } from '@extensions/tools/index.js';
+import { registerTodosTool, registerMemoryTool, registerUniversalTool, registerEvoReloadTool } from '@extensions/tools/index.js';
 import { registerSubToolLoaderExtension } from '@extensions/tools/subtool-loader';
 import autoContinueExtension from '@extensions/hooks/auto-continue.js';
 
@@ -93,6 +94,7 @@ describe('extensions/index', () => {
     expect(registerTodosTool).toHaveBeenCalledTimes(1);
     expect(registerMemoryTool).toHaveBeenCalledTimes(1);
     expect(registerUniversalTool).toHaveBeenCalledTimes(1);
+    expect(registerEvoReloadTool).toHaveBeenCalledTimes(1);
     expect(registerSubToolLoaderExtension).toHaveBeenCalledTimes(1);
   });
 });
