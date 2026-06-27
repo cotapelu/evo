@@ -189,11 +189,12 @@ describe('TodosTool Edge Cases Additional Coverage', () => {
       expect(task?.details).toBe('d');
     });
 
-    it('update empty ids is no-op', () => {
+    it('update empty ids should error', () => {
       const start: TodoPhase[] = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
       const { phases, errors } = applyOp(start, 1, 1, { update: { ids: [] } });
+      expect(errors).toContain('update must have at least one task ID');
+      // phases unchanged
       expect(phases[0].tasks[0].content).toBe('T');
-      expect(errors).toEqual([]);
     });
 
     it('update unknown task id records error but continues', () => {

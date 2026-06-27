@@ -290,16 +290,6 @@ export function normalizeParams(params: unknown): any {
     if (addPhase.name !== undefined && typeof addPhase.name !== "string") {
       throw new Error("add_phase.name must be a string");
     }
-    if (addPhase.name && typeof addPhase.name === "string" && addPhase.name.startsWith("{")) {
-      try {
-        const parsed = JSON.parse(addPhase.name);
-        if (typeof parsed === "object" && parsed !== null) {
-          normalized.add_phase = parsed;
-        }
-      } catch {
-        // Keep original if parse fails
-      }
-    }
   }
 
   if (normalized.add_phase && typeof normalized.add_phase === "object") {
@@ -427,6 +417,11 @@ function applySingleOp(file: TodoFile, params: any): { file: TodoFile; errors: s
       return { file, errors };
     }
 
+    if (taskIds.length === 0) {
+      errors.push("update must have at least one task ID");
+      return { file, errors };
+    }
+
     let hasValidUpdates = false;
     for (const taskId of taskIds) {
       const task = findTask(file.phases, taskId);
@@ -506,7 +501,7 @@ export function formatSummary(phases: TodoPhase[], errors: string[]): string {
   let currentIdx = phases.findIndex((p) => p.tasks.some((t) => t.status === "pending" || t.status === "in_progress"));
   if (currentIdx === -1) currentIdx = phases.length - 1;
   const current = phases[currentIdx];
-  const done = current?.tasks.filter((t) => t.status === "completed" || t.status === "abandoned").length ?? 0;
+  const done = current?.tasks.filter((t) => t.status === "completed").length ?? 0;
 
   const lines: string[] = [];
   if (errors.length > 0) {

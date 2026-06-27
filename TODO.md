@@ -287,6 +287,14 @@ Last Updated: 2026-06-26
 - [x] safe_edit additional tests (3 tests) covering empty operations array, non-Error thrown during validation, and multi-file rollback verification. No increase in overall coverage; branch coverage remains **82.80%**.
 - [x] team-manager additional tests (29 tests) covering startAgentLoops missing runtime, handleAgentFailure error variants, reclaimZombieAgents backoff/failure, claimTask backoff and no-pending, getMyCurrentTask unknown, releaseTask edge cases, completeTask assignee mismatch, handleAgentEvent/extractText variations, TeamRegistry error handling. Increased `team-manager` branch coverage to **81.36%**; overall statements **92.38%**, branches **82.80%**.
 - [x] Create `evo-reload` extension with tool `evo.reload` to allow LLM to trigger runtime reload after development changes. Includes internal command `/reload-evo` and comprehensive tests (6 tests). Coverage increased to **92.78%** statements, **83.45%** branches.
+- [x] **Todos-tool comprehensive testing & critical bug fixes**
+  - [x] Added extensive test suite (`todos-tool-additional-validation.test.ts`) with 21 new tests covering validation edge cases, type checking, batch operations, multi-phase workflows, and formatSummary edge cases
+  - [x] Fixed dangerous bug in `normalizeParams`: removed code that hijacked `add_phase` when `name` started with `{` (possible data loss)
+  - [x] Fixed `formatSummary` to exclude `abandoned` from `completed` count (correct semantics)
+  - [x] Added validation for empty `ids` array in `update` operation (previously silent no-op)
+  - [x] Updated existing tests (`todos-tool-coverage.test.ts`, `todos-tool-edge-additional.test.ts`) to match corrected behavior
+  - [x] All 228+ todos-tool tests pass; build green
+  - [x] Updated PROJECT_STATE.md with new test count and coverage metrics (now 179+ suites, 2000+ tests, coverage 93.12% statements)
 
 ## Upcoming
 - Achieve ≥85% branch coverage (currently 82.80%).

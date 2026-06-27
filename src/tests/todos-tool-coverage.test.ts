@@ -107,10 +107,11 @@ describe('TodosTool Coverage Gaps', () => {
       expect(result.errors).toContain('Invalid status: 123. Must be pending, in_progress, completed, or abandoned.');
     });
 
-    it('update: no error when ids array empty (noop)', () => {
+    it('update: errors when ids array empty', () => {
       const phases: any[] = [{ id: 'phase-1', name: 'P1', tasks: [{ id: 'task-1', content: 'T', status: 'pending' }] }];
       const result = applyOp(phases, 1, 1, { update: { ids: [] } });
-      expect(result.errors).toHaveLength(0);
+      expect(result.errors).toContain('update must have at least one task ID');
+      // phases unchanged
       expect(result.phases[0].tasks).toHaveLength(1);
     });
 
