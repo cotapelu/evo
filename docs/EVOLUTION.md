@@ -1209,10 +1209,17 @@ Last Updated: 2026-06-21
 - Tests count: 1726 across 165 suites.
 - All tests passing; build green; zero typecheck errors.
 
+### Two Hundred First Round (AstQuery Coverage)
+- Added additional tests to `codebase/ast_query` (3 tests) to cover previously uncovered branches.
+- Covered: arrow functions (kind=function returns '<arrow>'), export * from declaration (ExportAllDeclaration), and invalid regex pattern handling (fallback to no matches).
+- Result: `ast_query` branch coverage increased from 73.82% to **75.16%**; overall coverage improved to **91.55%** statements (5158/5635), **81.93%** branches (2834/3460), functions **88.56%** (891/1006), lines **92.4%** (4757/5149).
+- Tests count: 1729 across 165 suites.
+- All tests passing; build green; zero typecheck errors.
+
 ## Current Status (2026-06-26)
 - ✅ Build: Green
-- ✅ Tests: All passing (165 suites, 1726 tests, 3 skipped)
-- ✅ Coverage: 91.51% Statements (5157/5635), Functions 88.56% (891/1006), Branches 81.87% (2833/3460), Lines 92.36% (4756/5149)
+- ✅ Tests: All passing (165 suites, 1729 tests, 3 skipped)
+- ✅ Coverage: 91.55% Statements (5158/5635), Functions 88.56% (891/1006), Branches 81.93% (2834/3460), Lines 92.4% (4757/5149)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1220,7 +1227,7 @@ Last Updated: 2026-06-21
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets
-- Maintain ≥80% test coverage (currently 91.51%).
+- Maintain ≥80% test coverage (currently 91.55%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Continue improving branch coverage (now at 81.87%); next milestone 85%.
+- Continue improving branch coverage (now at 81.93%); next milestone 85%.
 

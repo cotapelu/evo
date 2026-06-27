@@ -226,4 +226,37 @@ function standalone() {}
 
     await unlink(file);
   });
+
+  it('should find arrow functions (kind=function)', async () => {
+    const code = `const f = () => {}; const g = function() {};`;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: 'function' } }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    const names = result.details.matches.map(m => m.name);
+    expect(names).toContain('<arrow>');
+    expect(names).toContain('<anonymous>');
+    await unlink(file);
+  });
+
+  it('should handle export * from (ExportAllDeclaration)', async () => {
+    const code = `export * from './other';`;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: 'export' } }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    const names = result.details.matches.map(m => m.name);
+    expect(names).toContain('*');
+    await unlink(file);
+  });
+
+  it('should handle invalid regex pattern (fallback to no matches)', async () => {
+    const code = `function target() {} function other() {}`;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: 'function', name: 'targ[' } }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    expect(result.details.matches).toHaveLength(0);
+    await unlink(file);
+  });
 });

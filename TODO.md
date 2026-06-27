@@ -280,10 +280,11 @@ Last Updated: 2026-06-26
 - [x] copy-command edge case tests (5 tests) covering non-message entries, missing role, content edge cases. Statements **91.39%**, branches **81.76%**.
 - [x] dependency_tree additional tests (11 tests) covering self-loops, default exports, external packages, wildcard imports, re-export renames, empty files, empty file list error, multi-symbol edges. Statements **91.44%**, branches **81.82%**.
 - [x] analyze additional tests (4 tests) covering default export const, multiple named exports with aliases, .tsx language detection, unknown extension parsing. Increased analyze branch coverage to **80.39%**; overall statements **91.51%**, branches **81.87%**.
+- [x] ast_query additional tests (3 tests) covering arrow functions, export * from, invalid regex pattern. Increased ast_query branch coverage to **75.16%**; overall statements **91.55%**, branches **81.93%**.
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 81.87%).
-- Target remaining low-coverage modules: team-widget (~61.53%), copy-command (~70.83%), codebase/analyze (now ~80.39%), codebase/ast_query (~73.82%), team-manager (~72.72%), etc.
+- Achieve ≥85% branch coverage (currently 81.93%).
+- Target remaining low-coverage modules: team-widget (~61.53%), copy-command (~70.83%), codebase/analyze (now ~80.39%), codebase/ast_query (now ~75.16%), team-manager (~72.72%), etc.
 - Maintain overall statement coverage ≥91%.
 
 

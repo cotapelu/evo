@@ -3,37 +3,32 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "AnalyzeCoverageRound",
+      "name": "AstQueryCoverage",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Examine analyze capability branches and add missing tests",
+          "content": "Examine codebase/ast_query tests and identify missing branches",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Focus on symbol extraction edge cases, file errors, empty results",
+          "content": "Add tests for edge cases: missing file, parse errors, complex queries",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Run coverage and measure",
+          "content": "Run coverage and measure improvement",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Update documentation",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Git commit",
+          "content": "Update documentation and commit",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T01:35:00.870Z"
+  "updatedAt": "2026-06-27T01:50:39.770Z"
 }
