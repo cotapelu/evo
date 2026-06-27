@@ -18,7 +18,7 @@ Last Updated: 2026-06-26
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (165 test suites, 1729 tests, 3 skipped).
+- Comprehensive test coverage (166 test suites, 1732 tests, 3 skipped).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.
@@ -87,6 +87,7 @@ Last Updated: 2026-06-26
 * **Round 199**: `codebase/dependency_tree` additional tests (11 tests) covering self-loops, default exports, external packages, wildcard imports, re-export renames, empty files, empty file list error, multi-symbol edges. Improved overall to **91.44%** statements, **81.82%** branches.
 * **Round 200**: `codebase/analyze` additional tests (4 tests) covering default export const, multiple named exports with aliases, .tsx language detection, unknown extension parsing. Improved overall to **91.51%** statements, **81.87%** branches.
 * **Round 201**: `codebase/ast_query` additional tests (3 tests) covering arrow functions, export * from, invalid regex pattern. `ast_query` branch coverage increased from 73.82% to **75.16%**; overall to **91.55%** statements, **81.93%** branches.
+* **Round 202**: `codebase/call_graph` additional tests (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. `call_graph` branch coverage increased from ~73.82% to **80.73%**; overall to **91.70%** statements, **81.99%** branches.
 
 - **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
 ## Recommendations

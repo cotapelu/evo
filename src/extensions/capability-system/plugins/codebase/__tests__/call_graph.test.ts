@@ -244,4 +244,123 @@ function baz() {}
     }
     await rm(dir, { recursive: true, force: true });
   });
+
+  it("should not revisit same file via different import paths (diamond)", async () => {
+    // a -> b, a -> c, b -> d, c -> d. d should be parsed only once.
+    const dCode = `export function d() {}`;
+    const bCode = `import { d } from "./d"; export function b() { d(); }`;
+    const cCode = `import { d } from "./d"; export function c() { d(); }`;
+    const aCode = `import { b } from "./b"; import { c } from "./c"; export function a() { b(); c(); }`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), "callgraph-diamond-"));
+    await writeFile(path.join(dir, "d.ts"), dCode);
+    await writeFile(path.join(dir, "b.ts"), bCode);
+    await writeFile(path.join(dir, "c.ts"), cCode);
+    await writeFile(path.join(dir, "a.ts"), aCode);
+
+    const result = await callGraphModule.execute({ file: "a.ts", query: { includeCrossFile: true, depth: 10 } }, { cwd: dir } as { cwd: string });
+
+    expect(result.isError).toBe(false);
+    const names = result.details.result.nodes.map(n => n.name).sort();
+    expect(names).toEqual(["a", "b", "c", "d"]);
+    // Ensure d appears only once
+    const dCount = result.details.result.nodes.filter(n => n.name === "d").length;
+    expect(dCount).toBe(1);
+
+    // Cleanup
+    for (const f of ["a.ts","b.ts","c.ts","d.ts"]) {
+      try { await unlink(path.join(dir, f)); } catch {}
+    }
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("should handle depth=0 (only root file, no cross-file imports)", async () => {
+    const code = `
+function a() { b(); }
+function b() {}
+    `;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await callGraphModule.execute({ file: path.basename(file), query: { includeCrossFile: true, depth: 0 } }, ctx as { cwd: string });
+
+    expect(result.isError).toBe(false);
+    // Only functions from this file should be present; edge a->b captured
+    const names = result.details.result.nodes.map(n => n.name).sort();
+    expect(names).toEqual(["a", "b"]);
+    expect(result.details.result.edges.length).toBe(1);
+    expect(`${result.details.result.edges[0].from.name}->${result.details.result.edges[0].to.name}`).toBe("a->b");
+
+    await unlink(file);
+  });
+
+  it("should ignore missing imported module", async () => {
+    const mainCode = `import { missing } from "./doesnotexist"; function main() { missing(); }`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), "callgraph-missingmod-"));
+    await writeFile(path.join(dir, "main.ts"), mainCode);
+
+    const result = await callGraphModule.execute({ file: "main.ts", query: { includeCrossFile: true, depth: 1 } }, { cwd: dir } as { cwd: string });
+
+    expect(result.isError).toBe(false);
+    const names = result.details.result.nodes.map(n => n.name);
+    expect(names).toContain("main");
+    // edge should not exist
+    expect(result.details.result.edges.length).toBe(0);
+
+    await unlink(path.join(dir, "main.ts"));
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("should ignore call to imported function that is not exported from target", async () => {
+    const libCode = `export function foo() {}`;
+    const mainCode = `import { bar } from "./lib"; function main() { bar(); }`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), "callgraph-missingfunc-"));
+    await writeFile(path.join(dir, "lib.ts"), libCode);
+    await writeFile(path.join(dir, "main.ts"), mainCode);
+
+    const result = await callGraphModule.execute({ file: "main.ts", query: { includeCrossFile: true, depth: 1 } }, { cwd: dir } as { cwd: string });
+
+    expect(result.isError).toBe(false);
+    const names = result.details.result.nodes.map(n => n.name);
+    expect(names).toContain("main");
+    expect(result.details.result.edges.length).toBe(0);
+
+    await unlink(path.join(dir, "lib.ts"));
+    await unlink(path.join(dir, "main.ts"));
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("should handle invalid regex in name filter (fallback to no matches)", async () => {
+    const code = `
+function foo() { bar(); baz(); }
+function bar() {}
+function baz() {}
+    `;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await callGraphModule.execute({ file: path.basename(file), query: { name: "targ[", includeCrossFile: false } }, ctx as { cwd: string });
+
+    expect(result.isError).toBe(false);
+    expect(result.details.result.edges.length).toBe(0);
+
+    await unlink(file);
+  });
+
+  it("should handle entryPoints with duplicates and self-reference", async () => {
+    const aCode = `export function a() {}`;
+    const bCode = `export function b() {}`;
+    const dir = await mkdtemp(path.join(os.tmpdir(), "callgraph-epdup-"));
+    await writeFile(path.join(dir, "a.ts"), aCode);
+    await writeFile(path.join(dir, "b.ts"), bCode);
+
+    const result = await callGraphModule.execute({ file: "a.ts", entryPoints: ["a.ts","a.ts","b.ts"], query: { includeCrossFile: false } }, { cwd: dir } as { cwd: string });
+
+    expect(result.isError).toBe(false);
+    const names = result.details.result.nodes.map(n => n.name).sort();
+    expect(names).toEqual(["a", "b"]);
+
+    // Cleanup
+    for (const f of ["a.ts","b.ts"]) {
+      try { await unlink(path.join(dir, f)); } catch {}
+    }
+    await rm(dir, { recursive: true, force: true });
+  });
 });

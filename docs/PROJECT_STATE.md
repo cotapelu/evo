@@ -4,8 +4,8 @@ Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (165 suites, 1729 tests, 3 skipped)
-✅ Coverage: 91.55% Statements (5158/5635), Functions 88.56% (891/1006), Branches 81.93% (2834/3460), Lines 92.4% (4757/5149)
+✅ Tests: All passing (166 suites, 1732 tests, 3 skipped)
+✅ Coverage: 91.70% Statements (5161/5628), Functions 89.82% (891/992), Branches 81.99% (2837/3460), Lines 92.57% (4760/5142)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -54,7 +54,8 @@ Last Updated: 2026-06-26
   - Round 16 (Dependency Tree Coverage): Added additional tests to `dependency_tree` (11 tests) covering self-loops, default exports, external packages, wildcard imports, re-export renames, empty files, empty file list error handling, multi-symbol edges, and reachable filtering. Increased overall coverage to **91.44%** statements, **81.82%** branches.
   - Round 17 (Analyze Coverage): Added additional tests to `codebase/analyze` (4 tests) covering default export of const, multiple named exports with aliases, .tsx language detection, unknown extension parsing. Increased overall coverage to **91.51%** statements, **81.87%** branches.
   - Round 18 (AstQuery Coverage): Added additional tests to `codebase/ast_query` (3 tests) covering arrow functions, export * from, invalid regex pattern fallback. Increased ast_query branch coverage from 73.82% to **75.16%**; overall coverage to **91.55%** statements, **81.93%** branches.
-    - Total test suites: 165, tests: 1729 (3 skipped).
+  - Round 19 (Call Graph Coverage): Added additional tests to `codebase/call_graph` (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. Increased call_graph branch coverage to **80.73%**; overall coverage to **91.70%** statements, **81.99%** branches.
+    - Total test suites: 166, tests: 1732 (3 skipped).
 
 ## Known Issues
 - None currently; all recent issues resolved.
