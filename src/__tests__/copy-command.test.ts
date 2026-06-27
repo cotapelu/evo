@@ -143,4 +143,73 @@ describe("Copy Command", () => {
       expect(mockNotify).toHaveBeenCalledWith("Failed to copy: Clipboard access denied", "error");
     });
   });
+
+  it("handles non-message entry in tree", async () => {
+    const api = createMockApi();
+    registerCopyCommand(api);
+
+    const tree = [
+      { entry: { type: "system" } }
+    ];
+    const ctx = createMockCtx(tree);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    await handler("", ctx);
+    expect(mockNotify).toHaveBeenCalledWith("No assistant response found", "error");
+  });
+
+  it("handles message entry with missing role", async () => {
+    const api = createMockApi();
+    registerCopyCommand(api);
+
+    const tree = [
+      { entry: { type: "message", message: {} } }
+    ];
+    const ctx = createMockCtx(tree);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    await handler("", ctx);
+    expect(mockNotify).toHaveBeenCalledWith("No assistant response found", "error");
+  });
+
+  it("handles message with content undefined", async () => {
+    const api = createMockApi();
+    registerCopyCommand(api);
+
+    const tree = [
+      { entry: { type: "message", message: { role: "assistant", content: undefined } } }
+    ];
+    const ctx = createMockCtx(tree);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    await handler("", ctx);
+    expect(mockNotify).toHaveBeenCalledWith("No assistant response found", "error");
+  });
+
+  it("handles message with content not array", async () => {
+    const api = createMockApi();
+    registerCopyCommand(api);
+
+    const tree = [
+      { entry: { type: "message", message: { role: "assistant", content: "just a string" } } }
+    ];
+    const ctx = createMockCtx(tree);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    await handler("", ctx);
+    expect(mockNotify).toHaveBeenCalledWith("No assistant response found", "error");
+  });
+
+  it("finds last assistant even with non-message entries", async () => {
+    const { copyToClipboard } = await import("@earendil-works/pi-coding-agent");
+    const api = createMockApi();
+    registerCopyCommand(api);
+
+    const tree = [
+      { entry: { type: "system" } },
+      { entry: mockSessionEntry("user", "Hello") },
+      { entry: { type: "other" } },
+      { entry: mockSessionEntry("assistant", "Final answer") }
+    ];
+    const ctx = createMockCtx(tree);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    await handler("", ctx);
+    expect(copyToClipboard).toHaveBeenCalledWith("Final answer");
+  });
 });

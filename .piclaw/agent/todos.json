@@ -3,16 +3,16 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "CapSysExtFinalize",
+      "name": "CopyCommandRound",
       "tasks": [
         {
           "id": "task-1",
-          "content": "25 extension tests added, all passing",
+          "content": "Add 5 edge case tests to copy-command (non-message, missing role, content edge cases)",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Coverage: statements 91.35%, branches 81.61%, functions 88.46%",
+          "content": "Measured coverage: statements 91.39%, branches 81.76%",
           "status": "completed"
         },
         {
@@ -50,5 +50,5 @@
   ],
   "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T00:52:20.063Z"
+  "updatedAt": "2026-06-27T01:08:12.870Z"
 }
