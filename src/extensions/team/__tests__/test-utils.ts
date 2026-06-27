@@ -13,10 +13,14 @@ export function createMockRuntime(): any {
     session: {
       sessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       prompt: async () => {},
-      sessionManager: {},
+      sessionManager: {
+        getSessionFile: () => '/tmp/session', // stub for default createAgentSessionRuntime
+      },
+      subscribe: () => () => {}, // return unsubscribe function
     },
     cwd: process.cwd(),
     services: {
+      agentDir: '/tmp', // common default for join
       authStorage: {},
       settingsManager: {},
       modelRegistry: {},

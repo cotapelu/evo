@@ -212,4 +212,19 @@ describe("Copy Command", () => {
     await handler("", ctx);
     expect(copyToClipboard).toHaveBeenCalledWith("Final answer");
   });
+
+  it('should handle copy failure with non-Error response', async () => {
+    const { copyToClipboard } = await import("@earendil-works/pi-coding-agent");
+    vi.mocked(copyToClipboard).mockRejectedValue({ notMessage: true });
+
+    const api = createMockApi();
+    registerCopyCommand(api);
+
+    const tree = [{ entry: mockSessionEntry("assistant", "Test response") }];
+    const ctx = createMockCtx(tree);
+    const handler = api.registerCommand.mock.calls[0][1].handler;
+    await handler("", ctx);
+
+    expect(mockNotify).toHaveBeenCalledWith("Failed to copy: unknown error", "error");
+  });
 });
