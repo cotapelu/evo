@@ -4,8 +4,8 @@ Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (166 suites, 1739 tests, 3 skipped)
-✅ Coverage: 91.83% Statements (5168/5628), Functions 89.28% (891/998), Branches 82.25% (2846/3460), Lines 92.69% (4766/5142)
+✅ Tests: All passing (167 suites, 1768 tests, 3 skipped)
+✅ Coverage: 92.38% Statements (5199/5628), Functions 89.78% (896/998), Branches 82.80% (2865/3460), Lines 93.17% (4791/5142)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -57,7 +57,8 @@ Last Updated: 2026-06-26
   - Round 19 (Call Graph Coverage): Added additional tests to `codebase/call_graph` (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. Increased call_graph branch coverage to **80.73%**; overall coverage to **91.70%** statements, **81.99%** branches.
   - Round 20 (Safe Edit Coverage): Added additional tests to `codebase/safe_edit` (4 tests) covering required newCode for insert, negative range start, backup of non-existent file, and tsc exit code 2 without throwing. Increased safe_edit branch coverage from 77.14% to **80.00%**; overall coverage to **91.73%** statements, **82.05%** branches.
   - Round 21 (AstQuery Additional Coverage): Added additional tests to `codebase/ast_query` (3 tests) covering symbols for functions and classes, call expressions with member expression, and export named without specifiers. Increased ast_query branch coverage from 75.16% to **79.86%**; overall coverage to **91.83%** statements, **82.25%** branches.
-    - Total test suites: 166, tests: 1739 (3 skipped).
+  - Round 22 (Team Manager Additional Coverage): Added additional tests to `team-manager` (29 tests) covering startAgentLoops missing runtime, handleAgentFailure error variants, reclaimZombieAgents backoff/failure, claimTask backoff and no-pending, getMyCurrentTask unknown, releaseTask edge cases, completeTask assignee mismatch, handleAgentEvent/extractText variations, and TeamRegistry error conditions. Increased `team-manager` branch coverage from ~72.73% to **81.36%**; overall coverage to **92.38%** statements, **82.80%** branches.
+    - Total test suites: 167, tests: 1768 (3 skipped).
 
 ## Known Issues
 - None currently; all recent issues resolved.
