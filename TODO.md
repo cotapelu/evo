@@ -319,10 +319,14 @@ Last Updated: 2026-06-26
   - [x] Added evo-reload branch coverage tests (5 tests)
   - [x] Updated test counts (176 suites, 1868 tests)
   - [x] Overall coverage: 92.63% Statements, **83.76%** Branches
+- [x] **Branch coverage push (Round 211)**
+  - [x] Added analyze branch coverage tests (2 tests) for readFile and non-Error error handling
+  - [x] Updated test counts (177 suites, 1870 tests)
+  - [x] Overall coverage: 92.66% Statements, **83.81%** Branches
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 83.61%).
-- Target remaining low-coverage modules: evo-reload (~57%), copy-command (~70%), codebase/analyze (~80%), codebase/ast_query (~80%), codebase/call_graph (~81%), etc.
+- Achieve ≥85% branch coverage (currently 83.81%).
+- Target remaining low-coverage modules: codebase/analyze (~82%), codebase/ast_query (~80%), codebase/call_graph (~81%).
 - Maintain overall statement coverage ≥91%.
 
 
