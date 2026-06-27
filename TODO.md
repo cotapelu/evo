@@ -284,6 +284,7 @@ Last Updated: 2026-06-26
 - [x] call_graph additional tests (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. Increased call_graph branch coverage to **80.73%**; overall statements **91.70%**, branches **81.99%**.
 - [x] ast_query additional tests (3 tests) covering symbols for functions and classes, call expressions with member expression, and export named without specifiers. Increased ast_query branch coverage to **79.86%**; overall statements **91.83%**, branches **82.25%**.
 - [x] safe_edit additional tests (4 tests) covering required newCode for insert, negative range start, backup of non-existent file, and tsc exit code 2 without throwing. Increased safe_edit branch coverage to **80.00%**; overall statements **91.73%**, branches **82.05%**.
+- [x] safe_edit additional tests (3 tests) covering empty operations array, non-Error thrown during validation, and multi-file rollback verification. No increase in overall coverage; branch coverage remains **82.80%**.
 - [x] team-manager additional tests (29 tests) covering startAgentLoops missing runtime, handleAgentFailure error variants, reclaimZombieAgents backoff/failure, claimTask backoff and no-pending, getMyCurrentTask unknown, releaseTask edge cases, completeTask assignee mismatch, handleAgentEvent/extractText variations, TeamRegistry error handling. Increased `team-manager` branch coverage to **81.36%**; overall statements **92.38%**, branches **82.80%**.
 
 ## Upcoming
