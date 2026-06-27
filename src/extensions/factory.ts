@@ -8,14 +8,13 @@
  */
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
-import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "./tools/index.js";
+import { registerTodosTool, registerMemoryTool, registerUniversalTool, registerEvoReloadTool } from "./tools/index.js";
 // Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
 import { registerTeamTool } from "./team/index.js";
 import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
 import capabilitySystemExtension from "./capability-system/extension.js";
 import { registerSkillReaderExtension } from "./tools/skill-reader.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
-import evoReloadExtension from "./evo-reload/index.js";
 import autoCompact85Extension from "./hooks/auto-compact-85.js";
 import contextLoggerExtension from "./context-logger.js";
 
@@ -56,8 +55,8 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerSkillReaderExtension(api);
   registerMasterTool(api); // MASTER TOOL - hundreds of commands in one!
 
-  // Register Evo Reload extension (tool for LLM to trigger runtime reload)
-  evoReloadExtension(api);
+  // Register Evo Reload tool (allows LLM to trigger runtime reload)
+  registerEvoReloadTool(api);
 
   // Register universal tool
   registerUniversalTool(api);

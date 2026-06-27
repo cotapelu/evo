@@ -3,52 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Refactor Main Entry Points",
+      "name": "Create evo.reload tool",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Analyze current cli.ts and index.ts structure and identify improvement areas",
-          "status": "completed"
-        },
-        {
-          "id": "task-2",
-          "content": "Add startup logging with version and environment info to cli.ts",
+          "content": "Create evo-reload.ts in extensions/tools/",
           "status": "in_progress"
         },
         {
+          "id": "task-2",
+          "content": "Register tool in factory.ts",
+          "status": "pending"
+        },
+        {
           "id": "task-3",
-          "content": "Improve error handling in cli.ts with better context and exit codes",
+          "content": "Add tests for evo.reload tool",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Add signal handlers (SIGINT, SIGTERM) for graceful shutdown",
+          "content": "Run typecheck and tests",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Use structured logger instead of console.error",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Make VERSION dynamic by reading from package.json",
-          "status": "pending"
-        },
-        {
-          "id": "task-7",
-          "content": "Add APP_NAME export to index.ts",
-          "status": "pending"
-        },
-        {
-          "id": "task-8",
-          "content": "Run tests to ensure no regressions",
+          "content": "Update documentation",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 9,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T13:46:56.473Z"
+  "updatedAt": "2026-06-27T14:48:40.997Z"
 }

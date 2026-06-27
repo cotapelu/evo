@@ -151,8 +151,8 @@ export function createMasterTool(options: any = {}): ToolDefinition {
         };
       }
 
-      // Special meta-commands (list, help, stats, reload)
-      if (command === "list" || command === "list.grep" || command === "help" || command === "stats" || command === "reload") {
+      // Special meta-commands (list, help, stats)
+      if (command === "list" || command === "list.grep" || command === "help" || command === "stats") {
         return handleMetaCommand(command, args, ctx);
       }
 
@@ -370,20 +370,6 @@ function handleStatsCommand(registry: CommandRegistry): AgentToolResult<any> {
   };
 }
 
-function handleReloadCommand(registry: CommandRegistry): AgentToolResult<any> {
-  registry.clearCache();
-  // Re-scan commands
-  registry.ensureInitialized().then(() => {
-    console.log("[MasterTool] Commands reloaded");
-  });
-
-  return {
-    content: [{ type: "text", text: "✅ Command cache cleared. New commands will be loaded on next execution." }],
-    details: { reloaded: true },
-    isError: false
-  };
-}
-
 function handleMetaCommand(
   command: string,
   args: any,
@@ -400,11 +386,9 @@ function handleMetaCommand(
       return handleHelpCommand(registry, args);
     case "stats":
       return handleStatsCommand(registry);
-    case "reload":
-      return handleReloadCommand(registry);
     default:
       return {
-        content: [{ type: "text", text: `❌ Unknown meta-command: ${command}. Use 'list', 'help', 'stats', 'reload'` }],
+        content: [{ type: "text", text: `❌ Unknown meta-command: ${command}. Use 'list', 'help', 'stats'` }],
         details: { error: "unknown_meta_command" },
         isError: true
       };
