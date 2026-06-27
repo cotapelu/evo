@@ -197,12 +197,18 @@ function parentMatches(container: any, parentName: string): boolean {
 // --- Main collection ---
 function collectMatches(ast: any, query: any): Match[] {
   const { kind, name, parent: parentName, limit } = query;
-  const maxResults = limit || 50;
+  const maxResults = limit !== undefined ? limit : 50;
   const matches: Match[] = [];
   let abort = false;
 
   function visitor(node: any, directParent?: any) {
     if (abort) return;
+
+    // Early limit check before processing
+    if (matches.length >= maxResults) {
+      abort = true;
+      return;
+    }
 
     const matchInfo = getMatchInfo(node, kind);
     if (!matchInfo) return;
