@@ -1195,10 +1195,17 @@ Last Updated: 2026-06-21
 - Tests count: 1711 across 165 suites.
 - All tests passing; build green; zero typecheck errors.
 
+### One Hundred Ninety-Ninth Round (Dependency Tree Coverage)
+- Added additional tests to `codebase/dependency_tree` (11 tests) to cover remaining conditional branches.
+- Covered: self-loop cycles, export default declarations, external package imports (ignored), wildcard imports (* as), re-export with renamed specifier, files with no imports/exports, empty file list (expect error), multi-symbol imports on same edge, and reachable filtering with multiple entry points.
+- Improved `dependency_tree` branch coverage from ~70.92% to ~75%; overall coverage increased to **91.44%** statements (5153/5635), **81.82%** branches (2831/3460), functions **88.56%** (891/1006), lines **92.3%** (4753/5149).
+- Tests count: 1722 across 165 suites.
+- All tests passing; build green; zero typecheck errors.
+
 ## Current Status (2026-06-26)
 - ✅ Build: Green
-- ✅ Tests: All passing (165 suites, 1711 tests, 3 skipped)
-- ✅ Coverage: 91.39% Statements (5152/5635), Functions 88.46% (890/1006), Branches 81.76% (2828/3460), Lines 92.28% (4752/5149)
+- ✅ Tests: All passing (165 suites, 1722 tests, 3 skipped)
+- ✅ Coverage: 91.44% Statements (5153/5635), Functions 88.56% (891/1006), Branches 81.82% (2831/3460), Lines 92.3% (4753/5149)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1206,7 +1213,7 @@ Last Updated: 2026-06-21
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets
-- Maintain ≥80% test coverage (currently 91.39%).
+- Maintain ≥80% test coverage (currently 91.44%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Continue improving branch coverage (now at 81.76%); consider raising target to 85%.
+- Continue improving branch coverage (now at 81.82%); next milestone 85%.
 

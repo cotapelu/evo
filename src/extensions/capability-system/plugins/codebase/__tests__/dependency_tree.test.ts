@@ -216,4 +216,96 @@ export const c = 3;`);
     const details = result.details as DepTreeSuccessDetails;
     expect(details.nodes.length).toBe(4);
   });
+
+  it('handles self-loop cycle', async () => {
+    // a.ts imports itself (via './a')
+    await fs.writeFile('a.ts', `import { foo } from './a';
+export const a = 1;`);
+
+    const result = await execute({ files: ['a.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    expect(details.cycles.length).toBeGreaterThan(0);
+  });
+
+  it('handles export default', async () => {
+    await fs.writeFile('a.ts', `export default class A {}`);
+    await fs.writeFile('b.ts', `import A from './a';
+export const b = 2;`);
+
+    const result = await execute({ files: ['a.ts','b.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    const nodeA = details.nodes.find(n => n.id.endsWith('a.ts'));
+    expect(nodeA?.exports).toContain('default');
+    const edge = details.edges.find(e => e.from.endsWith('b.ts') && e.to.endsWith('a.ts'));
+    expect(edge).toBeDefined();
+  });
+
+  it('handles import of external package (ignored)', async () => {
+    await fs.writeFile('a.ts', `import React from 'react';
+export const a = 1;`);
+
+    const result = await execute({ files: ['a.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    // a.ts should have no imports because external package ignored
+    const node = details.nodes.find(n => n.id.endsWith('a.ts'));
+    expect(node?.imports).toHaveLength(0);
+  });
+
+  it('handles wildcard import (* as ns) and re-export (* as)', async () => {
+    await fs.writeFile('a.ts', `import * as ns from './b';
+export const a = 1;`);
+    await fs.writeFile('b.ts', `export const b = 2;`);
+
+    const result = await execute({ files: ['a.ts','b.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    const edge = details.edges.find(e => e.from.endsWith('a.ts') && e.to.endsWith('b.ts'));
+    expect(edge?.symbols).toContain('*');
+  });
+
+  it('handles re-export with renamed specifier', async () => {
+    await fs.writeFile('a.ts', `export { foo as bar } from './b';`);
+    await fs.writeFile('b.ts', `export const foo = 1;`);
+
+    const result = await execute({ files: ['a.ts','b.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    const edge = details.edges.find(e => e.from.endsWith('a.ts') && e.to.endsWith('b.ts'));
+    expect(edge).toBeDefined();
+  });
+
+  it('handles file with no imports/exports', async () => {
+    await fs.writeFile('a.ts', `const x = 1;`);
+    const result = await execute({ files: ['a.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    expect(details.nodes.length).toBe(1);
+    const node = details.nodes.find(n => n.id.endsWith('a.ts'));
+    expect(node?.exports).toHaveLength(0);
+    expect(node?.imports).toHaveLength(0);
+  });
+
+  it('handles empty file list', async () => {
+    const result = await execute({ files: [] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(true);
+    expect(result.details?.error).toBe('files required');
+  });
+
+  it('merges multiple symbols on same edge', async () => {
+    await fs.writeFile('a.ts', `import { x, y } from './b';
+export const a = 1;`);
+    await fs.writeFile('b.ts', `export const x = 1; export const y = 2;`);
+
+    const result = await execute({ files: ['a.ts','b.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    const edge = details.edges.find(e => e.from.endsWith('a.ts') && e.to.endsWith('b.ts'));
+    expect(edge?.symbols).toHaveLength(2);
+    expect(edge?.symbols).toContain('x');
+    expect(edge?.symbols).toContain('y');
+  });
+
 });

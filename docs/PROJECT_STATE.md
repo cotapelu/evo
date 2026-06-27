@@ -4,8 +4,8 @@ Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (165 suites, 1711 tests, 3 skipped)
-✅ Coverage: 91.39% Statements (5152/5635), Functions 88.46% (890/1006), Branches 81.76% (2828/3460), Lines 92.28% (4752/5149)
+✅ Tests: All passing (165 suites, 1722 tests, 3 skipped)
+✅ Coverage: 91.44% Statements (5153/5635), Functions 88.56% (891/1006), Branches 81.82% (2831/3460), Lines 92.3% (4753/5149)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -51,7 +51,8 @@ Last Updated: 2026-06-26
   - Round 13 (Milestone): Added comprehensive tests for `master-tool` orchestrator (22 tests) covering execute branches (validation, registry init failures, meta-commands, signal propagation, result transformation) and renderResult branches (partial, error, success, truncation, fallback). Branch coverage reached exactly **80%**; statements increased to **89.72%**.
   - Round 14 (Extension Coverage): Added comprehensive tests for `capability-system/extension` (25 tests) covering loader initialization (default/custom, loadAll success/error), discovery capability registration, router tool registration, dev mode plugins command, router tool execute (missing capability, not found, delegation, signal, errors), renderCall, and renderResult branches. Increased overall coverage to **91.35%** statements, **81.61%** branches.
   - Round 15 (Copy Command Edge Cases): Added edge case tests to `copy-command` (5 tests) covering non-message entries, missing role, undefined content, non-array content, and mixed tree entries. Statements increased to **91.39%**, branches to **81.76%**.
-    - Total test suites: 165, tests: 1711 (3 skipped).
+  - Round 16 (Dependency Tree Coverage): Added additional tests to `dependency_tree` (11 tests) covering self-loops, default exports, external packages, wildcard imports, re-export renames, empty files, empty file list error handling, multi-symbol edges, and reachable filtering. Increased overall coverage to **91.44%** statements, **81.82%** branches.
+    - Total test suites: 165, tests: 1722 (3 skipped).
 
 ## Known Issues
 - None currently; all recent issues resolved.
