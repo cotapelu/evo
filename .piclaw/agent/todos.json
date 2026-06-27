@@ -3,32 +3,37 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "DepTreeFinalize",
+      "name": "AnalyzeCoverageRound",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Added 11 additional dependency_tree tests (total 17)",
-          "status": "completed"
-        },
-        {
-          "id": "task-2",
-          "content": "Coverage increased to 91.44% statements, 81.82% branches",
-          "status": "completed"
-        },
-        {
-          "id": "task-3",
-          "content": "Update documentation",
+          "content": "Examine analyze capability branches and add missing tests",
           "status": "in_progress"
         },
         {
+          "id": "task-2",
+          "content": "Focus on symbol extraction edge cases, file errors, empty results",
+          "status": "pending"
+        },
+        {
+          "id": "task-3",
+          "content": "Run coverage and measure",
+          "status": "pending"
+        },
+        {
           "id": "task-4",
+          "content": "Update documentation",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
           "content": "Git commit",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 5,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T01:16:07.980Z"
+  "updatedAt": "2026-06-27T01:35:00.870Z"
 }

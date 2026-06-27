@@ -1202,10 +1202,17 @@ Last Updated: 2026-06-21
 - Tests count: 1722 across 165 suites.
 - All tests passing; build green; zero typecheck errors.
 
+### Two Hundredth Round (Analyze Coverage)
+- Added additional tests to `codebase/analyze` (4 tests) covering previously uncovered branches.
+- Covered: default export of const variable, multiple named exports with aliases, .tsx language detection, and unknown file extension parsing.
+- Result: `analyze` branch coverage increased from 78.43% to **80.39%**; overall coverage improved to **91.51%** statements (5157/5635), **81.87%** branches (2833/3460), functions **88.56%** (891/1006), lines **92.36%** (4756/5149).
+- Tests count: 1726 across 165 suites.
+- All tests passing; build green; zero typecheck errors.
+
 ## Current Status (2026-06-26)
 - ✅ Build: Green
-- ✅ Tests: All passing (165 suites, 1722 tests, 3 skipped)
-- ✅ Coverage: 91.44% Statements (5153/5635), Functions 88.56% (891/1006), Branches 81.82% (2831/3460), Lines 92.3% (4753/5149)
+- ✅ Tests: All passing (165 suites, 1726 tests, 3 skipped)
+- ✅ Coverage: 91.51% Statements (5157/5635), Functions 88.56% (891/1006), Branches 81.87% (2833/3460), Lines 92.36% (4756/5149)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1213,7 +1220,7 @@ Last Updated: 2026-06-21
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets
-- Maintain ≥80% test coverage (currently 91.44%).
+- Maintain ≥80% test coverage (currently 91.51%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Continue improving branch coverage (now at 81.82%); next milestone 85%.
+- Continue improving branch coverage (now at 81.87%); next milestone 85%.
 

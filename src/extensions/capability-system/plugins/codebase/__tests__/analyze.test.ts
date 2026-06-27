@@ -154,7 +154,60 @@ export { original as aliased };`);
     expect(analysis.symbols).toHaveLength(0);
   });
 
-  it("schema is defined", () => {
+  // Additional coverage-focused tests
+
+  it('handles default export of const', async () => {
+    await writeFile('def.ts', 'export default const X = 1;');
+    const ctx = { cwd: tempDir } as any;
+    const result = await execute({ file: 'def.ts' }, ctx);
+    expect(result.isError).toBe(false);
+    const analysis: any = result.details;
+    expect(analysis.exports.some((e: any) => e.type === 'default' && e.name === 'X')).toBe(true);
+    expect(analysis.symbols.some((s: any) => s.kind === 'variable' && s.name === 'X')).toBe(true);
+  });
+
+  it('handles multiple named exports with aliases', async () => {
+    await writeFile('multi.ts', `
+      const a = 1;
+      const b = 2;
+      export { a as a2, b };
+    `);
+    const ctx = { cwd: tempDir } as any;
+    const result = await execute({ file: 'multi.ts' }, ctx);
+    expect(result.isError).toBe(false);
+    const analysis: any = result.details;
+    const aExport = analysis.exports.find((e: any) => e.name === 'a');
+    expect(aExport).toBeDefined();
+    expect(aExport.aliases).toContain('a2');
+    const bExport = analysis.exports.find((e: any) => e.name === 'b');
+    expect(bExport).toBeDefined();
+  });
+
+  it('detects .tsx file language', async () => {
+    await writeFile('comp.tsx', `
+      import React from 'react';
+      export default function C() { return <div/>; }
+    `);
+    const ctx = { cwd: tempDir } as any;
+    const result = await execute({ file: 'comp.tsx' }, ctx);
+    expect(result.isError).toBe(false);
+    expect(result.details.language).toBe('tsx');
+  });
+
+  it('handles unknown extension but still parses', async () => {
+    await writeFile('mod.mjs', `
+      import { x } from './y';
+      export const z = 1;
+    `);
+    const ctx = { cwd: tempDir } as any;
+    const result = await execute({ file: 'mod.mjs' }, ctx);
+    expect(result.isError).toBe(false);
+    expect(result.details.language).toBe('unknown');
+    expect(result.details.imports.length).toBeGreaterThan(0);
+    expect(result.details.exports.length).toBeGreaterThan(0);
+  });
+
+  it('schema is defined', () => {
     expect(schema).toBeDefined();
   });
 });
