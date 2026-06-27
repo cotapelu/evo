@@ -18,14 +18,14 @@ Last Updated: 2026-06-26
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (165 test suites, 1681 tests, 3 skipped).
+- Comprehensive test coverage (165 test suites, 1706 tests, 3 skipped).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.
 - All tests passing; build green.
 - Zero TypeScript typecheck errors with strict settings.
 - Capability router tool is self-documenting: dynamically lists all registered capabilities in its guidelines, providing immediate discoverability for LLMs.
-- Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases, team-ops-renderer, package-manager.test.ts).
+- Progressive improvement of test typing: mock factory now typed, plugin capability tests any-free, command tests and renderer tests cleaned (provider-command, metrics-command, copy-command, team-command, todos-renderer, branch-summary-renderer, team-ops-tool, memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, session-tree-command, memory-tool-renderer, todos-tool-edge-cases, package-manager-errors, todos-tool-coverage, todos-tool-final-gaps, package-manager-coverage, todos-tool-edge-additional, team-tool, team-manager-edge-cases, team-manager-additional, package-manager-edge-cases, team-ops-renderer, package-manager.test.ts, master-tool.test.ts, extension.test.ts).
 - Tool definitions improved: `memory-tool` now uses factory pattern and complete parameters schema; `universal-tool` enriched parameters and prompt guidelines. Both are fully documented for LLM use.
 - **Guideline generator**: Auto-generates rich, schema-driven prompt guidelines for all capabilities. Provides parameter types, descriptions, meaningful examples (file paths, booleans), minimal/full/variation instances, and return format. Integrated into plugin-loader, eliminating manual guideline writing and improving LLM comprehension.
 - **Codebase Plugin**: Provides LLM agents with safe code manipulation and analysis capabilities (`analyze`, `search`, `safe_edit`, `analyze_ast`, `ast_query`, `call_graph`, `metrics`, `complexity`, `dependency_tree`). Comprehensive test suite (83 tests) all passing; functions ≤20 lines, complexity ≤10; includes robust test isolation using `mkdtemp`.
@@ -77,11 +77,12 @@ Last Updated: 2026-06-26
 * **Git plugin full coverage**: All git capabilities (add, branch, checkout, commit, diff, log, pull, push, status) now have comprehensive unit tests.
 * **Dev plugin full coverage**: All dev capabilities (format, test, build, audit, scripts) fully tested.
 * **Security & System plugins**: security.scan and system.metrics now fully covered.
-* **Master Tool & Todos**: Extensive coverage improvements, including renderers and edge cases, bringing overall to 85.12% statements (76.53% branches).
+* **Master Tool & Todos**: Extensive coverage improvements, including renderers and edge cases, bringing overall to 85.12% statements (76.53% branches). Subsequent rounds pushed further to 91.35% statements, 81.61% branches.
 * **Branch Coverage Round 193**: Comprehensive `todo.manage` tests (22 tests) covering all conditional branches.
 * **Branch Coverage Round 194**: Comprehensive `system.info` tests (7 tests) covering execute/renderResult branches, including detailed mode and error handling.
 * **Branch Coverage Round 195**: Comprehensive `dev.test` tests (20 tests) covering command building, output parsing, and renderResult. Overall: **87.96%** statements, **78.46%** branches.
 * **Branch Coverage Round 196**: Comprehensive `master-tool` tests (22 tests) covering execute (validation, registry failures, meta-commands, signal, result transformation) and renderResult (partial, error, success, truncation, fallback). Branch coverage reached exactly **80%**; statements **89.72%**. Milestone achieved.
+* **Branch Coverage Round 197**: Comprehensive `capability-system/extension` tests (25 tests) covering loader initialization, discovery capability registration, router tool, dev mode plugins command, router execute/renderCall/renderResult branches. Overall: **91.35%** statements, **81.61%** branches.
 
 - **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
 ## Recommendations

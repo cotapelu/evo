@@ -276,11 +276,12 @@ Last Updated: 2026-06-26
 - [x] System.info command comprehensive tests (7 tests) covering execute and renderResult branches. Coverage increased to **87.48%** statements, **78.00%** branches.
 - [x] Dev.test command comprehensive tests (20 tests) covering command building, output parsing, error handling, signal passing, renderResult branches. Coverage increased to **87.96%** statements, **78.46%** branches.
 - [x] Master-tool comprehensive tests (22 tests) covering execute (validation, registry failures, meta-commands, signal, result transformation) and renderResult (partial, error, success, truncation, fallback). Branch coverage reached **80%**; statements **89.72%**. Milestone achieved.
+- [x] Capability-system/extension comprehensive tests (25 tests) covering loader initialization, discovery capability registration, router tool registration, dev mode plugins command, router tool execute/renderCall/renderResult. Overall coverage increased to **91.35%** statements, **81.61%** branches.
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 80%).
-- Target remaining low-coverage command modules: dev.format, dev.build, dev.audit, dev.scripts, and any utilities with conditional branches.
-- Maintain overall statement coverage ≥89%.
+- Achieve ≥85% branch coverage (currently 81.61%).
+- Target remaining low-coverage modules: capabilitiy-system/extension (remaining branches), team-widget, codebase/dependency_tree, commands/copy-command, commands/tree-command, etc.
+- Maintain overall statement coverage ≥90%.
 
 
 ## Notes

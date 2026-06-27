@@ -3,16 +3,16 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "MasterToolFinalize",
+      "name": "CapSysExtFinalize",
       "tasks": [
         {
           "id": "task-1",
-          "content": "All tests passing: 22 master-tool tests added",
+          "content": "25 extension tests added, all passing",
           "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Coverage achieved: statements 89.72%, branches 80%",
+          "content": "Coverage: statements 91.35%, branches 81.61%, functions 88.46%",
           "status": "completed"
         },
         {
@@ -50,5 +50,5 @@
   ],
   "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T00:32:03.687Z"
+  "updatedAt": "2026-06-27T00:52:20.063Z"
 }
