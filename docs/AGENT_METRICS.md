@@ -29,18 +29,19 @@ Last Updated: 2026-06-27
 - **Branch Coverage Round 215**: expanded ast_query branch coverage (12 tests total, +11 new covering file not found, readFile error, limit enforcement, exact name, regex, invalid regex, parent filter, combined filters, import/export queries, no matches). Overall coverage: 92.64% Statements, **83.76%** Branches. Test suites: 179, tests: 1879 (3 skipped).
 - **Branch Coverage Round 216**: added dependency_tree branch coverage (5 tests: parse error, readFile error, external import ignored, missing local file edge not created, cycle deduplication). Overall coverage: 92.75% Statements, **83.81%** Branches. Test suites: 180, tests: 1884 (3 skipped).
 - **Branch Coverage Round 217**: added analyze_ast branch coverage (10 tests: readFile error, language detection variants, enum, const/let/var, type/interface, re-exports). Overall coverage: 92.82% Statements, **83.93%** Branches. Test suites: 181, tests: 1894 (3 skipped).
+- **Branch Coverage Round 218**: expanded dependency_tree branch coverage (13 tests total, +8 new covering import/export variations, re-exports, export all). Overall coverage: 92.89% Statements, **84.13%** Branches. Test suites: 181, tests: 1900 (3 skipped).
 - Earlier rounds: systematic test expansion across all capability plugins (git, dev, security, system) and core modules (StateManager 100%, CommandExecutor 95.87%, prompt-integration 75.61%, git-status renderer 95.08%, counter tests) brought overall to **85.12%** statements, **76.53%** branches.
 - Branch coverage progression: todo.manage → 77.89%, system.info → 78.00%, dev.test → 78.46%, master-tool → 80%, extension → 81.61%.
-- Total test suites: 181, tests: 1894 (3 skipped).
+- Total test suites: 181, tests: 1900 (3 skipped).
 
 ## Test Metrics
 - Total Test Suites: 181
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1894
+- Tests Passed: 1900
 - Tests Skipped: 3
-- Coverage: 92.82% Statements (5265/5672), Functions 86.64% (902/1041), Branches 83.93% (2915/3473), Lines 93.66% (4848/5176)
+- Coverage: 92.89% Statements (5269/5672), Functions 86.74% (903/1041), Branches 84.13% (2922/3473), Lines 93.74% (4852/5176)
 
 ## Reliability
 - Rollback Count: 0

@@ -343,10 +343,14 @@ Last Updated: 2026-06-26
   - [x] Added analyze_ast branch coverage tests (10 tests covering readFile error, language detection (ts/tsx/js/jsx/unknown), enum, const/let/var, type/interface, re-exports)
   - [x] Test suites: 181, tests: 1894 (3 skipped)
   - [x] Overall coverage: 92.82% Statements, **83.93%** Branches (+4 arcs)
+- [x] **Branch coverage push (Round 218)**
+  - [x] Expanded dependency_tree branch coverage (13 tests total, +8 new covering import variations, export forms, re-exports, export all)
+  - [x] Test suites: 181, tests: 1900 (3 skipped)
+  - [x] Overall coverage: 92.89% Statements, **84.13%** Branches (+8 arcs)
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 83.93%).
-- Target remaining low-coverage modules: extension.ts (54%), plugin-loader (65%), analyze_ast (77% after tests), ast_query (80%), call_graph (81%), master-tool (75%), analyze (82%), dependency_tree (72%), etc.
+- Achieve ≥85% branch coverage (currently 84.13%).
+- Target remaining low-coverage modules: extension.ts (54%), plugin-loader (65%), ast_query (80%), call_graph (81%), master-tool (75%), analyze (82%), etc.
 - Maintain overall overall statement coverage ≥91%.
 
 
