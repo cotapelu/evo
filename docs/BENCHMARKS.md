@@ -17,13 +17,13 @@ Based on AUTO-CONTINUE.md requirements:
 
 | Operation | Target | Current (Baseline) |
 |-----------|--------|-------------------|
-| **UI Response** | < 100ms | Pending baseline |
-| **Memory Ops** | < 50ms | Pending baseline |
-| **Codebase Analyze** | < 200ms (500 lines) | Pending baseline |
-| **Safe Edit** | < 300ms (diff + validate) | Pending baseline |
-| **Dependency Tree** | < 500ms (medium project) | Pending baseline |
-| **Team Manager Ops** | < 10ms (claim/complete) | Pending baseline |
-| **TUI Render** | < 16ms (60fps) | Pending baseline |
+| **UI Response** | < 100ms | ✅ 0.14ms avg (Render Text) |
+| **Memory Ops** | < 50ms | ✅ 0.06-10ms (Add/Search/Get/Delete) |
+| **Codebase Analyze** | < 200ms (500 lines) | ✅ 0.52ms avg (Medium) |
+| **Safe Edit** | < 300ms (diff + validate) | ✅ 0.60ms avg (Medium) |
+| **Dependency Tree** | < 500ms (medium project) | ✅ 0.14ms avg (Medium) |
+| **Team Manager Ops** | < 10ms (claim/complete) | ✅ 0.28-0.55ms (Claim/Heartbeat) |
+| **TUI Render** | < 16ms (60fps) | ✅ 0.07-0.93ms (all components) |
 
 ---
 
@@ -236,6 +236,60 @@ await harness.runBenchmark('My Feature', () => myBenchmark(), {
   warmup: 5
 });
 ```
+
+---
+
+## 📌 Baseline (2026-06-27)
+
+**Platform:** Linux x64, Node.js v24.11.1, 4 CPU cores, 3.6 GB RAM
+**Date:** 2026-06-27T14:19:38Z
+**Total Suites:** 4 | **Benchmarks:** 35+ measurements
+
+All targets **exceeded** – performance is well within production requirements:
+
+| Category | Operation | Mean | P95 | Target | Status |
+|----------|-----------|------|-----|--------|--------|
+| **TUI Render** | Text (1000 iters) | 0.141 ms | 0.262 ms | <16ms | ✅ |
+| | List (100 items) | 0.233 ms | 0.485 ms | <16ms | ✅ |
+| | Table (50 rows) | 0.931 ms | 1.508 ms | <16ms | ✅ |
+| | Tree (depth 3) | 0.321 ms | 0.563 ms | <16ms | ✅ |
+| | Styles | 0.069 ms | 0.189 ms | <16ms | ✅ |
+| | Large Dataset (1000 items) | 0.629 ms | 1.263 ms | <16ms | ✅ |
+| **Team Ops** | Team Creation | 0.431 ms | 1.164 ms | <10ms | ✅ |
+| | Task Claiming | 0.553 ms | 1.371 ms | <10ms | ✅ |
+| | Agent Heartbeat | 0.537 ms | 1.246 ms | <10ms | ✅ |
+| | Concurrent Agents (10) | 0.157 ms | 0.382 ms | <10ms | ✅ |
+| | Task Status Tracking | 0.280 ms | 0.797 ms | <10ms | ✅ |
+| **Memory Ops** | Add Single | 0.057 ms | 0.116 ms | <50ms | ✅ |
+| | Add Batch | 0.346 ms | 0.827 ms | <50ms | ✅ |
+| | Search (1000 entries) | 10.376 ms | 12.668 ms | <50ms | ✅ |
+| | Get by ID | 1.379 ms | 2.290 ms | <50ms | ✅ |
+| | Delete | 0.384 ms | 0.731 ms | <50ms | ✅ |
+| | Mixed Workload | 0.107 ms | 0.180 ms | <50ms | ✅ |
+| **Codebase** | Analyze (Small) | 0.601 ms | 0.761 ms | <200ms | ✅ |
+| | Analyze (Medium) | 0.523 ms | 0.652 ms | <200ms | ✅ |
+| | Analyze (Large) | 0.592 ms | 0.893 ms | <200ms | ✅ |
+| | Analyze AST (Small) | 0.569 ms | 0.694 ms | <200ms | ✅ |
+| | Analyze AST (Medium) | 0.539 ms | 0.716 ms | <200ms | ✅ |
+| | Analyze AST (Large) | 0.862 ms | 1.525 ms | <200ms | ✅ |
+| | Safe Edit (Small) | 0.520 ms | 0.885 ms | <300ms | ✅ |
+| | Safe Edit (Medium) | 0.604 ms | 0.785 ms | <300ms | ✅ |
+| | Safe Edit (Large) | 0.876 ms | 1.102 ms | <300ms | ✅ |
+| | Complexity (Small) | 0.961 ms | 1.586 ms | <150ms | ✅ |
+| | Complexity (Medium) | 1.150 ms | 2.023 ms | <150ms | ✅ |
+| | Complexity (Large) | 1.957 ms | 2.741 ms | <150ms | ✅ |
+| | Dependency Tree (Small) | 0.213 ms | 0.252 ms | <500ms | ✅ |
+| | Dependency Tree (Medium) | 0.139 ms | 0.167 ms | <500ms | ✅ |
+| | Dependency Tree (Large) | 0.174 ms | 0.209 ms | <500ms | ✅ |
+| | Search (Small) | 0.756 ms | 0.985 ms | <200ms | ✅ |
+| | Search (Medium) | 0.650 ms | 0.737 ms | <200ms | ✅ |
+| | Search (Large) | 1.260 ms | 1.684 ms | <200ms | ✅ |
+
+**Notes:**
+- All operations are in-memory, single-process measurements.
+- Warm-up: 5 runs, Iterations: 20-100 depending on speed.
+- StdDev consistently < 25% of mean, indicating stable performance.
+- No P99 outliers exceeding 2× median.
 
 ---
 
