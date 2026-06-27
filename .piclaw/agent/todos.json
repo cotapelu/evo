@@ -3,32 +3,52 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "AstQueryCoverage",
+      "name": "Refactor Main Entry Points",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Examine codebase/ast_query tests and identify missing branches",
-          "status": "in_progress"
+          "content": "Analyze current cli.ts and index.ts structure and identify improvement areas",
+          "status": "completed"
         },
         {
           "id": "task-2",
-          "content": "Add tests for edge cases: missing file, parse errors, complex queries",
-          "status": "pending"
+          "content": "Add startup logging with version and environment info to cli.ts",
+          "status": "in_progress"
         },
         {
           "id": "task-3",
-          "content": "Run coverage and measure improvement",
+          "content": "Improve error handling in cli.ts with better context and exit codes",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Update documentation and commit",
+          "content": "Add signal handlers (SIGINT, SIGTERM) for graceful shutdown",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Use structured logger instead of console.error",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Make VERSION dynamic by reading from package.json",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Add APP_NAME export to index.ts",
+          "status": "pending"
+        },
+        {
+          "id": "task-8",
+          "content": "Run tests to ensure no regressions",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 5,
+  "nextTaskId": 9,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T01:50:39.770Z"
+  "updatedAt": "2026-06-27T13:46:56.473Z"
 }

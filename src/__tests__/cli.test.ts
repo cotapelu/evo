@@ -10,7 +10,7 @@ vi.mock('@earendil-works/pi-coding-agent', async () => {
 });
 
 vi.mock('../extensions/index', () => ({
-  getExtensionFactories: () => []
+  extensionFactories: []
 }));
 
 describe('cli', () => {

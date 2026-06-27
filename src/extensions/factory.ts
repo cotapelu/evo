@@ -97,6 +97,9 @@ export function getExtensionFactories() {
   return [extensionsAggregator];
 }
 
+/** Constant array of extension factories - use directly for shorter imports */
+export const extensionFactories = [extensionsAggregator];
+
 // Re-export aggregator with clear name
 export { extensionsAggregator };
 

@@ -4,4 +4,4 @@
  * Re-exports from factory.ts
  */
 
-export { extensionsAggregator as default, getExtensionFactories } from './factory.js';
+export { extensionsAggregator as default, extensionFactories, getExtensionFactories } from './factory.js';
