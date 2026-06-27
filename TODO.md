@@ -264,7 +264,7 @@ Last Updated: 2026-06-26
 ## In Progress
 - (none)
 
-- [x] Achieve ≥80% test coverage (reached 87.48%) through systematic test expansion.
+- [x] Achieve ≥80% test coverage (reached 87.96%) through systematic test expansion.
 - [x] Finalize all evolution documentation updates.
 
 ## Completed (continued)
@@ -275,8 +275,8 @@ Last Updated: 2026-06-26
 - [x] Branch coverage improvement: Enabled and wrote comprehensive tests for `todo.manage` command (22 tests covering all execute/renderResult branches). Coverage increased from 85.12% to **87.13%** statements, branch coverage from 76.53% to **77.89%**.
 
 ## Upcoming
-- Improve branch coverage further (currently 77.89%) toward ≥80% target.
-- Target remaining low-coverage files: src/extensions/master-tool/commands/todo/manage.ts (continue), src/extensions/tools/actions/index.ts, and other modules with <80% branch coverage.
+- Improve branch coverage further (currently 78.46%) toward ≥80% target.
+- Target remaining low-coverage files: src/extensions/tools/actions/index.ts and other command modules.
 - Maintain overall statement coverage ≥85%.
 
 
