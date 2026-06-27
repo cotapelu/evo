@@ -1248,10 +1248,21 @@ Last Updated: 2026-06-27
 - Overall coverage: Statements 92.55%, Branches 83.61%, approaching 85% branch target.
 - Identified remaining low-coverage modules: `evo-reload` (57%), `copy-command` (~71%), `codebase/analyze` (~80%), `codebase/ast_query` (~80%), `codebase/call_graph` (~81%).
 
+### Two Hundred Seventh Round (Copy-Command Branch Coverage)
+- Added branch coverage tests for `copy-command` (4 tests) covering error handling, non-Error thrown without message, non-text assistant content, and mixed text/image content.
+- Test suites: 175, tests: 1863 (3 skipped).
+- No overall branch coverage increase (copy-command already highly covered by existing tests).
+
+### Two Hundred Eighth Round (Evo-Reload Branch Coverage)
+- Added branch coverage tests for `evo-reload` (5 tests) covering `sendUserMessage` exceptions (Error and non-Error) and `renderResult` branches (reloaded action, fallback, missing error message).
+- Increased overall branch coverage from **83.61%** to **83.76%**; statements from **92.55%** to **92.63%**.
+- Test suites: 176, tests: 1868 (3 skipped).
+- All tests passing; build green.
+
 ## Current Status (2026-06-27)
 - ✅ Build: Green
-- ✅ Tests: All passing (174 suites, 1859 tests, 3 skipped)
-- ✅ Coverage: 92.55% Statements (5250/5672), Functions 86.64% (902/1041), Branches 83.61% (2904/3473), Lines 93.41% (4835/5176)
+- ✅ Tests: All passing (176 suites, 1868 tests, 3 skipped)
+- ✅ Coverage: 92.63% Statements (5254/5672), Functions 86.64% (902/1041), Branches 83.76% (2909/3473), Lines 93.48% (4839/5176)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
