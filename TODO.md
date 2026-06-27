@@ -331,10 +331,14 @@ Last Updated: 2026-06-26
   - [x] Added call_graph branch coverage tests (2 tests) for readFile and parse errors
   - [x] Test suites: 178, tests: 1864
   - [x] Overall coverage: 92.64% Statements, 83.73% Branches (no branch increase)
+- [x] **Branch coverage push (Round 215)**
+  - [x] Expanded ast_query branch coverage tests (11 new tests covering file not found, readFile error, limit enforcement, exact name, regex, invalid regex, parent filter, combined filters, import/export queries, no matches)
+  - [x] Test suites: 179, tests: 1879 (3 skipped)
+  - [x] Overall coverage: 92.64% Statements, **83.76%** Branches (+1 arc)
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 83.73%).
-- Target remaining low-coverage modules: team-widget (~61%), prompt-integration (~76%), evo-reload (~57%), copy-command (~71%), universal-tool (~93%? actually high), etc.
+- Achieve ≥85% branch coverage (currently 83.76%).
+- Target remaining low-coverage modules: team-widget (~73%), prompt-integration (~92%), evo-reload (~93%), copy-command (~96%), universal-tool (~? high), extension.ts (54%), plugin-loader (65%), dependency_tree (72%), analyze_ast (76%), master-tool (74%), etc.
 - Maintain overall statement coverage ≥91%.
 
 

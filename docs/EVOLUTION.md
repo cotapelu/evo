@@ -1274,10 +1274,16 @@ Last Updated: 2026-06-27
 - Test suites: 178, tests: 1864 (3 skipped).
 - Overall coverage: 92.64% Statements, 83.73% Branches.
 
+### Two Hundred Twelfth Round (AstQuery Expanded Branch Coverage)
+- Expanded `ast_query` branch coverage with 11 additional tests (total 12 tests).
+- Covers: file not found, readFile error, limit enforcement, exact name, regex filter, invalid regex fallback, parent filter, combined filters, import/export queries, no matches.
+- Test suites: 179, tests: 1879 (3 skipped).
+- Overall coverage: 92.64% Statements, **83.76%** Branches.
+
 ## Current Status (2026-06-27)
 - ✅ Build: Green
-- ✅ Tests: All passing (178 suites, 1864 tests, 3 skipped)
-- ✅ Coverage: 92.64% Statements (5255/5672), Functions 86.64% (902/1041), Branches 83.73% (2908/3473), Lines 93.50% (4840/5176)
+- ✅ Tests: All passing (179 suites, 1879 tests, 3 skipped)
+- ✅ Coverage: 92.64% Statements (5255/5672), Functions 86.64% (902/1041), Branches 83.76% (2909/3473), Lines 93.50% (4840/5176)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 

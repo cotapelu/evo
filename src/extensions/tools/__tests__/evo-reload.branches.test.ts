@@ -82,6 +82,15 @@ describe('Evo Reload Tool (Branch Coverage)', () => {
       expect(result.isError).toBe(true);
       expect(result.details?.error).toBe('[object Object]'); // String(error) yields "[object Object]"
     });
+
+    it('executes successfully when sendUserMessage succeeds', async () => {
+      vi.mocked(mockApi.sendUserMessage).mockResolvedValue(undefined);
+      const result = await executeTool();
+      expect(result.isError).toBe(false);
+      expect(result.details?.action).toBe('reload_queued');
+      expect(result.details?.timestamp).toBeDefined();
+      expect(result.content[0].text).toContain('queued');
+    });
   });
 
   describe('renderResult() branches', () => {
@@ -122,6 +131,32 @@ describe('Evo Reload Tool (Branch Coverage)', () => {
       expect(text).toContain('❌');
       // Should show default unknown error text
       expect(text).toContain('Unknown error');
+    });
+
+    it('renders error with specific error message', () => {
+      const result: AgentToolResult<any> = {
+        content: [{ type: "text", text: "err" }],
+        details: { error: 'Network failure' },
+        isError: true
+      };
+      const rendered = capturedTool.renderResult(result, { expanded: false, isPartial: false }, { fg: (c: string, s: string) => s } as any);
+      const lines = rendered.render(80);
+      const text = lines.join('');
+      expect(text).toContain('❌');
+      expect(text).toContain('Network failure');
+    });
+
+    it('renders partial state indicator when isPartial true', () => {
+      const result: AgentToolResult<any> = {
+        content: [{ type: "text", text: "OK" }],
+        details: {},
+        isError: false
+      };
+      const rendered = capturedTool.renderResult(result, { expanded: false, isPartial: true }, { fg: (c: string, s: string) => s } as any);
+      const lines = rendered.render(80);
+      const text = lines.join('');
+      expect(text).toContain('⏳');
+      expect(text).toContain('Reloading runtime');
     });
   });
 });
