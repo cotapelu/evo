@@ -422,4 +422,92 @@ describe("codebase.safe_edit", () => {
     await safeEditModule.execute(params, ctx as { cwd: string });
     expect(eslintCalled).toBe(false);
   });
+
+  // Additional branch coverage tests for safe_edit
+  it('should require newCode for insert operation', async () => {
+    const file = path.join(tempDir, 'sample.ts');
+    await writeFile(file, 'content', 'utf-8');
+    const ctx = createMockCtx(tempDir);
+
+    const params = {
+      operations: [{
+        file: 'sample.ts',
+        editType: 'insert' as const,
+        range: { start: 0, end: 0 },
+        // @ts-ignore - intentionally missing newCode
+        newCode: undefined
+      }]
+    };
+
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
+    expect(result.success).toBe(false);
+    expect(result.results[0].error).toContain('newCode is required');
+  });
+
+  it('should reject negative range start', async () => {
+    const file = path.join(tempDir, 'sample.ts');
+    await writeFile(file, 'line1\nline2', 'utf-8');
+    const ctx = createMockCtx(tempDir);
+
+    const params = {
+      operations: [{
+        file: 'sample.ts',
+        editType: 'replace' as const,
+        range: { start: -1, end: 1 },
+        newCode: 'new'
+      }]
+    };
+
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
+    expect(result.success).toBe(false);
+    expect(result.results[0].error).toContain('Invalid range');
+  });
+
+  it('should handle backup of non-existent file', async () => {
+    const ctx = createMockCtx(tempDir);
+    // No file created for operation
+
+    const params = {
+      operations: [{
+        file: 'nonexistent.ts',
+        editType: 'replace' as const,
+        range: { start: 0, end: 1 },
+        newCode: 'new'
+      }],
+      format: false,
+      fixImports: false
+    };
+
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
+    expect(result.success).toBe(false);
+    expect(result.results[0].error).toMatch(/Cannot read file|nonexistent/);
+  });
+
+  it('should accept tsc exit code 2 without throwing', async () => {
+    const file = path.join(tempDir, 'sample.ts');
+    await writeFile(file, 'export const x = 1;', 'utf-8');
+    const ctx = createMockCtx(tempDir);
+
+    ctx.exec = async (cmd: string, args: string[], opts?: any) => {
+      if (cmd === 'npx' && args[0] === 'tsc') {
+        return { code: 2, stdout: '', stderr: 'usage error' };
+      }
+      return { code: 0, stdout: '', stderr: '' };
+    };
+
+    const params = {
+      operations: [{
+        file: 'sample.ts',
+        editType: 'replace' as const,
+        range: { start: 0, end: 1 },
+        newCode: 'export const x = 2;'
+      }],
+      format: false,
+      fixImports: false
+    };
+
+    const result = await safeEditModule.execute(params, ctx as { cwd: string });
+    expect(result.success).toBe(true);
+  });
+
 });

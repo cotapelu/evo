@@ -4,8 +4,8 @@ Last Updated: 2026-06-26
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (166 suites, 1732 tests, 3 skipped)
-✅ Coverage: 91.70% Statements (5161/5628), Functions 89.82% (891/992), Branches 81.99% (2837/3460), Lines 92.57% (4760/5142)
+✅ Tests: All passing (166 suites, 1736 tests, 3 skipped)
+✅ Coverage: 91.73% Statements (5163/5628), Functions 89.82% (891/992), Branches 82.05% (2839/3460), Lines 92.59% (4761/5142)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -55,7 +55,8 @@ Last Updated: 2026-06-26
   - Round 17 (Analyze Coverage): Added additional tests to `codebase/analyze` (4 tests) covering default export of const, multiple named exports with aliases, .tsx language detection, unknown extension parsing. Increased overall coverage to **91.51%** statements, **81.87%** branches.
   - Round 18 (AstQuery Coverage): Added additional tests to `codebase/ast_query` (3 tests) covering arrow functions, export * from, invalid regex pattern fallback. Increased ast_query branch coverage from 73.82% to **75.16%**; overall coverage to **91.55%** statements, **81.93%** branches.
   - Round 19 (Call Graph Coverage): Added additional tests to `codebase/call_graph` (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. Increased call_graph branch coverage to **80.73%**; overall coverage to **91.70%** statements, **81.99%** branches.
-    - Total test suites: 166, tests: 1732 (3 skipped).
+  - Round 20 (Safe Edit Coverage): Added additional tests to `codebase/safe_edit` (4 tests) covering required newCode for insert, negative range start, backup of non-existent file, and tsc exit code 2 without throwing. Increased safe_edit branch coverage from 77.14% to **80.00%**; overall coverage to **91.73%** statements, **82.05%** branches.
+    - Total test suites: 166, tests: 1736 (3 skipped).
 
 ## Known Issues
 - None currently; all recent issues resolved.
