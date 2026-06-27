@@ -273,11 +273,14 @@ Last Updated: 2026-06-26
 - [x] StateManager comprehensive test suite (18 tests) covering state creation, restoration, persistence, dirty flag management, and error handling. Increased state-manager coverage from 37.35% to 71.08% and overall to 82.14%.
 - [x] TeamManager additional tests (4 tests) covering pending index insertion, duplicate handling, claimTask backoff, and message sending. Increased team-manager coverage from 84.76% to 84.97% and overall to 82.18%.
 - [x] Branch coverage improvement: Enabled and wrote comprehensive tests for `todo.manage` command (22 tests covering all execute/renderResult branches). Coverage increased from 85.12% to **87.13%** statements, branch coverage from 76.53% to **77.89%**.
+- [x] System.info command comprehensive tests (7 tests) covering execute and renderResult branches. Coverage increased to **87.48%** statements, **78.00%** branches.
+- [x] Dev.test command comprehensive tests (20 tests) covering command building, output parsing, error handling, signal passing, renderResult branches. Coverage increased to **87.96%** statements, **78.46%** branches.
+- [x] Master-tool comprehensive tests (22 tests) covering execute (validation, registry failures, meta-commands, signal, result transformation) and renderResult (partial, error, success, truncation, fallback). Branch coverage reached **80%**; statements **89.72%**. Milestone achieved.
 
 ## Upcoming
-- Improve branch coverage further (currently 78.46%) toward ≥80% target.
-- Target remaining low-coverage files: src/extensions/tools/actions/index.ts and other command modules.
-- Maintain overall statement coverage ≥85%.
+- Achieve ≥85% branch coverage (currently 80%).
+- Target remaining low-coverage command modules: dev.format, dev.build, dev.audit, dev.scripts, and any utilities with conditional branches.
+- Maintain overall statement coverage ≥89%.
 
 
 ## Notes
