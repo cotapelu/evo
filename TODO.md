@@ -327,10 +327,14 @@ Last Updated: 2026-06-26
   - [x] Added ast_query branch coverage tests (1 test) for parse error handling
   - [x] Test suites: 177, tests: 1862
   - [x] Overall coverage: 92.63% Statements, **83.73%** Branches
+- [x] **Branch coverage push (Round 214)**
+  - [x] Added call_graph branch coverage tests (2 tests) for readFile and parse errors
+  - [x] Test suites: 178, tests: 1864
+  - [x] Overall coverage: 92.64% Statements, 83.73% Branches (no branch increase)
 
 ## Upcoming
 - Achieve ≥85% branch coverage (currently 83.73%).
-- Target remaining low-coverage modules: codebase/analyze (~82%), codebase/ast_query (~80%), codebase/call_graph (~81%).
+- Target remaining low-coverage modules: team-widget (~61%), prompt-integration (~76%), evo-reload (~57%), copy-command (~71%), universal-tool (~93%? actually high), etc.
 - Maintain overall statement coverage ≥91%.
 
 

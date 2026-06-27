@@ -25,18 +25,19 @@ Last Updated: 2026-06-27
 - **Branch Coverage Round 211**: evo-reload branch coverage tests (5 tests) covering error handling and renderResult branches. Increased overall branch coverage from **83.61%** to **83.76%**; statements **92.63%**. Total test suites: 176, tests: 1868 (3 skipped).
 - **Branch Coverage Round 212**: analyze branch coverage tests (2 tests) for readFile errors and non-Error exceptions. Overall branch coverage increased to **83.81%**; statements **92.66%**. Test suites: 177, tests: 1870 (3 skipped).
 - **Branch Coverage Round 213**: ast_query branch coverage tests (1 test) for parse error handling. Overall coverage: 92.63% Statements, **83.73%** Branches. Test suites: 177, tests: 1862 (3 skipped).
+- **Branch Coverage Round 214**: call_graph branch coverage tests (2 tests) for readFile and parse errors. Overall coverage: 92.64% Statements, 83.73% Branches (no branch increase). Test suites: 178, tests: 1864 (3 skipped).
 - Earlier rounds: systematic test expansion across all capability plugins (git, dev, security, system) and core modules (StateManager 100%, CommandExecutor 95.87%, prompt-integration 75.61%, git-status renderer 95.08%, counter tests) brought overall to **85.12%** statements, **76.53%** branches.
 - Branch coverage progression: todo.manage → 77.89%, system.info → 78.00%, dev.test → 78.46%, master-tool → 80%, extension → 81.61%.
-- Total test suites: 177, tests: 1862 (3 skipped).
+- Total test suites: 178, tests: 1864 (3 skipped).
 
 ## Test Metrics
-- Total Test Suites: 177
+- Total Test Suites: 178
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1862
+- Tests Passed: 1864
 - Tests Skipped: 3
-- Coverage: 92.63% Statements (5254/5672), Functions 86.64% (902/1041), Branches 83.73% (2908/3473), Lines 93.48% (4839/5176)
+- Coverage: 92.64% Statements (5255/5672), Functions 86.64% (902/1041), Branches 83.73% (2908/3473), Lines 93.50% (4840/5176)
 
 ## Reliability
 - Rollback Count: 0
