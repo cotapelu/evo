@@ -3,37 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Create evo.reload tool",
+      "name": "Fix todos tool bugs",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Create evo-reload.ts in extensions/tools/",
+          "content": "Fix duplicate interface TodoFile definition",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Register tool in factory.ts",
+          "content": "Fix normalizeParams edge case for add_phase.name string",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Add tests for evo.reload tool",
+          "content": "Fix getProjectTodoFilePath to use proper project root",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Run typecheck and tests",
+          "content": "Verify file persistence and session reconstruction",
           "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Update documentation",
+          "content": "Run full test suite and build",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Use evo-reload and test final",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T14:48:40.997Z"
+  "updatedAt": "2026-06-27T16:10:39.401Z"
 }

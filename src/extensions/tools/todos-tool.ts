@@ -124,13 +124,6 @@ function getSessionState(ctx: ExtensionContext): TodoSessionState {
   return s;
 }
 
-
-export interface TodoFile {
-  phases: TodoPhase[];
-  nextTaskId: number;
-  nextPhaseId: number;
-}
-
 interface PersistedTodo {
   version: 1;
   phases: TodoPhase[];
@@ -293,6 +286,10 @@ export function normalizeParams(params: unknown): any {
 
   if (normalized.add_phase && typeof normalized.add_phase === "object") {
     const addPhase = normalized.add_phase as Record<string, unknown>;
+    // Validate name type if present
+    if (addPhase.name !== undefined && typeof addPhase.name !== "string") {
+      throw new Error("add_phase.name must be a string");
+    }
     if (addPhase.name && typeof addPhase.name === "string" && addPhase.name.startsWith("{")) {
       try {
         const parsed = JSON.parse(addPhase.name);
@@ -622,7 +619,7 @@ export class TodoState {
 
   async loadFromFile(cwd: string): Promise<boolean> {
     const fileData = await loadTodoFromFile(cwd);
-    if (!fileData) { this.phases = []; this.nextTaskId = 1; this.nextPhaseId = 1; this.storageType = "file"; return false; }
+    if (!fileData) { this.phases = []; this.nextTaskId = 1; this.nextPhaseId = 1; this.storageType = "memory"; return false; }
     this.phases = clonePhases(fileData.phases);
     this.nextTaskId = fileData.nextTaskId;
     this.nextPhaseId = fileData.nextPhaseId;

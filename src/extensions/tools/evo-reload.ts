@@ -63,7 +63,7 @@ Call: evo-reload()
         // Queue the system /reload command as a follow-up user message.
         // The built-in slash command handler will process it and call AgentSession.reload().
         // This is the same mechanism used by the reload-runtime example in llm-context.
-        api.sendUserMessage("/reload", { deliverAs: "followUp" });
+        api.sendUserMessage("/reload\n", { deliverAs: "followUp" });
 
         return {
           content: [{ type: "text", text: "✅ Runtime reload queued. The system will reload extensions, skills, prompts, and themes shortly." }],
