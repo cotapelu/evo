@@ -1,11 +1,11 @@
 # Project State
 
-Last Updated: 2026-06-26
+Last Updated: 2026-06-27
 
 ## Status
 ✅ Build: Green
-✅ Tests: All passing (169 suites, 1789 tests, 3 skipped)
-✅ Coverage: 92.66% Statements (5215/5628), Functions 89.88% (897/998), Branches 83.38% (2885/3460), Lines 93.41% (4803/5142)
+✅ Tests: All passing (170 suites, 1795 tests, 3 skipped)
+✅ Coverage: 92.78% Statements (5229/5638), Functions 89.92% (898/998), Branches 83.45% (2889/3462), Lines 93.47% (4807/5144)
 ✅ Typecheck: Clean (0 errors)
 
 ## Key Components
@@ -21,6 +21,7 @@ Last Updated: 2026-06-26
   - TUI rendering: text, list, table, tree, styled text, large datasets
   All benchmarks meet production targets (UI < 16ms, memory ops < 50ms, analyze < 200ms for 500 lines).
 - **Test Suite**: Fully green. Previously failing tests fixed; comprehensive edge case coverage.
+- **Evo Reload Extension**: New tool `evo.reload` allows the LLM to trigger runtime reload after development changes. Provides seamless development workflow: make code changes, call evo.reload, and continue testing without restart. Includes command `/reload-evo` (internal) and comprehensive test coverage (6 tests).
 - **Error Handling**: `memory-tool` now handles `api.appendEntry` failures gracefully and includes robust edge-case tests (JSON parsing, session reconstruction, concurrency). `provider-command` adds try-catch around `modelRegistry.getAll` to prevent crashes.
 - **Dead Code Removal**: Deleted unused `buildMemoryLines` helper from `memory-tool.ts`, reducing duplication and improving maintainability.
 - **Renderer Coverage Expansion**: Added comprehensive renderer tests for `todos-tool` (19), `universal-tool` (4), and `subtool-loader` (15). Overall statement coverage increased from 80.81% to 81.36%.

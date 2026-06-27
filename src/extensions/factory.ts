@@ -15,6 +15,7 @@ import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
 import capabilitySystemExtension from "./capability-system/extension.js";
 import { registerSkillReaderExtension } from "./tools/skill-reader.js";
 import autoContinueExtension from "./hooks/auto-continue.js";
+import evoReloadExtension from "./evo-reload/index.js";
 import autoCompact85Extension from "./hooks/auto-compact-85.js";
 import contextLoggerExtension from "./context-logger.js";
 
@@ -54,6 +55,9 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerTeamTool(api);
   registerSkillReaderExtension(api);
   registerMasterTool(api); // MASTER TOOL - hundreds of commands in one!
+
+  // Register Evo Reload extension (tool for LLM to trigger runtime reload)
+  evoReloadExtension(api);
 
   // Register universal tool
   registerUniversalTool(api);
