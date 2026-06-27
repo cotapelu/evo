@@ -323,9 +323,13 @@ Last Updated: 2026-06-26
   - [x] Added analyze branch coverage tests (2 tests) for readFile and non-Error error handling
   - [x] Updated test counts (177 suites, 1870 tests)
   - [x] Overall coverage: 92.66% Statements, **83.81%** Branches
+- [x] **Branch coverage push (Round 212)**
+  - [x] Added ast_query branch coverage tests (1 test) for parse error handling
+  - [x] Test suites: 177, tests: 1862
+  - [x] Overall coverage: 92.63% Statements, **83.73%** Branches
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 83.81%).
+- Achieve ≥85% branch coverage (currently 83.73%).
 - Target remaining low-coverage modules: codebase/analyze (~82%), codebase/ast_query (~80%), codebase/call_graph (~81%).
 - Maintain overall statement coverage ≥91%.
 

@@ -1259,10 +1259,20 @@ Last Updated: 2026-06-27
 - Test suites: 176, tests: 1868 (3 skipped).
 - All tests passing; build green.
 
+### Two Hundred Ninth Round (Analyze Branch Coverage)
+- Added branch coverage tests for `analyze` (2 tests) covering readFile errors and non-Error exceptions.
+- Test suites: 177, tests: 1870 (3 skipped).
+- Overall coverage: 92.66% Statements, 83.81% Branches.
+
+### Two Hundred Tenth Round (AstQuery Branch Coverage)
+- Added branch coverage tests for `ast_query` (1 test) for parse error handling.
+- Test suites: 177, tests: 1862 (3 skipped).
+- Overall coverage: 92.63% Statements, 83.73% Branches.
+
 ## Current Status (2026-06-27)
 - ✅ Build: Green
-- ✅ Tests: All passing (177 suites, 1870 tests, 3 skipped)
-- ✅ Coverage: 92.66% Statements (5256/5672), Functions 86.64% (902/1041), Branches 83.81% (2911/3473), Lines 93.52% (4841/5176)
+- ✅ Tests: All passing (177 suites, 1862 tests, 3 skipped)
+- ✅ Coverage: 92.63% Statements (5254/5672), Functions 86.64% (902/1041), Branches 83.73% (2908/3473), Lines 93.48% (4839/5176)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1270,7 +1280,7 @@ Last Updated: 2026-06-27
 - Reliance on `globalPluginLoader` singleton may complicate testing in parallel environments; consider scoped loaders.
 
 ## Quality Targets
-- Maintain ≥80% test coverage (currently 92.55%).
+- Maintain ≥80% test coverage (currently 92.63%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Continue improving branch coverage (now at 83.61%); next milestone 85%.
+- Continue improving branch coverage (now at 83.73%); next milestone 85%.
 
