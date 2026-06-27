@@ -1229,10 +1229,16 @@ Last Updated: 2026-06-21
 - Tests count: 1736 across 166 suites.
 - All tests passing; build green; zero typecheck errors.
 
+### Two Hundred Fourth Round (AstQuery Additional Coverage)
+- Added additional tests to `codebase/ast_query` (3 tests) covering symbols for functions and classes, call expressions with member expression, and export named without specifiers.
+- Result: `ast_query` branch coverage increased from 75.16% to **79.86%**; overall coverage improved to **91.83%** statements (5168/5628), **82.25%** branches (2846/3460), functions **89.28%** (891/998), lines **92.69%** (4766/5142).
+- Tests count: 1739 across 166 suites.
+- All tests passing; build green; zero typecheck errors.
+
 ## Current Status (2026-06-26)
 - ✅ Build: Green
-- ✅ Tests: All passing (166 suites, 1736 tests, 3 skipped)
-- ✅ Coverage: 91.73% Statements (5163/5628), Functions 89.82% (891/992), Branches 82.05% (2839/3460), Lines 92.59% (4761/5142)
+- ✅ Tests: All passing (166 suites, 1739 tests, 3 skipped)
+- ✅ Coverage: 91.83% Statements (5168/5628), Functions 89.28% (891/998), Branches 82.25% (2846/3460), Lines 92.69% (4766/5142)
 - ✅ Typecheck: Clean (0 errors)
 - ✅ Quality Gates: Functions ≤20 lines, Complexity ≤10, No `as any` in production code
 
@@ -1242,5 +1248,5 @@ Last Updated: 2026-06-21
 ## Quality Targets
 - Maintain ≥80% test coverage (currently 91.55%).
 - Keep functions ≤20 lines; monitor for growing methods.
-- Continue improving branch coverage (now at 82.05%); next milestone 85%.
+- Continue improving branch coverage (now at 82.25%); next milestone 85%.
 

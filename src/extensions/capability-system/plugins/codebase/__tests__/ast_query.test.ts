@@ -259,4 +259,48 @@ function standalone() {}
     expect(result.details.matches).toHaveLength(0);
     await unlink(file);
   });
+
+  // Additional branch coverage tests for ast_query
+  it('should find symbols for functions and classes', async () => {
+    const code = `
+function foo() {}
+class Bar {}
+    `;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: 'symbol' } }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    const names = result.details.matches.map(m => m.name);
+    expect(names).toContain('foo');
+    expect(names).toContain('Bar');
+    await unlink(file);
+  });
+
+  it('should find call expressions with member expression (obj.method())', async () => {
+    const code = `
+const obj = { method() {} };
+obj.method();
+    `;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: 'call', name: 'method' } }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    expect(result.details.matches.length).toBe(1);
+    expect(result.details.matches[0].name).toBe('method');
+    await unlink(file);
+  });
+
+  it('should find export named declaration without specifiers', async () => {
+    const code = `export {};`;
+    const file = await writeTempFile(code);
+    const ctx = { cwd: path.dirname(file) };
+    const result = await astQueryModule.execute({ file: path.basename(file), query: { kind: 'export' } }, ctx as { cwd: string });
+    expect(result.isError).toBe(false);
+    expect(result.details.matches.length).toBe(1);
+    expect(result.details.matches[0].name).toBe('<export>');
+    await unlink(file);
+  });
+
+
+
 });

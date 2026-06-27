@@ -3,8 +3,8 @@
 Last Updated: 2026-06-26
 
 ## Session Summary
-- Iterations: 203
-- Tasks Completed: 260
+- Iterations: 204
+- Tasks Completed: 261
 - High-impact work: **codebase plugin** (analyze, safe_edit, analyze_ast, search, ast_query, call_graph, metrics, complexity, dependency_tree) with consistent quality gates (≤20 lines, ≤10 complexity)
 - **Performance Benchmarking**: Full benchmark suite with statistical analysis, multi-size testing. Meets performance target requirements.
 - **Coverage Milestone (Round 196)**: Master-tool comprehensive tests (22 tests). Branch coverage reached exactly **80%**.
@@ -15,18 +15,19 @@ Last Updated: 2026-06-26
 - **Coverage Round 201**: ast_query capability additional tests (3 tests) covering arrow functions, export * from declaration, invalid regex pattern fallback. Increased ast_query branch coverage from 73.82% to **75.16%**; overall coverage improved to **91.55%** statements, **81.93%** branches.
 - **Coverage Round 202**: call_graph capability additional tests (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. Increased call_graph branch coverage from ~73.82% to **80.73%**; overall coverage improved to **91.70%** statements, **81.99%** branches.
 - **Coverage Round 203**: safe_edit capability additional tests (4 tests) covering required newCode for insert, negative range start, backup of non-existent file, and tsc exit code 2 without throwing. Increased safe_edit branch coverage from 77.14% to **80.00%**; overall coverage improved to **91.73%** statements, **82.05%** branches.
+- **Coverage Round 204**: ast_query capability additional tests (3 tests) covering symbols for functions and classes, call expressions with member expression, and export named without specifiers. Increased ast_query branch coverage from 75.16% to **79.86%**; overall coverage improved to **91.83%** statements, **82.25%** branches.
 - Earlier rounds: systematic test expansion across all capability plugins (git, dev, security, system) and core modules (StateManager 100%, CommandExecutor 95.87%, prompt-integration 75.61%, git-status renderer 95.08%, counter tests) brought overall to **85.12%** statements, **76.53%** branches.
 - Branch coverage progression: todo.manage → 77.89%, system.info → 78.00%, dev.test → 78.46%, master-tool → 80%, extension → 81.61%.
-- Total test suites: 166, tests: 1736 (3 skipped).
+- Total test suites: 166, tests: 1739 (3 skipped).
 
 ## Test Metrics
 - Total Test Suites: 166
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1736
+- Tests Passed: 1739
 - Tests Skipped: 3
-- Coverage: 91.73% Statements (5163/5628), Functions 89.82% (891/992), Branches 82.05% (2839/3460), Lines 92.59% (4761/5142)
+- Coverage: 91.83% Statements (5168/5628), Functions 89.28% (891/998), Branches 82.25% (2846/3460), Lines 92.69% (4766/5142)
 
 ## Reliability
 - Rollback Count: 0

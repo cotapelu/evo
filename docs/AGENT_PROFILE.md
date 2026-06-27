@@ -18,7 +18,7 @@ Last Updated: 2026-06-26
 - `src/extensions/capability-system/plugin-loader.ts`: watch mode logic added; monitor for edge cases in file system event handling.
 
 ## Strengths
-- Comprehensive test coverage (166 test suites, 1736 tests, 3 skipped).
+- Comprehensive test coverage (166 test suites, 1739 tests, 3 skipped).
 - Clear modular architecture for capabilities.
 - Robust PluginLoader with watch mode: debounced reloads (200ms), deletion handling, per-plugin watcher lifecycle, hot-reload for execute files via ES module cache clearing, debounced new plugin detection (500ms), and support for scoped instances to enable parallel testing.
 - Good separation of concerns in capability system.
@@ -89,6 +89,7 @@ Last Updated: 2026-06-26
 * **Round 201**: `codebase/ast_query` additional tests (3 tests) covering arrow functions, export * from, invalid regex pattern. `ast_query` branch coverage increased from 73.82% to **75.16%**; overall to **91.55%** statements, **81.93%** branches.
 * **Round 202**: `codebase/call_graph` additional tests (7 tests) covering diamond import deduplication, depth=0 handling, missing imported module, imported function not found, invalid regex pattern fallback, and entryPoints duplicates. `call_graph` branch coverage increased from ~73.82% to **80.73%**; overall to **91.70%** statements, **81.99%** branches.
 * **Round 203**: `codebase/safe_edit` additional tests (4 tests) covering required newCode for insert, negative range start, backup of non-existent file, and tsc exit code 2 without throwing. `safe_edit` branch coverage increased from 77.14% to **80.00%**; overall to **91.73%** statements, **82.05%** branches.
+* **Round 204**: `codebase/ast_query` additional tests (3 tests) covering symbols for functions and classes, call expressions with member expression, and export named without specifiers. `ast_query` branch coverage increased from 75.16% to **79.86%**; overall to **91.83%** statements, **82.25%** branches.
 
 - **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
 ## Recommendations
