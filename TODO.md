@@ -332,13 +332,17 @@ Last Updated: 2026-06-26
   - [x] Test suites: 178, tests: 1864
   - [x] Overall coverage: 92.64% Statements, 83.73% Branches (no branch increase)
 - [x] **Branch coverage push (Round 215)**
-  - [x] Expanded ast_query branch coverage tests (11 new tests covering file not found, readFile error, limit enforcement, exact name, regex, invalid regex, parent filter, combined filters, import/export queries, no matches)
+  - [x] Expanded ast_query branch coverage tests (12 tests total, +11 new covering file not found, readFile error, limit enforcement, exact name, regex, invalid regex, parent filter, combined filters, import/export queries, no matches)
   - [x] Test suites: 179, tests: 1879 (3 skipped)
   - [x] Overall coverage: 92.64% Statements, **83.76%** Branches (+1 arc)
+- [x] **Branch coverage push (Round 216)**
+  - [x] Added dependency_tree branch coverage tests (5 tests: parse error, readFile error, external import ignored, missing local file edge not created, cycle deduplication)
+  - [x] Test suites: 179, tests: 1884 (3 skipped)
+  - [x] Overall coverage: 92.75% Statements, **83.81%** Branches (+2 arcs)
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 83.76%).
-- Target remaining low-coverage modules: team-widget (~73%), prompt-integration (~92%), evo-reload (~93%), copy-command (~96%), universal-tool (~? high), extension.ts (54%), plugin-loader (65%), dependency_tree (72%), analyze_ast (76%), master-tool (74%), etc.
+- Achieve ≥85% branch coverage (currently 83.81%).
+- Target remaining low-coverage modules: extension.ts (54%), plugin-loader (65%), dependency_tree (72%), analyze_ast (76%), master-tool (75%), analyze (82%), ast_query (80%), call_graph (81%), etc.
 - Maintain overall statement coverage ≥91%.
 
 
