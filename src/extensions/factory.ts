@@ -9,6 +9,7 @@
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
 import { registerTodosTool, registerMemoryTool, registerUniversalTool, registerEvoReloadTool } from "./tools/index.js";
+import { registerBuildinCustomToools } from "./tools/builtin-fs-tools.js";
 // Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
 import { registerTeamTool } from "./team/index.js";
 import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
@@ -62,6 +63,9 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerUniversalTool(api);
   // Register sub-tool loader
   registerSubToolLoaderExtension(api);
+
+  // Register builtin filesystem tools (ls, grep, find)
+  registerBuildinCustomToools(api);
 
   // Register custom message renderers
   registerTodosRenderer(api);
