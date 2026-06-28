@@ -137,7 +137,7 @@ describe("Memory Renderer (basic)", () => {
     for (const mem of memories.slice(0, 15)) {
       const icon = mem.tags.some(t => t.toLowerCase().includes("meeting")) ? "🏷️" : "📝";
       const id = theme.fg("accent", `#${mem.id}`);
-      const preview = mem.text.length > 60 ? mem.text.substring(0, 60) + "..." : mem.text;
+      const preview = mem.text.length > 60 ? `${mem.text.substring(0, 60)  }...` : mem.text;
       const text = theme.fg("text", preview);
       const tags = mem.tags && mem.tags.length > 0 ? theme.fg("dim", ` [${mem.tags.join(", ")}]`) : "";
       lines.push(`  ${icon} ${id} ${text}${tags}`);

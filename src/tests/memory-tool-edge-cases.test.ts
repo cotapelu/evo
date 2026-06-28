@@ -79,7 +79,7 @@ describe('Memory Tool Edge Cases', () => {
       const mem = [{ id: 99, text: longText, tags: [] }];
       const comp = new MemoryListComponent(mem, theme, () => {});
       const lines = comp.render(80).join('\n');
-      expect(lines).toContain('x'.repeat(60) + '...');
+      expect(lines).toContain(`${'x'.repeat(60)  }...`);
     });
 
     it('should show "...and N more" when more than 50 memories', () => {

@@ -171,11 +171,11 @@ describe('Master Tool Components', () => {
 
     it('should categorize commands correctly', async () => {
       // Execute commands to register them
-      let res1 = await registry.execute('system.info', {} as any, {
+      const res1 = await registry.execute('system.info', {} as any, {
         toolCallId: '1', ctx: {} as any, signal: undefined, onUpdate: undefined, maxOutputSize: 1024*1024
       });
       expect(res1.isError).toBe(false);
-      let res2 = await registry.execute('git.status', {} as any, {
+      const res2 = await registry.execute('git.status', {} as any, {
         toolCallId: '2', ctx: {} as any, signal: undefined, onUpdate: undefined, maxOutputSize: 1024*1024
       });
       expect(res2.isError).toBe(false);

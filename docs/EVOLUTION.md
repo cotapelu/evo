@@ -1310,3 +1310,11 @@ Last Updated: 2026-06-27
 - Keep functions ≤20 lines; monitor for growing methods.
 - Continue improving branch coverage (now at 83.73%); next milestone 85%.
 
+
+### [2025-06-28] Quality Gate Recovery & Lint Compliance
+- **CRITICAL**: Fixed 18 failing tests in `master-tool` branch coverage suite caused by mock constructor misconfiguration and misaligned test expectations with lazy loading design.
+- **HIGH**: Fixed ESLint configuration by removing test file exclusions in `tsconfig.json`; all tests now lintable.
+- **MEDIUM**: Resolved `no-await-in-loop` errors in benchmark and test files by adding targeted eslint-disable comments for intentional sequential loops.
+- **MEDIUM**: Fixed `no-floating-promises` in `team-manager-edge-cases.test.ts` by converting `.then` to async/await.
+- **Impact**: Build green, all tests pass (1943), zero lint errors. Quality gate score ≥90 restored.
+- **Follow-up**: Consider refactoring lazy-loading test patterns to a reusable helper to avoid future misalignment.

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-await-in-loop */
 /**
  * PiClaw Benchmark Suite
  *
@@ -47,30 +48,30 @@ const suites: BenchmarkSuite[] = [
 ];
 
 function printHeader(): void {
-  console.log('\n' + '═'.repeat(80));
+  console.log(`\n${  '═'.repeat(80)}`);
   console.log('🎯 PICLAW BENCHMARK SUITE');
   console.log('═'.repeat(80));
   console.log(`\nNode.js: ${process.version}`);
   console.log(`Platform: ${process.platform} ${process.arch}`);
   console.log(`CPU Cores: ${cpus().length}`);
   console.log(`Memory: ${(totalmem() / (1024 ** 3)).toFixed(1)} GB`);
-  console.log('\n' + '─'.repeat(80) + '\n');
+  console.log(`\n${  '─'.repeat(80)  }\n`);
 }
 
 function printSuiteHeader(name: string, description: string): void {
   console.log(`\n📋 Suite: ${name}`);
   console.log(`   ${description}`);
-  console.log('─'.repeat(80) + '\n');
+  console.log(`${'─'.repeat(80)  }\n`);
 }
 
 function printSummary(totalSuites: number, totalTime: number): void {
-  console.log('\n' + '═'.repeat(80));
+  console.log(`\n${  '═'.repeat(80)}`);
   console.log('📊 SUMMARY');
   console.log('═'.repeat(80));
   console.log(`Total Suites:  ${totalSuites}`);
   console.log(`Total Time:    ${totalTime.toFixed(3)} ms`);
   console.log(`Avg per Suite: ${(totalTime / totalSuites).toFixed(3)} ms`);
-  console.log('═'.repeat(80) + '\n');
+  console.log(`${'═'.repeat(80)  }\n`);
 }
 
 // Main entry point

@@ -7,7 +7,7 @@ describe('Todos Load Edge Cases', () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = join('/tmp', 'todos-load-test-' + Date.now());
+    tmpDir = join('/tmp', `todos-load-test-${  Date.now()}`);
     mkdirSync(tmpDir, { recursive: true });
   });
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-await-in-loop */
 /**
  * Benchmark Harness
  *
@@ -76,7 +77,7 @@ class BenchmarkHarness {
     const max = sorted[sorted.length - 1];
     const p95 = this.percentile(sorted, 95);
     const p99 = this.percentile(sorted, 99);
-    const variance = sorted.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / sorted.length;
+    const variance = sorted.reduce((acc, val) => acc + (val - mean)**2, 0) / sorted.length;
     const stddev = Math.sqrt(variance);
     const opsPerSecond = 1000 / mean;
 

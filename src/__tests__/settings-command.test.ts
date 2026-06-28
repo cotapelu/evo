@@ -9,7 +9,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // --- Mocks setup (avoid TDZ via var) ---
-var mockSettingsManager: any;
+let mockSettingsManager: any;
 let capturedSettingsListArgs: any[] = [];
 
 // Mock pi-coding-agent: provide SettingsManager, getAgentDir, getSettingsListTheme

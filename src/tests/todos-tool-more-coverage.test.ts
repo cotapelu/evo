@@ -38,14 +38,14 @@ describe('TodosTool Additional Coverage (core functions)', () => {
     });
 
     it('add_task can add to phase referenced by name', () => {
-      let { phases } = applyOp([], 1, 1, { add_phase: { name: 'MyPhase', tasks: [{ content: 'T1' }] } });
+      const { phases } = applyOp([], 1, 1, { add_phase: { name: 'MyPhase', tasks: [{ content: 'T1' }] } });
       const { phases: final, errors } = applyOp(phases, 2, 2, { add_task: { phase: 'MyPhase', content: 'T2' } });
       expect(errors).toEqual([]);
       expect(final[0].tasks).toHaveLength(2);
     });
 
     it('update with mixed valid and unknown IDs updates valid and reports errors', () => {
-      let { phases } = applyOp([], 1, 1, { add_phase: { name: 'P', tasks: [{ content: 'T1' }, { content: 'T2' }] } });
+      const { phases } = applyOp([], 1, 1, { add_phase: { name: 'P', tasks: [{ content: 'T1' }, { content: 'T2' }] } });
       const taskId = phases[0].tasks[0].id;
       const { phases: resultPhases, errors } = applyOp(phases, 2, 2, { update: { ids: [taskId, 'missing'], status: 'completed' } });
       expect(errors).toContain('Task "missing" not found');

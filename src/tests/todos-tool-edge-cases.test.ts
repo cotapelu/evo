@@ -8,7 +8,7 @@ describe('TodosTool Edge Cases', () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = join('/tmp', 'todos-test-' + Date.now());
+    tmpDir = join('/tmp', `todos-test-${  Date.now()}`);
     mkdirSync(tmpDir, { recursive: true });
   });
 
@@ -208,7 +208,7 @@ describe('TodosTool Edge Cases', () => {
     let ctx: any;
 
     beforeEach(() => {
-      cwd = join('/tmp', 'todos-exec-' + Date.now());
+      cwd = join('/tmp', `todos-exec-${  Date.now()}`);
       mkdirSync(cwd, { recursive: true });
       ctx = { cwd } as unknown as ExtensionContext;
       capturedTool = undefined;

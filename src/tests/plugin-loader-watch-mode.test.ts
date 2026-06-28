@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { join } from 'path';
 import * as fs from 'fs';

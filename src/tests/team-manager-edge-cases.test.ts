@@ -132,18 +132,17 @@ describe('AgentTeam Edge Cases', () => {
     expect(task.assignee).toBeNull();
   });
 
-  it('should update heartbeat correctly', () => {
+  it('should update heartbeat correctly', async () => {
     const team = new AgentTeam();
     team.setTeamId('test-team');
-    team.initialize([]).then(() => {
-      const int = getInternal(team);
-      // Initially, agentLastSeen empty
-      expect(int.agentLastSeen.has('agent-1')).toBe(false);
-      team.updateHeartbeat('agent-1');
-      expect(int.agentLastSeen.has('agent-1')).toBe(true);
-      const lastSeen = int.agentLastSeen.get('agent-1');
-      expect(lastSeen).toBeGreaterThanOrEqual(Date.now() - 1000);
-    });
+    await team.initialize([]);
+    const int = getInternal(team);
+    // Initially, agentLastSeen empty
+    expect(int.agentLastSeen.has('agent-1')).toBe(false);
+    team.updateHeartbeat('agent-1');
+    expect(int.agentLastSeen.has('agent-1')).toBe(true);
+    const lastSeen = int.agentLastSeen.get('agent-1');
+    expect(lastSeen).toBeGreaterThanOrEqual(Date.now() - 1000);
   });
 
   it('should write and read from workspace', async () => {
