@@ -9,8 +9,8 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // --- Mocks setup (avoid TDZ via var) ---
-let mockSettingsManager: any;
-let capturedSettingsListArgs: any[] = [];
+var mockSettingsManager: any;
+var capturedSettingsListArgs: any[] = [];
 
 // Mock pi-coding-agent: provide SettingsManager, getAgentDir, getSettingsListTheme
 vi.mock('@earendil-works/pi-coding-agent', () => {

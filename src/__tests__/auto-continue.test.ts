@@ -56,8 +56,8 @@ function createMockContext(overrides: any = {}) {
 describe('Auto Continue Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    existsSync.mockReturnValue(false);
-    readFileSync.mockClear();
+    (existsSync as any).mockReturnValue(false);
+    (readFileSync as any).mockClear();
 
     // Setup timer spies
     mockSetTimeout = vi.fn().mockImplementation((cb: any, ms: number) => {
@@ -75,10 +75,11 @@ describe('Auto Continue Hook', () => {
 
   it('registers command and event handlers', () => {
     const pi = createMockPI();
-    autoContinue(pi);
+    // @ts-ignore - pi mock missing many ExtensionAPI properties
+    autoContinue(pi as any);
     expect(pi.registerCommand).toHaveBeenCalledWith('gnpi', expect.any(Object));
     // pi.on should have been called at least for session_shutdown, agent_end, session_compact
-    const eventNames = pi.on.mock.calls.map(([name]: [string, any]) => name);
+    const eventNames = pi.on.mock.calls.map((args: any[]) => args[0]);
     expect(eventNames).toContain('session_shutdown');
     expect(eventNames).toContain('agent_end');
     expect(eventNames).toContain('session_compact');
@@ -86,10 +87,10 @@ describe('Auto Continue Hook', () => {
 
   it('enables auto-continue and starts idle timer', () => {
     const pi = createMockPI();
-    autoContinue(pi);
+    autoContinue(pi as any);
 
     // Get the command handler from registerCommand call
-    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi');
+    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi')!;
     const handler = registerCmdCall[1].handler;
 
     const ctx = createMockContext(); // isIdle returns true by default
@@ -110,8 +111,8 @@ describe('Auto Continue Hook', () => {
 
   it('disables and clears timer', () => {
     const pi = createMockPI();
-    autoContinue(pi);
-    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi');
+    autoContinue(pi as any);
+    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi')!;
     const handler = registerCmdCall[1].handler;
 
     // Enable first
@@ -127,9 +128,9 @@ describe('Auto Continue Hook', () => {
 
   it('session_shutdown clears timer', () => {
     const pi = createMockPI();
-    autoContinue(pi);
+    autoContinue(pi as any);
     // Get session_shutdown handler
-    const shutdownHandler = pi.on.mock.calls.find(([name]) => name === 'session_shutdown')[1];
+    const shutdownHandler = pi.on.mock.calls.find(([name]) => name === 'session_shutdown')![1];
 
     // Simulate that there is an idleTimer set (we can't easily set internal variable but we can call startIdleTimer via enabling first)
     // Better: just call the shutdown handler without timer; it should do nothing (no crash)
@@ -139,11 +140,11 @@ describe('Auto Continue Hook', () => {
 
   it('agent_end starts timer if enabled', () => {
     const pi = createMockPI();
-    autoContinue(pi);
+    autoContinue(pi as any);
 
     // Enable first
     const ctx = createMockContext();
-    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi');
+    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi')!;
     const handler = registerCmdCall[1].handler;
     handler('on', ctx);
     expect(mockSetTimeout).toHaveBeenCalledTimes(1);
@@ -153,7 +154,7 @@ describe('Auto Continue Hook', () => {
     mockClearTimeout.mockClear();
 
     // Trigger agent_end
-    const agentEndHandler = pi.on.mock.calls.find(([name]) => name === 'agent_end')[1];
+    const agentEndHandler = pi.on.mock.calls.find(([name]) => name === 'agent_end')![1];
     agentEndHandler();
 
     // Since idleTimer is already set, startIdleTimer should return without calling setTimeout again
@@ -162,8 +163,8 @@ describe('Auto Continue Hook', () => {
 
   it('can set custom timeout', () => {
     const pi = createMockPI();
-    autoContinue(pi);
-    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi');
+    autoContinue(pi as any);
+    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi')!;
     const handler = registerCmdCall[1].handler;
 
     const ctx = createMockContext();
@@ -177,8 +178,8 @@ describe('Auto Continue Hook', () => {
 
   it('toggles off on empty args or invalid', () => {
     const pi = createMockPI();
-    autoContinue(pi);
-    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi');
+    autoContinue(pi as any);
+    const registerCmdCall = pi.registerCommand.mock.calls.find(([name]) => name === 'gnpi')!;
     const handler = registerCmdCall[1].handler;
 
     const ctx = createMockContext();

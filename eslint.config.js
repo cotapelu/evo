@@ -4,7 +4,7 @@ import tseslintParser from "@typescript-eslint/parser";
 
 export default [
   {
-    ignores: ["dist", "node_modules", "coverage", "llm-context"],
+    ignores: ["dist", "node_modules", "coverage", "llm-context", "src/**/*.test.ts", "src/tests/**", "src/**/__tests__/**", "src/benchmarks/**"],
   },
   {
     files: ["**/*.ts"],
