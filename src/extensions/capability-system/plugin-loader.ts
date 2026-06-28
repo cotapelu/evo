@@ -3,7 +3,8 @@
  * Plugin Loader
  */
 
-import { existsSync, readFileSync, readdirSync, watch } from "fs";
+import { access, readdir, readFile } from "fs/promises";
+import { existsSync, watch } from "fs"; // watch is sync, existsSync ok for quick check
 import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import type {
@@ -74,7 +75,7 @@ export class PluginLoader {
       return this.makeEmptyStats();
     }
 
-    const pluginFolders = this.getPluginFolders(pluginsDir);
+    const pluginFolders = await this.getPluginFolders(pluginsDir);
     await this.loadPlugins(pluginFolders, errors);
 
     if (this.options.watchMode) this.startWatchMode(pluginsDir);
@@ -86,10 +87,9 @@ export class PluginLoader {
     return { totalPlugins: 0, totalCapabilities: 0, loadTimeMs: 0, errors: [] };
   }
 
-  private getPluginFolders(pluginsDir: string): string[] {
-    return readdirSync(pluginsDir, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name);
+  private async getPluginFolders(pluginsDir: string): Promise<string[]> {
+    const entries = await readdir(pluginsDir, { withFileTypes: true });
+    return entries.filter(d => d.isDirectory()).map(d => d.name);
   }
 
   private async loadPlugins(folders: string[], errors: Array<{ pluginId: string; error: string }>): Promise<void> {
@@ -132,9 +132,14 @@ export class PluginLoader {
     const pluginPath = join(this.options.pluginsDir, pluginFolder);
     const manifestPath = join(pluginPath, MANIFEST_FILENAME);
 
-    if (!existsSync(manifestPath)) throw new Error(`Missing ${MANIFEST_FILENAME}`);
+    try {
+      await access(manifestPath);
+    } catch {
+      throw new Error(`Missing ${MANIFEST_FILENAME}`);
+    }
 
-    const manifest: PluginManifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+    const content = await readFile(manifestPath, "utf-8");
+    const manifest: PluginManifest = JSON.parse(content);
     this.validateManifest(manifest, pluginFolder);
 
     if (this.loadedPlugins.has(manifest.id)) {
