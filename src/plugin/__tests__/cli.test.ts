@@ -17,7 +17,7 @@ describe('cli', () => {
   it('initializes without throwing', async () => {
     // Importing cli runs top-level code which calls main.
     // The mock ensures main does nothing and doesn't throw.
-    await import('../cli');
+    await import('../../cli');
     expect(true).toBe(true);
   });
 });

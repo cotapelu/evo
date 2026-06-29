@@ -13,7 +13,7 @@
   },
   "scripts": {
     "generate-custom-models": "tsx scripts/generate-custom-models.ts",
-    "build": "npm run generate-custom-models && tsc -p tsconfig.build.json && chmod +x dist/cli.js && cp -r src/extensions/tools/skill-reader/skills dist/extensions/tools/skill-reader/ && cp -r src/extensions/capability-system/plugins dist/extensions/capability-system/",
+    "build": "npm run generate-custom-models && tsc -p tsconfig.build.json && chmod +x dist/cli.js && cp -r src/plugin/extensions/tools/skill-reader/skills dist/extensions/tools/skill-reader/ && cp -r src/plugin/extensions/capability-system/plugins dist/extensions/capability-system/",
     "start": "node dist/cli.js",
     "dev": "npm run generate-custom-models && tsx src/cli.ts",
     "lint": "eslint src/**/*.ts --fix",
@@ -21,11 +21,11 @@
     "check": "npm run typecheck",
     "test": "vitest run",
     "prepublishOnly": "npm run build && npm test",
-    "benchmark": "tsx src/benchmarks/index.ts",
-    "benchmark:team": "tsx src/benchmarks/team-performance.ts",
-    "benchmark:codebase": "tsx src/benchmarks/codebase-performance.ts",
-    "benchmark:memory": "tsx src/benchmarks/memory-tool.ts",
-    "benchmark:tui": "tsx src/benchmarks/tui-rendering.ts"
+    "benchmark": "tsx src/plugin/benchmarks/index.ts",
+    "benchmark:team": "tsx src/plugin/benchmarks/team-performance.ts",
+    "benchmark:codebase": "tsx src/plugin/benchmarks/codebase-performance.ts",
+    "benchmark:memory": "tsx src/plugin/benchmarks/memory-tool.ts",
+    "benchmark:tui": "tsx src/plugin/benchmarks/tui-rendering.ts"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.80.2",

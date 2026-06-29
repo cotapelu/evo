@@ -78,11 +78,13 @@ class TableComponent implements Component {
   }
 }
 
+type TreeNode = { label: string; children?: TreeNode[] };
+
 class TreeComponent implements Component {
-  private nodes: Array<{ label: string; children?: typeof this.nodes }> = [];
+  private nodes: TreeNode[] = [];
   private expanded = new Set<number>();
 
-  update(nodes: Array<{ label: string; children?: typeof this.nodes }>): void {
+  update(nodes: TreeNode[]): void {
     this.nodes = nodes;
   }
 

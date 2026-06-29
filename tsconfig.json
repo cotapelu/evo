@@ -8,7 +8,7 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@extensions/*": ["src/extensions/*"],
+      "@extensions/*": ["src/plugin/extensions/*"],
       "@typescript-eslint/parser": ["node_modules/@typescript-eslint/parser/dist/index.js"]
     },
     "types": ["node", "vitest"],

@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   resolve: {
     alias: {
-      '@extensions': path.resolve(__dirname, 'src/extensions')
+      '@extensions': path.resolve(__dirname, 'src/plugin/extensions')
     }
   },
   test: {
