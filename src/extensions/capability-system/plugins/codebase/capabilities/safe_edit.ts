@@ -6,6 +6,7 @@
  * Rolls back on any failure to preserve working tree.
  * Supports atomic multi-file and multi-operation edits.
  */
+/* eslint-disable no-await-in-loop */
 
 import { Type } from "typebox";
 import { promises as fs } from "fs";

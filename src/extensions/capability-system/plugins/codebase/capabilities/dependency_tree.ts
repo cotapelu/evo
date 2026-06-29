@@ -5,6 +5,7 @@
  * Builds a module dependency graph for TypeScript/JavaScript files.
  * Detects cycles, computes per-file exports/imports, and provides reachable analysis from entry points.
  */
+/* eslint-disable no-await-in-loop */
 
 import { Type } from "typebox";
 import { promises as fs } from "fs";

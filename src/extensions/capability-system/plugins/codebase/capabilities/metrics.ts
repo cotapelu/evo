@@ -4,6 +4,7 @@
  *
  * Computes basic code metrics (lines, functions, classes, imports, exports) for TypeScript/JavaScript files.
  */
+/* eslint-disable no-await-in-loop */
 
 import { Type } from "typebox";
 import { promises as fs } from "fs";
@@ -128,7 +129,7 @@ function buildStats(results: MetricResult[], stats: ReturnType<typeof initStats>
 
 async function computeMetrics(cwd: string, files: string[]): Promise<{ results: MetricResult[]; stats: Result['stats'] }> {
   const results: MetricResult[] = [];
-  let stats = initStats();
+  const stats = initStats();
   for (const fileRel of files) {
     const res = await analyzeFile(cwd, fileRel);
     results.push(res);

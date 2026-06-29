@@ -298,10 +298,10 @@ function buildSummary(file: string, lines: number, language: string, imports: Im
 🔤 Language: ${language}
 
 📥 Imports (${imports.length}):
-${imports.map((imp, i) => `  ${i+1}. ${imp.importClause ? imp.importClause + ' ' : ''}from "${imp.moduleSpecifier}"`).join('\n')}
+${imports.map((imp, i) => `  ${i+1}. ${imp.importClause ? `${imp.importClause  } ` : ''}from "${imp.moduleSpecifier}"`).join('\n')}
 
 📤 Exports (${exports.length}):
-${exports.map((exp, i) => `  ${i+1}. ${exp.type} ${exp.name}${exp.aliases ? ' as ' + exp.aliases.join(', ') : ''}`).join('\n')}
+${exports.map((exp, i) => `  ${i+1}. ${exp.type} ${exp.name}${exp.aliases ? ` as ${  exp.aliases.join(', ')}` : ''}`).join('\n')}
 
 🔧 Symbols (${symbols.length}):
 ${symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.line})`).join('\n')}

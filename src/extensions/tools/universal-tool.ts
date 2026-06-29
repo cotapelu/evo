@@ -60,8 +60,8 @@ export function buildCommand(action: string, params: any): string {
     }
 
     case "random": {
-      const min = params.min != null ? params.min : 0;
-      const max = params.max != null ? params.max : 100;
+      const min = params.min ?? 0;
+      const max = params.max ?? 100;
       if (typeof min !== "number" || typeof max !== "number") {
         throw new Error("Invalid random parameters: min and max must be numbers");
       }
@@ -203,7 +203,7 @@ export function registerUniversalTool(api: ExtensionAPI): void {
       },
       required: ["action"],
     },
-    execute: execute,
+    execute,
     renderResult: renderUniversal,
   };
 

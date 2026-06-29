@@ -24,7 +24,7 @@ export async function execute(params: { action: string; script?: string }, ctx: 
         details: { action: "list" },
         isError: result.code !== 0
       };
-    } else {
+    } 
       if (!params.script) {
         throw new Error("script required when action='run'");
       }
@@ -34,7 +34,7 @@ export async function execute(params: { action: string; script?: string }, ctx: 
         details: { action: "run", script: params.script, exitCode: result.code },
         isError: result.code !== 0
       };
-    }
+    
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     return { content: [{ type: "text" as const, text: `❌ Error: ${msg}` }], isError: true, details: { error: msg } };

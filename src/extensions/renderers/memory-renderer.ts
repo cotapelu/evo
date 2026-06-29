@@ -77,7 +77,7 @@ export function registerMemoryRenderer(api: ExtensionAPI): void {
       for (const mem of showMemories) {
         const icon = query && mem.tags?.some(t => t.toLowerCase().includes(query.toLowerCase())) ? "🏷️" : "📝";
         const id = theme.fg("accent", `#${mem.id}`);
-        const preview = mem.text.length > 60 ? mem.text.substring(0, 60) + "..." : mem.text;
+        const preview = mem.text.length > 60 ? `${mem.text.substring(0, 60)  }...` : mem.text;
         const text = theme.fg("text", preview);
         const tags = mem.tags && mem.tags.length > 0 ? theme.fg("dim", ` [${mem.tags.join(", ")}]`) : "";
         lines.push(`  ${icon} ${id} ${text}${tags}`);
@@ -91,7 +91,7 @@ export function registerMemoryRenderer(api: ExtensionAPI): void {
     if (details.action === "get" && details.target) {
       lines.push("");
       const mem = details.target;
-      lines.push(`  ${theme.fg("accent", "Memory #" + mem.id)}`);
+      lines.push(`  ${theme.fg("accent", `Memory #${  mem.id}`)}`);
       lines.push(`  ${theme.fg("text", mem.text)}`);
       if (mem.tags && mem.tags.length > 0) {
         lines.push(`  ${theme.fg("dim", `Tags: ${mem.tags.join(", ")}`)}`);

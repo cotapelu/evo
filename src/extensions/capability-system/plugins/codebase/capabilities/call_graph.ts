@@ -5,6 +5,7 @@
  * Build call graph from one or more entry files, optionally following imports.
  * Supports filtering by callee name, depth limit, and result limit.
  */
+/* eslint-disable no-await-in-loop */
 
 import { Type } from "typebox";
 import { promises as fs } from "fs";
@@ -175,10 +176,10 @@ function resolveCallee(
     const base = resolve(callerDir, imp.source);
     const candidates = [
       base,
-      base + '.ts',
-      base + '.tsx',
-      base + '.js',
-      base + '.jsx',
+      `${base  }.ts`,
+      `${base  }.tsx`,
+      `${base  }.js`,
+      `${base  }.jsx`,
       resolve(base, 'index.ts'),
       resolve(base, 'index.js')
     ];
@@ -191,10 +192,10 @@ function resolveCallee(
       }
     }
     return null;
-  } else {
+  } 
     const localKey = `${callerPF.fileRel}:${call.calleeLocal}`;
     return callerPF.funcs.get(localKey) || null;
-  }
+  
 }
 
 async function collectAllFiles(cwd: string, roots: string[], depth: number, includeCrossFile: boolean): Promise<ParsedFile[]> {
@@ -215,10 +216,10 @@ async function collectAllFiles(cwd: string, roots: string[], depth: number, incl
         const base = resolve(callerDir, imp.source);
         const candidates = [
           base,
-          base + '.ts',
-          base + '.tsx',
-          base + '.js',
-          base + '.jsx',
+          `${base  }.ts`,
+          `${base  }.tsx`,
+          `${base  }.js`,
+          `${base  }.jsx`,
           resolve(base, 'index.ts'),
           resolve(base, 'index.js')
         ];
@@ -340,7 +341,7 @@ export async function execute(params: { file: string; entryPoints?: string[]; qu
   const roots = determineRoots(params.file, params.entryPoints);
   const allFiles = await collectAllFiles(cwd, roots, depth, includeCrossFile);
   const absToFuncs = buildAbsToFuncs(allFiles);
-  let edges = buildEdges(allFiles, absToFuncs, nameFilter, limit);
+  const edges = buildEdges(allFiles, absToFuncs, nameFilter, limit);
   const nodeSet = collectUniqueNodes(allFiles, edges);
   const result = buildResult(nodeSet, edges);
   const summary = formatSummary(params, result, edges);

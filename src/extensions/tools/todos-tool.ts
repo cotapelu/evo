@@ -178,7 +178,7 @@ async function saveTodoToFile(cwd: string, todo: TodoFile): Promise<void> {
     updatedAt: new Date().toISOString(),
   };
   // Atomic write: write to temp file then rename
-  const tempPath = filePath + `.tmp.${Date.now()}.${process.pid}.json`;
+  const tempPath = `${filePath}.tmp.${Date.now()}.${process.pid}.json`;
   await fs.writeFile(tempPath, JSON.stringify(persisted, null, 2));
   await fs.rename(tempPath, filePath);
 }
@@ -259,13 +259,16 @@ function normalizeInProgress(phases: TodoPhase[]): void {
 // Input normalization (IDENTICAL to backup)
 // ============================================================================
 
-export function normalizeParams(params: unknown): any {
-  if (typeof params === "string") {
+export function normalizeParams(input: unknown): any {
+  let params: any;
+  if (typeof input === "string") {
     try {
-      params = JSON.parse(params);
+      params = JSON.parse(input);
     } catch (e) {
       throw new Error(`Invalid JSON string: ${e instanceof Error ? e.message : String(e)}`);
     }
+  } else {
+    params = input;
   }
 
   if (typeof params !== "object" || params === null) {
@@ -338,150 +341,180 @@ function makeEmptyFile(): TodoFile {
   return { phases: [], nextTaskId: 1, nextPhaseId: 1 };
 }
 
-function applySingleOp(file: TodoFile, params: any): { file: TodoFile; errors: string[] } {
-  const errors: string[] = [];
-
-  if (params.delete !== undefined) {
-    file = makeEmptyFile();
-    return { file, errors };
+// --- Validation helpers (low complexity) ---
+function validateObjectParam(param: any, paramName: string): string[] {
+  if (!param || typeof param !== "object") {
+    return [`${paramName} must be an object`];
   }
+  return [];
+}
 
-  if (params.add_phase) {
-    const op = params.add_phase;
-    if (!op || typeof op !== "object") {
-      errors.push("add_phase must be an object");
-      return { file, errors };
-    }
-    if (!op.name || typeof op.name !== "string") {
-      errors.push("add_phase.name must be a string (not an object or array)");
-      return { file, errors };
-    }
-    if (op.tasks && !Array.isArray(op.tasks)) {
-      errors.push("add_phase.tasks must be an array");
-      return { file, errors };
-    }
-    const phaseId = `phase-${file.nextPhaseId++}`;
-    const { phase, nextTaskId } = buildPhaseFromInput(op, phaseId, file.nextTaskId);
-    file.phases.push(phase);
-    file.nextTaskId = nextTaskId;
-    normalizeInProgress(file.phases);
-    return { file, errors };
+function validateAddPhaseParams(op: any): string[] {
+  const errors = validateObjectParam(op, "add_phase");
+  if (errors.length) return errors;
+  if (!op.name || typeof op.name !== "string") {
+    errors.push("add_phase.name must be a string (not an object or array)");
   }
-
-  if (params.add_task) {
-    const op = params.add_task;
-    if (!op || typeof op !== "object") {
-      errors.push("add_task must be an object");
-      return { file, errors };
-    }
-    if (!op.phase || typeof op.phase !== "string") {
-      errors.push("add_task.phase must be a string (e.g., 'phase-1' or phase name)");
-      return { file, errors };
-    }
-    if (!op.content || typeof op.content !== "string") {
-      errors.push("add_task.content must be a string");
-      return { file, errors };
-    }
-    // Support lookup by phase name OR phase ID
-    const target = file.phases.find((p) => p.id === op.phase || p.name === op.phase);
-    if (!target) {
-      errors.push(`Phase "${op.phase}" not found`);
-    } else {
-      target.tasks.push({
-        id: `task-${file.nextTaskId++}`,
-        content: op.content,
-        status: "pending",
-        notes: op.notes,
-        details: op.details,
-      });
-    }
-    normalizeInProgress(file.phases);
-    return { file, errors };
+  if (op.tasks && !Array.isArray(op.tasks)) {
+    errors.push("add_phase.tasks must be an array");
   }
+  return errors;
+}
 
-  if (params.update) {
-    const op = params.update;
-    if (!op || typeof op !== "object") {
-      errors.push("update must be an object");
-      return { file, errors };
-    }
-
-    // Support batch update with ids array OR single id
-    let taskIds: string[];
-    if (op.ids && Array.isArray(op.ids)) {
-      taskIds = op.ids;
-    } else if (op.id && typeof op.id === "string") {
-      taskIds = [op.id];
-    } else {
-      errors.push("update must have either 'id' (string) or 'ids' (array of strings)");
-      return { file, errors };
-    }
-
-    if (taskIds.length === 0) {
-      errors.push("update must have at least one task ID");
-      return { file, errors };
-    }
-
-    let hasValidUpdates = false;
-    for (const taskId of taskIds) {
-      const task = findTask(file.phases, taskId);
-      if (!task) {
-        errors.push(`Task "${taskId}" not found`);
-        continue;
-      }
-      hasValidUpdates = true;
-      if (op.status !== undefined) {
-        if (typeof op.status === "string" && ["pending", "in_progress", "completed", "abandoned"].includes(op.status)) {
-          task.status = op.status as TodoStatus;
-        } else {
-          errors.push(`Invalid status: ${op.status}. Must be pending, in_progress, completed, or abandoned.`);
-        }
-      }
-      if (op.content !== undefined) task.content = op.content;
-      if (op.notes !== undefined) task.notes = op.notes;
-      if (op.details !== undefined) task.details = op.details;
-    }
-
-    if (!hasValidUpdates && taskIds.length > 0) {
-      errors.push("No valid tasks found to update");
-    }
-    normalizeInProgress(file.phases);
-    return { file, errors };
+function validateAddTaskParams(op: any): string[] {
+  const errors = validateObjectParam(op, "add_task");
+  if (errors.length) return errors;
+  if (!op.phase || typeof op.phase !== "string") {
+    errors.push("add_task.phase must be a string (e.g., 'phase-1' or phase name)");
   }
-
-  if (params.remove_task) {
-    const op = params.remove_task;
-    if (!op || typeof op !== "object") {
-      errors.push("remove_task must be an object");
-      return { file, errors };
-    }
-    if (!op.id || typeof op.id !== "string") {
-      errors.push("remove_task.id must be a string (e.g., 'task-1')");
-      return { file, errors };
-    }
-    let removed = false;
-    for (const phase of file.phases) {
-      const idx = phase.tasks.findIndex((t) => t.id === op.id);
-      if (idx !== -1) {
-        phase.tasks.splice(idx, 1);
-        removed = true;
-        break;
-      }
-    }
-    if (!removed) {
-      errors.push(`Task "${op.id}" not found`);
-    }
-    normalizeInProgress(file.phases);
-    return { file, errors };
+  if (!op.content || typeof op.content !== "string") {
+    errors.push("add_task.content must be a string");
   }
+  return errors;
+}
 
-  if (params.list !== undefined) {
-    return { file, errors };
+function validateRemoveTaskParams(op: any): string[] {
+  const errors = validateObjectParam(op, "remove_task");
+  if (errors.length) return errors;
+  if (!op.id || typeof op.id !== "string") {
+    errors.push("remove_task.id must be a string (e.g., 'task-1')");
   }
+  return errors;
+}
 
-  errors.push("No operation specified");
+// --- Handlers (low complexity) ---
+function handleDelete(file: TodoFile): { file: TodoFile; errors: string[] } {
+  return { file: makeEmptyFile(), errors: [] };
+}
+
+function handleAddPhase(file: TodoFile, op: any): { file: TodoFile; errors: string[] } {
+  const errors = validateAddPhaseParams(op);
+  if (errors.length) return { file, errors };
+  const phaseId = `phase-${file.nextPhaseId++}`;
+  const { phase, nextTaskId } = buildPhaseFromInput(op, phaseId, file.nextTaskId);
+  file.phases.push(phase);
+  file.nextTaskId = nextTaskId;
   normalizeInProgress(file.phases);
   return { file, errors };
+}
+
+function handleAddTask(file: TodoFile, op: any): { file: TodoFile; errors: string[] } {
+  const errors = validateAddTaskParams(op);
+  if (errors.length) return { file, errors };
+  const target = file.phases.find((p) => p.id === op.phase || p.name === op.phase);
+  if (!target) {
+    errors.push(`Phase "${op.phase}" not found`);
+  } else {
+    target.tasks.push({
+      id: `task-${file.nextTaskId++}`,
+      content: op.content,
+      status: "pending",
+      notes: op.notes,
+      details: op.details,
+    });
+  }
+  normalizeInProgress(file.phases);
+  return { file, errors };
+}
+
+function applyUpdateToTask(task: TodoItem, op: any): string[] {
+  const errors: string[] = [];
+  if (op.status !== undefined) {
+    if (typeof op.status === "string" && ["pending", "in_progress", "completed", "abandoned"].includes(op.status)) {
+      task.status = op.status as TodoStatus;
+    } else {
+      errors.push(`Invalid status: ${op.status}. Must be pending, in_progress, completed, or abandoned.`);
+    }
+  }
+  if (op.content !== undefined) task.content = op.content;
+  if (op.notes !== undefined) task.notes = op.notes;
+  if (op.details !== undefined) task.details = op.details;
+  return errors;
+}
+
+function parseUpdateIds(op: any): { taskIds: string[] } | { error: string } {
+  if (op.ids && Array.isArray(op.ids)) {
+    if (op.ids.length === 0) {
+      return { error: "update must have at least one task ID" };
+    }
+    return { taskIds: op.ids };
+  }
+  if (op.id && typeof op.id === "string") {
+    return { taskIds: [op.id] };
+  }
+  return { error: "update must have either 'id' (string) or 'ids' (array of strings)" };
+}
+
+function handleUpdate(file: TodoFile, op: any): { file: TodoFile; errors: string[] } {
+  const errors: string[] = [];
+
+  // Validate op is object
+  const objErrors = validateObjectParam(op, "update");
+  if (objErrors.length) {
+    errors.push(...objErrors);
+    return { file, errors };
+  }
+
+  const idsResult = parseUpdateIds(op);
+  if ('error' in idsResult) {
+    errors.push(idsResult.error);
+    return { file, errors };
+  }
+  const { taskIds } = idsResult;
+
+  let hasValidUpdates = false;
+  for (const taskId of taskIds) {
+    const task = findTask(file.phases, taskId);
+    if (!task) {
+      errors.push(`Task "${taskId}" not found`);
+      continue;
+    }
+    hasValidUpdates = true;
+    const taskErrors = applyUpdateToTask(task, op);
+    errors.push(...taskErrors);
+  }
+
+  if (!hasValidUpdates) {
+    errors.push("No valid tasks found to update");
+  }
+
+  normalizeInProgress(file.phases);
+  return { file, errors };
+}
+
+function handleRemoveTask(file: TodoFile, op: any): { file: TodoFile; errors: string[] } {
+  const errors = validateRemoveTaskParams(op);
+  if (errors.length) return { file, errors };
+  let removed = false;
+  for (const phase of file.phases) {
+    const idx = phase.tasks.findIndex((t) => t.id === op.id);
+    if (idx !== -1) {
+      phase.tasks.splice(idx, 1);
+      removed = true;
+      break;
+    }
+  }
+  if (!removed) {
+    errors.push(`Task "${op.id}" not found`);
+  }
+  normalizeInProgress(file.phases);
+  return { file, errors };
+}
+
+function handleList(file: TodoFile): { file: TodoFile; errors: string[] } {
+  return { file, errors: [] };
+}
+
+function applySingleOp(file: TodoFile, params: any): { file: TodoFile; errors: string[] } {
+  if (params.delete !== undefined) return handleDelete(file);
+  if (params.add_phase) return handleAddPhase(file, params.add_phase);
+  if (params.add_task) return handleAddTask(file, params.add_task);
+  if (params.update) return handleUpdate(file, params.update);
+  if (params.remove_task) return handleRemoveTask(file, params.remove_task);
+  if (params.list !== undefined) return handleList(file);
+  // No operation: normalize and return error
+  normalizeInProgress(file.phases);
+  return { file, errors: ["No operation specified"] };
 }
 
 export function formatSummary(phases: TodoPhase[], errors: string[]): string {
@@ -810,7 +843,7 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
   return {
     name: "todos",
     label: "Todo",
-    description: "Complete todo management: add_phase, add_task, update, remove_task, delete, list. Auto-normalizes ONE in_progress task. Persists to " + CONFIG_DIR_NAME + "/agent/todos.json. add_task accepts phase name or ID. update supports batch update via ids array.",
+    description: `Complete todo management: add_phase, add_task, update, remove_task, delete, list. Auto-normalizes ONE in_progress task. Persists to ${CONFIG_DIR_NAME}/agent/todos.json. add_task accepts phase name or ID. update supports batch update via ids array.`,
     promptSnippet: "todos({ OPERATION: {...} }). All params are OBJECTS (not JSON strings). Ops: add_phase, add_task, update, remove_task, delete, list.",
     promptGuidelines: [
       "RULE: Operation is the KEY. todos({ OPERATION: params }), NOT { operation: name, params: {...} }",
@@ -828,7 +861,7 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
       "",
       "AUTO-RULES:",
       "• Only ONE task can be 'in_progress' (auto-normalizes others to 'pending')",
-      "• Data persists to " + CONFIG_DIR_NAME + "/agent/todos.json",
+      `• Data persists to ${CONFIG_DIR_NAME}/agent/todos.json`,
       "• Use 'details' field only for in_progress context (multiline)",
       "• Task IDs are auto: task-1, task-2... Find them by running todos({ list: {} })",
     ],
@@ -856,9 +889,9 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
       try {
         let p: any;
         try {
-          if (typeof params === "string") params = JSON.parse(params);
-          if (typeof params !== "object" || params === null) throw new Error("object required");
-          p = params;
+          const parsed = typeof params === "string" ? JSON.parse(params) : params;
+          if (typeof parsed !== "object" || parsed === null) throw new Error("object required");
+          p = parsed;
         } catch (e: unknown) {
           const msg = e instanceof Error ? e.message : String(e);
           return {

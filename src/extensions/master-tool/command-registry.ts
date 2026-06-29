@@ -6,6 +6,7 @@
  * Tự động scan thư mục commands/ và load command metadata.
  * Hỗ trợ lazy loading, category organization, command discovery.
  */
+/* eslint-disable no-await-in-loop */
 
 import { readdir, stat } from "fs/promises";
 import { join, extname, basename, dirname } from "path";

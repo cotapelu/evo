@@ -92,6 +92,7 @@ export default [
       "no-useless-rename": "error",
       "no-useless-return": "warn",
       "no-var": "error",
+      "complexity": ["warn", 10],
       "object-shorthand": "error",
       "prefer-const": "error",
       "prefer-exponentiation-operator": "error",

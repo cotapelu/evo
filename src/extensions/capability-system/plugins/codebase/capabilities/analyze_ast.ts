@@ -238,10 +238,10 @@ function buildSummary(params: { file: string }, lines: number, language: string,
 🔤 Language: ${language}
 
 📥 Imports (${result.imports.length}):
-${result.imports.map((imp, i) => `  ${i+1}. ${imp.importClause ? imp.importClause + ' ' : ''}from "${imp.moduleSpecifier}"`).join('\n')}
+${result.imports.map((imp, i) => `  ${i+1}. ${imp.importClause ? `${imp.importClause  } ` : ''}from "${imp.moduleSpecifier}"`).join('\n')}
 
 📤 Exports (${result.exports.length}):
-${result.exports.map((exp, i) => `  ${i+1}. ${exp.type} ${exp.name || ''}${exp.aliases ? ' as ' + exp.aliases.join(', ') : ''}`).join('\n')}
+${result.exports.map((exp, i) => `  ${i+1}. ${exp.type} ${exp.name || ''}${exp.aliases ? ` as ${  exp.aliases.join(', ')}` : ''}`).join('\n')}
 
 🔧 Symbols (${result.symbols.length}):
 ${result.symbols.map((sym, i) => `  ${i+1}. ${sym.kind} ${sym.name} (line ${sym.line})`).join('\n')}

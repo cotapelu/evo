@@ -48,7 +48,7 @@ function getState(ctx: TeamWidgetContext): TeamWidgetSessionState | undefined {
 function ensureState(ctx: TeamWidgetContext): TeamWidgetSessionState {
   let state = getState(ctx);
   if (!state) {
-    state = { enabled: true, ctx: ctx, intervalId: null };
+    state = { enabled: true, ctx, intervalId: null };
     // @ts-ignore - symbol-keyed property
     ctx[TEAM_WIDGET_STATE] = state;
   }
@@ -176,7 +176,7 @@ export function registerTeamWidget(api: ExtensionAPI): void {
   // Set up widget on session start
   api.on("session_start", async (_event, ctx: TeamWidgetContext) => {
     // Create per-session state (default enabled)
-    const state: TeamWidgetSessionState = { enabled: true, ctx: ctx, intervalId: null };
+    const state: TeamWidgetSessionState = { enabled: true, ctx, intervalId: null };
     // @ts-ignore - symbol-keyed property not in type
     ctx[TEAM_WIDGET_STATE] = state;
 

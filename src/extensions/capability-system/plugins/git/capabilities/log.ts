@@ -2,6 +2,7 @@
 /**
  * git.log capability
  */
+/* eslint-disable default-param-last */
 
 import { Type } from "typebox";
 

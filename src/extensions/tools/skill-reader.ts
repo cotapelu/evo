@@ -179,7 +179,7 @@ export function createSkillLoaderTool(): ToolDefinition {
       required: ["command", "args"]
     },
     // @ts-expect-error - custom field for discovery
-    commandMeta: commandMeta,
+    commandMeta,
 
     async execute(_toolCallId: string, params: any, signal?: AbortSignal, _onUpdate?: any, ctx?: any) {
       const { command, args } = params;

@@ -156,7 +156,7 @@ export class TodoState {
       await fs.mkdir(dir, { recursive: true });
 
       const snapshot = this.getSnapshot();
-      const tempPath = filePath + `.tmp.${Date.now()}.${process.pid}.json`;
+      const tempPath = `${filePath  }.tmp.${Date.now()}.${process.pid}.json`;
       await fs.writeFile(tempPath, JSON.stringify(snapshot, null, 2));
       await fs.rename(tempPath, filePath);
 
@@ -368,8 +368,8 @@ export function renderResult(result: any, options: any, theme: any): any {
       lines.push(theme.fg("accent", "📝 Todo List").bold());
       lines.push("");
       lines.push(`Total: ${theme.fg("highlight", data.stats.total.toString())} | ` +
-        `${theme.fg("success", data.stats.done + " done")} | ` +
-        `${theme.fg("text", data.stats.pending + " pending")}`);
+        `${theme.fg("success", `${data.stats.done  } done`)} | ` +
+        `${theme.fg("text", `${data.stats.pending  } pending`)}`);
 
       if (data.tasks.length > 0) {
         lines.push("");

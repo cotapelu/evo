@@ -5,6 +5,7 @@
  * Searches code files for a query string (case-sensitive or insensitive).
  * Returns matching lines with file path, line number, column, and snippet.
  */
+/* eslint-disable no-await-in-loop */
 
 import { Type } from "typebox";
 import { promises as fs } from "fs";

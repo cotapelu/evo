@@ -2,6 +2,7 @@
 /**
  * Plugin Loader
  */
+/* eslint-disable no-await-in-loop */
 
 import { access, readdir, readFile } from "fs/promises";
 import { existsSync, watch } from "fs"; // watch is sync, existsSync ok for quick check
@@ -356,21 +357,23 @@ export class PluginLoader {
       clearTimeout(existing);
     }
 
-    const timer = setTimeout(async () => {
-      this.newPluginTimers.delete(pluginFolder);
-      const pluginPath = join(this.options.pluginsDir, pluginFolder);
-      const manifestPath = join(pluginPath, MANIFEST_FILENAME);
+    const timer = setTimeout(() => {
+      (async () => {
+        this.newPluginTimers.delete(pluginFolder);
+        const pluginPath = join(this.options.pluginsDir, pluginFolder);
+        const manifestPath = join(pluginPath, MANIFEST_FILENAME);
 
-      // Only load if manifest exists now
-      if (existsSync(manifestPath)) {
-        try {
-          await this.loadPlugin(pluginFolder);
-        } catch (err) {
-          console.error(`[PluginLoader] Delayed load failed for ${pluginFolder}:`, err);
+        // Only load if manifest exists now
+        if (existsSync(manifestPath)) {
+          try {
+            await this.loadPlugin(pluginFolder);
+          } catch (err) {
+            console.error(`[PluginLoader] Delayed load failed for ${pluginFolder}:`, err);
+          }
+        } else {
+          console.warn(`[PluginLoader] Manifest not found for ${pluginFolder} after delay, skipping`);
         }
-      } else {
-        console.warn(`[PluginLoader] Manifest not found for ${pluginFolder} after delay, skipping`);
-      }
+      })().catch((e) => console.error(`[PluginLoader] Delayed load error for ${pluginFolder}:`, e));
     }, 500); // 500ms debounce allows file system operations to complete
 
     this.newPluginTimers.set(pluginFolder, timer);

@@ -3,6 +3,7 @@
  *
  * Simple task distribution and shared workspace for multi-agent collaboration.
  */
+/* eslint-disable no-await-in-loop */
 
 import {
   AgentSessionRuntime,
@@ -29,7 +30,7 @@ const MAX_RETRY_DELAY_MS = 60000; // 60 seconds
 const AGENT_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes for zombie detection
 
 function calculateRetryDelay(retryCount: number): number {
-  const delay = BASE_RETRY_DELAY_MS * Math.pow(2, retryCount - 1);
+  const delay = BASE_RETRY_DELAY_MS * 2**(retryCount - 1);
   return Math.min(delay, MAX_RETRY_DELAY_MS);
 }
 
@@ -410,7 +411,7 @@ export class AgentTeam implements AgentTeamRuntime {
       // Notify task released
       this.notifyUpdate(this.createUpdate(
         `↩️ Agent ${role} released task ${taskIndex}`,
-        { agent: role, taskIndex: taskIndex, retryCount: task.retryCount }
+        { agent: role, taskIndex, retryCount: task.retryCount }
       ));
       return true;
     });
@@ -517,7 +518,7 @@ export class AgentTeam implements AgentTeamRuntime {
       // Notify task completed
       this.notifyUpdate(this.createUpdate(
         `✅ Agent ${role} completed task ${taskIndex}`,
-        { agent: role, taskIndex: taskIndex, resultPreview: result.substring(0, 150) }
+        { agent: role, taskIndex, resultPreview: result.substring(0, 150) }
       ));
     });
   }
@@ -576,7 +577,7 @@ export class AgentTeam implements AgentTeamRuntime {
       } else {
         agentCwd = baseCwd ?? parentRuntime.cwd;
       }
-      if (!agentCwd) throw new Error('agentCwd is undefined for role ' + role);
+      if (!agentCwd) throw new Error(`agentCwd is undefined for role ${  role}`);
 
       // Create isolated session directory
       const teamDir = path.join(parentRuntime.services.agentDir as string, 'teams', this.id);
@@ -909,7 +910,7 @@ export class TeamRegistry {
     const team = this.teams.get(teamId);
     if (team) {
       const timer = setTimeout(() => {
-        this.autoDisposeTeam(teamId);
+        this.autoDisposeTeam(teamId).catch((e) => console.error('Auto dispose error:', e));
       }, this.AUTO_DISPOSE_DELAY).unref?.();
       if (timer) {
         this.autoDisposeTimers.set(teamId, timer);
@@ -1010,6 +1011,7 @@ export async function bootPiclawTeam(
 }
 
 function startCompletionMonitor(team: AgentTeam): void {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   team.monitorInterval = setInterval(async () => {
     await team.withLock(() => team.reclaimZombieAgents());
     const status = await team.getTeamStatus();

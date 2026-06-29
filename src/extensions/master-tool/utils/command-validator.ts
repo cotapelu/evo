@@ -113,9 +113,9 @@ export class CommandValidator {
       if (typeof o !== 'object' || o === null) return false;
       if (visited.has(o)) return false;
       visited.add(o);
-      if (Object.prototype.hasOwnProperty.call(o, '__proto__')) return true;
-      if (Object.prototype.hasOwnProperty.call(o, 'constructor')) return true;
-      if (Object.prototype.hasOwnProperty.call(o, 'prototype')) return true;
+      if (Object.hasOwn(o, '__proto__')) return true;
+      if (Object.hasOwn(o, 'constructor')) return true;
+      if (Object.hasOwn(o, 'prototype')) return true;
       for (const v of Object.values(o)) {
         if (check(v)) return true;
       }

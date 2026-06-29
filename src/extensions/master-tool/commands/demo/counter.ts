@@ -94,7 +94,7 @@ export class CounterState {
     try {
       await fs.mkdir(dir, { recursive: true });
 
-      const tempPath = filePath + `.tmp.${Date.now()}.${process.pid}.json`;
+      const tempPath = `${filePath  }.tmp.${Date.now()}.${process.pid}.json`;
       await fs.writeFile(tempPath, JSON.stringify(this.getSnapshot(), null, 2));
       await fs.rename(tempPath, filePath);
 

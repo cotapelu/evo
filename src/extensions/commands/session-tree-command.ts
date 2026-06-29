@@ -61,7 +61,7 @@ function renderCompactionDetails(e: any): string[] {
   lines.push(`Tokens before: ${comp.tokensBefore ?? 'N/A'}`);
   lines.push(`First kept: ${comp.firstKeptEntryId ?? 'none'}`);
   if (comp.summary) {
-    const summaryPreview = comp.summary.length > 200 ? comp.summary.substring(0, 200) + '...' : comp.summary;
+    const summaryPreview = comp.summary.length > 200 ? `${comp.summary.substring(0, 200)  }...` : comp.summary;
     lines.push(`Summary: ${summaryPreview}`);
   }
   return lines;

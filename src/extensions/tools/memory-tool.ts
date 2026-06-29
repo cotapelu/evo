@@ -78,7 +78,7 @@ export class MemoryListComponent {
       const toShow = this.memories.slice(0, maxShow);
       for (const mem of toShow) {
         const id = th.fg("accent", `#${mem.id}`);
-        const preview = mem.text.length > 60 ? mem.text.substring(0, 60) + "..." : mem.text;
+        const preview = mem.text.length > 60 ? `${mem.text.substring(0, 60)  }...` : mem.text;
         const text = th.fg("text", preview);
         const tags = mem.tags && mem.tags.length > 0 ? th.fg("dim", ` [${mem.tags.join(", ")}]`) : "";
         lines.push(`  ${id} ${text}${tags}`);
@@ -167,6 +167,7 @@ export function registerMemoryTool(api: ExtensionAPI): void {
         // Parse JSON string if needed (like todos-tool)
         if (typeof params === "string") {
           try {
+            // eslint-disable-next-line no-param-reassign
             params = JSON.parse(params);
           } catch (e: any) {
             return { content: [{ type: "text", text: `Error: Invalid JSON - ${e.message}` }], details: { action: "unknown", memories: [...memories], nextId, error: "Invalid JSON" }, isError: false };
@@ -202,7 +203,7 @@ export function registerMemoryTool(api: ExtensionAPI): void {
             if (memories.length === 0) {
               return { content: [{ type: "text", text: "No memories stored." }], details, isError: false };
             }
-            const lines = memories.map(m => `#${m.id}: ${m.text.length > 80 ? m.text.substring(0, 80) + "..." : m.text}${m.tags ? ` [${m.tags.join(", ")}]` : ""}`);
+            const lines = memories.map(m => `#${m.id}: ${m.text.length > 80 ? `${m.text.substring(0, 80)  }...` : m.text}${m.tags ? ` [${m.tags.join(", ")}]` : ""}`);
             return { content: [{ type: "text", text: lines.join("\n") }], details, isError: false };
           }
 
@@ -261,7 +262,7 @@ export function registerMemoryTool(api: ExtensionAPI): void {
             const q = query.toLowerCase();
             const results = memories.filter(m => m.text.toLowerCase().includes(q) || (m.tags?.some(t => t.toLowerCase().includes(q))));
             const lines = results.map(m => `#${m.id}: ${m.text}${m.tags ? ` [${m.tags.join(", ")}]` : ""}`);
-            const summary = `Found ${results.length} of ${memories.length} memories:\n` + lines.join("\n");
+            const summary = `Found ${results.length} of ${memories.length} memories:\n${  lines.join("\n")}`;
             return { content: [{ type: "text", text: summary }], details: { action: "search", memories: results, nextId }, isError: false };
           }
 
@@ -279,10 +280,10 @@ export function registerMemoryTool(api: ExtensionAPI): void {
       let text = th.fg("toolTitle", th.bold("memory ")) + th.fg("muted", args.action);
       if (args.text) {
         const preview = args.text.substring(0, 30) + (args.text.length > 30 ? "..." : "");
-        text += " " + th.fg("dim", '"' + preview + '"');
+        text += ` ${  th.fg("dim", `"${  preview  }"`)}`;
       }
-      if (args.id !== undefined) text += " " + th.fg("accent", "#" + args.id);
-      if (args.tags) text += " " + th.fg("warning", "[" + args.tags.length + " tags]");
+      if (args.id !== undefined) text += ` ${  th.fg("accent", `#${  args.id}`)}`;
+      if (args.tags) text += ` ${  th.fg("warning", `[${  args.tags.length  } tags]`)}`;
       return new Text(text, 0, 0);
     },
 

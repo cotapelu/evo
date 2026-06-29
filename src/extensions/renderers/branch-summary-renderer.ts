@@ -56,7 +56,7 @@ export function registerBranchSummaryRenderer(api: ExtensionAPI): void {
     }
 
     // Visual separator
-    lines.push("\n" + theme.fg("border", "─".repeat(40)));
+    lines.push(`\n${  theme.fg("border", "─".repeat(40))}`);
 
     return new Text(lines.join("\n"));
   });

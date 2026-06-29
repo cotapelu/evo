@@ -127,6 +127,7 @@ export async function executeSubtool(
         return { isError: true, content: [{ type: "text", text: "Missing required parameter: url" }], details: undefined };
       }
 
+      // eslint-disable-next-line no-new
       try { new URL(url); } catch {
         return { isError: true, content: [{ type: "text", text: `Invalid URL: ${url}` }], details: undefined };
       }

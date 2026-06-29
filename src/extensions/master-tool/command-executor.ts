@@ -224,12 +224,12 @@ export class CommandExecutor {
       // 10. Validate output size
       const outputValidation = this.validator.validateResult(result, execCtx.maxOutputSize);
       if (!outputValidation.valid) {
-        result.stderr = (result.stderr ? result.stderr + "\n" : "") + `Warning: ${outputValidation.errors.join(', ')}`;
+        result.stderr = `${result.stderr ? `${result.stderr  }\n` : ""  }Warning: ${outputValidation.errors.join(', ')}`;
         if (result.stdout.length > execCtx.maxOutputSize) {
-          result.stdout = result.stdout.substring(0, execCtx.maxOutputSize) + "\n... (truncated)";
+          result.stdout = `${result.stdout.substring(0, execCtx.maxOutputSize)  }\n... (truncated)`;
         }
         if (result.stderr.length > execCtx.maxOutputSize) {
-          result.stderr = result.stderr.substring(0, execCtx.maxOutputSize) + "\n... (truncated)";
+          result.stderr = `${result.stderr.substring(0, execCtx.maxOutputSize)  }\n... (truncated)`;
         }
       }
 

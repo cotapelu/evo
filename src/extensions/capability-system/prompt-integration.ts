@@ -25,12 +25,12 @@ export function enhancePromptWithCapabilities(
   const notesIndex = basePrompt.indexOf("\n\n## Notes");
 
   if (guidelinesIndex !== -1) {
-    return basePrompt.slice(0, guidelinesIndex) + "\n\n" + capabilitiesSection + basePrompt.slice(guidelinesIndex);
+    return `${basePrompt.slice(0, guidelinesIndex)  }\n\n${  capabilitiesSection  }${basePrompt.slice(guidelinesIndex)}`;
   }
   if (notesIndex !== -1) {
-    return basePrompt.slice(0, notesIndex) + "\n\n" + capabilitiesSection + basePrompt.slice(notesIndex);
+    return `${basePrompt.slice(0, notesIndex)  }\n\n${  capabilitiesSection  }${basePrompt.slice(notesIndex)}`;
   }
-  return basePrompt + "\n\n" + capabilitiesSection;
+  return `${basePrompt  }\n\n${  capabilitiesSection}`;
 }
 
 /**
