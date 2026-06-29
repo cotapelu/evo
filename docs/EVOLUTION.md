@@ -1450,3 +1450,31 @@ Main `execute` now orchestrates at high level; complexity reduced from 19 to ≤
 - Consider applying similar pattern to other complex async methods across codebase (e.g., `plugin-loader.execute`, `team-manager` methods) where complexity exceeds 10.
 - Continue systematic complexity reduction to improve overall maintainability score.
 
+
+### [2025-06-28] Memory-tool Complexity Reduction (Cycle 8)
+
+**Area**: `memory-tool.ts`
+
+**Change**: Refactored `execute` method into thin orchestrator by extracting eight helper functions:
+- `parseInput(params)` — parses and validates input (JSON conversion, object check)
+- `handleAdd(p)` — adds a new memory with tags and timestamp
+- `handleList()` — returns formatted list of memories
+- `handleGet(p)` — retrieves memory by ID
+- `handleDelete(p)` — deletes memory by ID with rollback on failure
+- `handleClear()` — clears all memories, marking as deleted in history
+- `handleSearch(p)` — searches memories by text or tags (case-insensitive)
+- `unknownActionResult(action)` — fallback for unknown actions
+
+Main `execute` now reads as a clear switch dispatcher; complexity reduced from 20 to ≤10.
+
+**Impact**:
+- All tests pass (1943 passed, 3 skipped).
+- Typecheck 0 errors, lint 0 errors.
+- Build successful.
+- `memory-tool` module fully compliant with complexity ≤10 quality gate.
+- No regressions; fixed stray quote syntax bug in `handleDelete` during refactor.
+
+**Follow-up**:
+- Continue systematic complexity reduction on other modules (`plugin-loader.execute` currently 14, `team-manager` methods >10, other tool execute functions).
+- Maintain the local-helper orchestration pattern (helpers ≤20 lines, complexity ≤10) for clarity and testability.
+
