@@ -776,6 +776,39 @@ function renderTodosCall(args: any, theme: any): Text {
   return new Text(text, 0, 0);
 }
 
+function renderHeader(details: TodoToolDetails, theme: any): string[] {
+  if (details.error) return [theme.fg("error", `Error: ${details.error}`)];
+  return [theme.fg("toolTitle", `Todos: ${details.phases.flatMap(p => p.tasks).length} tasks`)];
+}
+
+function renderEmptyState(theme: any): Text {
+  return new Text(theme.fg("dim", "No todos"), 0, 0);
+}
+
+function renderTaskLine(task: TodoItem, theme: any): string[] {
+  const color = task.status === "completed" || task.status === "abandoned" ? "dim" : task.status === "in_progress" ? "accent" : "text";
+  const prefix = task.status === "in_progress" ? "→" : task.status === "completed" ? "✓" : task.status === "abandoned" ? "✗" : " ";
+  const lines: string[] = [ `${theme.fg(color, `  ${prefix} ${task.id} ${task.content}`)}` ];
+  if (task.status === "in_progress" && task.details) {
+    for (const line of task.details.split("\n")) {
+      lines.push(theme.fg("dim", `    ${line}`));
+    }
+  }
+  return lines;
+}
+
+function renderPhaseTasks(phase: TodoPhase, options: { expanded: boolean }, theme: any): string[] {
+  const lines: string[] = [];
+  const displayTasks = options.expanded ? phase.tasks : phase.tasks.slice(0, 5);
+  for (const task of displayTasks) {
+    lines.push(...renderTaskLine(task, theme));
+  }
+  if (!options.expanded && phase.tasks.length > 5) {
+    lines.push(theme.fg("dim", `  ... ${phase.tasks.length - 5} more`));
+  }
+  return lines;
+}
+
 function renderTodosResult(result: { details?: TodoToolDetails }, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
   const details = result.details as TodoToolDetails | undefined;
   if (!details) return new Text("", 0, 0);
@@ -784,26 +817,12 @@ function renderTodosResult(result: { details?: TodoToolDetails }, options: { exp
 
   const phases = details.phases.filter((p: any) => p.tasks.length > 0);
   const allTasks = phases.flatMap((p: any) => p.tasks);
-  if (allTasks.length === 0) return new Text(theme.fg("dim", "No todos"), 0, 0);
+  if (allTasks.length === 0) return renderEmptyState(theme);
 
-  const lines: string[] = [theme.fg("toolTitle", `Todos: ${allTasks.length} tasks`)];
+  const lines: string[] = renderHeader(details, theme);
   for (const phase of phases) {
     if (phases.length > 1) lines.push(theme.fg("accent", `▼ ${phase.name}`));
-    const displayTasks = options.expanded ? phase.tasks : phase.tasks.slice(0, 5);
-    for (const task of displayTasks) {
-      const color = task.status === "completed" || task.status === "abandoned" ? "dim" : task.status === "in_progress" ? "accent" : "text";
-      const prefix = task.status === "in_progress" ? "→" : task.status === "completed" ? "✓" : task.status === "abandoned" ? "✗" : " ";
-      lines.push(`${theme.fg(color, `  ${prefix} ${task.id} ${task.content}`)}`);
-      if (task.status === "in_progress" && task.details) {
-        for (const line of task.details.split("\n")) {
-          lines.push(theme.fg("dim", `    ${line}`));
-        }
-      }
-    }
-
-    if (!options.expanded && phase.tasks.length > 5) {
-      lines.push(theme.fg("dim", `  ... ${phase.tasks.length - 5} more`));
-    }
+    lines.push(...renderPhaseTasks(phase, options, theme));
   }
 
   return new Text(lines.join("\n"), 0, 0);

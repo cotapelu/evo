@@ -240,3 +240,25 @@ Last Updated: 2026-06-27
 **Remaining**:
 - `renderTodosResult` (20), `execute` (19) in `todos-tool` to address.
 
+
+### [2025-06-28] Complexity Reduction - renderTodosResult
+
+**Type**: Code Quality (Complexity)
+
+**Summary**: Refactored `renderTodosResult` in `todos-tool` into small helpers, reducing complexity from 20 to ≤10.
+
+**Key Changes**:
+- Extracted `renderHeader`, `renderEmptyState`, `renderTaskLine`, `renderPhaseTasks`.
+- All helpers ≤20 lines, complexity ≤10.
+- Simplified orchestrator to filter phases, loop, and compose lines.
+
+**Impact**:
+- All tests pass: 1943 passed, 3 skipped.
+- Typecheck: 0 errors.
+- Lint: 0 errors.
+- Build: successful.
+- Only remaining high-complexity function in `todos-tool`: `execute` (19).
+
+**Next**:
+- Refactor `execute` to achieve full `todos-tool` compliance.
+

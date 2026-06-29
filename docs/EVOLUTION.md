@@ -1403,3 +1403,25 @@ Main `normalizeParams` now orchestrates; complexity dropped from 23 to ≤10.
 - Remaining high-complexity functions in `todos-tool`: `renderTodosResult` (20), `execute` (19)
 - Next iteration will target `renderTodosResult`.
 
+
+### [2025-06-28] Complexity Reduction - renderTodosResult
+
+**Area**: `todos-tool.ts`
+
+**Change**: Refactored `renderTodosResult` by extracting rendering helpers:
+- `renderHeader(details, theme)` — renders title line
+- `renderEmptyState(theme)` — returns "No todos" Text
+- `renderTaskLine(task, theme)` — formats a single task with status prefix and details
+- `renderPhaseTasks(phase, options, theme)` — renders all tasks in a phase with truncation
+Main `renderTodosResult` now orchestrates; complexity reduced from 20 to ≤10.
+
+**Impact**:
+- All tests pass (1943)
+- Typecheck 0 errors, lint 0 errors
+- Build successful
+- Quality gate: remaining high-complexity function in `todos-tool` is `execute` (19)
+
+**Follow-up**:
+- Target `execute` next to complete `todos-tool` compliance.
+- Consider similar extraction patterns for other complex render functions across codebase.
+
