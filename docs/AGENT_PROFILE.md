@@ -98,6 +98,8 @@ Last Updated: 2026-06-27
 * **Branch Coverage Round 209**: Added branch coverage tests for `prompt-integration` (12 tests) and `team-widget` (15 tests). Increased overall branch coverage from **83.45%** to **83.61%**; statements **92.55%**. Total test suites: 174, tests: 1859 (3 skipped).
 
 - **Master Tool System**: Production-ready command framework with auto-discovery, validation, caching, rate limiting, audit, security checks, and stateful support (persistence, mutex, auto-save/restore). Replaces template-tool; provides unified toolbox for 50-500+ commands.
+- `team-ops-tool.execute` complexity reduced from ~36 to ≤10 via helper extraction and action handler map; fully compliant.
+
 ## Recommendations
 - ✅ Added `waitForLoad()` helper in `PluginLoader` for readiness.
 - ✅ Introduced `@extensions` path alias for test imports.
@@ -173,3 +175,25 @@ Last Updated: 2026-06-27
 - Continue reducing complexity on other modules: `plugin-loader.execute` (14), `team-manager` methods, and other tool execute functions.
 - Maintain systematic decomposition pattern.
 
+
+## Team-ops-tool Complexity Reduction (Cycle 9) - 2025-06-28
+
+**Area**: `team-ops-tool.ts`
+
+**Change**: Refactored `execute` method by extracting helper functions for each action and replacing the large switch statement with an action handler map. Complexity reduced from ~36 to ≤10.
+
+**Details**:
+- Extracted helpers: `parseInput`, `handleClaimTask`, `handleReleaseTask`, `handleCompleteTask`, `handleGetTeamStatus`, `handleWorkspaceRead`, `handleWorkspaceWrite`, `handleSendMessage`, `handleGetMessages`, `handleUpdateStatus`, `handleUnknownAction`.
+- Introduced `actionHandlers` dictionary to map actions to handlers, eliminating the switch statement.
+- Simplified `execute` to a thin orchestrator with a try-catch, parsing, lookup, and invocation.
+
+**Impact**:
+- All tests pass (1943 passed, 3 skipped).
+- Typecheck 0 errors, lint 0 errors.
+- Build successful.
+- `team-ops-tool` now fully compliant with complexity ≤10 quality gate.
+
+**Follow-up**:
+- Continue systematic complexity reduction on other high-complexity functions (e.g., `team-manager` methods, `plugin-loader` utilities).
+- Maintain the handler-map pattern for multi-action tools to keep complexity low.
+- Expand use of handler maps to other tools with >5 actions.

@@ -1478,3 +1478,26 @@ Main `execute` now reads as a clear switch dispatcher; complexity reduced from 2
 - Continue systematic complexity reduction on other modules (`plugin-loader.execute` currently 14, `team-manager` methods >10, other tool execute functions).
 - Maintain the local-helper orchestration pattern (helpers ≤20 lines, complexity ≤10) for clarity and testability.
 
+
+### [2025-06-28] Team-ops-tool Complexity Reduction (Cycle 9)
+
+**Area**: `team-ops-tool.ts`
+
+**Change**: Refactored `execute` method by extracting helper functions and replacing the large switch statement with an action handler map. Complexity reduced from ~36 to ≤10.
+
+**Details**:
+- Extracted helpers: `parseInput`, `handleClaimTask`, `handleReleaseTask`, `handleCompleteTask`, `handleGetTeamStatus`, `handleWorkspaceRead`, `handleWorkspaceWrite`, `handleSendMessage`, `handleGetMessages`, `handleUpdateStatus`, `handleUnknownAction`.
+- Introduced `actionHandlers` map: `{ claim_task, release_task, ... }` to route actions.
+- Simplified `execute` to a thin orchestrator with try-catch, parsing, handler lookup, and invocation.
+
+**Impact**:
+- All tests pass (1943 passed, 3 skipped).
+- Typecheck 0 errors, lint 0 errors.
+- Build successful.
+- `team-ops-tool` fully compliant with complexity ≤10 quality gate.
+- No regressions.
+
+**Follow-up**:
+- Continue systematic complexity reduction on remaining high-complexity functions (`team-manager` methods, `plugin-loader` utilities).
+- Consider applying handler-map pattern to other tools with many actions.
+- Maintain helper extraction pattern (≤20 lines, ≤10 complexity).
