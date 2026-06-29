@@ -517,6 +517,45 @@ function applySingleOp(file: TodoFile, params: any): { file: TodoFile; errors: s
   return { file, errors: ["No operation specified"] };
 }
 
+function formatHeader(errors: string[], tasks: TodoItem[]): string[] {
+  const lines: string[] = [];
+  if (errors.length > 0) {
+    lines.push(`⚠️ Errors: ${errors.join("; ")}`);
+  } else {
+    const pending = tasks.filter((t) => t.status === "pending" || t.status === "in_progress").length;
+    const completed = tasks.filter((t) => t.status === "completed").length;
+    lines.push(`✅ Todo updated: ${pending} remaining, ${completed} completed.`);
+    lines.push(`📊 Use /todos to view, or continue with next task.`);
+    lines.push("");
+  }
+  return lines;
+}
+
+function formatRemainingItems(remainingTasks: Array<TodoItem & { phase: string }>): string[] {
+  if (remainingTasks.length === 0) {
+    return ["Remaining items: none."];
+  }
+  const lines: string[] = [`Remaining items (${remainingTasks.length}):`];
+  for (const task of remainingTasks) {
+    lines.push(`  - ${task.id} ${task.content} [${task.status}] (${task.phase})`);
+    if (task.status === "in_progress" && task.details) {
+      for (const line of task.details.split("\n")) {
+        lines.push(`      ${line}`);
+      }
+    }
+  }
+  return lines;
+}
+
+function formatPhaseProgress(
+  phases: TodoPhase[],
+  currentIdx: number,
+  current: TodoPhase | undefined,
+  done: number
+): string {
+  return `Phase ${currentIdx + 1}/${phases.length} "${current?.name ?? "unknown"}" — ${done}/${current?.tasks.length ?? 0} tasks complete`;
+}
+
 export function formatSummary(phases: TodoPhase[], errors: string[]): string {
   const tasks = phases.flatMap((p) => p.tasks);
   if (tasks.length === 0) return errors.length > 0 ? `Errors: ${errors.join("; ")}` : "Todo list cleared.";
@@ -537,31 +576,9 @@ export function formatSummary(phases: TodoPhase[], errors: string[]): string {
   const done = current?.tasks.filter((t) => t.status === "completed").length ?? 0;
 
   const lines: string[] = [];
-  if (errors.length > 0) {
-    lines.push(`⚠️ Errors: ${errors.join("; ")}`);
-  } else {
-    const pending = tasks.filter((t) => t.status === "pending" || t.status === "in_progress").length;
-    const completed = tasks.filter((t) => t.status === "completed").length;
-    lines.push(`✅ Todo updated: ${pending} remaining, ${completed} completed.`);
-    lines.push(`📊 Use /todos to view, or continue with next task.`);
-    lines.push("");
-  }
-  if (remainingTasks.length === 0) {
-    lines.push("Remaining items: none.");
-  } else {
-    lines.push(`Remaining items (${remainingTasks.length}):`);
-    for (const task of remainingTasks) {
-      lines.push(`  - ${task.id} ${task.content} [${task.status}] (${task.phase})`);
-      if (task.status === "in_progress" && task.details) {
-        for (const line of task.details.split("\n")) {
-          lines.push(`      ${line}`);
-        }
-      }
-    }
-  }
-  lines.push(
-    `Phase ${currentIdx + 1}/${phases.length} "${current?.name ?? "unknown"}" — ${done}/${current?.tasks.length ?? 0} tasks complete`,
-  );
+  lines.push(...formatHeader(errors, tasks));
+  lines.push(...formatRemainingItems(remainingTasks));
+  lines.push(formatPhaseProgress(phases, currentIdx, current, done));
   return lines.join("\n");
 }
 

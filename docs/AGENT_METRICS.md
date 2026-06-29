@@ -194,3 +194,27 @@ Last Updated: 2026-06-27
 - Consider converting sequential `await` loops to `Promise.all` where order independence is safe.
 - Revisit default-param-last pattern across capability plugins: could be unified via a signature wrapper or conversion, but requires careful test updates.
 
+
+### [2025-06-28] Complexity Reduction - formatSummary
+
+**Type**: Code Quality (Complexity)
+
+**Summary**: Refactored `formatSummary` in `todos-tool` into smaller focused helpers, reducing cyclomatic complexity from 16 to compliant level (orchestrator with ≤10 helpers).
+
+**Key Changes**:
+- Extracted `formatHeader`, `formatRemainingItems`, `formatPhaseProgress`.
+- All new helpers ≤20 lines; complexity ≤10.
+- Maintained all existing logic; no behavioral changes.
+
+**Impact**:
+- All tests pass: 1943 passed, 3 skipped.
+- Typecheck: 0 errors.
+- Lint: 0 errors.
+- Build: successful.
+- Quality gate score ≥90 maintained.
+- Remaining functions with complexity >10: `normalizeParams` (23), `renderTodosResult` (20), `execute` (19) in `todos-tool`.
+
+**Follow-up**:
+- Continue complexity reduction on remaining high-complexity functions in `todos-tool`.
+- Consider similar extraction patterns for other large functions across codebase.
+

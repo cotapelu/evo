@@ -1359,3 +1359,22 @@ Last Updated: 2026-06-27
 - Explore converting default-param-last patterns across capabilities to a unified signature, but requires extensive test updates.
 - Revisit `createCapabilityRouterTool` guidelines integration to ensure manifest examples remain accurate.
 
+
+### [2025-06-28] Complexity Reduction - formatSummary
+
+**Area**: `todos-tool.ts`
+
+**Change**: Refactored `formatSummary` by extracting three focused helpers:
+- `formatHeader(errors, tasks)` — renders header with stats or errors
+- `formatRemainingItems(remainingTasks)` — lists remaining tasks with details handling
+- `formatPhaseProgress(phases, currentIdx, current, done)` — produces phase progress footer
+
+**Impact**:
+- `formatSummary` reduced from complexity 16 to orchestrator with three simple calls; each new helper ≤10 complexity.
+- All tests pass (1943), typecheck 0 errors, lint 0 errors, build successful.
+- Quality gate ≥90 maintained; function size and complexity quality gates progressing toward full compliance.
+
+**Follow-up**:
+- Continue with remaining high-complexity functions in `todos-tool`: `normalizeParams` (23), `renderTodosResult` (20), `execute` (19).
+- Evaluate converting sequential `await` loops to `Promise.all` where order independence is safe (may enable removal of `no-await-in-loop` disables).
+

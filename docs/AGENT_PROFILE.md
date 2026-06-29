@@ -120,3 +120,11 @@ Last Updated: 2026-06-27
   - Deleted obsolete `diff.js` to resolve parsing error.
 - **Quality Gates**: All tests pass (1943), TypeScript typecheck 0 errors, ESLint 0 errors, build successful. Score ≥90 maintained.
 - **Follow-up**: Continue complexity reduction on remaining high-complexity functions (`formatSummary`, `renderTodosResult`, `normalizeParams`). Consider converting sequential loops to `Promise.all` where safe. Evaluate default-param-last pattern alignment across capabilities in a future cycle.
+
+## Complexity Reduction Progress - 2025-06-28
+
+- Completed `applySingleOp` (44→12) and `formatSummary` (16→orchestrator) refactors in `todos-tool.ts`.
+- Remaining high-complexity functions in `todos-tool`: `normalizeParams` (23), `renderTodosResult` (20), `execute` (19).
+- Next iteration(s) will target these functions to achieve full compliance with complexity ≤10 quality gate.
+- Overall trend: steady improvement in function modularity; maintainability score increasing.
+
