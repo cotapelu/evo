@@ -1378,3 +1378,28 @@ Last Updated: 2026-06-27
 - Continue with remaining high-complexity functions in `todos-tool`: `normalizeParams` (23), `renderTodosResult` (20), `execute` (19).
 - Evaluate converting sequential `await` loops to `Promise.all` where order independence is safe (may enable removal of `no-await-in-loop` disables).
 
+
+### [2025-06-28] Complexity Reduction - normalizeParams
+
+**Area**: `todos-tool.ts`
+
+**Change**: Extracted `normalizeParams` into small focused helpers:
+- `parseStringToObject(value, key)` — parses JSON string or returns value
+- `normalizeAddPhase(normalized)` — handles add_phase parsing and tasks string split
+- `normalizeAddTask(normalized)` — normalizes add_task operation
+- `normalizeUpdate(normalized)` — normalizes update operation
+- `normalizeRemoveTask(normalized)` — normalizes remove_task operation
+- `normalizeDelete(normalized)` — normalizes delete operation
+
+Main `normalizeParams` now orchestrates; complexity dropped from 23 to ≤10.
+
+**Impact**:
+- All tests pass (1943)
+- Typecheck 0 errors, lint 0 errors
+- Build successful
+- Quality gate compliance: complexity ≤10 achieved for `normalizeParams`
+
+**Follow-up**:
+- Remaining high-complexity functions in `todos-tool`: `renderTodosResult` (20), `execute` (19)
+- Next iteration will target `renderTodosResult`.
+

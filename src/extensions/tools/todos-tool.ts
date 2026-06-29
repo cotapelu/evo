@@ -259,6 +259,53 @@ function normalizeInProgress(phases: TodoPhase[]): void {
 // Input normalization (IDENTICAL to backup)
 // ============================================================================
 
+function parseStringToObject(value: unknown, key: string): any {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      throw new Error(`${key} must be an object, not a string. Error parsing: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return value;
+}
+
+function normalizeAddPhase(normalized: Record<string, unknown>): void {
+  if (!normalized.add_phase) return;
+  normalized.add_phase = parseStringToObject(normalized.add_phase, "add_phase");
+  const addPhase = normalized.add_phase as Record<string, unknown>;
+  if (addPhase.name !== undefined && typeof addPhase.name !== "string") {
+    throw new Error("add_phase.name must be a string");
+  }
+  if (addPhase.tasks && typeof addPhase.tasks === "string") {
+    try {
+      addPhase.tasks = JSON.parse(addPhase.tasks);
+    } catch {
+      addPhase.tasks = (addPhase.tasks as string).split(",").map((s) => ({ content: s.trim() }));
+    }
+  }
+}
+
+function normalizeAddTask(normalized: Record<string, unknown>): void {
+  if (!normalized.add_task) return;
+  normalized.add_task = parseStringToObject(normalized.add_task, "add_task");
+}
+
+function normalizeUpdate(normalized: Record<string, unknown>): void {
+  if (!normalized.update) return;
+  normalized.update = parseStringToObject(normalized.update, "update");
+}
+
+function normalizeRemoveTask(normalized: Record<string, unknown>): void {
+  if (!normalized.remove_task) return;
+  normalized.remove_task = parseStringToObject(normalized.remove_task, "remove_task");
+}
+
+function normalizeDelete(normalized: Record<string, unknown>): void {
+  if (!normalized.delete) return;
+  normalized.delete = parseStringToObject(normalized.delete, "delete");
+}
+
 export function normalizeParams(input: unknown): any {
   let params: any;
   if (typeof input === "string") {
@@ -277,57 +324,11 @@ export function normalizeParams(input: unknown): any {
 
   const normalized = params as Record<string, unknown>;
 
-  if (normalized.add_phase && typeof normalized.add_phase === "string") {
-    try {
-      normalized.add_phase = JSON.parse(normalized.add_phase);
-    } catch (e) {
-      throw new Error(
-        `add_phase must be an object, not a string. Error parsing: ${e instanceof Error ? e.message : String(e)}`,
-      );
-    }
-  }
-
-  if (normalized.add_phase && typeof normalized.add_phase === "object") {
-    const addPhase = normalized.add_phase as Record<string, unknown>;
-    // Validate name type if present
-    if (addPhase.name !== undefined && typeof addPhase.name !== "string") {
-      throw new Error("add_phase.name must be a string");
-    }
-  }
-
-  if (normalized.add_phase && typeof normalized.add_phase === "object") {
-    const addPhase = normalized.add_phase as Record<string, unknown>;
-    if (addPhase.tasks && typeof addPhase.tasks === "string") {
-      try {
-        addPhase.tasks = JSON.parse(addPhase.tasks);
-      } catch {
-        addPhase.tasks = (addPhase.tasks as string).split(",").map((s) => ({ content: s.trim() }));
-      }
-    }
-  }
-
-  if (normalized.delete !== undefined && typeof normalized.delete === "string") {
-    try {
-      normalized.delete = JSON.parse(normalized.delete);
-    } catch (e) {
-      throw new Error(
-        `delete must be an object, not a string. Error parsing: ${e instanceof Error ? e.message : String(e)}`,
-      );
-    }
-  }
-
-  // Auto-parse other ops if they are strings
-  ["add_task", "update", "remove_task", "delete"].forEach(op => {
-    if (normalized[op] && typeof normalized[op] === "string") {
-      try {
-        normalized[op] = JSON.parse(normalized[op]);
-      } catch (e) {
-        throw new Error(
-          `${op} must be an object, not a string. Error parsing: ${e instanceof Error ? e.message : String(e)}`,
-        );
-      }
-    }
-  });
+  normalizeAddPhase(normalized);
+  normalizeAddTask(normalized);
+  normalizeUpdate(normalized);
+  normalizeRemoveTask(normalized);
+  normalizeDelete(normalized);
 
   // @ts-ignore
   return normalized;

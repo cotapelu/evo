@@ -218,3 +218,25 @@ Last Updated: 2026-06-27
 - Continue complexity reduction on remaining high-complexity functions in `todos-tool`.
 - Consider similar extraction patterns for other large functions across codebase.
 
+
+### [2025-06-28] Complexity Reduction - normalizeParams
+
+**Type**: Code Quality (Complexity)
+
+**Summary**: Refactored `normalizeParams` in `todos-tool` into six small helpers, reducing complexity from 23 to ≤10.
+
+**Key Changes**:
+- Extracted `parseStringToObject`, `normalizeAddPhase`, `normalizeAddTask`, `normalizeUpdate`, `normalizeRemoveTask`, `normalizeDelete`.
+- Each helper ≤20 lines, complexity ≤10.
+- Orchestrator simplified: just calls each normalize function.
+
+**Impact**:
+- All tests pass: 1943 passed, 3 skipped.
+- Typecheck: 0 errors.
+- Lint: 0 errors.
+- Build: successful.
+- Quality gate maintained.
+
+**Remaining**:
+- `renderTodosResult` (20), `execute` (19) in `todos-tool` to address.
+

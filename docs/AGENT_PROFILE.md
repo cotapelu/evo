@@ -128,3 +128,10 @@ Last Updated: 2026-06-27
 - Next iteration(s) will target these functions to achieve full compliance with complexity ≤10 quality gate.
 - Overall trend: steady improvement in function modularity; maintainability score increasing.
 
+
+## Complexity Reduction Progress - 2025-06-28 (cont.)
+
+- Completed `normalizeParams` refactor (23 → ≤10).
+- Remaining high-complexity functions in `todos-tool`: `renderTodosResult` (20), `execute` (19).
+- Next cycle will target `renderTodosResult` to bring overall `todos-tool` into full compliance with complexity ≤10 quality gate.
+
