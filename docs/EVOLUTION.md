@@ -1425,3 +1425,28 @@ Main `renderTodosResult` now orchestrates; complexity reduced from 20 to ≤10.
 - Target `execute` next to complete `todos-tool` compliance.
 - Consider similar extraction patterns for other complex render functions across codebase.
 
+
+### [2025-06-28] Complexity Reduction - execute (FINAL)
+
+**Area**: `todos-tool.ts`
+
+**Change**: Refactored `execute` by extracting local helpers inside the method:
+- `parseAndValidate(params, session)` — parsing, normalization, early error returns
+- `validateOperation(p, errors)` — operation count and name validation
+- `applyState(state, p, errors)` — applies op and mutates state
+- `persistIfNeeded(session, ctx, p, errors)` — conditional file persistence
+- `sendSystemUpdate(api, op, summaryText, errors)` — async system message
+- `buildResult(resultPhases, errors, summaryText, storageType)` — constructs return object
+
+Main `execute` now orchestrates at high level; complexity reduced from 19 to ≤10.
+
+**Impact**:
+- All tests pass (1943)
+- Typecheck 0 errors, lint 0 errors
+- Build successful
+- `todos-tool` now **fully compliant** with complexity ≤10 quality gate for all functions.
+
+**Follow-up**:
+- Consider applying similar pattern to other complex async methods across codebase (e.g., `plugin-loader.execute`, `team-manager` methods) where complexity exceeds 10.
+- Continue systematic complexity reduction to improve overall maintainability score.
+
