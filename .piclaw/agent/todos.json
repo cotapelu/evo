@@ -3,42 +3,32 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix todos tool bugs",
+      "name": "Tạo extensionsAggregator standalone",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Fix duplicate interface TodoFile definition",
+          "content": "Đọc tất cả các file register functions",
           "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Fix normalizeParams edge case for add_phase.name string",
+          "content": "Xác định dependencies",
           "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Fix getProjectTodoFilePath to use proper project root",
+          "content": "Tạo bản standalone",
           "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Verify file persistence and session reconstruction",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Run full test suite and build",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Use evo-reload and test final",
+          "content": "Test hoạt động",
           "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 5,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-27T16:10:39.401Z"
+  "updatedAt": "2026-06-30T05:46:16.721Z"
 }

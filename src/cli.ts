@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 import { main } from "@earendil-works/pi-coding-agent";
-import { extensionFactories } from "./plugin/extensions/index.js";
+import { getExtensionFactories } from "./plugin/index.js";
+import registerAllAddon from "./addon/index.js";
 
-await main(process.argv.slice(2), { extensionFactories });
+const pluginFactories = getExtensionFactories();
+const { extensions: addonExtensions } = registerAllAddon(process.cwd());
+
+await main(process.argv.slice(2), {
+  extensionFactories: [...pluginFactories, ...addonExtensions]
+});
