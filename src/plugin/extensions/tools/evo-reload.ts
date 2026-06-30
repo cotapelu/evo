@@ -68,20 +68,19 @@ Call: evo-reload()
 
     async execute(toolCallId: string, params: Record<string, any>, signal: AbortSignal | null | undefined, onUpdate: ((data: any) => void) | null | undefined, ctx: any): Promise<any> {
       try {
-        // Queue the system /reload command as a follow-up user message.
-        // The built-in slash command handler will process it and call AgentSession.reload().
-        // This is the same mechanism used by the reload-runtime example in llm-context.
+        // Tools receive ExtensionContext which does not have reload().
+        // Queue the /reload command as a follow-up user message.
         api.sendUserMessage("/reload", { deliverAs: "followUp" });
 
         return {
-          content: [{ type: "text", text: "✅ Runtime reload queued. The system will reload extensions, skills, prompts, and themes shortly." }],
+          content: [{ type: "text", text: "✅ Runtime reload queued. The system will reload shortly." }],
           details: { action: "reload_queued", timestamp: Date.now() },
           isError: false
         };
       } catch (error: any) {
         const message = error instanceof Error ? error.message : String(error);
         return {
-          content: [{ type: "text", text: `❌ Failed to reload runtime: ${message}` }],
+          content: [{ type: "text", text: `❌ Failed to queue reload: ${message}` }],
           details: { error: message, stack: error.stack },
           isError: true
         };
