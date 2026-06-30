@@ -29,8 +29,8 @@ const commandMeta: Record<string, {
       skill: Type.Optional(Type.String({ description: "Skill name to retrieve (without .md). If omitted, lists all available skills." })),
     }),
     examples: [
-      "skill_reader({ command: 'read_skill', args: {} })",
-      "skill_reader({ command: 'read_skill', args: { skill: 'debugger' } })",
+      "skill_reader_1({ command: 'read_skill', args: {} })",
+      "skill_reader_1({ command: 'read_skill', args: { skill: 'debugger' } })",
     ]
   },
   // Thêm command metadata ở đây...
@@ -104,14 +104,14 @@ export function createSkillLoaderTool(): ToolDefinition {
       skillListLines.push(`    • ${s}`);
     }
     const exampleSkill = skills[0];
-    skillListLines.push(`  Example: skill_reader({ command:'read_skill', args:{ skill:'${exampleSkill}' } })`);
+    skillListLines.push(`  Example: skill_reader_1({ command:'read_skill', args:{ skill:'${exampleSkill}' } })`);
   } else {
     skillListLines.push(`  No skills currently available.`);
   }
   skillListLines.push(`  Note: Skills are read-only. Place .md files in skills/ to add new ones.`);
 
   const finalPromptGuidelines = [
-    `skill_reader commands:`,
+    `skill_reader_1 commands:`,
     `• read_skill: Read skill template from skills/ directory`,
     `  - args:{} → list all available skill names`,
     `  - args:{skill:'<name>'} → return full skill content as text`,
@@ -124,10 +124,10 @@ export function createSkillLoaderTool(): ToolDefinition {
     : `// no skills available`;
 
   return {
-    name: "skill_reader",
+    name: "skill_reader_1",
     label: "Skill Reader",
     description: "Retrieve skill .md content for LLM inspection (does not register with Pi).",
-    promptSnippet: `skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  ${skillsConcise}`,
+    promptSnippet: `skill_reader_1({ command:'read_skill', args:{skill:'<skill-name>'} })  ${skillsConcise}`,
     promptGuidelines: finalPromptGuidelines,
     parameters: {
       type: "object",
@@ -207,7 +207,7 @@ export function createSkillLoaderTool(): ToolDefinition {
 
       } catch (error: any) {
         return {
-          content: [{ type: "text", text: `skill_reader ${command} error: ${error.message}` }],
+          content: [{ type: "text", text: `skill_reader_1 ${command} error: ${error.message}` }],
           details: { error: error.message, command },
           isError: true
         } as const;
