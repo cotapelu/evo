@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Fix Build Errors",
+      "tasks": [
+        {
+          "id": "task-1",
+          "content": "Analyze TypeScript errors in build output",
+          "status": "in_progress"
+        }
+      ]
+    }
+  ],
+  "nextTaskId": 2,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-06-20T15:31:13.405Z"
+}
