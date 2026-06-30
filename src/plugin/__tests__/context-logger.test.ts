@@ -61,8 +61,8 @@ describe('Context Logger Extension', () => {
 
   it('registers flags', () => {
     defaultExtension(api);
-    expect(api.registerFlag).toHaveBeenCalledWith('contextLogFile', expect.any(Object));
-    expect(api.registerFlag).toHaveBeenCalledWith('contextLogAppend', expect.any(Object));
+    expect(api.registerFlag).toHaveBeenCalledWith('contextLogFile_plugin', expect.any(Object));
+    expect(api.registerFlag).toHaveBeenCalledWith('contextLogAppend_plugin', expect.any(Object));
   });
 
   it('sets up before_provider_request hook', () => {

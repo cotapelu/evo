@@ -35,7 +35,7 @@ export default function (pi: ExtensionAPI) {
 	// Hook into before_provider_request to capture context
 	pi.on("before_provider_request", async (event: BeforeProviderRequestEvent) => {
 		const logFile = pi.getFlag("contextLogFile_plugin") as string | undefined;
-		const shouldAppend = (pi.getFlag("contextLogAppend") as boolean) ?? true;
+		const shouldAppend = (pi.getFlag("contextLogAppend_plugin") as boolean) ?? true;
 
 		// If no log file specified, use default in cwd
 		const effectiveLogFile = logFile ?? DEFAULT_LOG_PATH;
