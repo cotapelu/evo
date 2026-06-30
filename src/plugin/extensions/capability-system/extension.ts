@@ -242,14 +242,14 @@ function createCapabilityRouterTool(api: any) {
   }
 
   guidelines.push("");
-  guidelines.push("Format: { capability: 'plugin.capability', params: { ... } }");
-  guidelines.push("Example: { capability: 'system.capabilities', params: { tag: 'git' } }");
+  guidelines.push("Format: { 'plugin.capability': { capability: '<capability-id>', params: { ... } } }");
+  guidelines.push("Example: { 'plugin.capability': { capability: 'system.capabilities', params: { tag: 'git' } } }");
 
   return {
-    name: "capability",
+    name: "plugin.capability",
     label: "Capability Router",
     description: `Execute any of ${allCaps.length} registered capabilities across ${byPlugin.size} plugins (git, dev, security, system, etc.). Discover available operations with system.capabilities().`,
-    promptSnippet: "{ capability: 'system.capabilities', params: {} }",
+    promptSnippet: "{ 'plugin.capability': { capability: 'system.capabilities', params: {} } }",
     promptGuidelines: guidelines,
     parameters: {
       type: "object",

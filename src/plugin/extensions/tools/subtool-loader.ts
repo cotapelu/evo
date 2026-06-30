@@ -175,12 +175,12 @@ export async function executeSubtool(
  */
 export function createSubLoaderToolDefinition(): ToolDefinition {
   return {
-    name: "subtool_loader",
+    name: "plugin.subtool_loader",
     label: "SubTool Loader",
     description:
       "Unified access to file and network operations using SDK tools. " +
       "Tools: read (file), ls (list), find (search files), grep (text search), http (curl).",
-    promptSnippet: "Use `subtool_loader({ subtool, args })` to invoke operations.",
+    promptSnippet: "Use `plugin.subtool_loader({ subtool, args })` to invoke operations.",
     promptGuidelines: [
       "All sub-tools use SDK implementations with proper validation and signal handling.",
       "",

@@ -13,7 +13,7 @@ describe("Universal Tool", () => {
     const api = createMockApi();
     registerUniversalTool(api);
     expect(api.registerTool).toHaveBeenCalledWith(expect.objectContaining({
-      name: "universal",
+      name: "plugin.universal",
       label: "Universal Tool",
     }));
   });

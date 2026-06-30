@@ -20,7 +20,7 @@ describe("Memory Tool", () => {
   });
 
   it("has correct metadata", () => {
-    expect(tool.name).toBe("memory");
+    expect(tool.name).toBe("plugin.memory");
     expect(tool.label).toBe("Memory");
     expect(tool.description).toContain("Store and retrieve");
   });

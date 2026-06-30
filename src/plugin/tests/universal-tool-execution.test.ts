@@ -32,7 +32,7 @@ describe("Universal Tool Execution", () => {
 
   it("registers tool with correct metadata", () => {
     expect(mockApi.registerTool).toHaveBeenCalledWith(expect.objectContaining({
-      name: "universal",
+      name: "plugin.universal",
       label: "Universal Tool",
       description: expect.stringContaining("echo"),
       parameters: expect.objectContaining({

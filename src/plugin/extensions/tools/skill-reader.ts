@@ -29,8 +29,8 @@ const commandMeta: Record<string, {
       skill: Type.Optional(Type.String({ description: "Skill name to retrieve (without .md). If omitted, lists all available skills." })),
     }),
     examples: [
-      "skill_reader({ command: 'read_skill', args: {} })",
-      "skill_reader({ command: 'read_skill', args: { skill: 'debugger' } })",
+      "plugin.skill_reader({ command: 'read_skill', args: {} })",
+      "plugin.skill_reader({ command: 'read_skill', args: { skill: 'debugger' } })",
     ]
   },
   // Thêm command metadata ở đây...
@@ -79,14 +79,14 @@ export function createSkillLoaderTool(): ToolDefinition {
       skillListLines.push(`    • ${s}`);
     }
     const exampleSkill = skills[0];
-    skillListLines.push(`  Example: skill_reader({ command:'read_skill', args:{ skill:'${exampleSkill}' } })`);
+    skillListLines.push(`  Example: plugin.skill_reader({ command:'read_skill', args:{ skill:'${exampleSkill}' } })`);
   } else {
     skillListLines.push(`  No skills currently available.`);
   }
   skillListLines.push(`  Note: Skills are read-only. Place .md files in skills/ to add new ones.`);
 
   const finalPromptGuidelines = [
-    `skill_reader commands:`,
+    `plugin.skill_reader commands:`,
     `• read_skill: Read skill template from skills/ directory`,
     `  - args:{} → list all available skill names`,
     `  - args:{skill:'<name>'} → return full skill content as text`,
@@ -99,10 +99,10 @@ export function createSkillLoaderTool(): ToolDefinition {
     : `// no skills available`;
 
   return {
-    name: "skill_reader",
+    name: "plugin.skill_reader",
     label: "Skill Reader",
     description: "CRITICAL: Read skill playbooks BEFORE executing complex tasks. Skills contain mandatory step-by-step procedures, checklists, and best practices for audit, code review, debugging, refactoring, and testing. NEVER skip this step.",
-    promptSnippet: `skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  // MANDATORY before audit, code-review, debug, refactor, test`,
+    promptSnippet: `plugin.skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  // MANDATORY before audit, code-review, debug, refactor, test`,
     promptGuidelines: [
       `# ⚠️ CRITICAL: SKILL READER - MANDATORY FIRST STEP`,
       ``,
@@ -118,8 +118,8 @@ export function createSkillLoaderTool(): ToolDefinition {
       `   - "refactor", "improve code", "clean up", "remove duplication" → skill: \`refactor\``,
       `   - "test", "increase coverage", "write tests" → skill: \`test-rule\``,
       ``,
-      `2. **IMMEDIATELY call skill_reader** to get the guide:`,
-      `   \`skill_reader({ command:'read_skill', args:{ skill:'<matched-name>' } })\``,
+      `2. **IMMEDIATELY call plugin.skill_reader** to get the guide:`,
+      `   \`plugin.skill_reader({ command:'read_skill', args:{ skill:'<matched-name>' } })\``,
       ``,
       `3. **READ and FOLLOW** every step in the guide. Do NOT skip.`,
       ``,
@@ -132,14 +132,14 @@ export function createSkillLoaderTool(): ToolDefinition {
       `### EXAMPLES`,
       `User: "Hãy audit codebase để tìm security issues"`,
       `YOU:`,
-      `  - Call \`skill_reader({ command:'read_skill', args:{ skill:'audit' } })\``,
+      `  - Call \`plugin.skill_reader({ command:'read_skill', args:{ skill:'audit' } })\``,
       `  - Wait for full guide`,
       `  - Execute steps: search secrets, scan dependencies, check complexity, etc.`,
       `  - Use guide's checklist to verify completeness`,
       ``,
       `User: "Có PR cần review"`,
       `YOU:`,
-      `  - Call \`skill_reader({ command:'read_skill', args:{ skill:'code-review' } })\``,
+      `  - Call \`plugin.skill_reader({ command:'read_skill', args:{ skill:'code-review' } })\``,
       `  - Follow review checklist: logic, security, performance, tests, documentation`,
       ``,
       `### NEVER SKIP`,
@@ -241,7 +241,7 @@ export function createSkillLoaderTool(): ToolDefinition {
 
       } catch (error: any) {
         return {
-          content: [{ type: "text", text: `skill_reader ${command} error: ${error.message}` }],
+          content: [{ type: "text", text: `plugin.skill_reader ${command} error: ${error.message}` }],
           details: { error: error.message, command },
           isError: true
         } as const;

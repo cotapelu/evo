@@ -51,7 +51,7 @@ describe('SubTool Loader', () => {
 
   describe('Tool definition', () => {
     it('has correct metadata', () => {
-      expect(tool.name).toBe('subtool_loader');
+      expect(tool.name).toBe('plugin.subtool_loader');
       expect(tool.label).toBe('SubTool Loader');
       expect(tool.description).toContain('SDK tools');
       expect(tool.promptSnippet).toContain('subtool_loader');

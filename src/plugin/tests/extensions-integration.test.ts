@@ -18,6 +18,6 @@ describe('extensions/index', () => {
     await extensionsIndex(mockApi);
     expect(mockApi.on).toHaveBeenCalledWith('session_start', expect.any(Function));
     expect(mockApi.registerCommand).toHaveBeenCalledWith('gnpi', expect.any(Object));
-    expect(mockApi.registerTool).toHaveBeenCalledWith(expect.objectContaining({ name: 'subtool_loader' }));
+    expect(mockApi.registerTool).toHaveBeenCalledWith(expect.objectContaining({ name: 'plugin.subtool_loader' }));
   });
 });

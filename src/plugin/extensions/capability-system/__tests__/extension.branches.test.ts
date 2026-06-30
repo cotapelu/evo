@@ -134,7 +134,7 @@ describe('extension.ts branch coverage', () => {
     it('captures the registered tool after initialization', async () => {
       await capabilitySystemExtension(mockApi);
       expect(capturedTool).toBeDefined();
-      expect(capturedTool.name).toBe('capability');
+      expect(capturedTool.name).toBe('plugin.capability');
     });
   });
 

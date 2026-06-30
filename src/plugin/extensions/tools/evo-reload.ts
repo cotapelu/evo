@@ -16,6 +16,14 @@ import { Text } from "@earendil-works/pi-tui";
  * Register evo.reload tool.
  */
 export function registerEvoReloadTool(api: ExtensionAPI): void {
+  // Register the /reload command handler
+  api.registerCommand("reload", {
+    description: "Reload extensions, skills, prompts, and themes",
+    handler: async (_args: any, ctx: any) => {
+      await ctx.reload();
+    },
+  });
+
   const tool: ToolDefinition = {
     name: "evo-reload",
     label: "Reload Runtime",

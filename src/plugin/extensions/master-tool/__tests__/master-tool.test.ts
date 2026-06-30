@@ -47,7 +47,7 @@ describe('Master Tool - execute()', () => {
   describe('tool definition', () => {
     it('should have correct name and description', () => {
       const tool = createMasterTool();
-      expect(tool.name).toBe('master_tool');
+      expect(tool.name).toBe('plugin.master_tool');
       expect(tool.label).toBe('Master Tool');
       expect(tool.description).toContain('Unified access');
     });

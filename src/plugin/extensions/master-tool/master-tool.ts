@@ -64,7 +64,7 @@ export function createMasterTool(options: any = {}): ToolDefinition {
   const registry = getRegistry(options);
 
   return {
-    name: "master_tool",
+    name: "plugin.master_tool",
     label: "Master Tool",
     description:
       "Unified access to hundreds of specialized commands. " +

@@ -248,7 +248,7 @@ function createCapabilityRouterTool(api: any) {
   guidelines.push("Example: { capability: 'system.capabilities', params: { tag: 'git' } }");
 
   return {
-    name: "capability_1",
+    name: "capability",
     label: "Capability Router",
     description: `Execute any of ${allCaps.length} registered capabilities across ${byPlugin.size} plugins (git, dev, security, system, etc.). Discover available operations with system.capabilities().`,
     promptSnippet: "{ capability: 'system.capabilities', params: {} }",

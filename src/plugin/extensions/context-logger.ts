@@ -20,13 +20,13 @@ const DEFAULT_LOG_PATH = join(CONFIG_DIR_NAME, "context", "context.log");
 
 export default function (pi: ExtensionAPI) {
 	// Register CLI flags for this extension
-	pi.registerFlag("contextLogFile", {
+	pi.registerFlag("contextLogFile_plugin", {
 		description: "Path to file where LLM context will be logged (default: .piclaw/context/context.log)",
 		type: "string",
 		default: undefined,
 	});
 
-	pi.registerFlag("contextLogAppend", {
+	pi.registerFlag("contextLogAppend_plugin", {
 		description: "Append to context log (default: true)",
 		type: "boolean",
 		default: true,
@@ -34,7 +34,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Hook into before_provider_request to capture context
 	pi.on("before_provider_request", async (event: BeforeProviderRequestEvent) => {
-		const logFile = pi.getFlag("contextLogFile") as string | undefined;
+		const logFile = pi.getFlag("contextLogFile_plugin") as string | undefined;
 		const shouldAppend = (pi.getFlag("contextLogAppend") as boolean) ?? true;
 
 		// If no log file specified, use default in cwd

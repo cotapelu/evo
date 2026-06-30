@@ -3,17 +3,62 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Build và kiểm tra",
+      "name": "Codebase Audit",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Chạy npm run build để biên dịch toàn bộ project",
+          "content": "Scan for secrets & credentials",
           "status": "in_progress"
+        },
+        {
+          "id": "task-2",
+          "content": "Check dependency vulnerabilities",
+          "status": "pending"
+        },
+        {
+          "id": "task-3",
+          "content": "Analyze code complexity & size",
+          "status": "pending"
+        },
+        {
+          "id": "task-4",
+          "content": "Review security patterns (XSS, injection, eval)",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Check file permissions & path traversal risks",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Review error handling & logging",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Check test coverage & quality",
+          "status": "pending"
+        },
+        {
+          "id": "task-8",
+          "content": "Review configuration & environment handling",
+          "status": "pending"
+        },
+        {
+          "id": "task-9",
+          "content": "Check for unsafe patterns (child_process, exec)",
+          "status": "pending"
+        },
+        {
+          "id": "task-10",
+          "content": "Generate audit report",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 2,
+  "nextTaskId": 11,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-30T07:06:05.946Z"
+  "updatedAt": "2026-06-30T13:27:56.246Z"
 }

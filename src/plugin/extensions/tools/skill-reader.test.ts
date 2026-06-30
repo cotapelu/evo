@@ -13,7 +13,7 @@ describe('skill-reader tool', () => {
 
   it('should create tool definition with correct metadata', () => {
     const tool = createSkillLoaderTool();
-    expect(tool.name).toBe('skill_reader');
+    expect(tool.name).toBe('plugin.skill_reader');
     expect(tool.label).toBe('Skill Reader');
     expect(tool.description).toContain('CRITICAL: Read skill playbooks');
     expect(tool.parameters).toBeDefined();
