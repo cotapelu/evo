@@ -172,14 +172,14 @@ function renderUniversal(result: any, options: any, theme: any): any {
  */
 export function registerUniversalTool(api: ExtensionAPI): void {
   const tool: ToolDefinition = {
-    name: "universal",
+    name: "universal_1",
     label: "Universal Tool",
     description:
       "Multi-purpose tool with registry-based actions. Supports: echo, system_info, date, uuid, random, calc. Easily extensible.",
     promptSnippet:
-      "universal({ action: '<action>', ...params })",
+      "universal_1({ action: '<action>', ...params })",
     promptGuidelines: [
-      "Use the universal tool with an `action` parameter.",
+      "Use the universal_1 tool with an `action` parameter.",
       "Available actions:",
       "- 'echo': Echo a message back (requires `message`).",
       "- 'system_info': Get system diagnostics (no parameters).",

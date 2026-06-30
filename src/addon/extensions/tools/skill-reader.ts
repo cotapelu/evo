@@ -124,10 +124,10 @@ export function createSkillLoaderTool(): ToolDefinition {
     : `// no skills available`;
 
   return {
-    name: "skill_reader",
+    name: "skill_reader_1",
     label: "Skill Reader",
     description: "Retrieve skill .md content for LLM inspection (does not register with Pi).",
-    promptSnippet: `skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  ${skillsConcise}`,
+    promptSnippet: `skill_reader_1({ command:'read_skill', args:{skill:'<skill-name>'} })  ${skillsConcise}`,
     promptGuidelines: finalPromptGuidelines,
     parameters: {
       type: "object",

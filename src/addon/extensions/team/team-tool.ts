@@ -24,19 +24,19 @@ export function registerTeamTool(api: ExtensionAPI): void {
 
 export function createTeamTool(): ToolDefinition {
   return {
-    name: "team_run",
+    name: "team_run_1",
     label: "Team Run",
     description: "Create a team and automatically execute tasks. The team will self-organize and complete all tasks without further intervention.",
     promptSnippet: "Delegates tasks to a self-organizing multi-agent team",
     promptGuidelines: [
-      "Use team_run to create and manage agent teams.",
+      "Use team_run_1 to create and manage agent teams.",
       "To create a new team: provide tasks array, and optionally teamSize and teamRoles. Teams always run non-blocking in background.",
       // Removed: wait concept - teams always non-blocking
       "To check status: provide teamId. (Teams always run non-blocking in background.)",
       "Tips:",
-      "  - Create first: team_run({tasks: [...]}) → returns teamId.",
+      "  - Create first: team_run_1({tasks: [...]}) → returns teamId.",
       "  - Do other work...",
-      "  - Then check status: team_run({teamId: '...'}).",
+      "  - Then check status: team_run_1({teamId: '...'}).",
       "  - Progress updates are automatically sent during execution.",
       "  - Teams run in background until all tasks complete."
     ],

@@ -3,32 +3,17 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Tạo extensionsAggregator standalone",
+      "name": "Build và kiểm tra",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Đọc tất cả các file register functions",
+          "content": "Chạy npm run build để biên dịch toàn bộ project",
           "status": "in_progress"
-        },
-        {
-          "id": "task-2",
-          "content": "Xác định dependencies",
-          "status": "pending"
-        },
-        {
-          "id": "task-3",
-          "content": "Tạo bản standalone",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Test hoạt động",
-          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 5,
+  "nextTaskId": 2,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-30T05:46:16.721Z"
+  "updatedAt": "2026-06-30T07:06:05.946Z"
 }
