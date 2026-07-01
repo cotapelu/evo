@@ -2,26 +2,19 @@
  * Built-in tools registry
  * Central export point for all built-in tool registration functions.
  */
-import { registerAllBuiltinTools } from './tools/builtin-tools.js';
-import { registerAllCustomTools } from './tools/custom-tools.js';
+import {
+  registerAllBuildinAndCustomTools,
+  registerAllBuiltinTools,
+  registerAllCustomTools,
+} from './tools/index.js';
 import { getAllBuiltinExtensions } from './extensions/index.js';
-export { registerAllBuiltinTools, registerAllCustomTools, getAllBuiltinExtensions };
+export {
+  registerAllBuiltinTools,
+  registerAllCustomTools,
+  getAllBuiltinExtensions,
+  registerAllBuildinAndCustomTools,
+};
 import type { AgentTool, ToolDefinition, ExtensionFactory } from './deps.js';
-
-/**
- * Registers both built-in tools and custom wrapper tools.
- * Use this to get all available tools for the agent session.
- *
- * @param cwd - Working directory for all tools
- * @returns Array of all tool definitions:
- *   - 7 built-in tools (AgentTool instances)
- *   - 7 custom wrapper tools (ToolDefinition instances with custom names)
- */
-export function registerAllBuildinAndCustomTools(cwd: string): (AgentTool | ToolDefinition)[] {
-  const builtin = registerAllBuiltinTools(cwd);
-  const custom = registerAllCustomTools(cwd);
-  return [...builtin, ...custom];
-}
 
 /**
  * Registers all built-in components: tools + extensions.

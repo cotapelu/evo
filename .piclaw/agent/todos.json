@@ -3,62 +3,17 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Codebase Audit",
+      "name": "Phase 2: Cập nhật buildin/index.ts",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Scan for secrets & credentials",
+          "content": "Sửa buildin/index.ts để import từ tools/index.js thay vì từng file riêng",
           "status": "in_progress"
-        },
-        {
-          "id": "task-2",
-          "content": "Check dependency vulnerabilities",
-          "status": "pending"
-        },
-        {
-          "id": "task-3",
-          "content": "Analyze code complexity & size",
-          "status": "pending"
-        },
-        {
-          "id": "task-4",
-          "content": "Review security patterns (XSS, injection, eval)",
-          "status": "pending"
-        },
-        {
-          "id": "task-5",
-          "content": "Check file permissions & path traversal risks",
-          "status": "pending"
-        },
-        {
-          "id": "task-6",
-          "content": "Review error handling & logging",
-          "status": "pending"
-        },
-        {
-          "id": "task-7",
-          "content": "Check test coverage & quality",
-          "status": "pending"
-        },
-        {
-          "id": "task-8",
-          "content": "Review configuration & environment handling",
-          "status": "pending"
-        },
-        {
-          "id": "task-9",
-          "content": "Check for unsafe patterns (child_process, exec)",
-          "status": "pending"
-        },
-        {
-          "id": "task-10",
-          "content": "Generate audit report",
-          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 11,
+  "nextTaskId": 2,
   "nextPhaseId": 2,
-  "updatedAt": "2026-06-30T13:27:56.246Z"
+  "updatedAt": "2026-07-01T15:36:33.023Z"
 }
