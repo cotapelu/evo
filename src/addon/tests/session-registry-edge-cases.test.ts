@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SessionRegistry, SessionState } from '../tools/session/registry.js';
+import { SessionRegistry, SessionState } from '../extensions/session-tool/registry.js';
 
 // Mock AgentSession
 function createMockSession(sessionFile?: string): any {

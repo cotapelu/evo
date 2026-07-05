@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { operationCleanup } from '../tools/session/operations/cleanup.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
+import { operationCleanup } from '../extensions/session-tool/operations/cleanup.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
 import type { AgentToolResult } from '@earendil-works/pi-coding-agent';
 
 function createMockManager(dir: string): MultiSessionManager {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { operationRename } from '../tools/session/operations/rename.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
-import type { SessionMetadata } from '../tools/session/registry.js';
-import { SessionState } from '../tools/session/registry.js';
+import { operationRename } from '../extensions/session-tool/operations/rename.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
+import type { SessionMetadata } from '../extensions/session-tool/registry.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
 
 describe('operationRename', () => {
   let mgr: MultiSessionManager;

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MultiSessionManager } from '../tools/session/manager.js';
+import { MultiSessionManager } from '../extensions/session-tool/manager.js';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 
 // Mock AgentSession

@@ -42,7 +42,7 @@ function makeJsonLogger(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | '
       const rest = args.slice(1);
       const entry: any = {
         timestamp: new Date().toISOString(),
-        level: level,
+        level,
         message: msg,
         ...(rest.length > 0 ? { meta: rest } : {}),
       };

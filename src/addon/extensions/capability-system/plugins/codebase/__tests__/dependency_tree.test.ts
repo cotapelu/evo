@@ -216,4 +216,15 @@ export const c = 3;`);
     const details = result.details as DepTreeSuccessDetails;
     expect(details.nodes.length).toBe(4);
   });
+
+  it('detects self-import cycle', async () => {
+    await fs.writeFile('self.ts', `import './self';`);
+    const result = await execute({ files: ['self.ts'] }, { cwd: tmpDir } as { cwd: string });
+    expect(result.isError).toBe(false);
+    const details = result.details as DepTreeSuccessDetails;
+    // self-import creates a cycle: self.ts -> self.ts
+    const selfCycle = details.cycles.find(c => c.length === 2 && c[0].endsWith('self.ts') && c[1].endsWith('self.ts'));
+    expect(selfCycle).toBeDefined();
+    expect(details.summary.cycleCount).toBeGreaterThan(0);
+  });
 });

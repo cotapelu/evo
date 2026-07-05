@@ -96,6 +96,18 @@ export async function executeLoadSkill(
 
     // ── GET MODE: Retrieve specific skill content ────────────────────────────
     if (!skillMap.has(skill)) {
+      // Fallback: try resourceLoader from context if available (supports extension-provided skills)
+      const resourceLoader = _ctx?.session?.services?.resourceLoader;
+      if (resourceLoader && typeof resourceLoader.loadSkill === 'function') {
+        try {
+          const resource = await resourceLoader.loadSkill(skill);
+          return {
+            stdout: resource.content,
+            stderr: "",
+            code: 0,
+          };
+        } catch {}
+      }
       return {
         stdout: "",
         stderr: `Skill '${skill}' not found. Available: ${Array.from(skillMap.keys()).join(', ')}`,

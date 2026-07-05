@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { operationTag } from '../tools/session/operations/tag.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
-import type { SessionMetadata } from '../tools/session/registry.js';
-import { SessionState } from '../tools/session/registry.js';
+import { operationTag } from '../extensions/session-tool/operations/tag.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
+import type { SessionMetadata } from '../extensions/session-tool/registry.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
 
 describe('operationTag', () => {
   let mgr: MultiSessionManager;

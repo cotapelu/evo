@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { operationDelete } from '../tools/session/operations/delete.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
+import { operationDelete } from '../extensions/session-tool/operations/delete.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
 
 describe('operationDelete', () => {
   let mgr: MultiSessionManager;

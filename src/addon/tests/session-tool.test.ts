@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setCurrentRuntime, clearCurrentRuntime } from '../runtime-context.js';
-import { resetSessionTool, createSessionTool } from '../tools/session/index.js';
+import { resetSessionTool, createSessionTool } from '../extensions/session-tool/index.js';
 import { createMockRuntime, createMockSession } from './utils.js';
 
 // Helper type for tool execution results (matches the actual return shape)

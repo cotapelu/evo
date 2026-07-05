@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { SessionMetadata } from '../tools/session/registry.js';
-import { SessionState } from '../tools/session/registry.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
+import type { SessionMetadata } from '../extensions/session-tool/registry.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
 
 // Mock handoff operations to avoid filesystem dependencies
-vi.mock('../tools/session/operations/handoff.js', () => ({
+vi.mock('../extensions/session-tool/operations/handoff.js', () => ({
   operationPrepareChild: async () => ({
     content: [{ type: 'text', text: 'Prepared child child-1' }],
     details: { sessionId: 'child-1', contractPath: '/bus' },
@@ -45,7 +45,7 @@ function mockSession(overrides: Partial<SessionMetadata> = {}): SessionMetadata 
 
 describe('Session Router Handoff Operations', () => {
   it('should route prepare_child operation when mission provided', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         createChild: async (): Promise<SessionMetadata> => mockSession({ id: 'child-1', name: 'child1', isActive: true }),
@@ -58,7 +58,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should validate missing contract.mission for prepare_child', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         createChild: async (): Promise<SessionMetadata> => mockSession({ id: 'c' }),
@@ -71,7 +71,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should route child_read operation', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         getActive: (): SessionMetadata | null => mockSession({ id: 'child-1' }),
@@ -84,7 +84,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should validate missing content for child_write', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         getActive: (): SessionMetadata | null => mockSession({ id: 'child-1' }),
@@ -98,7 +98,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should route child_write with content', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         getActive: (): SessionMetadata | null => mockSession({ id: 'child-1' }),
@@ -112,7 +112,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should validate missing sessionId for parent_read', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         get: (): SessionMetadata | null => mockSession({ id: 'child-1' }),
@@ -125,7 +125,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should route parent_read with sessionId', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         get: (): SessionMetadata | null => mockSession({ id: 'child-1', filePath: '/f' }),
@@ -138,7 +138,7 @@ describe('Session Router Handoff Operations', () => {
   });
 
   it('should route complete_child operation', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const router = createSessionToolRouter({
       initialize: () => ({
         getActive: (): SessionMetadata | null => mockSession({ id: 'child-1' }),

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { operationList, formatListOutput } from '../tools/session/operations/list.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
-import type { SessionMetadata } from '../tools/session/registry.js';
-import { SessionState } from '../tools/session/registry.js';
+import { operationList, formatListOutput } from '../extensions/session-tool/operations/list.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
+import type { SessionMetadata } from '../extensions/session-tool/registry.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
 
 describe('operationList', () => {
   let mgr: MultiSessionManager;

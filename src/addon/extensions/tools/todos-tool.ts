@@ -16,6 +16,7 @@ import type { ToolDefinition, ExtensionAPI, ExtensionContext } from "@earendil-w
 import { Text } from "@earendil-works/pi-tui";
 import { Mutex } from "../utils/mutex.js";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 // import { getAgentDir } from "@earendil-works/pi-coding-agent"; // unused
 
 const CONFIG_DIR_NAME = ".piclaw";
@@ -99,12 +100,12 @@ export interface TodoToolDetails {
   error?: string;
 }
 
+// In-memory todo structure (without version/updatedAt)
 export interface TodoFile {
   phases: TodoPhase[];
   nextTaskId: number;
   nextPhaseId: number;
 }
-
 
 // Per-session state storage
 interface TodoSessionState {
@@ -125,12 +126,6 @@ function getSessionState(ctx: ExtensionContext): TodoSessionState {
 }
 
 
-export interface TodoFile {
-  phases: TodoPhase[];
-  nextTaskId: number;
-  nextPhaseId: number;
-}
-
 interface PersistedTodo {
   version: 1;
   phases: TodoPhase[];
@@ -150,6 +145,72 @@ interface PersistedTodo {
 // ... etc
 //
 // Now we use parameters: {} and validate manually in execute()
+
+// ============================================================================
+// TypeBox Schemas for todos operations
+// ============================================================================
+
+const TodoPhaseTaskSchema = Type.Object({
+  content: Type.String({ description: "Task content" }),
+  status: Type.Optional(Type.Union([
+    Type.Literal("pending"),
+    Type.Literal("in_progress"),
+    Type.Literal("completed"),
+    Type.Literal("abandoned")
+  ])),
+  notes: Type.Optional(Type.String()),
+  details: Type.Optional(Type.String()),
+});
+
+const TodoPhaseInputSchema = Type.Object({
+  name: Type.String({ description: "Phase name" }),
+  tasks: Type.Optional(Type.Array(TodoPhaseTaskSchema)),
+});
+
+const TodoAddTaskParamsSchema = Type.Object({
+  phase: Type.String({ description: "Phase ID or name" }),
+  content: Type.String(),
+  notes: Type.Optional(Type.String()),
+  details: Type.Optional(Type.String()),
+});
+
+const TodoUpdateParamsSchema = Type.Object({
+  id: Type.Optional(Type.String()),
+  ids: Type.Optional(Type.Array(Type.String())),
+  status: Type.Optional(Type.Union([
+    Type.Literal("pending"),
+    Type.Literal("in_progress"),
+    Type.Literal("completed"),
+    Type.Literal("abandoned")
+  ])),
+  content: Type.Optional(Type.String()),
+  notes: Type.Optional(Type.String()),
+  details: Type.Optional(Type.String()),
+});
+
+const TodoRemoveTaskParamsSchema = Type.Object({
+  id: Type.String({ description: "Task ID to remove" }),
+});
+
+const TodoDeleteParamsSchema = Type.Object({});
+const TodoListParamsSchema = Type.Object({});
+
+const TodosParamsSchema = Type.Object(
+  {
+    add_phase: Type.Optional(TodoPhaseInputSchema),
+    add_task: Type.Optional(TodoAddTaskParamsSchema),
+    update: Type.Optional(TodoUpdateParamsSchema),
+    remove_task: Type.Optional(TodoRemoveTaskParamsSchema),
+    delete: Type.Optional(TodoDeleteParamsSchema),
+    list: Type.Optional(TodoListParamsSchema),
+  },
+  {
+    minProperties: 1,
+    maxProperties: 1,
+    additionalProperties: false,
+    description: "Exactly one operation: add_phase, add_task, update, remove_task, delete, or list"
+  }
+);
 
 // ============================================================================
 // File I/O - Project-based storage
@@ -728,13 +789,13 @@ export class TodoState {
 
 // BACKUP: formatTodoLine function (adapted for pi-tui Text)
 // formatTodoLineExtension unused - removed
-function renderTodosCall(args: any, theme: any): Text {
+export function renderTodosCall(args: any, theme: any): Text {
   const op = args.delete !== undefined ? "delete" : args.add_phase ? "add_phase" : args.add_task ? "add_task" : args.update ? "update" : args.remove_task ? "remove_task" : args.list ? "list" : "todo";
   const text = `${theme.fg("toolTitle", theme.bold("todos"))} ${theme.fg("muted", op)}`;
   return new Text(text, 0, 0);
 }
 
-function renderTodosResult(result: { details?: TodoToolDetails }, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
+export function renderTodosResult(result: { details?: TodoToolDetails }, options: { expanded: boolean; isPartial: boolean }, theme: any): Text {
   const details = result.details;
   if (!details) return new Text("", 0, 0);
   if (details.error) return new Text(theme.fg("error", `Error: ${details.error}`), 0, 0);
@@ -771,7 +832,7 @@ function renderTodosResult(result: { details?: TodoToolDetails }, options: { exp
 // Tool Factory (with mergeCallAndResult support)
 // ============================================================================
 
-function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails> {
+export function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails> {
   // No per-session state; global constants only
 
   api.on("session_start", async (_event, ctx) => {
@@ -841,7 +902,7 @@ function createTodoTool(api: ExtensionAPI): ToolDefinition<any, TodoToolDetails>
       "• Use 'details' field only for in_progress context (multiline)",
       "• Task IDs are auto: task-1, task-2... Find them by running todos({ list: {} })",
     ],
-    parameters: {},
+    parameters: TodosParamsSchema,
 
     /**
      * Execute a todos operation.

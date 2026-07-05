@@ -42,7 +42,7 @@ function getState(ctx: ExtensionContext): TeamWidgetSessionState | undefined {
   return ctx[TEAM_WIDGET_STATE];
 }
 
-function ensureState(ctx: ExtensionContext): TeamWidgetSessionState {
+export function ensureState(ctx: ExtensionContext): TeamWidgetSessionState {
   let state = getState(ctx);
   if (!state) {
     state = { enabled: true, ctx: ctx, intervalId: null };
@@ -52,14 +52,14 @@ function ensureState(ctx: ExtensionContext): TeamWidgetSessionState {
   return state;
 }
 
-function buildHeaderLines(theme: Theme): string[] {
+export function buildHeaderLines(theme: Theme): string[] {
   return [
     theme.fg("accent", "👥 Team").bold(),
     ""
   ];
 }
 
-function buildTeamLines(ui: ExtensionUIContext, teamId: string, status: TeamStatus): string[] {
+export function buildTeamLines(ui: ExtensionUIContext, teamId: string, status: TeamStatus): string[] {
   const shortId = teamId.slice(-6);
   const lines: string[] = [];
   lines.push(ui.theme.fg("accent", `Team ${shortId}`));
@@ -72,7 +72,7 @@ function buildTeamLines(ui: ExtensionUIContext, teamId: string, status: TeamStat
   return lines;
 }
 
-function refreshWidget(ui: ExtensionUIContext): Promise<void> {
+export function refreshWidget(ui: ExtensionUIContext): Promise<void> {
   return new Promise((resolve) => {
     try {
       const registry = TeamRegistry.getInstance();
@@ -112,7 +112,7 @@ function refreshWidget(ui: ExtensionUIContext): Promise<void> {
   });
 }
 
-function startWidget(ctx: ExtensionContext) {
+export function startWidget(ctx: ExtensionContext) {
   const state = ensureState(ctx);
   // Prevent double start
   if (state.intervalId) return;
@@ -128,7 +128,7 @@ function startWidget(ctx: ExtensionContext) {
   }, 2000);
 }
 
-function stopWidget(state: TeamWidgetSessionState) {
+export function stopWidget(state: TeamWidgetSessionState) {
   if (state.intervalId) {
     clearInterval(state.intervalId);
     state.intervalId = null;

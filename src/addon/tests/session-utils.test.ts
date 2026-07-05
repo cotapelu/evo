@@ -4,10 +4,10 @@ import {
   countNodes,
   formatListOutput,
   renderTree,
-} from '../tools/session/utils.js';
-import type { SessionMetadata, SessionTreeNode } from '../tools/session/registry.js';
-import { SessionState } from '../tools/session/registry.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
+} from '../extensions/session-tool/utils.js';
+import type { SessionMetadata, SessionTreeNode } from '../extensions/session-tool/registry.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 
 describe('formatSession', () => {

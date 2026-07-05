@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { MultiSessionManager, SessionMetadata } from '../tools/session/manager.js';
-import { SessionState } from '../tools/session/registry.js';
+import type { MultiSessionManager, SessionMetadata } from '../extensions/session-tool/manager.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
 
 function mockSession(overrides: Partial<SessionMetadata> = {}): SessionMetadata {
   return {
@@ -19,7 +19,7 @@ function mockSession(overrides: Partial<SessionMetadata> = {}): SessionMetadata 
 
 describe('Router Status Operation', () => {
   it('should execute status successfully', async () => {
-    const { createSessionToolRouter } = await import('../tools/session/router.js');
+    const { createSessionToolRouter } = await import('../extensions/session-tool/router.js');
     const init = (): MultiSessionManager => ({
       getActive: () => mockSession({ id: 'active1', name: 'Active', isActive: true }),
       getRoot: () => mockSession({ id: 'root1', name: 'Root' }),

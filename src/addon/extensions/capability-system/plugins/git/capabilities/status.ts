@@ -29,6 +29,8 @@ export async function execute(_params: Record<string, never> = {}, ctx: any): Pr
     const untracked: string[] = [];
 
     for (const line of lines) {
+      // Skip branch info line
+      if (line.startsWith('##')) continue;
       const code = line.slice(0, 2);
       const file = line.slice(3);
       if (code === '??') {

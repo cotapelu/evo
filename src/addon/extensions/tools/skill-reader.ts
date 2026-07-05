@@ -76,16 +76,27 @@ function getSkillsDir(): string {
   return join(__dirname, 'skill-reader', 'skills');
 }
 
-function getAvailableSkills(): string[] {
+function getAvailableSkills(): Array<{ name: string; description: string }> {
   try {
     const skillsDir = getSkillsDir();
     const files = fs.readdirSync(skillsDir);
-    return files
-      .filter(f => f.endsWith('.md'))
-      .map(f => f.slice(0, -3)) // remove '.md'
-      .sort();
+    const result: Array<{ name: string; description: string }> = [];
+    for (const file of files) {
+      if (file.endsWith('.md')) {
+        const name = file.slice(0, -3);
+        try {
+          const content = fs.readFileSync(join(skillsDir, file), 'utf-8');
+          const firstLine = content.split('\n')[0];
+          // Remove markdown headers (#, ##, etc.) and trim
+          const description = firstLine.replace(/^#+\s*/, '').trim();
+          result.push({ name, description: description || name });
+        } catch {
+          result.push({ name, description: name });
+        }
+      }
+    }
+    return result.sort((a, b) => a.name.localeCompare(b.name));
   } catch {
-    // Silently return empty if directory not accessible
     return [];
   }
 }
@@ -95,16 +106,17 @@ function getAvailableSkills(): string[] {
 // ============================================================================
 
 export function createSkillLoaderTool(): ToolDefinition {
-  // Dynamically discover available skills and generate guidelines
-  const skills = getAvailableSkills();
+  // Dynamically discover available skills and their descriptions
+  const skillsInfo = getAvailableSkills(); // Array<{name, description}>
+  const skills = skillsInfo.map(s => s.name);
   const skillListLines: string[] = [];
-  if (skills.length > 0) {
-    skillListLines.push(`  Available skills (${skills.length}):`);
-    for (const s of skills) {
-      skillListLines.push(`    • ${s}`);
+  if (skillsInfo.length > 0) {
+    skillListLines.push(`  Available skills (${skillsInfo.length}):`);
+    for (const s of skillsInfo) {
+      skillListLines.push(`    • ${s.name}: ${s.description}`);
     }
-    const exampleSkill = skills[0];
-    skillListLines.push(`  Example: skill_reader({ command:'read_skill', args:{ skill:'${exampleSkill}' } })`);
+    const exampleSkill = skillsInfo[0];
+    skillListLines.push(`  Example: skill_reader({ command:'read_skill', args:{ skill:'${exampleSkill.name}' } })`);
   } else {
     skillListLines.push(`  No skills currently available.`);
   }
@@ -113,20 +125,20 @@ export function createSkillLoaderTool(): ToolDefinition {
   const finalPromptGuidelines = [
     `skill_reader commands:`,
     `• read_skill: Read skill template from skills/ directory`,
-    `  - args:{} → list all available skill names`,
-    `  - args:{skill:'<name>'} → return full skill content as text`,
+    `  - args:{} → list all available skill names with descriptions`,
+    `  - args:{skill:'<name>'} → return full skill content for that skill`,
     ...skillListLines
   ];
 
-  // Create concise skill list for promptSnippet
-  const skillsConcise = skills.length > 0
-    ? `// skills: ${skills.join(', ')}`
+  // Create concise skill list with descriptions for promptSnippet
+  const skillsConcise = skillsInfo.length > 0
+    ? `// skills: ${skillsInfo.map(s => `${s.name}: ${s.description}`).join('; ')}`
     : `// no skills available`;
 
   return {
     name: "skill_reader",
     label: "Skill Reader",
-    description: "Retrieve skill .md content for LLM inspection (does not register with Pi).",
+    description: "Retrieve skill documentation from markdown files. Use this tool to load complete instructions for a specific skill, then follow them precisely.",
     promptSnippet: `skill_reader({ command:'read_skill', args:{skill:'<skill-name>'} })  ${skillsConcise}`,
     promptGuidelines: finalPromptGuidelines,
     parameters: {

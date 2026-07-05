@@ -4,7 +4,7 @@ import {
   SessionMetadata,
   SessionState,
   SessionHistoryEntry,
-} from '../tools/session/registry.js';
+} from '../extensions/session-tool/registry.js';
 
 // Mock AgentSession minimal interface
 function createMockSession(id: string): any {

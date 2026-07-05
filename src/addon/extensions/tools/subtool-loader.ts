@@ -21,6 +21,7 @@ import {
   createGrepToolDefinition,
   createBashToolDefinition,
 } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 
 // Cache for per-context tool instances
 const toolCache = new WeakMap<ExtensionContext, Map<string, ToolDefinition>>();
@@ -208,6 +209,15 @@ export function createSubLoaderToolDefinition(): ToolDefinition {
     },
     // @ts-ignore
     execute: executeSubtool,
+    renderCall: (args: any, _theme: any, _context?: any) => {
+      const subtool = args?.subtool || 'unknown';
+      const argPreview = Object.entries(args?.args || {})
+        .slice(0, 2)
+        .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+        .join(' ');
+      const text = `subtool_loader → ${subtool}${argPreview ? ` (${argPreview})` : ''}`;
+      return new Text(text, 0, 0);
+    },
   };
 }
 

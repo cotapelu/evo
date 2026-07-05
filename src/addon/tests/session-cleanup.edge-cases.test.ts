@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { operationCleanup } from '../tools/session/operations/cleanup.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
+import { operationCleanup } from '../extensions/session-tool/operations/cleanup.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 

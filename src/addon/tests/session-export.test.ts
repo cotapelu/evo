@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { operationExport } from '../tools/session/operations/export.js';
-import type { MultiSessionManager } from '../tools/session/manager.js';
+import { operationExport } from '../extensions/session-tool/operations/export.js';
+import type { MultiSessionManager } from '../extensions/session-tool/manager.js';
 
 describe('operationExport', () => {
   let mgr: MultiSessionManager;

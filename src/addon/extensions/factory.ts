@@ -8,7 +8,7 @@
  */
 
 import { registerKiloProvider } from "./providers/kilo-provider.js";
-import { registerTodosTool, registerMemoryTool, registerUniversalTool } from "./tools/index.js";
+import { registerTodosTool, registerMemoryTool } from "./tools/index.js";
 // Tools moved to plugins: git, test, format, audit, build, metrics, secret-scanner, scripts
 import { registerTeamTool } from "./team/index.js";
 import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
@@ -19,9 +19,12 @@ import autoContinueExtension from "./hooks/auto-continue.js";
 import autoCompact85Extension from "./hooks/auto-compact-85.js";
 import contextLoggerExtension from "./context-logger.js";
 
-// Import master-tool extension
-import { registerMasterTool } from "./master-tool/index.js";
-
+// Import built-in tools override extension (disabled - overrides default built-in tools)
+// import registerBuiltinsExtension from "./buildin-tools/index.js";
+import multiAgentToolExtension from "./multi-agent-tool/index.js";
+import sessionToolExtension from "./session-tool/index.js";
+import promptHookExtension from "./prompt-hooks/index.js";
+// skillsToolExtension removed - skill_reader extension handles skills
 
 import piclawHeader from "./piclaw-header.js";
 import { registerTodosRenderer } from "./renderers/todos-renderer.js";
@@ -29,11 +32,12 @@ import { registerTeamWidget } from "./team/team-widget.js";
 import { registerMemoryRenderer } from "./renderers/memory-renderer.js";
 import { registerBranchSummaryRenderer } from "./renderers/branch-summary-renderer.js";
 import { registerTeamOpsRenderer } from "./renderers/team-ops-renderer.js";
-import { registerSessionTreeCommand } from "./commands/session-tree-command.js";
-import { registerSettingsCommand } from "./commands/settings-command.js";
 import { registerProviderCommand } from "./commands/provider-command.js";
-import { registerCopyCommand } from "./commands/copy-command.js";
 import { registerTeamCommand } from "./commands/team-command.js";
+// Removed conflicting built-in command registrations:
+// - registerSessionTreeCommand (conflicts with built-in /tree)
+// - registerSettingsCommand (conflicts with built-in /settings)
+// - registerCopyCommand (conflicts with built-in /copy)
 import { registerKeybindingExtension } from "./keybinding/keybinding-extension.js";
 
 /**
@@ -52,15 +56,28 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   // Register providers
   registerKiloProvider(api);
 
-  // Register custom tools
   registerTodosTool(api);
   registerMemoryTool(api);
   registerTeamTool(api);
   registerToolTemplate(api);
   registerSkillReaderExtension(api);
 
-  // Register universal tool
-  registerUniversalTool(api);
+  // // Register built-in tools override (same name, uses createXTool(ctx.cwd))
+  // registerBuiltinsExtension(api);
+  
+  // Register multi-agent tool
+  multiAgentToolExtension(api);
+  
+  // Register session tool
+  sessionToolExtension(api);
+  
+  // Register prompt hooks extension
+  promptHookExtension(api);
+  
+  // skills tool removed (use skill_reader extension)
+
+  // Register action tool (removed)
+  // registerActionTool(api);
   // Register sub-tool loader
   registerSubToolLoaderExtension(api);
 
@@ -71,11 +88,8 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerBranchSummaryRenderer(api);
   registerTeamOpsRenderer(api);
 
-  // Register commands
-  registerSessionTreeCommand(api);
-  registerSettingsCommand(api);
+  // Register commands (non-conflicting)
   registerProviderCommand(api);
-  registerCopyCommand(api);
   registerTeamCommand(api);
   // Register keybinding extension
   registerKeybindingExtension(api);
@@ -92,13 +106,7 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   // Register Context Logger Extension
   contextLoggerExtension(api);
 
-  // Register master-tool extension
-  try {
-    registerMasterTool(api);
-    console.log(`[Extensions] Registered master-tool extension`);
-  } catch (err) {
-    console.error('[Extensions] Failed to register master-tool:', err);
-  }
+  // Master-tool extension removed (not efficient)
 
   // Return an empty object to satisfy extension discovery requirements
   return {};

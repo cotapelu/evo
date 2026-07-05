@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { operationStatus } from '../tools/session/operations/status.js';
-import { operationHistory } from '../tools/session/operations/history.js';
-import { operationTree } from '../tools/session/operations/tree.js';
-import type { MultiSessionManager, SessionMetadata } from '../tools/session/manager.js';
-import { SessionState } from '../tools/session/registry.js';
+import { operationStatus } from '../extensions/session-tool/operations/status.js';
+import { operationHistory } from '../extensions/session-tool/operations/history.js';
+import { operationTree } from '../extensions/session-tool/operations/tree.js';
+import type { MultiSessionManager, SessionMetadata } from '../extensions/session-tool/manager.js';
+import { SessionState } from '../extensions/session-tool/registry.js';
 
 function mockSession(overrides: Partial<SessionMetadata> = {}): SessionMetadata {
   return {

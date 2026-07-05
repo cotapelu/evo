@@ -11,6 +11,12 @@ describe('codebase.metrics', () => {
     tmpdir = await mkdtemp('evo-test-metrics-');
   });
 
+  afterEach(async () => {
+    try {
+      await rm(tmpdir, { recursive: true, force: true });
+    } catch {}
+  });
+
   it('should compute metrics for a simple TypeScript file', async () => {
     const fileRel = 'sample.ts';
     const content = `
