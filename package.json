@@ -5,7 +5,7 @@
   "workspaces": [
     "packages/*"
   ],
-  "description": "Evo Coding Agent CLI - Professional AI coding assistant",
+  "description": "Tau Coding Agent CLI - Professional AI coding assistant",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -13,25 +13,20 @@
   },
   "scripts": {
     "generate-custom-models": "tsx scripts/generate-custom-models.ts",
-    "build": "npm run generate-custom-models && tsc -p tsconfig.build.json && chmod +x dist/cli.js && cp -r src/plugin/extensions/tools/skill-reader/skills dist/extensions/tools/skill-reader/ && cp -r src/plugin/extensions/capability-system/plugins dist/extensions/capability-system/",
+    "build": "npm run generate-custom-models && tsc -p tsconfig.build.json && chmod +x dist/cli.js && mkdir -p dist/addon/extensions/capability-system dist/addon/extensions/tools/skill-reader && cp -r src/addon/extensions/tools/skill-reader/skills dist/addon/extensions/tools/skill-reader/ && cp -r src/addon/extensions/capability-system/plugins dist/addon/extensions/capability-system/",
     "start": "node dist/cli.js",
     "dev": "npm run generate-custom-models && tsx src/cli.ts",
     "lint": "eslint src/**/*.ts --fix",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck",
     "test": "vitest run",
-    "prepublishOnly": "npm run build && npm test",
-    "benchmark": "tsx src/plugin/benchmarks/index.ts",
-    "benchmark:team": "tsx src/plugin/benchmarks/team-performance.ts",
-    "benchmark:codebase": "tsx src/plugin/benchmarks/codebase-performance.ts",
-    "benchmark:memory": "tsx src/plugin/benchmarks/memory-tool.ts",
-    "benchmark:tui": "tsx src/plugin/benchmarks/tui-rendering.ts"
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
-    "@earendil-works/pi-agent-core": "^0.80.2",
-    "@earendil-works/pi-ai": "^0.80.2",
-    "@earendil-works/pi-coding-agent": "^0.80.2",
-    "@earendil-works/pi-tui": "^0.80.2",
+    "@earendil-works/pi-agent-core": "^0.80.3",
+    "@earendil-works/pi-ai": "^0.80.3",
+    "@earendil-works/pi-coding-agent": "^0.80.3",
+    "@earendil-works/pi-tui": "^0.80.3",
     "chalk": "^5.6.2",
     "globals": "^17.5.0",
     "minimatch": "^10.2.5",

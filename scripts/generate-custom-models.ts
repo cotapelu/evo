@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const PROJECT_ROOT = join(__dirname, "..");
-const OUTPUT_DIR = join(PROJECT_ROOT, "src", "plugin", "extensions", "providers", "models");
+const OUTPUT_DIR = join(PROJECT_ROOT, "src", "addon", "extensions", "providers", "models");
 const OUTPUT_FILE = join(OUTPUT_DIR, "custom-models.generated.ts");
 
 interface ModelsDevProvider {
@@ -44,7 +44,7 @@ interface ModelsDevModel {
 // Import từ registry (được khai báo tập trung)
 // ============================================================================
 const { CUSTOM_PROVIDERS } = await import(
-  join(PROJECT_ROOT, "src", "plugin", "extensions", "providers", "registry.js"));
+  join(PROJECT_ROOT, "src", "addon", "extensions", "providers", "registry.js"));
 const CUSTOM_PROVIDER_KEYS = CUSTOM_PROVIDERS as readonly string[];
 
 
