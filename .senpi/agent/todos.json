@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "p",
+      "tasks": []
+    }
+  ],
+  "nextTaskId": 1,
+  "nextPhaseId": 2,
+  "updatedAt": "2026-06-11T15:47:13.527Z"
+}
