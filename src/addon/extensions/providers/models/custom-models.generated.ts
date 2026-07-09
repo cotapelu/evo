@@ -1,6 +1,6 @@
 // THIS FILE IS AUTO-GENERATED
 // Source: https://models.dev/api.json
-// Generated: 2026-07-05T04:41:10.769Z
+// Generated: 2026-07-09T04:08:41.701Z
 // DO NOT EDIT MANUALLY - Run 'npm run generate-custom-models' to update
 
 import type { Model } from "@earendil-works/pi-ai";
@@ -1383,6 +1383,23 @@ export const CUSTOM_MODELS = {
       },
       contextWindow: 204800,
       maxTokens: 131072,
+    } satisfies Model<"openai-completions">,
+    "minimax/minimax-m3": {
+      id: "minimax/minimax-m3",
+      name: "MiniMax: MiniMax M3",
+      api: "openai-completions",
+      provider: "kilo",
+      baseUrl: "https://api.kilo.ai/api/gateway",
+      reasoning: true,
+      input: ["text", "image"],
+      cost: {
+        input: 0.3,
+        output: 1.2,
+        cacheRead: 0.06,
+        cacheWrite: 0,
+      },
+      contextWindow: 1048576,
+      maxTokens: 512000,
     } satisfies Model<"openai-completions">,
     "mistralai/codestral-2508": {
       id: "mistralai/codestral-2508",
