@@ -39,13 +39,13 @@ Last Updated: 2026-07-16
 - Total test suites: 182, tests: 1943 (3 skipped).
 
 ## Test Metrics
-- Total Test Suites: 182
+- Total Test Suites: 153
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1943
-- Tests Skipped: 3
-- Coverage: 92.89% Statements (5269/5672), Functions 86.74% (903/1041), Branches 84.13% (2922/3473), Lines 93.74% (4852/5176)
+- Tests Passed: 1455
+- Tests Skipped: 0
+- Coverage: 85.93% Statements (4706/5476), Functions 86.06% (920/1069), Branches 77.39% (2640/3411), Lines 86.7% (4142/4777)
 
 ## Reliability
 - Rollback Count: 0
