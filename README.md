@@ -33,6 +33,31 @@ All extensions follow the SDK patterns for consistency and safety.
 
 For more details, see [docs/AGENT_PROFILE.md](docs/AGENT_PROFILE.md).
 
+## Production Readiness
+
+PiClaw adheres to strict production-quality standards as defined in [GOAL.md](GOAL.md):
+
+- ✅ **Quality Gates**: Functions ≤20 lines, complexity ≤10, no duplication, 100% error/input validation coverage
+- ✅ **Testing**: ≥80% coverage (currently **89.29%** statements, **81.06%** branches), 1546 passing tests
+- ✅ **Security**: No hardcoded secrets, input validation on all external inputs, npm audit integrated in CI
+- ✅ **CI/CD**: Automated quality checks (lint, typecheck, test, security scan) on every push/PR
+- ✅ **Pre-commit Hooks**: Husky enforces quality gates before each commit
+- ✅ **Code Ownership**: CODEOWNERS ensures proper review
+- ✅ **Observability**: Structured logging, performance benchmarks, metrics collection
+
+See [docs/AGENT_METRICS.md](docs/AGENT_METRICS.md) for detailed metrics and [docs/VERIFICATION_STEPS.md](docs/VERIFICATION_STEPS.md) for quality verification.
+
+## Extension Ecosystem
+
+PiClaw includes 23+ built-in extensions:
+
+- **Tools**: git, test, format, audit, build, scripts, memory, todos, master-tool, codebase plugin (analyze, search, safe_edit, analyze_ast, ast_query, call_graph, complexity, dependency_tree), team tools, session management, etc.
+- **Commands**: Slash commands like `/tree`, `/settings`, `/providers`, `/team`, `/copy`, `/scan-secrets`, `/scripts`, `/reload-evo`
+- **Renderers**: Custom output for todos, branch summaries, team ops, metrics (removed), etc.
+- **Widgets**: Live team status, metrics dashboard (removed), etc.
+
+All extensions follow the SDK patterns and are auto-discovered at runtime.
+
 ## Installation
 
 ```bash

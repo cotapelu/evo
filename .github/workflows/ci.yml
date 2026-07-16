@@ -35,6 +35,9 @@ jobs:
       - name: Type check
         run: npm run check
 
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+
       - name: Run tests
         run: npm test -- --coverage --reporter=json --output=test-report.json
 

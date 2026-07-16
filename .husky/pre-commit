@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-commit quality checks..."
+
+# Run quality checks (lint, typecheck, test, security scan)
+make quality
+
+# Check exit code
+if [ $? -ne 0 ]; then
+  echo "❌ Quality checks failed. Fix the issues before committing."
+  exit 1
+fi
+
+echo "✅ All quality checks passed. Committing..."

@@ -1,0 +1,54 @@
+# Codeowners for PiClaw
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners (fallback)
+* @organization/tech-lead @organization/sre-team
+
+# Core agent system
+/src/index.ts @organization/tech-lead
+/src/cli.ts @organization/tech-lead
+/src/runtime-context.ts @organization/tech-lead
+/src/addon/ @organization/tech-lead @organization/backend
+
+# Extensions core
+/src/addon/extensions/capability-system/ @organization/backend @organization/platform-team
+/src/addon/extensions/commands/ @organization/backend
+/src/addon/extensions/renderers/ @organization/frontend
+/src/addon/extensions/tools/ @organization/backend
+
+# Capability plugins
+/src/addon/extensions/capability-system/plugins/codebase/ @organization/backend @organization/security-team
+/src/addon/extensions/capability-system/plugins/dev/ @organization/backend @organization/devops
+/src/addon/extensions/capability-system/plugins/git/ @organization/backend
+/src/addon/extensions/capability-system/plugins/security/ @organization/security-team
+/src/addon/extensions/capability-system/plugins/system/ @organization/sre-team
+
+# Team collaboration
+/src/addon/extensions/team/ @organization/backend @organization/platform-team
+
+# Session management
+/src/addon/extensions/session-tool/ @organization/backend
+
+# TUI components
+/src/addon/extensions/tui/ @organization/frontend
+
+# Tests
+/src/**/*.test.ts @organization/qa-team @organization/backend
+/src/**/__tests__/ @organization/qa-team @organization/backend
+
+# Configuration
+/tsconfig.json @organization/tech-lead
+/eslint.config.js @organization/tech-lead
+/vitest.config.ts @organization/qa-team
+/package.json @organization/tech-lead
+/Makefile @organization/devops
+
+# Documentation
+/README.md @organization/tech-writers
+/GOAL.md @organization/tech-lead
+/AGENTS.md @organization/tech-lead
+/docs/ @organization/tech-writers
+
+# CI/CD
+/.github/workflows/ @organization/sre-team @organization/devops
+/.husky/ @organization/devops
