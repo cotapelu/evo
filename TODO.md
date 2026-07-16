@@ -266,6 +266,8 @@ Last Updated: 2026-07-16
 
 ## In Progress
 - Increase branch coverage to ≥85% by writing tests for low-coverage modules: extension.ts (54%), plugin-loader.ts (65%), analyze_ast (79.86%), call_graph (80.73%), safe_edit (80%), analyze (82%), etc.
+  - [x] subtool-loader: added 15 tests covering 30 branches
+  - [x] git.add: added 5 tests covering 13 branches
 
 ## Completed (continued)
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
