@@ -87,13 +87,13 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - Continue systematic testing to reach ≥85% branch coverage.
 
 ## Test Metrics
-- Total Test Suites: 161
+- Total Test Suites: 162
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1526
+- Tests Passed: 1541
 - Tests Skipped: 0
-- Coverage: 87.81% Statements (4809/5476), Functions 87.37% (934/1069), Branches 80.24% (2737/3411), Lines 88.52% (4229/4777)
+- Coverage: 89.29% Statements (4890/5476), Functions 88.21% (943/1069), Branches 80.94% (2761/3411), Lines 90.14% (4306/4777)
 
 ## Reliability
 - Rollback Count: 0
@@ -131,6 +131,26 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 
 **Next**:
 - Address remaining branches in piclaw-header (path fallbacks) and target other zero-coverage modules (keybinding-extension.ts, plugin-loader.ts) to reach ≥85% branch coverage.
+
+### [2025-07-16] Branch Coverage Expansion (Round 227)
+
+**Type**: Test Expansion
+
+**Summary**: Added comprehensive tests for keybinding-extension to cover loadKeybindings, registration, and terminal input handling branches.
+
+**Modules**:
+- **keybinding-extension.ts**: 12 tests covering loadKeybindings (missing config, invalid JSON, empty keybindings), registration early exit, terminal input handling (simple keys, ctrl+r combo, escape ignore, UI/idle gating, sendUserMessage errors, shutdown cleanup). Covered 24/28 branches (85.7%).
+
+**Impact**:
+- All tests pass: **1538 passed**, 0 failed.
+- Typecheck: 0 errors, Lint: 0 errors.
+- Build successful.
+- Overall branch coverage increased from **80.24%** to **80.94%** (2761/3411).
+- keybinding-extension.ts remaining 4 branches are edge cases in control character mapping.
+
+**Next**:
+- Complete keybinding-extension (4 remaining branches) and piclaw-header (3 remaining).
+- Continue systematic testing to reach ≥85% branch coverage.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627

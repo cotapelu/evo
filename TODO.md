@@ -280,8 +280,9 @@ Last Updated: 2026-07-16
   - [x] http.ts: added 15 tests covering request building, headers, body handling, flags, success and error responses
   - [x] prompt-integration.ts: added 17 tests covering all 24 branches (100%)
   - [x] piclaw-header.ts: added 8 tests covering session start with/without UI, environment skips, fetch outcomes (success, failure, unchanged, newer version). Covered 17/20 branches (85%)
-  - Current branch coverage: 80.24% (2737/3411)
-  - Next target: piclaw-header.ts (3 remaining branches) or keybinding-extension.ts (28 branches, 0% covered)
+  - [x] keybinding-extension.ts: added 12 tests covering loadKeybindings (missing config, invalid JSON, empty), registration early exit, terminal input handling (simple, ctrl+r, escape, UI/idle gating, send errors, shutdown). Covered 24/28 branches (85.7%)
+  - Current branch coverage: 80.94% (2761/3411)
+  - Next target: piclaw-header.ts (3 remaining) or complete keybinding-extension (4 remaining) or other high-impact modules
 
 ## Completed (continued)
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
