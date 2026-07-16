@@ -374,9 +374,10 @@ Last Updated: 2026-07-16
   - [x] Overall coverage: 92.89% Statements, **84.13%** Branches (+8 arcs)
 
 ## Upcoming
-- Achieve ≥85% branch coverage (currently 84.13%).
-- Target remaining low-coverage modules: extension.ts (54%), plugin-loader (65%), ast_query (80%), call_graph (81%), master-tool (75%), analyze (82%), etc.
-- Maintain overall overall statement coverage ≥91%.
+- Continue **Branch Coverage Expansion (Round 225)** to achieve ≥85% (current 82.96%, need +2.04%).
+- Completed: extension.ts (+1.9%, 23 tests)
+- Next: plugin-loader.ts (branch coverage ~65%), team-manager.ts (73.54%), and other modules (ast_query, call_graph, safe_edit, analyze_ast).
+- Maintain statement coverage ≥91% (currently 90.85%).
 
 
 ## Notes

@@ -240,4 +240,73 @@ describe('keybinding-extension branch coverage', () => {
     shutdownHandler();
     // We can't easily verify unsubscribe called, but at least no errors
   });
+
+  it('ignores bindings with non-string key type', async () => {
+    (existsSync as any).mockReturnValue(true);
+    // key is a number
+    (readFileSync as any).mockReturnValue(JSON.stringify({ keybindings: { team: 123 } }));
+    registerKeybindingExtension(mockApi);
+    const handler = getSessionStartHandler();
+    mockCtx = createMockCtx();
+    let inputCallback: any;
+    mockCtx.ui.onTerminalInput.mockImplementation((cb: any) => {
+      inputCallback = cb;
+      return () => {};
+    });
+    await handler('session_start', mockCtx);
+    // keyToCmd should be empty because type not string, so onTerminalInput not registered
+    expect(inputCallback).toBeUndefined();
+  });
+
+  it('ignores bindings with empty string key', async () => {
+    (existsSync as any).mockReturnValue(true);
+    (readFileSync as any).mockReturnValue(JSON.stringify({ keybindings: { team: '' } }));
+    registerKeybindingExtension(mockApi);
+    const handler = getSessionStartHandler();
+    mockCtx = createMockCtx();
+    let inputCallback: any;
+    mockCtx.ui.onTerminalInput.mockImplementation((cb: any) => {
+      inputCallback = cb;
+      return () => {};
+    });
+    await handler('session_start', mockCtx);
+    expect(inputCallback).toBeUndefined();
+  });
+
+  it('handles sendUserMessage error with empty message', async () => {
+    (existsSync as any).mockReturnValue(true);
+    (readFileSync as any).mockReturnValue(JSON.stringify({ keybindings: { team: 't' } }));
+    mockApi.sendUserMessage = vi.fn().mockImplementation(() => {
+      throw new Error(''); // empty message
+    });
+    registerKeybindingExtension(mockApi);
+    const handler = getSessionStartHandler();
+    mockCtx = createMockCtx();
+    let inputCallback: any;
+    mockCtx.ui.onTerminalInput.mockImplementation((cb: any) => {
+      inputCallback = cb;
+      return () => {};
+    });
+    await handler('session_start', mockCtx);
+    const result = inputCallback('t');
+    expect(mockCtx.ui.notify).toHaveBeenCalledWith('Failed to execute team: unknown error', 'error');
+    expect(result).toEqual({ consume: true });
+  });
+
+  it('passes through non-single-character input', async () => {
+    (existsSync as any).mockReturnValue(true);
+    (readFileSync as any).mockReturnValue(JSON.stringify({ keybindings: { team: 't' } }));
+    registerKeybindingExtension(mockApi);
+    const handler = getSessionStartHandler();
+    mockCtx = createMockCtx();
+    let inputCallback: any;
+    mockCtx.ui.onTerminalInput.mockImplementation((cb: any) => {
+      inputCallback = cb;
+      return () => {};
+    });
+    await handler('session_start', mockCtx);
+    const result = inputCallback('ab');
+    expect(mockApi.sendUserMessage).not.toHaveBeenCalled();
+    expect(result).toBeUndefined();
+  });
 });

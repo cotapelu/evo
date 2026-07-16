@@ -3,47 +3,42 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "GOAL.md Compliance",
+      "name": "Branch Coverage Expansion",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Add Makefile with quality target and common commands",
-          "status": "completed"
+          "content": "Analyze extension.ts branch coverage gaps",
+          "status": "in_progress"
         },
         {
           "id": "task-2",
-          "content": "Add pre-commit hook using Husky to enforce quality gates",
-          "status": "completed"
+          "content": "Write branch coverage tests for extension.ts execute/renderCall/renderResult",
+          "status": "pending"
         },
         {
           "id": "task-3",
-          "content": "Add GitHub PR template with quality checklist",
-          "status": "completed"
+          "content": "Analyze plugin-loader.ts remaining branches",
+          "status": "pending"
         },
         {
           "id": "task-4",
-          "content": "Add CODEOWNERS file to define code ownership",
-          "status": "completed"
+          "content": "Write tests for plugin-loader.ts uncovered branches",
+          "status": "pending"
         },
         {
           "id": "task-5",
-          "content": "Update CI to include security scanning (npm audit)",
-          "status": "completed"
+          "content": "Run tests, measure coverage increase, update metrics",
+          "status": "pending"
         },
         {
           "id": "task-6",
-          "content": "Run full test suite and verify all checks pass",
-          "status": "completed"
-        },
-        {
-          "id": "task-7",
-          "content": "Update documentation to reflect new infrastructure",
-          "status": "completed"
+          "content": "Update TODO.md and AGENT_METRICS.md with results",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 8,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-07-16T22:57:45.022Z"
+  "updatedAt": "2026-07-16T23:04:24.045Z"
 }
