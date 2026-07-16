@@ -39,14 +39,34 @@ Last Updated: 2026-07-16
 - Branch coverage progression: todo.manage → 77.89%, system.info → 78.00%, dev.test → 78.46%, master-tool → 80%, extension → 81.61%.
 - Total test suites: 182, tests: 1943 (3 skipped).
 
+## Coverage Expansion Round 224
+
+Added branch coverage tests for low-coverage modules:
+
+- **plugin-loader.ts**: 9 tests covering constructor defaults, `loadAll` caching (isLoaded and loadPromise paths), watch mode initialization, manifest validation (missing name/description/version/capabilities, invalid plugin ID, capability id/execute), `loadExecuteModule` missing execute function, `loadRendererModule` missing file.
+- **call_graph.ts**: 4 tests covering method definitions, top-level call ignoring, non-identifier callee, and local function call resolution.
+- **analyze_ast.ts**: 1 test for unknown file extension handling.
+
+Overall coverage metrics:
+
+- Statements: 86.3% (4726/5476)
+- Branches: 77.66% (2649/3411)
+- Functions: 86.24% (922/1069)
+- Lines: 87.12% (4162/4777)
+
+Total test suites: 156
+Total tests: 1483
+
+Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncovered branches), and continue towards ≥85% branch coverage.
+
 ## Test Metrics
-- Total Test Suites: 154
+- Total Test Suites: 156
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1465
+- Tests Passed: 1483
 - Tests Skipped: 0
-- Coverage: 86.28% Statements (4725/5476), Functions 86.24% (922/1069), Branches 77.68% (2650/3411), Lines 87.1% (4161/4777)
+- Coverage: 86.3% Statements (4726/5476), Functions 86.24% (922/1069), Branches 77.66% (2649/3411), Lines 87.12% (4162/4777)
 
 ## Reliability
 - Rollback Count: 0
