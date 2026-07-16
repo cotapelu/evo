@@ -1,8 +1,11 @@
 # TODO
 
-Last Updated: 2026-06-26
+Last Updated: 2026-07-16
 
 ## Completed
+- [x] Quality gate enforcement (Round 221): fixed esbuild vulnerability and ESLint warnings (no-explicit-any, no-empty-function, no-unused-vars). All quality gates now pass.
+- [x] Achieve ≥80% test coverage (reached 87.96%) through systematic test expansion.
+- [x] Finalize all evolution documentation updates.
 - [x] Fix failing plugin capability tests (dev, git, security-system)
   - [x] Correct relative import paths in tests
   - [x] Add missing `async` to `beforeEach` in git test
@@ -262,10 +265,7 @@ Last Updated: 2026-06-26
 - [x] Achieve ≥80% test coverage (reached 80.08%) through targeted tests for guideline-generator, search, complexity, and renderers.
 
 ## In Progress
-- (none)
-
-- [x] Achieve ≥80% test coverage (reached 87.96%) through systematic test expansion.
-- [x] Finalize all evolution documentation updates.
+- Increase branch coverage to ≥85% by writing tests for low-coverage modules: extension.ts (54%), plugin-loader.ts (65%), analyze_ast (79.86%), call_graph (80.73%), safe_edit (80%), analyze (82%), etc.
 
 ## Completed (continued)
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
