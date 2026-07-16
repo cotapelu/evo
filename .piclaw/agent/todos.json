@@ -3,17 +3,62 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Phase 2: Cập nhật buildin/index.ts",
+      "name": "Implement Autonomous Evolution Engine",
       "tasks": [
         {
           "id": "task-1",
-          "content": "Sửa buildin/index.ts để import từ tools/index.js thay vì từng file riêng",
+          "content": "Design the autonomous engine architecture and components",
           "status": "in_progress"
+        },
+        {
+          "id": "task-2",
+          "content": "Implement diagnostic runner (lint, typecheck, test, build)",
+          "status": "pending"
+        },
+        {
+          "id": "task-3",
+          "content": "Implement plan generator and LLM prompt construction",
+          "status": "pending"
+        },
+        {
+          "id": "task-4",
+          "content": "Implement verification and rollback logic",
+          "status": "pending"
+        },
+        {
+          "id": "task-5",
+          "content": "Implement metrics update and commit automation",
+          "status": "pending"
+        },
+        {
+          "id": "task-6",
+          "content": "Add extension registration to factory.ts",
+          "status": "pending"
+        },
+        {
+          "id": "task-7",
+          "content": "Write comprehensive unit tests for engine",
+          "status": "pending"
+        },
+        {
+          "id": "task-8",
+          "content": "Run quality checks (lint, typecheck, test) and ensure coverage ≥80% for autonomous code",
+          "status": "pending"
+        },
+        {
+          "id": "task-9",
+          "content": "Test the autonomous cycle in dev mode and verify metrics logging",
+          "status": "pending"
+        },
+        {
+          "id": "task-10",
+          "content": "Document the autonomous feature in README and update AGENT_METRICS.md",
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 2,
+  "nextTaskId": 11,
   "nextPhaseId": 2,
-  "updatedAt": "2026-07-01T15:36:33.023Z"
+  "updatedAt": "2026-07-16T11:06:41.812Z"
 }
