@@ -248,4 +248,114 @@ describe('PluginLoader', () => {
 
 
   });
+
+  // Additional branch coverage tests
+
+  describe('Constructor defaults', () => {
+    it('uses default options when none provided', () => {
+      const loader = new PluginLoader({});
+      const opts = (loader as any).options;
+      expect(opts.pluginsDir).toBeTruthy();
+      expect(opts.watchMode).toBe(false);
+      expect(typeof opts.onPluginLoaded).toBe('function');
+      expect(typeof opts.onPluginUnloaded).toBe('function');
+    });
+  });
+
+  describe('loadAll caching', () => {
+    it('returns cached result after completed load', async () => {
+      const loader = createLoader();
+      const performSpy = vi.spyOn(loader as any, 'performLoadAll').mockResolvedValue({
+        totalPlugins: 0,
+        totalCapabilities: 0,
+        loadTimeMs: 0,
+        errors: []
+      });
+      const stats1 = await loader.loadAll();
+      expect(performSpy).toHaveBeenCalledTimes(1);
+      const stats2 = await loader.loadAll();
+      expect(performSpy).toHaveBeenCalledTimes(1);
+      expect(stats2).toEqual(stats1);
+    });
+
+    it('concurrent loadAll calls share the same promise', async () => {
+      const loader = createLoader();
+      const performSpy = vi.spyOn(loader as any, 'performLoadAll').mockImplementation(
+        async () => {
+          await new Promise(res => setTimeout(res, 10));
+          return { totalPlugins: 0, totalCapabilities: 0, loadTimeMs: 0, errors: [] };
+        }
+      );
+      const p1 = loader.loadAll();
+      const p2 = loader.loadAll();
+      // Both calls should share the same internal loadPromise, so performLoadAll is invoked only once
+      await p1;
+      await p2;
+      expect(performSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('watchMode', () => {
+    it('calls startWatchMode when watchMode is true', async () => {
+      const loader = createLoader({ watchMode: true });
+      const startWatchSpy = vi.spyOn(loader as any, 'startWatchMode').mockImplementation(() => {});
+      const dynSpy = vi.spyOn(loader as any, 'dynamicImport').mockResolvedValue({ execute: vi.fn() });
+      await loader.loadAll();
+      expect(startWatchSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('validateManifest additional checks', () => {
+    let loader: PluginLoader;
+    beforeEach(() => {
+      loader = createLoader();
+    });
+
+    it('throws if name missing', () => {
+      const manifest = { id: 'test', description: 'desc', version: '1.0.0', capabilities: [] } as any;
+      expect(() => (loader as any).validateManifest(manifest, 'test')).toThrow("Missing 'name'");
+    });
+
+    it('throws if description missing', () => {
+      const manifest = { id: 'test', name: 'Test', version: '1.0.0', capabilities: [] } as any;
+      expect(() => (loader as any).validateManifest(manifest, 'test')).toThrow("Missing 'description'");
+    });
+
+    it('throws if version missing', () => {
+      const manifest = { id: 'test', name: 'Test', description: 'desc', capabilities: [] } as any;
+      expect(() => (loader as any).validateManifest(manifest, 'test')).toThrow("Missing 'version'");
+    });
+
+    it('throws if capabilities missing', () => {
+      const manifest = { id: 'test', name: 'Test', description: 'desc', version: '1.0.0' } as any;
+      expect(() => (loader as any).validateManifest(manifest, 'test')).toThrow("Missing 'capabilities'");
+    });
+
+    it('throws if plugin ID invalid format', () => {
+      const manifest = { id: 'Invalid!', name: 'Test', description: 'desc', version: '1.0.0', capabilities: [] } as any;
+      expect(() => (loader as any).validateManifest(manifest, 'test')).toThrow('Invalid plugin ID');
+    });
+
+    it('throws if capability missing id or execute', () => {
+      const manifest = { id: 'test', name: 'Test', description: 'desc', version: '1.0.0', capabilities: [{}] } as any;
+      expect(() => (loader as any).validateManifest(manifest, 'test')).toThrow("Capability missing id/execute");
+    });
+  });
+
+  describe('loadExecuteModule', () => {
+    it('throws if module lacks execute function', async () => {
+      const loader = createLoader();
+      const dynSpy = vi.spyOn(loader as any, 'dynamicImport').mockResolvedValue({});
+      await expect(loader.loadExecuteModule('/some/path.js')).rejects.toThrow('Missing execute function');
+    });
+  });
+
+  describe('loadRendererModule', () => {
+    it('returns undefined if renderer file does not exist', async () => {
+      const loader = createLoader();
+      (existsSync as any).mockReturnValue(false);
+      const result = await (loader as any).loadRendererModule('/some/renderer.js');
+      expect(result).toBeUndefined();
+    });
+  });
 });
