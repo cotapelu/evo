@@ -271,7 +271,9 @@ Last Updated: 2026-07-16
   - [x] git.branch: added 7 tests covering 14 branches
   - [x] git.checkout: added 4 tests covering 12 branches
   - [x] context-logger: added 10 tests covering 11 branches
+  - [x] extension.ts: added 6 tests covering 12 branches (initial layer; renderResult remains)
   - Current branch coverage: 77.68% (2650/3411)
+  - Next target: plugin-loader.ts (112 branches, 55 covered, 57 uncovered)
 
 ## Completed (continued)
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
