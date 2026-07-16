@@ -15,7 +15,7 @@ import { registerSubToolLoaderExtension } from "./tools/subtool-loader.js";
 import { registerToolTemplate } from "./tools/tool-template.js";
 import capabilitySystemExtension from "./capability-system/extension.js";
 import { registerSkillReaderExtension } from "./tools/skill-reader.js";
-import autonomousEvolutionExtension from "./autonomous-evolution.js";
+
 import autoContinueExtension from "./hooks/auto-continue.js";
 import autoCompact85Extension from "./hooks/auto-compact-85.js";
 import contextLoggerExtension from "./context-logger.js";
@@ -106,9 +106,6 @@ export default async function extensionsAggregator(api: import("@earendil-works/
 
   // Register Context Logger Extension
   contextLoggerExtension(api);
-
-  // Register Autonomous Evolution Extension
-  autonomousEvolutionExtension(api);
 
   // Master-tool extension removed (not efficient)
 
