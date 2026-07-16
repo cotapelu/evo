@@ -87,13 +87,13 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - Continue systematic testing to reach ≥85% branch coverage.
 
 ## Test Metrics
-- Total Test Suites: 160
+- Total Test Suites: 161
 - Initial Failing Suites: 0
 - Final Failing Suites: 0
 - Test Failure Rate: 0%
-- Tests Passed: 1518
+- Tests Passed: 1526
 - Tests Skipped: 0
-- Coverage: 87.8% Statements (4808/5476), Functions 87.37% (934/1069), Branches 79.59% (2715/3411), Lines 88.5% (4228/4777)
+- Coverage: 87.81% Statements (4809/5476), Functions 87.37% (934/1069), Branches 80.24% (2737/3411), Lines 88.52% (4229/4777)
 
 ## Reliability
 - Rollback Count: 0
@@ -111,6 +111,26 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - **Test Typing**: Refactored `mock-factory.ts` to return typed `ExtensionAPI` and `ExtensionContext`. Plugin capability tests (git, dev, security-system) typed. Command tests (provider-command, metrics-command, copy-command, team-command, team-ops-tool) use `vi.mocked()` or typed interfaces. Renderer tests (todos-renderer, branch-summary-renderer) use typed RendererFn. Tool tests (memory-tool, universal-tool-execution, subtool-loader, cli, metrics-widget, renderers, tool-template, team-widget-lifecycle, extensions-index, team-manager-notifyupdate, todos-tool-state, team-manager-coverage, update-method, actions, piclaw-header-coverage, plugin-loader-watch-mode, integration/copy-command.integration, render-utils, team-command, todos-tool-type-errors, integration-flow) typed. **team-manager-additional.test.ts** (12 `as any` casts eliminated via helper types, mock registry, and careful casting). 11 test files cleaned so far. Systematic elimination continues.
 - **Tool Definitions Cleanup**: Refactored `memory-tool` to use proper factory pattern (`createMemoryTool`) and added full JSON Schema `parameters` for actions (add, list, get, delete, clear, search). Refactored `universal-tool` with improved `promptSnippet` and enriched `parameters` schema (message, min/max, expression). All tests pass; build stable.
 - **Renderer Coverage Expansion**: Added targeted tests for `todos-tool` render functions (19 tests covering statuses, truncation, phase rendering), `universal-tool` renderResult (4 tests for system info formatting and fallbacks), and `subtool-loader` validation (15 tests). Boosted statement coverage from 80.81% to 81.36%.
+
+### [2025-07-16] Branch Coverage Expansion (Round 226)
+
+**Type**: Test Expansion
+
+**Summary**: Completed prompt-integration coverage and added comprehensive tests for piclaw-header.
+
+**Modules**:
+- **prompt-integration.ts**: 2 additional tests covering fallback short-id comparisons (empty and tie cases), bringing total to **17 tests** and **24/24 branches** (100%).
+- **piclaw-header.ts**: 8 tests covering session start with/without UI, environment variable shortcuts (`PI_SKIP_VERSION_CHECK`, `PI_OFFLINE`), and version check outcomes (fetch success/failure, response not ok, version unchanged, newer version). Covered **17/20 branches** (85%).
+
+**Impact**:
+- All tests pass: **1526 passed**, 0 failed.
+- Typecheck: 0 errors, Lint: 0 errors.
+- Build successful.
+- Overall branch coverage increased from **79.71%** to **80.24%** (2737/3411).
+- piclaw-header.ts remaining 3 branches relate to path resolution fallback logic.
+
+**Next**:
+- Address remaining branches in piclaw-header (path fallbacks) and target other zero-coverage modules (keybinding-extension.ts, plugin-loader.ts) to reach ≥85% branch coverage.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627

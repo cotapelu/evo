@@ -76,6 +76,38 @@ describe('prompt-integration branch coverage', () => {
       expect(result[1].command).toBe('/c.d');
     });
 
+    it('sorts by plugin and falls back to short id when plugin ties', () => {
+      mockRegistry.listAll.mockReturnValue([
+        { id: 'plugin.sub1', name: 'B', pluginId: 'plugin', description: '' },
+        { id: 'plugin.sub2', name: 'A', pluginId: 'plugin', description: '' }
+      ]);
+      const result = generateSlashCommands('plugin');
+      expect(result[0].command).toBe('/plugin.sub1'); // 'sub1' < 'sub2'
+      expect(result[1].command).toBe('/plugin.sub2');
+    });
+
+    it('sorts by plugin and handles empty short id fallback', () => {
+      mockRegistry.listAll.mockReturnValue([
+        { id: 'plugin.', name: 'A', pluginId: 'plugin', description: '' },
+        { id: 'plugin.sub', name: 'B', pluginId: 'plugin', description: '' }
+      ]);
+      const result = generateSlashCommands('plugin');
+      const commands = result.map(r => r.command);
+      expect(commands).toContain('/plugin.');
+      expect(commands).toContain('/plugin.sub');
+    });
+
+    it('sorts by plugin and both short ids fallback when empty', () => {
+      mockRegistry.listAll.mockReturnValue([
+        { id: 'plugin.', name: 'A', pluginId: 'plugin', description: '' },
+        { id: 'other.', name: 'B', pluginId: 'plugin', description: '' }
+      ]);
+      const result = generateSlashCommands('plugin');
+      const commands = result.map(r => r.command);
+      expect(commands).toContain('/plugin.');
+      expect(commands).toContain('/other.');
+    });
+
     it('sorts by name when requested', () => {
       mockRegistry.listAll.mockReturnValue([
         { id: 'a.b', name: 'B', pluginId: 'a', description: '' },

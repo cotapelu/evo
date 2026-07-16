@@ -278,9 +278,10 @@ Last Updated: 2026-07-16
   - [x] safe_edit.ts: added 2 tests covering validation failure (missing newCode) and tsc non-zero exit
   - [x] team-widget.ts: added 3 tests covering startWidget early return, stopWidget with no intervalId, and disabled interval branch
   - [x] http.ts: added 15 tests covering request building, headers, body handling, flags, success and error responses
-  - [x] prompt-integration.ts: added 15 tests covering 20/24 branches (missing 4 edge cases in parseSlashCommand ternary outcomes)
-  - Current branch coverage: 79.59% (2715/3411)
-  - Next target: plugin-loader.ts (112 branches, 52 covered, 60 uncovered) or continue prompt-integration remaining branches
+  - [x] prompt-integration.ts: added 17 tests covering all 24 branches (100%)
+  - [x] piclaw-header.ts: added 8 tests covering session start with/without UI, environment skips, fetch outcomes (success, failure, unchanged, newer version). Covered 17/20 branches (85%)
+  - Current branch coverage: 80.24% (2737/3411)
+  - Next target: piclaw-header.ts (3 remaining branches) or keybinding-extension.ts (28 branches, 0% covered)
 
 ## Completed (continued)
 - [x] Add edge case tests for session-tree-command (image rendering, line wrapping, invalidate), auto-continue (toggle-off timer clear), keybinding-extension (config errors, escape key, error handling, shutdown cleanup), and logger (invalid env fallback). Increase coverage to 78.75%.
