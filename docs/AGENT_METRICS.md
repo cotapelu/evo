@@ -59,6 +59,30 @@ Total tests: 1483
 
 Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncovered branches), and continue towards ≥85% branch coverage.
 
+### [2025-07-16] Branch Coverage Expansion (Round 225)
+
+**Type**: Test Expansion
+
+**Summary**: Added targeted branch coverage tests for multiple low-coverage modules to prepare for ≥85% target.
+
+**Modules**:
+- **plugin-loader.ts**: 9 tests covering constructor defaults, loadAll caching, watch mode, manifest validation, and module loading edge cases.
+- **call_graph.ts**: 4 tests covering method definitions, top-level call ignoring, non-Identifier callee, and local call resolution.
+- **analyze_ast.ts**: 1 test for unknown file extension handling.
+- **safe_edit.ts**: 2 tests covering input validation failure and tsc non-zero exit handling.
+- **team-widget.ts**: 3 tests covering startWidget early return, stopWidget with no intervalId, and disabled interval branch.
+- **http.ts**: 15 tests covering request building, headers, body handling, flags, and both success/error responses.
+
+**Impact**:
+- All tests pass: 1503 passed, 0 failed.
+- Typecheck: 0 errors, Lint: 0 errors.
+- Build successful.
+- Coverage remains at 77.66% (2649/3411); these tests establish foundation for upcoming gains.
+
+**Next**:
+- Target prompt-integration.ts (24 branches, 0% coverage) for immediate impact.
+- Continue systematic testing to reach ≥85% branch coverage.
+
 ## Test Metrics
 - Total Test Suites: 156
 - Initial Failing Suites: 0
