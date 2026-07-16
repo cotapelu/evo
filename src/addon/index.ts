@@ -3,7 +3,6 @@
 // ============================================
 // Copy entire folder src/addon/ to reuse
 
-import extensionsAggregator from './extensions/index.js';
 import { getExtensionFactories } from './extensions/index.js';
 
 /** Export extension factories array (synchronous) */

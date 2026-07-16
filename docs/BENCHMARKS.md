@@ -13,7 +13,6 @@ The benchmark suite provides comprehensive performance metrics for critical oper
 
 ## 🎯 Performance Targets
 
-Based on AUTO-CONTINUE.md requirements:
 
 | Operation | Target | Current (Baseline) |
 |-----------|--------|-------------------|

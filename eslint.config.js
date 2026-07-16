@@ -25,7 +25,7 @@ export default [
     rules: {
       // Error prevention
       "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
       "@typescript-eslint/require-await": "warn",
@@ -34,6 +34,7 @@ export default [
       "no-control-regex": "error",
       "no-debugger": "error",
       "no-empty": "warn",
+      "no-empty-function": "error",
       "no-empty-pattern": "error",
       "no-eval": "error",
       "no-ex-assign": "error",

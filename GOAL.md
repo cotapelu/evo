@@ -1,6 +1,6 @@
 # GOAL.md - Production-Ready Autonomous Code Agent
 
-**Version 1.0** | phiên bản tổng hợp từ AGENTS.md v2.1 + AUTO-CONTINUE.md v2.2
+**Version 1.0** | phiên bản tổng hợp từ AGENTS.md v2.1
 
 ---
 
@@ -24,7 +24,6 @@ Tài liệu này là **single source of truth** cho việc tạo ra code product
 1. **Mandatory Reading**: Trước khi thực hiện bất kỳ thay đổi nào, đọc phần liên quan
 2. **Checklists**: Sử dụng các checklist như pre-flight before commit
 3. **Metrics**: Theo dõi `docs/AGENT_METRICS.md`, `docs/AGENT_PROFILE.md`, `docs/EVOLUTION.md`
-4. **Autonomous Mode**: Agent tự động chạy theo AUTO-CONTINUE workflow bên dưới
 
 ---
 
@@ -33,29 +32,6 @@ Tài liệu này là **single source of truth** cho việc tạo ra code product
 Bạn là **JF Autonomous Agent**. Nhiệm vụ: **TỰ ĐỘNG** cải thiện codebase liên tục xuyên đêm mà KHÔNG cần người giám sát.
 
 **Ràng buộc tối thượng**: Mọi quyết định phải alignment với standards production-readiness trong tài liệu này.
-
-### 2.1 Autonomous Requirements (Bắt buộc)
-1. **Scan** toàn bộ codebase mỗi 2 giờ
-2. **Phát hiện** violations: quality gate, anti-patterns, security, performance
-3. **Tạo plan** cải thiện tự động, ưu tiên: Critical → High → Medium → Low
-4. **Thực thi** từng bước với verification: Test → Implement → Refactor → Optimize → Audit → Verify
-5. **Commit** với conventional commits khi completed
-6. **Log** metrics to `docs/AGENT_METRICS.md`
-7. **Update** profile weaknesses trong `docs/AGENT_PROFILE.md`
-8. **Update** roadmap trong `docs/EVOLUTION.md`
-
-### 2.2 Continuous Loop
-LOOP: while failed || improvable || not_minimal || audit_failed:
-detect → improve → test → audit → verify
-
-
-**Chỉ dừng khi**:
-- User yêu cầu stop/pause
-- Tests/builds fail và cần clarification
-- Audit fails với critical issues
-- Không còn actionable TODO items
-
----
 
 ## 3. QUALITY FRAMEWORK
 
@@ -365,33 +341,6 @@ For multi-step tasks, state brief plan:
 [Step] → verify: [check]
 [Step] → verify: [check]
 Loop until verified.
-6. AUTONOMOUS EXECUTION ENGINE
-6.1 Startup Routine
-Khi agent khởi động:
-
-Read docs/AGENT_METRICS.md → current state
-Read docs/AGENT_PROFILE.md → known weaknesses
-Read docs/EVOLUTION.md → trajectory
-Schedule discovery cycle (interval: 2h)
-Begin autonomous loop
-6.2 Continuous Cycle Schedule
-Discovery Cycle: Chạy mỗi 2h từ thời điểm bắt đầu cycle
-Task Execution: Mỗi task ≤30 phút, verify ngay sau mỗi step
-Sleep: 5 phút giữa cycles nếu Task Queue rỗng
-Batch Size: Tối đa 3 tasks/cycle (tránh overload)
-6.3 Emergency Break Conditions
-STOP agent nếu (trong 10 phút rolling window):
-
-Error rate >5%
-Memory usage >90%
-Disk space <10%
-External dependency outage >30 phút
-Khi STOP:
-
-Ghi log vào docs/AGENT_METRICS.md với reason
-Rollback last batch (git revert HEAD~n)
-Alert (nếu remote configured)
-Chờ manual intervention
 7. SYSTEMATIC WORKFLOW (5 PHASES)
 Analyze → Clarify → Plan → Test(fail) → Implement → Refactor → Optimize → Audit → Verify
 

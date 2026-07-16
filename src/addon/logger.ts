@@ -1,15 +1,16 @@
 const logLevel = process.env.PI_LOG_LEVEL as 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' | undefined;
 const logFormat = process.env.PI_LOG_FORMAT as 'pretty' | 'json' | undefined;
+type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 const enabledLevels = logLevel ? new Set([logLevel]) : null;
 
-function isEnabled(level: string): boolean {
+function isEnabled(level: LogLevel): boolean {
   if (!enabledLevels) return false;
-  return enabledLevels.has(level as any);
+  return enabledLevels.has(level);
 }
 
 function makePrettyLogger(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal') {
-  return (...args: any[]) => {
+  return (...args: unknown[]) => {
     if (isEnabled(level)) {
       switch (level) {
         case 'trace':
@@ -30,17 +31,19 @@ function makePrettyLogger(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' |
         case 'fatal':
           console.error(`[${level.toUpperCase()}]`, ...args);
           break;
+        default:
+          break;
       }
     }
   };
 }
 
 function makeJsonLogger(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal') {
-  return (...args: any[]) => {
+  return (...args: unknown[]) => {
     if (isEnabled(level)) {
       const msg = args.length > 0 ? args[0] : undefined;
       const rest = args.slice(1);
-      const entry: any = {
+      const entry = {
         timestamp: new Date().toISOString(),
         level,
         message: msg,
@@ -51,12 +54,12 @@ function makeJsonLogger(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | '
   };
 }
 
-const noop = () => {};
+const noop = () => undefined;
 
 const createLogger =
   logFormat === 'json'
-    ? (level: string) => makeJsonLogger(level as any)
-    : (level: string) => makePrettyLogger(level as any);
+    ? (level: LogLevel) => makeJsonLogger(level)
+    : (level: LogLevel) => makePrettyLogger(level);
 
 const logger = {
   trace: logLevel ? createLogger('trace') : noop,

@@ -87,7 +87,6 @@
  */
 
 import type { AgentSessionRuntime, AgentSession, AgentSessionServices, AgentSessionRuntimeDiagnostic, ToolDefinition, ExtensionRunner, SessionManager, ToolInfo } from '@earendil-works/pi-coding-agent';
-import type { Model } from '@earendil-works/pi-ai';
 
 let currentRuntime: AgentSessionRuntime | null = null;
 
@@ -150,14 +149,14 @@ export function getCurrentAgentDir(): string {
 /**
  * Get current model from session (may be undefined if not selected yet).
  */
-export function getCurrentModel(): Model<any> | undefined {
+export function getCurrentModel() {
   return getCurrentSession().model;
 }
 
 /**
  * Get the current model's API type (for provider selection).
  */
-export function getCurrentModelApi(): any {
+export function getCurrentModelApi() {
   return getCurrentModel()?.api;
 }
 
@@ -221,7 +220,7 @@ export function getCurrentToolDefinition(name: string): ToolDefinition | undefin
 /**
  * Get all messages from current session.
  */
-export function getCurrentMessages(): any[] {
+export function getCurrentMessages(): AgentSession['messages'] {
   return getCurrentSession().messages;
 }
 
@@ -235,28 +234,28 @@ export function getCurrentModelFallbackMessage(): string | undefined {
 /**
  * Get auth storage from services.
  */
-export function getCurrentAuthStorage(): any {
+export function getCurrentAuthStorage(): AgentSessionServices['authStorage'] {
   return getCurrentServices().authStorage;
 }
 
 /**
  * Get the settings manager from the current runtime's services.
  */
-export function getCurrentSettingsManager(): any {
+export function getCurrentSettingsManager(): AgentSessionServices['settingsManager'] {
   return getCurrentServices().settingsManager;
 }
 
 /**
  * Get the model registry from the current runtime's services.
  */
-export function getCurrentModelRegistry(): any {
+export function getCurrentModelRegistry(): AgentSessionServices['modelRegistry'] {
   return getCurrentServices().modelRegistry;
 }
 
 /**
  * Get the resource loader from the current runtime's services.
  */
-export function getCurrentResourceLoader(): any {
+export function getCurrentResourceLoader(): AgentSessionServices['resourceLoader'] {
   return getCurrentServices().resourceLoader;
 }
 
