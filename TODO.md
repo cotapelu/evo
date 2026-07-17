@@ -374,11 +374,13 @@ Last Updated: 2026-07-16
   - [x] Overall coverage: 92.89% Statements, **84.13%** Branches (+8 arcs)
 
 ## Upcoming
-- Continue **Branch Coverage Expansion (Round 225)** to achieve ≥85% (current 82.96%, need +2.04%).
-- Completed: extension.ts (+1.9%, 23 tests)
-- Next: plugin-loader.ts (branch coverage ~65%), team-manager.ts (73.54%), and other modules (ast_query, call_graph, safe_edit, analyze_ast).
-- Maintain statement coverage ≥91% (currently 90.85%).
-
+- Continue **Branch Coverage Expansion (Round 225)** – current branch coverage 83.84%, need ~1.16% to reach 85%.
+- Recent: team-manager.ts new tests (37 tests) increased its branch coverage from 73.54% to **83.87%**; overall +0.47%.
+- Next priority low-coverage modules:
+  - `src/addon/extensions/team/index.ts` (66.66% branches)
+  - `src/addon/core/path-security.ts` (66.66% branches)
+  - `src/addon/extensions/session-tores/operations/tree.ts` (75% branches)
+- Maintain statement coverage ≥91% (currently 92.22%).
 
 ## Notes
 - All tests passing; build green.
