@@ -387,9 +387,4 @@ Last Updated: 2026-07-16
 - Current evolution cycle objectives achieved: robust async init, path aliases, eliminated deprecation warnings, expanded test coverage, documented initialization, improved watch mode.
 - System stable; awaiting next strategic direction.
 
-## BlockedPending
-- [ ] analyze.ts: verify final narrow fix for 'import type' in tryParseImport is applied (typeOnly assignment needs move before match/create confirmation)
-- [ ] ast_query.ts: pending final rerun after commit
-
-## Blocked
 - Verification blocked for analyzed fix due to repeated CLI/runtime issues.
