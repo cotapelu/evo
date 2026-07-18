@@ -26,4 +26,21 @@ describe('operationTree branch coverage', () => {
     expect(text).toContain('Root: root456 "(unnamed)"');
     expect(result.details.rootId).toBe('root456');
   });
+
+  it('handles absent root (null) — falsy branch', () => {
+    const mgr = createManagerWithRoot(undefined);
+    const result = operationTree(mgr);
+    const text = result.content[0].text;
+    expect(text).not.toContain('Root:');
+    expect(text).toContain('🌳 Session Tree:');
+    expect(result.details.rootId).toBeUndefined();
+  });
+
+  it('handles explicit null root — falsy branch', () => {
+    const mgr = createManagerWithRoot(null as unknown as { id: string } | undefined);
+    const result = operationTree(mgr);
+    const text = result.content[0].text;
+    expect(text).not.toContain('Root:');
+    expect(result.details.rootId).toBeUndefined();
+  });
 });

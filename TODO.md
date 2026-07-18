@@ -383,6 +383,7 @@ Last Updated: 2026-07-16
 - Maintain statement coverage ≥91% (currently 92.22%).
 - Path-security module moved from up to date to `src/addon/tools/utils/path-security.ts` after repo restructure: its actual location is now `src/addon/extensions/tools/utils/path-security.ts`. After Round 227 branch-expansion testing, `path-security.ts` now reports 91.66% branches (up from the prior 66.66% baseline), with full suite green (24/24 tests in `src/addon/extensions/tools/utils/__tests__/`).
 - `team/index.ts` is a pure re-export barrel (no control flow); v8 reports 0/0 branches, so the TODO figure of 66.66% was from a different build and isn't actionable as branch coverage. Actual low-coverage hidden problem inside `src/addon/extensions/team/`: `team-widget.ts` — but already exercised by 2 test files at `src/addon/tests/extensions/team/{team-widget.test.ts, team-widget.branches.test.ts}` (16/16 passing). Prior concern closed; no extra test file needed.
+- Round 228 session-tool/operations/tree.ts: actual file at canonical path is `src/addon/extensions/session-tool/operations/tree.ts` (was misprinted `session-tores` in TODO). Branch coverage raised from 75% → 100% via 2 new tests covering the falsy `rootInfo` branch in `operationTree`. Suite green.
 
 
 
