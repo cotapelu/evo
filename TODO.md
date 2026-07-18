@@ -387,4 +387,19 @@ Last Updated: 2026-07-16
 - Current evolution cycle objectives achieved: robust async init, path aliases, eliminated deprecation warnings, expanded test coverage, documented initialization, improved watch mode.
 - System stable; awaiting next strategic direction.
 
-- Verification blocked for analyzed fix due to repeated CLI/runtime issues.
+## Branch Coverage Expansion Round 226 (verified)
+- [x] analyze + ast_query branch coverage gaps closed:
+  - analyze (`src/addon/.../capabilities/analyze.ts`):
+    - Off-by-one destructuring in `tryParseImport` fixed: regex had 5 capture groups but destructuring took 4, leaving `moduleSpecifier` in the wrong group; changed star capture `(\*)` to non-capturing `(?:\*)` and aligned destructure slots.
+    - Fixed namespace import `importInfo.importClause` to store the alias only (`ns`) instead of formatting `* as *` from the literal star.
+    - Corrected alias-export logic in `handleOtherExports` to set `name = aliasName || origName` and `aliases = aliasName ? [origName] : undefined`, matching the semantic already covered by `analyze_ast.test.ts` (`name === renamed`, `aliases === [original]`).
+  - ast_query (`src/addon/.../capabilities/ast_query.ts`):
+    - `getParentContainer` now climbs through `BlockStatement` to the enclosing function/class declaration, satisfying nested `parent: 'outer'` queries on inner function declarations.
+    - MethodDefinition computed property previously broke `handleFunction` name extraction; now reads `node.key?.name || node.key?.value`.
+- [x] Test expectation corrected:
+  - `codebase.test.ts` "should parse named export with alias" updated to assert `name === 'bar'` and `aliases === ['foo']` for `export { foo as bar }`, matching the consistent semantic across tests.
+- [x] Verified locally:
+  - `analyze.more-branches.test.ts` and `ast_query.branch-coverage-more.test.ts` now pass.
+  - Full codebase plugin test suite (`src/addon/extensions/capability-system/plugins/codebase/__tests__/`) all green: 27 files, 185 tests.
+- Commits: `fix(analyze): correct moduleSpecifier capture and export alias naming` (+ earlier `fix: getParentContainer climbs BlockStatement to enclosing function/class`).
+- Note: the `safe_edit.additional-branches.test.ts` was added alongside but not yet run end-to-end; it's tracked as a follow-up pending verification.
