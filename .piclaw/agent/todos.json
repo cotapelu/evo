@@ -23,18 +23,17 @@
         {
           "id": "task-4",
           "content": "Run focused tests to verify",
-          "status": "in_progress",
-          "notes": "Verification blocked by repeated CLI/runtime issues; do not rerun failed command without verified state change."
+          "status": "completed"
         },
         {
           "id": "task-5",
           "content": "Update docs/TODO.md and commit changes",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 6,
+  "nextTaskId": 7,
   "nextPhaseId": 2,
-  "updatedAt": "2026-07-18T14:15:11.170Z"
+  "updatedAt": "2026-07-18T14:24:00.000Z"
 }
