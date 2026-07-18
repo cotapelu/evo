@@ -84,10 +84,10 @@ function processNamedGroup(namedGroup: string): { importClause: string; namedImp
 }
 
 function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): boolean {
+  const isTypeOnly = line.includes('import type');
   const importMatch = line.match(IMPORT_DECL_REGEX);
   if (importMatch) {
     const [, starAs, namedGroup, defaultImport, moduleSpecifier] = importMatch;
-    const isTypeOnly = line.includes('import type');
     const importInfo: ImportInfo = { moduleSpecifier, ...(isTypeOnly ? { typeOnly: true } : {}) };
     if (starAs) {
       importInfo.importClause = `* as ${starAs}`;
