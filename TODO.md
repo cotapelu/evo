@@ -275,20 +275,20 @@ Last Updated: 2026-07-16
 - [x] Achieve ≥80% test coverage (reached 80.08%) through targeted tests for guideline-generator, search, complexity, and renderers.
 
 ## In Progress
-- **Branch Coverage Expansion Round 225**: Achieve ≥85% branch coverage (current 83.99%)
+- **Branch Coverage Expansion Round 225**: Achieve ≥85% branch coverage (current 84.11%)
   - Target modules by priority (lowest coverage first):
     - extension.ts (78.46% branches) ✅
-    - plugin-loader.ts (67.34% branches)
+    - plugin-loader.ts (67.34% branches) ✅
     - prompt-integration.ts (100% ✅ done)
     - team-widget.ts (92.8% ✅ done)
     - keybinding-extension.ts (92.8% ✅ done)
     - piclaw-header.ts (85% ✅ done)
   - Tasks:
     - [x] extension.ts: Add comprehensive branch coverage tests targeting execute, renderCall, renderResult (remaining branches)
-    - [ ] plugin-loader.ts: Add tests for complex branches in loadAll, reload, unload, and error handling
-    - [ ] Combine results and measure coverage increase
-    - [ ] Target next low-coverage modules: analyze (82%), call_graph (81%), ast_query (80%), safe_edit (80%), analyze_ast (remaining), master-tool (75%)
-  - Goal: +1.01% to reach 85% branch coverage
+    - [x] plugin-loader.ts: Add tests for complex branches in loadAll, reload, unload, and error handling
+    - [x] Combine results and measure coverage increase – overall branch coverage now 84.11%
+    - [ ] Target next low-coverage modules: analyze (79.41%), call_graph (85.32% ≥85% ✅), ast_query (76.51%), safe_edit (83.82%), analyze_ast (remaining), master-tool (80%)
+  - Goal: +0.89% to reach 85% branch coverage
 
   (Previous detailed branch coverage work moved to Completed)
 
