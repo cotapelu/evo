@@ -60,7 +60,7 @@ interface AnalysisResult {
 // This is a heuristic analyzer suitable for LLM context.
 
 // Regex patterns for parsing
-const IMPORT_DECL_REGEX = /^\s*import\s+(?:(\*)\s*as\s+(\w+)|({[\s\S]*?})|(\w+))\s*from\s*['"]([^'"]+)['"];?/;
+const IMPORT_DECL_REGEX = /^\s*import\s+(?:type\s+)?(?:(\*)\s*as\s+(\w+)|({[\s\S]*?})|(\w+))\s+from\s*['"]([^'"]+)['"];?/;
 const EXPORT_DECL_REGEX = /^\s*export\s+(?:(\*)\s*from\s*['"][^'"]+['"];?|({[\s\S]*?})|(\w+)(\s+as\s+(\w+))?|default\s+(\w+))/;
 const FUNCTION_DECL_REGEX = /^\s*(?:async\s+)?function\s+(\w+)\s*\(/;
 const CLASS_DECL_REGEX = /^\s*class\s+(\w+)/;
@@ -87,7 +87,8 @@ function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): b
   const importMatch = line.match(IMPORT_DECL_REGEX);
   if (importMatch) {
     const [, starAs, namedGroup, defaultImport, moduleSpecifier] = importMatch;
-    const importInfo: ImportInfo = { moduleSpecifier };
+    const isTypeOnly = line.includes('import type');
+    const importInfo: ImportInfo = { moduleSpecifier, ...(isTypeOnly ? { typeOnly: true } : {}) };
     if (starAs) {
       importInfo.importClause = `* as ${starAs}`;
     } else if (namedGroup) {
