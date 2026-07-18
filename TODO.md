@@ -403,3 +403,5 @@ Last Updated: 2026-07-16
   - Full codebase plugin test suite (`src/addon/extensions/capability-system/plugins/codebase/__tests__/`) all green: 27 files, 185 tests.
 - Commits: `fix(analyze): correct moduleSpecifier capture and export alias naming` (+ earlier `fix: getParentContainer climbs BlockStatement to enclosing function/class`).
 - Note: the `safe_edit.additional-branches.test.ts` was added alongside but not yet run end-to-end; it's tracked as a follow-up pending verification.
+- Verified `safe_edit.additional-branches.test.ts` (Round 226 follow-up): all 2 tests pass without code changes (replace branch + format=true branch).
+- Full codebase plugin test suite (`src/addon/extensions/capability-system/plugins/codebase/__tests__/`) all green: 27 files, 185 tests.
