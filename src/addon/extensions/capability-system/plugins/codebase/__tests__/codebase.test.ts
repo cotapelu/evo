@@ -172,8 +172,8 @@ function myFunc() {}
     expect(result.isError).toBe(false);
     expect(result.details.exports.length).toBe(1);
     expect(result.details.exports[0].type).toBe('named');
-    expect(result.details.exports[0].name).toBe('foo');
-    expect(result.details.exports[0].aliases).toEqual(['bar']);
+    expect(result.details.exports[0].name).toBe('bar');
+    expect(result.details.exports[0].aliases).toEqual(['foo']);
     await unlink(file);
   });
 

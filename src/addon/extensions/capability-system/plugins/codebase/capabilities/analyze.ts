@@ -60,7 +60,7 @@ interface AnalysisResult {
 // This is a heuristic analyzer suitable for LLM context.
 
 // Regex patterns for parsing
-const IMPORT_DECL_REGEX = /^\s*import\s+(?:type\s+)?(?:(\*)\s*as\s+(\w+)|({[\s\S]*?})|(\w+))\s+from\s*['"]([^'"]+)['"];?/;
+const IMPORT_DECL_REGEX = /^\s*import\s+(?:type\s+)?(?:(?:\*)\s*as\s+(\w+)|({[\s\S]*?})|(\w+))\s+from\s*['"]([^'"]+)['"];?/;
 const EXPORT_DECL_REGEX = /^\s*export\s+(?:(\*)\s*from\s*['"][^'"]+['"];?|({[\s\S]*?})|(\w+)(\s+as\s+(\w+))?|default\s+(\w+))/;
 const FUNCTION_DECL_REGEX = /^\s*(?:async\s+)?function\s+(\w+)\s*\(/;
 const CLASS_DECL_REGEX = /^\s*class\s+(\w+)/;
@@ -90,7 +90,7 @@ function tryParseImport(line: string, lineNum: number, imports: ImportInfo[]): b
     const [, starAs, namedGroup, defaultImport, moduleSpecifier] = importMatch;
     const importInfo: ImportInfo = { moduleSpecifier, ...(isTypeOnly ? { typeOnly: true } : {}) };
     if (starAs) {
-      importInfo.importClause = `* as ${starAs}`;
+      importInfo.importClause = starAs;
     } else if (namedGroup) {
       const result = processNamedGroup(namedGroup);
       importInfo.importClause = result.importClause;
@@ -185,8 +185,8 @@ function handleOtherExports(line: string, lineNum: number, exports: ExportInfo[]
       if (namedStr) {
         const parts = namedStr.split(',').map(p => p.trim());
         parts.forEach(p => {
-          const [name, alias] = p.split(/\s+as\s+/);
-          exports.push({ type: "named", name, aliases: alias ? [alias] : undefined });
+          const [origName, aliasName] = p.split(/\s+as\s+/);
+          exports.push({ type: "named", name: aliasName || origName, aliases: aliasName ? [origName] : undefined });
         });
       }
     } else if (exportName) {
