@@ -3,7 +3,7 @@
   "phases": [
     {
       "id": "phase-1",
-      "name": "Fix branch coverage",
+      "name": "Branch coverage - Rounds 226-232 (closed)",
       "tasks": [
         {
           "id": "task-1",
@@ -29,11 +29,51 @@
           "id": "task-5",
           "content": "Update docs/TODO.md and commit changes",
           "status": "completed"
+        },
+        {
+          "id": "task-6",
+          "content": "Round 226: fix analyze.ts moduleSpecifier capture & alias naming; ast_query parent climb",
+          "status": "completed"
+        },
+        {
+          "id": "task-7",
+          "content": "Round 227: path-security branch coverage 66.66% -> 91.66%",
+          "status": "completed"
+        },
+        {
+          "id": "task-8",
+          "content": "Round 228: tree.ts branch coverage 75% -> 100%",
+          "status": "completed"
+        },
+        {
+          "id": "task-9",
+          "content": "Round 229: analyze_ast.branch-coverage 76% -> 83.2%",
+          "status": "completed"
+        },
+        {
+          "id": "task-10",
+          "content": "Round 230: complexity.branch-coverage 74.25% -> 79.2%",
+          "status": "completed"
+        },
+        {
+          "id": "task-11",
+          "content": "Round 231: dependency_tree.branch-coverage 70.92% -> 75.88%",
+          "status": "completed"
+        },
+        {
+          "id": "task-12",
+          "content": "Round 232: safe_edit path-traversal catch branch covered",
+          "status": "completed"
+        },
+        {
+          "id": "task-13",
+          "content": "Round 225 formally closed in TODO.md; all listed target modules verified",
+          "status": "completed"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 14,
   "nextPhaseId": 2,
-  "updatedAt": "2026-07-18T14:24:00.000Z"
+  "updatedAt": "2026-07-18T00:00:00.000Z"
 }
