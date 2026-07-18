@@ -72,4 +72,22 @@ describe('safe_edit branch coverage', () => {
     expect(result.results[0].error).toContain('TypeScript check failed');
     expect(result.results[0].backupRestored).toBe(true);
   });
+
+  it('rejects operations with path traversal attempt (Round 232 — line ~204 catch branch)', async () => {
+    const ctx = createMockCtx();
+    const params = {
+      operations: [
+        // '../outsideSafe.ts' resolves outside cwd → resolveSecurePath throws → branch falls into the catch block.
+        { file: '../outsideSafe.ts', editType: 'replace' as const, range: { start: 0, end: 1 }, newCode: 'hacked' },
+      ],
+      format: false,
+      fixImports: false,
+    };
+
+    const result = await safeEditModule.execute(params, ctx as any);
+    expect(result.success).toBe(false);
+    expect(result.results[0].success).toBe(false);
+    expect(result.results[0].error).toContain('Access denied');
+  });
 });
+
