@@ -345,6 +345,51 @@ describe('Capability System Extension - Branch Coverage', () => {
   });
 });
 
+describe('truncateToVisualLines branch coverage via renderResult', () => {
+  it('handles many lines exceeding maxLines (outer skip)', async () => {
+    const tool = await getRouterTool();
+    const manyLines = Array.from({ length: 100 }, (_, i) => `Line ${i}`).join('\n');
+    const result = { content: [{ type: 'text', text: manyLines }], details: {}, isPartial: false, expanded: false };
+    const theme = { getContentWidth: () => 80, fg: (color: string, text: string) => text };
+    const context = { lastComponent: undefined, state: {}, invalidate: vi.fn(), isError: false, theme };
+    const comp = tool.renderResult(result, { isPartial: false, expanded: false }, theme, context);
+    const renderChild = comp.children.find(c => typeof c.render === 'function');
+    expect(renderChild).toBeDefined();
+    // Reset state if needed
+    comp.state.cachedLines = undefined;
+    comp.state.cachedSkipped = undefined;
+    renderChild.render(80);
+    expect(comp.state.cachedLines).toBeDefined();
+    // CAPABILITY_PREVIEW_LINES = 5
+    expect(comp.state.cachedLines.length).toBe(5);
+    // 100 lines total, first 5 are kept, 95 skipped
+    expect(comp.state.cachedSkipped).toBe(95);
+  });
+
+  it('handles a single very long line exceeding maxLines during chunking (inner break)', async () => {
+    const tool = await getRouterTool();
+    const maxLines = 5; // CAPABILITY_PREVIEW_LINES
+    const width = 10;
+    // Create a line that will produce more than maxLines chunks
+    const longLine = 'x'.repeat(width * maxLines + 5); // length = 55
+    const result = { content: [{ type: 'text', text: longLine }], details: {}, isPartial: false, expanded: false };
+    const theme = { getContentWidth: () => width, fg: (color: string, text: string) => text };
+    const context = { lastComponent: undefined, state: {}, invalidate: vi.fn(), isError: false, theme };
+    const comp = tool.renderResult(result, { isPartial: false, expanded: false }, theme, context);
+    const renderChild = comp.children.find(c => typeof c.render === 'function');
+    expect(renderChild).toBeDefined();
+    comp.state.cachedLines = undefined;
+    comp.state.cachedSkipped = undefined;
+    renderChild.render(width);
+    expect(comp.state.cachedLines).toBeDefined();
+    // Should keep maxLines chunks
+    expect(comp.state.cachedLines.length).toBe(maxLines);
+    const totalChunks = Math.ceil(longLine.length / width); // 6
+    const expectedSkipped = totalChunks - maxLines; // 1
+    expect(comp.state.cachedSkipped).toBe(expectedSkipped);
+  });
+});
+
 // Spy on clearInterval globally to avoid errors (Node will still call it)
 beforeAll(() => {
   vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => {});
