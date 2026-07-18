@@ -13,31 +13,29 @@
         {
           "id": "task-2",
           "content": "Analyze root causes for analyze and ast_query failures",
-          "status": "completed",
-          "notes": "analyze: 'import type' branch not marked typeOnly because state inspection used line.includes() after match; regex already supports typeOptional. ast_query: nested FunctionDeclaration inside BlockStatement wasn't climbing to outer FunctionDeclaration."
+          "status": "completed"
         },
         {
           "id": "task-3",
           "content": "Apply minimal source fixes",
-          "status": "completed",
-          "notes": "ast_query.ts updated to climb out of BlockStatement in getParentContainer(). analyze.ts typeOnly assignment remains pending verification due to repeated execution-state issues when applying narrow edit in this environment."
+          "status": "in_progress",
+          "notes": "ast_query.ts fix committed. analyze.ts still reverts to buggy 'import type' branch detection by line.includes(); next edit must restore the earlier intended isTypeOnly assignment shape and keep moduleSpecifier populated."
         },
         {
           "id": "task-4",
           "content": "Run focused tests to verify",
-          "status": "in_progress",
-          "notes": "Focused rerun indicates ast_query parentMatches flow is now resolved; analyze import typeOnly verification is still blocked by execution state and requires final source apply + rerun before mark complete."
+          "status": "pending",
+          "notes": "Blocked until analyze.ts source is restored to the intended fix and rerun passes."
         },
         {
           "id": "task-5",
           "content": "Update docs/TODO.md and commit changes",
-          "status": "pending",
-          "notes": "Will update TODO.md to reflect verified ast_query fix and remaining analyze fix status, plus recommended exact analyze.ts change (isTypeOnly move), then commit."
+          "status": "pending"
         }
       ]
     }
   ],
-  "nextTaskId": 7,
+  "nextTaskId": 6,
   "nextPhaseId": 2,
   "updatedAt": "2026-07-18T00:00:00.000Z"
 }
