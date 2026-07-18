@@ -395,21 +395,11 @@ Last Updated: 2026-07-16
 - System stable; awaiting next strategic direction.
 
 ## Branch Coverage Expansion Round 226 (verified)
-- [x] analyze + ast_query branch coverage gaps closed:
-  - analyze (`src/addon/.../capabilities/analyze.ts`):
-    - Off-by-one destructuring in `tryParseImport` fixed: regex had 5 capture groups but destructuring took 4, leaving `moduleSpecifier` in the wrong group; changed star capture `(\*)` to non-capturing `(?:\*)` and aligned destructure slots.
-    - Fixed namespace import `importInfo.importClause` to store the alias only (`ns`) instead of formatting `* as *` from the literal star.
-    - Corrected alias-export logic in `handleOtherExports` to set `name = aliasName || origName` and `aliases = aliasName ? [origName] : undefined`, matching the semantic already covered by `analyze_ast.test.ts` (`name === renamed`, `aliases === [original]`).
-  - ast_query (`src/addon/.../capabilities/ast_query.ts`):
-    - `getParentContainer` now climbs through `BlockStatement` to the enclosing function/class declaration, satisfying nested `parent: 'outer'` queries on inner function declarations.
-    - MethodDefinition computed property previously broke `handleFunction` name extraction; now reads `node.key?.name || node.key?.value`.
-- [x] Test expectation corrected:
-  - `codebase.test.ts` "should parse named export with alias" updated to assert `name === 'bar'` and `aliases === ['foo']` for `export { foo as bar }`, matching the consistent semantic across tests.
-- [x] Verified locally:
-  - `analyze.more-branches.test.ts` and `ast_query.branch-coverage-more.test.ts` now pass.
-  - Full codebase plugin test suite (`src/addon/extensions/capability-system/plugins/codebase/__tests__/`) all green: 27 files, 185 tests.
-- Commits: `fix(analyze): correct moduleSpecifier capture and export alias naming` (+ earlier `fix: getParentContainer climbs BlockStatement to enclosing function/class`).
-- Note: the `safe_edit.additional-branches.test.ts` was added alongside but not yet run end-to-end; it's tracked as a follow-up pending verification.
-- Round 227 commit 0ce5ecc verified: `path-security.ts` branch coverage raised from 66.66% → 91.66% (5 new tests added, full suite 24/24 green). `team-widget.ts` coverage effort attempted but tester wrote 6/9 wrong expectation/mocking; file deleted (no commit).
-- Verified `safe_edit.additional-branches.test.ts` (Round 226 follow-up): all 2 tests pass without code changes (replace branch + format=true branch).
-- Full codebase plugin test suite (`src/addon/extensions/capability-system/plugins/codebase/__tests__/`) all green: 27 files, 185 tests.
+- Round 226: `analyze` destructuring/moduleSpecifier fix (`fe76e16`); `ast_query` BlockStatement parent-climb (`481425b`); `codebase.test.ts` alias-export expectation aligned with `analyze_ast.test.ts` semantic. Suite: 27 files / 185 tests green.
+- Round 227 follow-up: `path-security.ts` 66.66% → 91.66% via 5 new tests in `path-security.branches.test.ts` (`ade5e34`). Suite 24/24 green.
+- Round 228 follow-up: `session-tool/operations/tree.ts` 75% → 100% via 2 new tests in `tree.branches.test.ts` (`375bddd`). Suite green.
+- Round 229 follow-up: `codebase/analyze_ast.ts` 76% → 83.2% via 4 new tests in `analyze_ast.branch-coverage.test.ts` (`7ff70b4`). Suite green.
+- Round 230 follow-up: `codebase/complexity.ts` 74.25% → 79.2% via 1 new test in `complexity.branch-coverage.test.ts` (`4e499cc`). Suite green.
+- Round 226 minor: `safe_edit.additional-branches.test.ts` exists and is green (Round 226 follow-up check in `02d160f`).
+- Round 228 clarifications: `team/index.ts` is a pure re-export barrel (no actionable branches); `team-widget.ts` already covered at `src/addon/tests/extensions/team/{team-widget.test.ts, team-widget.branches.test.ts}` (16/16 green) — see `46a923c`, `2117ff0`, `68dd684`.
+- Round 225 close-out (master-tool): source file removed from repo; list entry is stale (`fa6bd15`).
