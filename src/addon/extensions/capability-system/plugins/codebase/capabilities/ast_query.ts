@@ -179,6 +179,9 @@ function getParentContainer(node: any, directParent: any): any {
   if (node.type === 'MethodDefinition' && directParent?.type === 'ClassBody') {
     return directParent._parent; // climb to ClassDeclaration
   }
+  if (directParent?.type === 'BlockStatement') {
+    return directParent._parent; // climb out of block to containing function/class
+  }
   return directParent;
 }
 
