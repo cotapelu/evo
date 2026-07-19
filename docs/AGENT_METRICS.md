@@ -242,6 +242,24 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - `plugin-loader.ts` branch coverage: **71.42% → 89.79%**.
 - Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
 
+### [2026-07-19] Auto-Continue Branch Coverage (Round 234)
+
+**Summary**: Added branch coverage tests for `auto-continue.ts` to cover remaining branches in file handling, command parsing, event handlers, and UI conditional logic.
+
+**Tests Added**: 6 tests.
+- Empty reminder file handling (falls back to default)
+- readFileSync exception handling (fallback with error log)
+- UI notification suppressed when `hasUI` false
+- `isIdle` false prevents immediate timer start
+- `agent_end` no‑op when disabled
+- `session_compact` no‑op when disabled
+
+**Impact**:
+- All tests pass (6 added, total 1701).
+- Overall branch coverage increased from **85.30%** (2915/3417) to **85.45%** (2920/3417), **+0.15%**.
+- `auto-continue.ts` branch coverage: **71.92% → 80.7%**.
+- Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
+
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627
 - Final typecheck errors: 0
