@@ -1,6 +1,6 @@
 # Agent Metrics
 
-Last Updated: 2026-07-16
+Last Updated: 2026-07-19
 
 ## Infrastructure Compliance (Round 224)
 
@@ -194,6 +194,29 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 **Next**:
 - Finish keybinding-extension remaining 2 branches (CONFIG_DIR_NAME fallback) and piclaw-header remaining 3 branches.
 - Continue towards ≥85%.
+
+### [2026-07-19] SubTool Loader Branch Coverage (Round 229)
+
+**Type**: Test Expansion
+
+**Summary**: Added comprehensive branch coverage tests for `subtool-loader.ts` to cover previously untested branches in renderCall, HTTP request handling, result fallback logic, and error handling.
+
+**Tests Added**: 16 new tests.
+- **renderCall**: 7 tests covering args undefined, missing subtool, missing/empty args, arg preview (1, 2, >2 entries).
+- **execute (HTTP)**: 4 tests covering explicit GET method, body presence, non-object headers, and content fallback.
+- **execute (non-HTTP)**: 2 tests covering result content undefined and details undefined fallbacks.
+- **Caching**: 2 tests verifying cache miss and cache hit.
+- **Error handling**: 1 test for synchronous throw.
+
+**Impact**:
+- All tests pass: **1676 passed** (1660 → +16).
+- Typecheck: 0 errors, Lint: 0 errors.
+- Build successful.
+- Overall branch coverage increased from **84.81%** (2898/3417) to **85.13%** (2909/3417), **+0.32%**.
+- `subtool-loader.ts` branch coverage increased from **67.34%** to **89.79%**.
+- Achieved ≥85% branch coverage target as defined in GOAL.md.
+
+**Notes**: This round focused on one of the lowest-coverage modules. The targeted approach efficiently increased overall branch coverage with minimal test code, using compact test design to maximize net gain.
 
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627
