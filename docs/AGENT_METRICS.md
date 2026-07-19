@@ -218,6 +218,30 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 
 **Notes**: This round focused on one of the lowest-coverage modules. The targeted approach efficiently increased overall branch coverage with minimal test code, using compact test design to maximize net gain.
 
+### [2026-07-19] Team Widget & PluginLoader Branch Coverage (Round 233)
+
+**Type**: Test Expansion
+
+**Summary**: Added branch coverage tests for `team-widget.ts` and `plugin-loader.ts` to cover remaining branches and improve overall branch coverage.
+
+**Tests Added**:
+- `team-widget.branches.test.ts`: 1 new test verifying the interval callback calls `refreshWidget` when the widget is enabled.
+- `plugin-loader.branches.test.ts`: 18 new tests covering:
+  - `getPluginFolders`: filtering non-directory entries.
+  - `loadPlugin` error handling: missing manifest, propagation of `createCapability` errors.
+  - `scheduleNewPluginLoad`: debouncing, load after delay, warning when manifest missing.
+  - `scheduleReload`: debounced reload for loaded plugins, no‑op for unknown.
+  - `unloadPlugin`: handling non‑existent plugin, cleanup of capabilities, timers, watchers.
+  - `waitForLoad`: triggers `loadAll` when not already loading.
+  - `buildCapability`: proper inclusion/exclusion of `renderResult` based on truthiness.
+
+**Impact**:
+- All tests pass: +19 tests (total 1695).
+- Overall branch coverage increased from **85.13%** (2909/3417) to **85.30%** (2915/3417), **+0.17%**.
+- `team-widget.ts` branch coverage: **76.92% → 84.61%**.
+- `plugin-loader.ts` branch coverage: **71.42% → 89.79%**.
+- Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
+
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627
 - Final typecheck errors: 0

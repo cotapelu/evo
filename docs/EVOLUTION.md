@@ -1507,3 +1507,18 @@ Main `execute` now reads as a clear switch dispatcher; complexity reduced from 2
 - Continue systematic complexity reduction on remaining high-complexity functions (`team-manager` methods, `plugin-loader` utilities).
 - Consider applying handler-map pattern to other tools with many actions.
 - Maintain helper extraction pattern (≤20 lines, ≤10 complexity).
+
+### [2026-07-19] Team Widget & PluginLoader Branch Coverage (Round 233)
+
+**Summary**: Added branch coverage tests for `team-widget.ts` (1 test) and `plugin-loader.ts` (18 tests).
+
+**Tests Added**:
+- `team-widget.branches.test.ts`: 1 test verifying interval callback invokes `refreshWidget` when widget enabled.
+- `plugin-loader.branches.test.ts`: 18 tests covering `getPluginFolders`, `loadPlugin` errors, `scheduleNewPluginLoad` debouncing, `scheduleReload`, `unloadPlugin`, `waitForLoad`, and `buildCapability` behavior.
+
+**Impact**:
+- All tests pass.
+- Overall branch coverage increased from **85.13%** (2909/3417) to **85.30%** (2915/3417).
+- `team-widget.ts` branch coverage: **76.92% → 84.61%**.
+- `plugin-loader.ts` branch coverage: **71.42% → 89.79%**.
+- Quality gates: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.

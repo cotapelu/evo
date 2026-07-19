@@ -25,7 +25,9 @@ import {
   getTeamWidgetEnabled,
   ensureState,
   registerTeamWidget,
-  TEAM_WIDGET_STATE
+  TEAM_WIDGET_STATE,
+  buildTeamLines,
+  refreshWidget
 } from '../../../extensions/team/team-widget.ts';
 
 import { TeamRegistry } from '../../../extensions/team/team-manager.js';
@@ -87,5 +89,19 @@ describe('Team Widget branch coverage', () => {
     await vi.advanceTimersByTimeAsync(2000);
     // No setWidget should have been called while disabled
     expect(mockUI.setWidget).not.toHaveBeenCalled();
+  });
+
+  it('interval callback calls refreshWidget when enabled', async () => {
+    const ctx = createMockContext();
+    // Start the widget (enabled by default)
+    startWidget(ctx);
+    // Wait for the initial refreshWidget call to complete
+    await Promise.resolve();
+    // Clear the mock to only see interval-triggered calls
+    mockUI.setWidget.mockClear();
+    // Advance virtual time to trigger the interval once (2000ms)
+    await vi.advanceTimersByTimeAsync(2000);
+    // The setWidget should have been called because enabled is true
+    expect(mockUI.setWidget).toHaveBeenCalled();
   });
 });

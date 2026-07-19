@@ -22,7 +22,7 @@ vi.mock('../../../extensions/capability-system/guideline-generator.js', () => ({
   extractMinimalParams: vi.fn(() => ({}))
 }));
 
-import { existsSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { PluginLoader } from '../../../extensions/capability-system/plugin-loader.js';
 
 function createLoader() {
@@ -165,6 +165,165 @@ describe('PluginLoader branch coverage', () => {
         'snippet'
       );
       expect(cap.renderResult).toBeUndefined();
+    });
+  });
+
+  describe('PluginLoader additional branches (Round 230)', () => {
+    let loader: PluginLoader;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      (existsSync as any).mockReturnValue(true);
+      (readdirSync as any).mockReturnValue([]);
+      const validManifest = JSON.stringify({
+        id: 'test',
+        name: 'Test',
+        description: 'desc',
+        version: '1.0.0',
+        capabilities: [{ id: 'cap', execute: 'exec.js', inputSchema: {}, outputSchema: {} }]
+      });
+      (readFileSync as any).mockReturnValue(validManifest);
+      loader = new PluginLoader({ pluginsDir: '/tmp/plugins', watchMode: false });
+    });
+
+    afterEach(() => {
+      try {
+        (loader as any).clearAllTimers?.();
+      } catch {}
+    });
+
+    describe('getPluginFolders', () => {
+      it('filters out non-directory entries', () => {
+        (readdirSync as any).mockReturnValue([
+          { name: 'validDir', isDirectory: () => true },
+          { name: 'file.txt', isDirectory: () => false }
+        ]);
+        const folders = (loader as any).getPluginFolders('/tmp');
+        expect(folders).toEqual(['validDir']);
+      });
+    });
+
+    describe('loadPlugin error handling', () => {
+      it('throws when manifest file missing', async () => {
+        (existsSync as any).mockReturnValue(false);
+        await expect(loader.loadPlugin('myplugin')).rejects.toThrow('Missing manifest.json');
+      });
+
+      it('propagates errors from createCapability', async () => {
+        (existsSync as any).mockReturnValue(true);
+        (readFileSync as any).mockReturnValue(JSON.stringify({
+          id: 'plug',
+          name: 'Plug',
+          description: 'desc',
+          version: '1.0.0',
+          capabilities: [{ id: 'cap', execute: 'exec.js', inputSchema: {}, outputSchema: {} }]
+        }));
+        const createCapSpy = vi.spyOn(loader as any, 'createCapability').mockRejectedValue(new Error('cap error'));
+        await expect(loader.loadPlugin('plug')).rejects.toThrow('Capability');
+        createCapSpy.mockRestore();
+      });
+    });
+
+    describe('scheduleNewPluginLoad', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it('debounces multiple calls and loads after delay if manifest exists', async () => {
+        const loadSpy = vi.spyOn(loader as any, 'loadPlugin').mockResolvedValue({} as any);
+        (loader as any).scheduleNewPluginLoad('newplug');
+        (loader as any).scheduleNewPluginLoad('newplug');
+        expect((loader as any).newPluginTimers.size).toBe(1);
+        await vi.advanceTimersByTimeAsync(400);
+        expect(loadSpy).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(200);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith('newplug');
+      });
+
+      it('warns and does not load if manifest missing after delay', async () => {
+        const loadSpy = vi.spyOn(loader as any, 'loadPlugin');
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        (loader as any).scheduleNewPluginLoad('newplug');
+        (existsSync as any).mockReturnValue(false);
+        await vi.advanceTimersByTimeAsync(500);
+        expect(loadSpy).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Manifest not found'));
+        warnSpy.mockRestore();
+      });
+    });
+
+    describe('scheduleReload', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it('debounces and calls loadPlugin if plugin still loaded', async () => {
+        (loader as any).loadedPlugins.set('p1', { manifest: { id: 'p1' }, capabilities: [], reload: vi.fn(), unload: vi.fn() });
+        const loadSpy = vi.spyOn(loader as any, 'loadPlugin').mockResolvedValue({} as any);
+        (loader as any).scheduleReload('p1');
+        (loader as any).scheduleReload('p1');
+        expect((loader as any).reloadTimers.size).toBe(1);
+        await vi.advanceTimersByTimeAsync(200);
+        expect(loadSpy).toHaveBeenCalledWith('p1');
+      });
+
+      it('does nothing if plugin not loaded', async () => {
+        const loadSpy = vi.spyOn(loader as any, 'loadPlugin');
+        (loader as any).scheduleReload('unknown');
+        await vi.advanceTimersByTimeAsync(200);
+        expect(loadSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('unloadPlugin', () => {
+      it('handles non-existent plugin gracefully', () => {
+        expect(() => (loader as any).unloadPlugin('nonexistent')).not.toThrow();
+      });
+
+      it('cleans up loaded plugin correctly', () => {
+        const cap: any = {
+          id: 'p1.c1', // full capability ID
+          pluginId: 'p1',
+          name: 'Cap',
+          description: '',
+          parameters: {},
+          outputSchema: {}
+        };
+        const plugin: any = {
+          manifest: { id: 'p1' },
+          capabilities: [cap],
+          reload: vi.fn(),
+          unload: vi.fn()
+        };
+        (loader as any).loadedPlugins.set('p1', plugin);
+        (loader as any).reloadTimers.set('p1', setTimeout(() => {}, 1000) as any);
+        (loader as any).watchHandles.set('p1', { close: vi.fn() });
+        const registry = (loader as any).registry;
+        const unregisterSpy = vi.spyOn(registry, 'unregister');
+        const onUnload = vi.fn();
+        loader.options.onPluginUnloaded = onUnload;
+        (loader as any).unloadPlugin('p1');
+        expect((loader as any).loadedPlugins.has('p1')).toBe(false);
+        expect(unregisterSpy).toHaveBeenCalledWith('p1.c1');
+        expect((loader as any).reloadTimers.has('p1')).toBe(false);
+        expect((loader as any).watchHandles.has('p1')).toBe(false);
+        expect(onUnload).toHaveBeenCalledWith('p1');
+      });
+    });
+
+    describe('waitForLoad', () => {
+      it('calls loadAll when not loaded and no pending load', async () => {
+        const loadAllSpy = vi.spyOn(loader as any, 'loadAll').mockResolvedValue({ totalPlugins: 0, totalCapabilities: 0, loadTimeMs: 0, errors: [] } as any);
+        await (loader as any).waitForLoad();
+        expect(loadAllSpy).toHaveBeenCalled();
+      });
     });
   });
 });
