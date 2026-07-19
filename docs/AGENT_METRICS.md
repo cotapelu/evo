@@ -260,6 +260,23 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - `auto-continue.ts` branch coverage: **71.92% → 80.7%**.
 - Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
 
+### [2026-07-19] Git Pull Branch Coverage (Round 235)
+
+**Type**: Test Expansion
+
+**Summary**: Added branch coverage tests for `git/pull` capability to cover remaining branches in stdout fallback, cwd fallback, and branch formatting.
+
+**Tests Added**: 3 tests.
+- Empty stdout fallback message (uses default `Pulled from origin`)
+- Fallback message includes branch when provided (e.g., `origin/main`)
+- cwd fallback to `process.cwd()` when `ctx.cwd` is undefined
+
+**Impact**:
+- All tests pass (3 added, total 1704).
+- Overall branch coverage increased from **85.45%** (2920/3417) to **85.54%** (2923/3417), **+0.09%**.
+- `pull.ts` branch coverage: **61.53% → 92.3%**
+- Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
+
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627
 - Final typecheck errors: 0

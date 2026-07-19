@@ -379,6 +379,13 @@ Last Updated: 2026-07-18
   - Overall branch coverage: 85.30% → 85.45% (+0.15%).
   - All quality gates remain green.
 
+- [x] **Branch Coverage Expansion (Round 235)**
+  - Added branch coverage tests for `git/pull` capability (3 tests).
+  - Cover branches: empty stdout fallback, branch formatting in fallback, cwd fallback.
+  - pull.ts branch coverage: 61.53% → 92.3%.
+  - Overall branch coverage: 85.45% → 85.54% (+0.09%).
+  - All quality gates remain green.
+
 ## Upcoming
 - Continue **Branch Coverage Expansion (Round 225)** – current branch coverage 83.84%, need ~1.16% to reach 85%.
 - Recent: team-manager.ts new tests (37 tests) increased its branch coverage from 73.54% to **83.87%**; overall +0.47%.
