@@ -311,6 +311,22 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - `log.ts` branch coverage: **77.77% → 88.88%**.
 - Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
 
+### [2026-07-19] Git Commit Branch Coverage (Round 238)
+
+**Type**: Test Expansion
+
+**Summary**: Added branch coverage tests for `git/commit` capability to cover remaining branches in cwd fallback and empty stdout fallback.
+
+**Tests Added**: 2 tests.
+- cwd fallback to `process.cwd()` when `ctx.cwd` undefined
+- Empty stdout fallback message (uses default "✅ Committed")
+
+**Impact**:
+- All tests pass (2 added, total 1712).
+- Overall branch coverage increased from **85.71%** (2929/3417) to **85.77%** (2931/3417), **+0.06%**.
+- `commit.ts` branch coverage: **75% → 91.66%**.
+- Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
+
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627
 - Final typecheck errors: 0
