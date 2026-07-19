@@ -1538,6 +1538,21 @@ Main `execute` now reads as a clear switch dispatcher; complexity reduced from 2
 - `pull.ts` branch coverage: **61.53% → 92.3%**.
 - Quality gates remain green.
 
+### [2026-07-19] Git Push Branch Coverage (Round 236)
+
+**Summary**: Added branch coverage tests for `git/push` capability to cover remaining branches.
+
+**Tests Added**: 3 tests.
+- Empty stdout fallback message
+- Fallback includes branch when provided
+- cwd fallback to `process.cwd()` when `ctx.cwd` undefined
+
+**Impact**:
+- All tests pass.
+- Overall branch coverage increased from **85.54%** (2923/3417) to **85.68%** (2928/3417), **+0.14%**.
+- `push.ts` branch coverage: **66.66% → 93.33%**.
+- Quality gates remain green.
+
 ### [2026-07-19] Auto-Continue Branch Coverage (Round 234)
 
 **Summary**: Added branch coverage tests for `auto-continue.ts` to cover remaining branches in file handling, command parsing, event handlers, and UI conditional logic.

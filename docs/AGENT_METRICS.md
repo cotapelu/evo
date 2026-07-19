@@ -277,6 +277,23 @@ Next targets: safe_edit.ts (11 uncovered branches), plugin-loader.ts (60 uncover
 - `pull.ts` branch coverage: **61.53% → 92.3%**
 - Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
 
+### [2026-07-19] Git Push Branch Coverage (Round 236)
+
+**Type**: Test Expansion
+
+**Summary**: Added branch coverage tests for `git/push` capability to cover remaining branches in stdout fallback, cwd fallback, and branch formatting.
+
+**Tests Added**: 3 tests.
+- Empty stdout fallback message (uses default `Pushed to origin`)
+- Fallback message includes branch when provided (e.g., `origin/main`)
+- cwd fallback to `process.cwd()` when `ctx.cwd` is undefined
+
+**Impact**:
+- All tests pass (3 added, total 1707).
+- Overall branch coverage increased from **85.54%** (2923/3417) to **85.68%** (2928/3417), **+0.14%**.
+- `push.ts` branch coverage: **66.66% → 93.33%**.
+- Quality gates remain green: 0 type errors, 0 lint errors, build successful, 0 security vulnerabilities.
+
 ## Typecheck Hygiene
 - Initial typecheck errors in test files: 627
 - Final typecheck errors: 0
