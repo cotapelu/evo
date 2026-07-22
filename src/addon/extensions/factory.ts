@@ -20,8 +20,9 @@ import autoContinueExtension from "./hooks/auto-continue.js";
 import autoCompact85Extension from "./hooks/auto-compact-85.js";
 import contextLoggerExtension from "./context-logger.js";
 
-// Import built-in tools override extension (disabled - overrides default built-in tools)
-// import registerBuiltinsExtension from "./buildin-tools/index.js";
+import registerBuiltinsExtension from "./buildin-tools/index.js";
+// registerBuiltinsExtension(api); // Disabled due to TS errors
+
 import multiAgentToolExtension from "./multi-agent-tool/index.js";
 import sessionToolExtension from "./session-tool/index.js";
 import promptHookExtension from "./prompt-hooks/index.js";
@@ -63,8 +64,8 @@ export default async function extensionsAggregator(api: import("@earendil-works/
   registerToolTemplate(api);
   registerSkillReaderExtension(api);
 
-  // // Register built-in tools override (same name, uses createXTool(ctx.cwd))
-  // registerBuiltinsExtension(api);
+  // Register built-in tools override (re-registers find, grep, ls)
+  registerBuiltinsExtension(api);
   
   // Register multi-agent tool
   multiAgentToolExtension(api);
