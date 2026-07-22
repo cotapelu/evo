@@ -18,16 +18,16 @@ import {
  * Usage: Import this in factory.ts to enable.
  */
 
-export default function (pi: ExtensionAPI) {
-  pi.on("session_start", async (event, ctx) => {
-    // Simply re-register all built-in tools
-    // This works because createXTool returns a complete AgentTool with correct types
-    pi.registerTool(createReadTool(ctx.cwd));
-    pi.registerTool(createBashTool(ctx.cwd));
-    pi.registerTool(createEditTool(ctx.cwd));
-    pi.registerTool(createWriteTool(ctx.cwd));
-    pi.registerTool(createFindTool(ctx.cwd));
-    pi.registerTool(createGrepTool(ctx.cwd));
-    pi.registerTool(createLsTool(ctx.cwd));
-  });
+export default function (api: ExtensionAPI) {
+  // Register built-in tools directly during extension initialization
+  // Use process.cwd() as default working directory
+  const cwd = process.cwd();
+  
+  api.registerTool(createReadTool(cwd));
+  api.registerTool(createBashTool(cwd));
+  api.registerTool(createEditTool(cwd));
+  api.registerTool(createWriteTool(cwd));
+  api.registerTool(createFindTool(cwd));
+  api.registerTool(createGrepTool(cwd));
+  api.registerTool(createLsTool(cwd));
 }

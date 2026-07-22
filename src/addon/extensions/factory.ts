@@ -21,7 +21,6 @@ import autoCompact85Extension from "./hooks/auto-compact-85.js";
 import contextLoggerExtension from "./context-logger.js";
 
 import registerBuiltinsExtension from "./buildin-tools/index.js";
-// registerBuiltinsExtension(api); // Disabled due to TS errors
 
 import multiAgentToolExtension from "./multi-agent-tool/index.js";
 import sessionToolExtension from "./session-tool/index.js";
