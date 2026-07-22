@@ -20,18 +20,24 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck",
     "test": "vitest run",
+    "postinstall": "rm -rf node_modules/@earendil-works/pi-coding-agent/node_modules/brace-expansion node_modules/@earendil-works/pi-coding-agent/node_modules/protobufjs",
     "prepublishOnly": "npm run build && npm test",
     "prepare": "husky install"
   },
+  "overrides": {
+    "brace-expansion": "5.0.7",
+    "protobufjs": "7.6.5"
+  },
   "dependencies": {
-    "@earendil-works/pi-agent-core": "^0.80.3",
-    "@earendil-works/pi-ai": "^0.80.3",
-    "@earendil-works/pi-coding-agent": "^0.80.3",
-    "@earendil-works/pi-tui": "^0.80.3",
+    "@earendil-works/pi-agent-core": "0.80.3",
+    "@earendil-works/pi-ai": "0.80.3",
+    "@earendil-works/pi-coding-agent": "0.80.3",
+    "@earendil-works/pi-tui": "0.80.3",
     "chalk": "^5.6.2",
     "globals": "^17.5.0",
     "minimatch": "^10.2.5",
-    "sharp": "^0.34.5"
+    "protobufjs": "7.6.5",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@types/minimatch": "^5.1.2",
