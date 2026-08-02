@@ -3,6 +3,12 @@
 Last Updated: 2026-07-18
 
 ## Completed
+- [x] **Fix build errors from AgentSessionServices API migration** (2026-08-02)
+  - [x] Remove getCurrentAuthStorage() from runtime-context.ts (authStorage removed from AgentSessionServices)
+  - [x] Update getCurrentModelRegistry() to return modelRuntime instead of modelRegistry
+  - [x] Update team-manager.ts to pass modelRuntime and settingsManager to createAgentSessionServices
+  - [x] Update child-worker.ts to use modelRuntime.getModel() instead of modelRegistry.find()
+  - [x] Build passes (tsc -p tsconfig.build.json)
 - [x] **GOAL.md Production-Readiness Compliance (Round 224)**
   - [x] Add Makefile with quality targets and common commands
   - [x] Add Husky pre-commit hooks enforcing quality gates

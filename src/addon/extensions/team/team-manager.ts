@@ -461,13 +461,12 @@ export class AgentTeam implements AgentTeamRuntime {
         sessionManager: providedSessionManager,
         sessionStartEvent: startEvent,
       }) => {
-        // Use parent's shared services (auth, settings, model) but isolated session
+        // Use parent's shared services (settings, model) but isolated session
         const services = await createAgentSessionServices({
           cwd: sessionCwd,
           agentDir: sessionAgentDir,
-          authStorage: parentRuntime.services.authStorage,
           settingsManager: parentRuntime.services.settingsManager,
-          modelRegistry: parentRuntime.services.modelRegistry,
+          modelRuntime: parentRuntime.services.modelRuntime,
         });
 
         const sessionResult = await createAgentSessionFromServices({

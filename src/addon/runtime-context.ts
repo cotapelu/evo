@@ -232,13 +232,6 @@ export function getCurrentModelFallbackMessage(): string | undefined {
 }
 
 /**
- * Get auth storage from services.
- */
-export function getCurrentAuthStorage(): AgentSessionServices['authStorage'] {
-  return getCurrentServices().authStorage;
-}
-
-/**
  * Get the settings manager from the current runtime's services.
  */
 export function getCurrentSettingsManager(): AgentSessionServices['settingsManager'] {
@@ -246,10 +239,10 @@ export function getCurrentSettingsManager(): AgentSessionServices['settingsManag
 }
 
 /**
- * Get the model registry from the current runtime's services.
+ * Get the model runtime from the current runtime's services.
  */
-export function getCurrentModelRegistry(): AgentSessionServices['modelRegistry'] {
-  return getCurrentServices().modelRegistry;
+export function getCurrentModelRegistry(): AgentSessionServices['modelRuntime'] {
+  return getCurrentServices().modelRuntime;
 }
 
 /**

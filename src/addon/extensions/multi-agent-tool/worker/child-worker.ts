@@ -41,7 +41,7 @@ function parseModel(modelStr: string): { provider: string; id: string } {
 async function main() {
   try {
     const { provider, id } = parseModel(model);
-    const resolvedModel = services.modelRegistry.find(provider, id);
+    const resolvedModel = services.modelRuntime.getModel(provider, id);
     if (!resolvedModel) {
       throw new Error(`Model not found: ${model}`);
     }
