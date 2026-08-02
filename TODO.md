@@ -9,6 +9,12 @@ Last Updated: 2026-07-18
   - [x] Update team-manager.ts to pass modelRuntime and settingsManager to createAgentSessionServices
   - [x] Update child-worker.ts to use modelRuntime.getModel() instead of modelRegistry.find()
   - [x] Build passes (tsc -p tsconfig.build.json)
+- [x] **Fix tests for AgentSessionServices API migration** (2026-08-02)
+  - [x] runtime-context.test.ts: Remove getCurrentAuthStorage test, update modelRuntime mock
+  - [x] child-worker.test.ts: Update mock to use modelRuntime.getModel()
+  - [x] test-utils.ts: Update mock services to use modelRuntime
+  - [x] team-multi-runtime.test.ts: Use ModelRuntime directly, make createSimpleRuntime async
+  - [x] All 1704 tests pass
 - [x] **GOAL.md Production-Readiness Compliance (Round 224)**
   - [x] Add Makefile with quality targets and common commands
   - [x] Add Husky pre-commit hooks enforcing quality gates
