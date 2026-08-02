@@ -21,7 +21,6 @@ import {
   getCurrentToolDefinition,
   getCurrentMessages,
   getCurrentModelFallbackMessage,
-  getCurrentAuthStorage,
   getCurrentSettingsManager,
   getCurrentModelRegistry,
   getCurrentResourceLoader,
@@ -45,18 +44,15 @@ function createMockRuntime(overrides: Partial<AgentSessionRuntime> = {}): AgentS
   const services: AgentSessionServices = {
     cwd: '/tmp',
     agentDir: '/tmp/agent',
-    authStorage: {
-      get: vi.fn(),
-      set: vi.fn(),
-      delete: vi.fn(),
-    },
     settingsManager: {
       get: vi.fn(),
       set: vi.fn(),
     },
-    modelRegistry: {
-      getCurrentModel: vi.fn(),
-      listModels: vi.fn(),
+    modelRuntime: {
+      getModel: vi.fn(),
+      getModels: vi.fn(),
+      getAll: vi.fn(),
+      getAvailable: vi.fn(),
     },
     resourceLoader: {
       loadSkill: vi.fn(),
@@ -296,14 +292,6 @@ describe('runtime-context', () => {
     });
   });
 
-  describe('getCurrentAuthStorage', () => {
-    it('should return authStorage from services', () => {
-      const runtime = createMockRuntime();
-      setCurrentRuntime(runtime);
-      expect(getCurrentAuthStorage()).toBe(runtime.services.authStorage);
-    });
-  });
-
   describe('getCurrentSettingsManager', () => {
     it('should return settingsManager from services', () => {
       const runtime = createMockRuntime();
@@ -313,10 +301,10 @@ describe('runtime-context', () => {
   });
 
   describe('getCurrentModelRegistry', () => {
-    it('should return modelRegistry from services', () => {
+    it('should return modelRuntime from services', () => {
       const runtime = createMockRuntime();
       setCurrentRuntime(runtime);
-      expect(getCurrentModelRegistry()).toBe(runtime.services.modelRegistry);
+      expect(getCurrentModelRegistry()).toBe(runtime.services.modelRuntime);
     });
   });
 

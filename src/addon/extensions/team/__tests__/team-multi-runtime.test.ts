@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { vi, expect } from 'vitest';
 import { AgentTeam } from '../team-manager.js';
-import { SessionManager, SettingsManager, AuthStorage, ModelRegistry } from '@earendil-works/pi-coding-agent';
+import { SessionManager, SettingsManager, ModelRuntime } from '@earendil-works/pi-coding-agent';
 import type { AgentSessionRuntime, AgentSessionEvent } from '@earendil-works/pi-coding-agent';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -18,15 +18,14 @@ function getInternal(team: AgentTeam): AgentTeamInternal {
 }
 
 // Simple mock runtime factory - returns plain objects, no recursion
-function createSimpleRuntime(role: string): Partial<AgentSessionRuntime> {
+async function createSimpleRuntime(role: string): Promise<Partial<AgentSessionRuntime>> {
   const id = `session-${role}-${counter++}`;
   const tmpAgentDir = path.join(os.tmpdir(), `evo-test-${role}-${Date.now()}`);
   try { fs.mkdirSync(tmpAgentDir, { recursive: true }); } catch (e) {}
 
-  // Use real in-memory services to avoid mocking hundreds of methods
+  // Use ModelRuntime directly (new API)
+  const modelRuntime = await ModelRuntime.create({ allowModelNetwork: false });
   const settingsManager = SettingsManager.inMemory({});
-  const authStorage = AuthStorage.inMemory();
-  const modelRegistry = ModelRegistry.inMemory(authStorage);
   const sessionMgr = SessionManager.create(process.cwd(), tmpAgentDir);
 
   return {
@@ -39,9 +38,8 @@ function createSimpleRuntime(role: string): Partial<AgentSessionRuntime> {
       agentDir: tmpAgentDir,
       cwd: process.cwd(),
       diagnostics: [],
-      authStorage,
       settingsManager,
-      modelRegistry,
+      modelRuntime,
     },
     cwd: process.cwd(),
     setRebindSession: vi.fn(),
@@ -72,10 +70,10 @@ describe('AgentTeam Multi-Runtime', () => {
     team.size = roles.length;
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     team = new AgentTeam();
     team.setTeamId('test-team');
-    parentRuntime = createSimpleRuntime('parent') as AgentSessionRuntime;
+    parentRuntime = await createSimpleRuntime('parent') as AgentSessionRuntime;
     // Configure parent's createRuntime to return a fresh child runtime each call
     parentRuntime.createRuntime = vi.fn().mockImplementation(async (factory: any, options: any) => {
       return createSimpleRuntime('child') as AgentSessionRuntime;

@@ -42,7 +42,7 @@ describe('Child Worker', () => {
     mockWorkerData = {
       config: { id: 'child-1' },
       services: {
-        modelRegistry: { find: vi.fn().mockReturnValue({}) }
+        modelRuntime: { getModel: vi.fn().mockReturnValue({}) }
       },
       sessionManager: {},
       model: 'anthropic/claude',

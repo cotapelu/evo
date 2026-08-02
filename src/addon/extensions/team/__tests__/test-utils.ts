@@ -17,9 +17,8 @@ export function createMockRuntime(): any {
     },
     cwd: process.cwd(),
     services: {
-      authStorage: {},
       settingsManager: {},
-      modelRegistry: {},
+      modelRuntime: {},
       diagnostics: {
         info: () => {},
         warn: () => {},
