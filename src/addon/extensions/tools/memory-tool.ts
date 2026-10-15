@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import type { ExtensionAPI, ExtensionContext, Theme, ToolDefinition } from "@earendil-works/pi-coding-agent";
+import type { JsonObject } from "@earendil-works/pi-ai";
 // import { Type, StringEnum } from "@earendil-works/pi-ai"; // unused
 import { matchesKey, Text } from "@earendil-works/pi-tui";
 
@@ -117,11 +118,13 @@ export function registerMemoryTool(api: ExtensionAPI): void {
       nextId = 1;
       for (const entry of ctx.sessionManager.getBranch()) {
         if (entry.type === "message" && entry.message.role === "toolResult" && entry.message.toolName === "memory") {
-          // @ts-ignore
           const details = entry.message.details;
-          if (details && Array.isArray(details.memories)) {
-            memories = details.memories;
-            nextId = details.nextId;
+          if (details && typeof details === "object" && !Array.isArray(details)) {
+            const d = details as JsonObject;
+            if (Array.isArray(d.memories)) {
+              memories = d.memories as unknown as Memory[];
+              if (typeof d.nextId === "number") nextId = d.nextId;
+            }
           }
         }
       }
